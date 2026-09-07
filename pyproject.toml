@@ -73,6 +73,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "ANN", "PLR2004"]   # asserts, loose annotations and magic numbers are fine in tests
 "src/loremfile/cli.py" = ["T20"]          # the CLI is the one place that prints
+"tools/licences.py" = ["T20"]             # a reporting script: printing is the whole point
 
 [tool.ruff.lint.isort]
 known-first-party = ["loremfile"]

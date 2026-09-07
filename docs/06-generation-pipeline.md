@@ -169,13 +169,13 @@ Validation failures are hard errors in CI and print a table of path → failed c
 ## 9. Toolchain container (`tools/Dockerfile`)
 
 ```dockerfile
-FROM python:3.12-slim-bookworm@sha256:<DIGEST>        # pin by digest; update via Dependabot
+FROM python:3.12-slim-bookworm@sha256:782412e8…  # pinned by index digest; Dependabot bumps it
 ENV DEBIAN_FRONTEND=noninteractive TZ=UTC LANG=C.UTF-8 LC_ALL=C.UTF-8 PYTHONHASHSEED=0 SOURCE_DATE_EPOCH=1577836800
 RUN apt-get update && apt-get install -y --no-install-recommends \
       git=<ver> gh=<ver> ca-certificates=<ver> curl=<ver> \
       ffmpeg=<ver> qpdf=<ver> libavif-bin=<ver> zstd=<ver> xz-utils=<ver> bzip2=<ver> sqlite3=<ver> fonts-dejavu-core=<ver> \
     && rm -rf /var/lib/apt/lists/*
-# Every apt package is pinned to the exact version recorded in tools/apt-versions.txt (first build: install unpinned, run `dpkg -l`, then pin).
+# Every apt package is pinned to the exact version recorded in tools/apt-versions.txt (first build: install unpinned, run `dpkg -l`, then pin). Recorded in M1.2 — that file is the single source of truth; the real Dockerfile carries the literal versions.
 # Pinned versions disappear from the Debian mirrors after point releases; when that happens, point the sources at snapshot.debian.org for the recorded date.
 # git and gh are required because every workflow job runs inside this image: actions/checkout needs git for a real clone,
 # `build --new` reads origin/main:manifest.json, check_lock.sh diffs against the merge-base, gh_issue.py and release.py call gh.
@@ -189,7 +189,8 @@ WORKDIR /work
 - Tools that run on the host, not in the image: `actionlint` (workflow lint), `gitleaks` (secret scan), Lighthouse (`npx lighthouse https://loremfile.dev/ --only-categories=accessibility,performance,seo --preset=desktop`) — all informational except gitleaks, which must be clean once in M1.8.
 - `fonts-dejavu-core` is installed **only** for rendering label text inside images/PDF test cards where Pillow's default font is too small; it is a Debian package under the Bitstream Vera licence, which permits embedding and redistribution. The generated font family is not derived from it.
 - The image is built and pushed to `ghcr.io/<OWNER>/loremfile-toolchain` by `toolchain.yml`; workflows reference it by `@sha256:` digest recorded in `tools/TOOLCHAIN_DIGEST`. Changing the digest is a reviewed PR.
-- ffmpeg from Debian bookworm (5.1.x) satisfies all P1 codecs: libx264, libvpx, libopus, libvorbis, libmp3lame, aac (native), flac, theora, prores_ks, libaom (for AVIF via avifenc we use `libavif-bin`). HEVC/AV1 video fixtures (P2) need `libx265`/`libsvtav1`, which Debian's ffmpeg includes; confirm with `ffmpeg -encoders` during M1.2 (**[VERIFY]**). Also confirm in M1.2: the image's SQLite has FTS5 (`sqlite3 :memory: "PRAGMA compile_options"` lists `ENABLE_FTS5`) and `.tar.zst` is produced by piping through the `zstandard` Python package (Python 3.12's `tarfile` has no zstd mode).
+- **Verified in M1.2 on 2026-09-07** (linux/amd64, `python:3.12-slim-bookworm@sha256:782412e8…` = python 3.12.14 on Debian 12.15, ffmpeg `7:5.1.9-0+deb12u1`). `ffmpeg -encoders` lists every P1 encoder — `libx264`, `libvpx` (VP8), `libvpx-vp9`, `libopus`, `libvorbis`, `libmp3lame`, `aac` (native), `flac`, `libtheora`, `prores_ks` — and **also `libx265` and `libsvtav1`**, so the P2 HEVC/AV1 fixtures need no rebuild of the image. Two naming details the generators must use: the Theora encoder is **`libtheora`**, not `theora`; ProRes ships as three encoders (`prores`, `prores_aw`, `prores_ks`) and the catalog means **`prores_ks`**. AVIF is produced with `avifenc` from `libavif-bin` 0.11.1 (aom 3.6.0 encoder, dav1d 1.0.0 decoder), not through ffmpeg.
+- **Verified in M1.2 on 2026-09-07**: the image's SQLite is 3.40.1 and `sqlite3 :memory: "PRAGMA compile_options;"` lists `ENABLE_FTS5` (also FTS3/FTS4). `.tar.zst` is produced by piping through the `zstandard` Python package: the image's Python 3.12.14 raises `CompressionError: unknown compression type 'zst'` for `tarfile.open(..., "w:zst")` and has no `compression.zstd` module.
 - `tools/TOOLCHAIN_DIGEST` contains exactly one line: the full image reference `ghcr.io/<OWNER>/loremfile-toolchain@sha256:<64 hex>`; workflows and `docker pull` read it verbatim.
 
 ## 10. CLI
