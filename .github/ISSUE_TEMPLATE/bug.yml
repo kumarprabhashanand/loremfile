@@ -1,0 +1,39 @@
+name: Bug report
+description: Something on loremfile.dev is wrong or broken
+title: "bug: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a **security** issue, do not open an issue — use private reporting
+        (see [`SECURITY.md`](https://github.com/<OWNER>/loremfile/blob/main/SECURITY.md)).
+  - type: input
+    id: url
+    attributes:
+      label: URL
+      placeholder: https://loremfile.dev/pdf/a4-3pages.pdf
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect, and what happened instead?
+      description: >
+        Include the response headers if you have them — `curl -sI <url>` is ideal. If a file's
+        bytes look wrong, include the sha256 you got; the expected one is in
+        https://loremfile.dev/sha256sums.txt.
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      placeholder: |
+        curl -sI https://loremfile.dev/pdf/a4-3pages.pdf
+    validations: { required: false }
+  - type: input
+    id: client
+    attributes:
+      label: Client
+      description: Browser, library, or tool and its version. Where in the world are you?
+      placeholder: curl 8.7.1, Firefox 140, Berlin
+    validations: { required: false }

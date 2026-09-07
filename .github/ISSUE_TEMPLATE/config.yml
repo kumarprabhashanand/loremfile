@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/<OWNER>/loremfile/security/advisories/new
+    about: Report privately. Do not open a public issue. See SECURITY.md.
+  - name: Question about naming, sizes or the manifest
+    url: https://loremfile.dev/docs/naming
+    about: The naming grammar, decimal vs binary size units, and the manifest schema.

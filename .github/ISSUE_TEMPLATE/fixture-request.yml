@@ -1,0 +1,57 @@
+name: Fixture request
+description: Ask for a sample file that does not exist yet
+title: "fixture: "
+labels: ["fixture-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening: check [`docs/05-fixture-catalog.md`](https://github.com/<OWNER>/loremfile/blob/main/docs/05-fixture-catalog.md)
+        and [`manifest.json`](https://loremfile.dev/manifest.json) — it may already exist, or
+        be scheduled. Fixtures are boring by design; see the content policy in
+        [`docs/13-legal-and-policy.md` §5](https://github.com/<OWNER>/loremfile/blob/main/docs/13-legal-and-policy.md).
+  - type: input
+    id: format
+    attributes:
+      label: Format
+      description: The first path segment — lowercase letters and digits only.
+      placeholder: pdf
+    validations: { required: true }
+  - type: input
+    id: path
+    attributes:
+      label: Proposed path
+      description: >
+        Lowercase kebab-case plus extensions, following the grammar in CONTRIBUTING.md.
+        Sizes are units-explicit: kb/mb/gb are decimal, kib/mib/gib are binary.
+      placeholder: pdf/a4-50pages-tagged.pdf
+    validations: { required: true }
+  - type: textarea
+    id: testing
+    attributes:
+      label: What are you testing?
+      description: >
+        The most useful part of the request. "A 10 MB PDF and a 10 MB + 1 byte PDF so I can
+        test my upload limit" tells us the boundary matters and we will add both.
+    validations: { required: true }
+  - type: textarea
+    id: properties
+    attributes:
+      label: Required properties
+      description: >
+        Anything that must be exactly true — dimensions, duration, page count, row count,
+        codec, encoding, byte size and how exact it has to be.
+      placeholder: |
+        - exactly 10,000,000 bytes
+        - 3 pages, A4, no embedded fonts
+    validations: { required: false }
+  - type: checkboxes
+    id: policy
+    attributes:
+      label: Content policy
+      options:
+        - label: >
+            This is not malware or an exploit PoC, not an executable or macro, not a
+            decompression bomb, contains no credentials or real personal data and no
+            third-party copyrighted content, and is under 100 MB.
+          required: true

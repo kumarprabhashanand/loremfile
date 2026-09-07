@@ -1,0 +1,107 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "loremfile"
+version = "0.1.0"
+description = "Generators, validators and tooling for loremfile.dev — CC0 sample files for every file type"
+readme = "README.md"
+requires-python = "==3.12.*"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "the loremfile.dev contributors" }]
+keywords = ["fixtures", "test-data", "sample-files", "cc0"]
+classifiers = [
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Testing",
+]
+# Runtime dependencies are pinned with hashes in tools/requirements.lock, which is
+# what the toolchain image installs (docs/06 §9). Nothing is declared here, so that
+# there is exactly one source of truth for versions.
+dependencies = []
+
+[project.scripts]
+loremfile = "loremfile.cli:main"
+
+[project.urls]
+Homepage = "https://loremfile.dev"
+Source = "https://github.com/<OWNER>/loremfile"
+Issues = "https://github.com/<OWNER>/loremfile/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+loremfile = ["data/**/*", "schema/*.json"]
+
+# ---------------------------------------------------------------------------
+# ruff — lint and format (docs/06 §13)
+# ---------------------------------------------------------------------------
+[tool.ruff]
+src = ["src", "tests"]
+target-version = "py312"
+line-length = 100
+# Lint and format Python only. `docs/` and `review/` are the specification, copied
+# verbatim; ruff reformats Python code blocks inside Markdown, which would silently
+# rewrite the documents. `build/` holds generated fixtures and is never linted.
+include = ["*.py", "*.pyi", "**/pyproject.toml"]
+extend-exclude = ["docs", "review", "build"]
+
+[tool.ruff.lint]
+select = [
+  "F",    # pyflakes
+  "E",    # pycodestyle errors
+  "W",    # pycodestyle warnings
+  "I",    # isort
+  "UP",   # pyupgrade
+  "B",    # bugbear
+  "C4",   # comprehensions
+  "SIM",  # simplify
+  "PTH",  # use pathlib
+  "RUF",  # ruff-specific
+  "ANN",  # annotations — type hints everywhere
+  "S",    # bandit
+  "T20",  # no print() outside the CLI
+  "ARG",  # unused arguments
+  "PL",   # pylint subset
+]
+ignore = [
+  "PLR0913",  # generators legitimately take many keyword parameters from the catalog
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "ANN", "PLR2004"]   # asserts, loose annotations and magic numbers are fine in tests
+"src/loremfile/cli.py" = ["T20"]          # the CLI is the one place that prints
+
+[tool.ruff.lint.isort]
+known-first-party = ["loremfile"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+# ---------------------------------------------------------------------------
+# mypy — strict on src/ (docs/06 §13)
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.12"
+files = ["src"]
+strict = true
+warn_unreachable = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+ignore_errors = true
+
+# ---------------------------------------------------------------------------
+# pytest (docs/12)
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+  "slow: takes more than a few seconds (media generation)",
+  "container: requires the pinned toolchain image to be meaningful",
+]
