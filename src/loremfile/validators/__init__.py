@@ -98,7 +98,7 @@ _REGISTRY: dict[str, ValidatorFunc] = {}
 #: Validator modules to import so their @register decorators run. A family is added
 #: here by the same pull request that adds its generator — docs/06 §13 requires the two
 #: to ship together, and an unregistered validator is how that rule gets broken quietly.
-VALIDATOR_MODULES = ("binary", "text", "data")
+VALIDATOR_MODULES = ("binary", "text", "data", "columnar", "geo")
 
 
 def load() -> None:

@@ -1,0 +1,17 @@
+# gpx fixtures (docs/05 §3.7). Launch-set rows only; the rest are P1b.
+format: gpx
+family: data
+mime: application/gpx+xml
+description: >-
+  A GPX 1.1 track with timestamps and elevations.
+seo_title: "Sample GPX track file for testing GPS tools — free, CC0"
+related: [geojson, kml]
+fixtures:
+  - name: track-100-points.gpx
+    phase: 1
+    generator: geo.gpx_track
+    params: { points: 100 }
+    description: "A GPX 1.1 track of 100 points in one segment, each with an elevation and a monotonic timestamp."
+    tags: [data, geo]
+    expect: { track_points: 100, tracks: 1, root_element: gpx }
+    size_class: free

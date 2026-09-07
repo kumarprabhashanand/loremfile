@@ -104,7 +104,7 @@ ignore_errors = true
 # parsing, so the import is not optional; only its typing is. The cost is confined
 # to validators/data.py's XML branch.
 [[tool.mypy.overrides]]
-module = ["lxml.*"]
+module = ["lxml.*", "pyarrow.*", "fastavro.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------

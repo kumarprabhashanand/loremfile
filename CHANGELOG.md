@@ -44,6 +44,13 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Added — columnar, database and geographic formats (M3.2b)
+
+- `parquet/` (2), `arrow/` (1), `avro/` (1), `sqlite/` (2), `geojson/` (1), `gpx/` (1),
+  `kml/` (1), `kmz/` (1) — 10 launch fixtures.
+- `generators/columnar.py`, `generators/geo.py`, `validators/columnar.py`,
+  `validators/geo.py`.
+
 ### Added — data formats (M3.2a)
 
 - `csv/` (8), `tsv/` (1), `json/` (6), `ndjson/` (1), `xml/` (3), `yaml/` (1),
