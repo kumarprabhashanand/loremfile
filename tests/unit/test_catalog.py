@@ -356,6 +356,39 @@ def test_binary_mime_is_left_alone() -> None:
     assert fmt.mime_for(fmt.fixtures[0]) == "application/pdf"
 
 
+@pytest.mark.parametrize(
+    "mime",
+    [
+        "application/json",
+        "application/xml",
+        "application/yaml",
+        "application/toml",
+        "application/x-ndjson",
+        "application/geo+json",
+    ],
+)
+def test_text_like_application_types_also_get_a_charset(mime: str) -> None:
+    """docs/06 §6 text hygiene: these are not text/* but must still carry a charset."""
+    fmt = FormatCatalog.model_validate(
+        minimal_format(
+            format="json", mime=mime, fixtures=[minimal_fixture(name="a.json", format="json")]
+        )
+    )
+    assert fmt.mime_for(fmt.fixtures[0]) == f"{mime}; charset=utf-8"
+
+
+def test_xhtml_is_not_auto_charset() -> None:
+    """docs/05 §1 rule 7 lists xhtml as an explicit override, so the loader leaves it."""
+    fmt = FormatCatalog.model_validate(
+        minimal_format(
+            format="xhtml",
+            mime="application/xhtml+xml",
+            fixtures=[minimal_fixture(name="a.xhtml", format="xhtml")],
+        )
+    )
+    assert fmt.mime_for(fmt.fixtures[0]) == "application/xhtml+xml"
+
+
 # --- the real repository ---------------------------------------------------
 
 

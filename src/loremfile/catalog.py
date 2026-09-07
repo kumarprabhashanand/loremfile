@@ -33,6 +33,19 @@ FORMAT_RE = re.compile(r"^[a-z0-9]+$")
 
 MAX_DESCRIPTION_CHARS = 300
 
+#: Types that must carry an explicit charset even though they are not ``text/*``
+#: (docs/06 §6). The loader appends ``; charset=utf-8`` when the catalog omits it.
+CHARSET_BEARING_APPLICATION_TYPES = frozenset(
+    {
+        "application/json",
+        "application/xml",
+        "application/yaml",
+        "application/toml",
+        "application/x-ndjson",
+        "application/geo+json",
+    }
+)
+
 
 class Family(StrEnum):
     DOCUMENTS = "documents"
@@ -214,13 +227,15 @@ class FormatCatalog(BaseModel):
         """The exact ``Content-Type`` served for a fixture.
 
         The per-fixture override wins. Otherwise the format default is used, and
-        ``; charset=utf-8`` is appended to ``text/*`` types that do not already carry a
-        charset (docs/05 §1 rule 7). Non-``text/`` types that need a charset — the
-        ``application/xml`` and ``application/xhtml+xml`` cases — say so explicitly in
-        the catalog rather than relying on a rule that would have to guess.
+        ``; charset=utf-8`` is appended when the type is text-like and carries no
+        charset already (docs/05 §1 rule 7, docs/06 §6 "text hygiene"). Anything not in
+        that set — ``application/xhtml+xml`` among them — states its charset explicitly
+        in the catalog rather than relying on a rule that would have to guess.
         """
         mime = fixture.mime or self.mime
-        if mime.startswith("text/") and "charset=" not in mime:
+        base = mime.split(";", 1)[0].strip()
+        text_like = base.startswith("text/") or base in CHARSET_BEARING_APPLICATION_TYPES
+        if text_like and "charset=" not in mime:
             mime = f"{mime}; charset=utf-8"
         return mime
 
