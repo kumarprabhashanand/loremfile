@@ -2,23 +2,31 @@
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
   "catalog_version": "1.0.0",
-  "generated_at": "2026-09-07T19:17:22Z",
+  "generated_at": "2026-09-07T20:06:55Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/<OWNER>/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:3ba29bb905b96fcb019b82f3f0e05f9b6472749af252fbff3f879460e0ef327c",
-  "count": 65,
-  "total_bytes": 303647804,
+  "count": 75,
+  "total_bytes": 314340925,
   "formats": [
+    "arrow",
+    "avro",
     "bin",
     "csv",
+    "geojson",
+    "gpx",
     "ini",
     "json",
+    "kml",
+    "kmz",
     "log",
     "md",
     "ndjson",
+    "parquet",
     "sql",
+    "sqlite",
     "toml",
     "tsv",
     "txt",
@@ -26,6 +34,98 @@
     "yaml"
   ],
   "fixtures": [
+    {
+      "path": "arrow/people-1000.arrow",
+      "url": "https://loremfile.dev/arrow/people-1000.arrow",
+      "format": "arrow",
+      "ext": "arrow",
+      "mime": "application/vnd.apache.arrow.file",
+      "bytes": 260674,
+      "sha256": "52e3d2033bec6ffd5cd01e29c4dba5aef170f646b4339f2e4b4e5456d75b416f",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1,000 rows of the shared people dataset in the Arrow IPC file format (not the stream format), one record batch.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "rows": 1000,
+        "columns": 14,
+        "row_groups": 1,
+        "column_names": [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "phone",
+          "street",
+          "city",
+          "country",
+          "birth_date",
+          "signup_at",
+          "balance",
+          "is_active",
+          "tags",
+          "bio"
+        ]
+      },
+      "generator": "columnar.arrow_people",
+      "generator_params": {
+        "rows": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "avro/people-1000.avro",
+      "url": "https://loremfile.dev/avro/people-1000.avro",
+      "format": "avro",
+      "ext": "avro",
+      "mime": "application/avro",
+      "bytes": 109157,
+      "sha256": "5222ff857db756363624c0e5ccd80578865b8dfb2155d3dabda89f9ebb979978",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1,000 rows of the shared people dataset as Avro, deflate-compressed, with the writer schema embedded in the file header.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "rows": 1000,
+        "columns": 14,
+        "compression": "deflate",
+        "column_names": [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "phone",
+          "street",
+          "city",
+          "country",
+          "birth_date",
+          "signup_at",
+          "balance",
+          "is_active",
+          "tags",
+          "bio"
+        ]
+      },
+      "generator": "columnar.avro_people",
+      "generator_params": {
+        "rows": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
     {
       "path": "bin/1-byte.bin",
       "url": "https://loremfile.dev/bin/1-byte.bin",
@@ -981,6 +1081,84 @@
       "supersededBy": null
     },
     {
+      "path": "geojson/points-100.geojson",
+      "url": "https://loremfile.dev/geojson/points-100.geojson",
+      "format": "geojson",
+      "ext": "geojson",
+      "mime": "application/geo+json; charset=utf-8",
+      "bytes": 35344,
+      "sha256": "ed1a30ef9c8987db652a901a2eaa1c3170a89b06213a89b1712e0a7469c332a5",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A FeatureCollection of 100 Point features with names, categories, elevations and timestamps, inside a bounding box over the South Atlantic.",
+      "tags": [
+        "data",
+        "geo"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1711,
+        "max_line_bytes": 45,
+        "top_type": "object",
+        "items": 100,
+        "features": 100,
+        "geometry_types": [
+          "Point"
+        ]
+      },
+      "generator": "geo.geojson_points",
+      "generator_params": {
+        "count": 100
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "gpx/track-100-points.gpx",
+      "url": "https://loremfile.dev/gpx/track-100-points.gpx",
+      "format": "gpx",
+      "ext": "gpx",
+      "mime": "application/gpx+xml",
+      "bytes": 12873,
+      "sha256": "143bd0b1690ae9ab674233ec510a9fd06e173d37b37cbc3d0fa01821fdb3188f",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A GPX 1.1 track of 100 points in one segment, each with an elevation and a monotonic timestamp.",
+      "tags": [
+        "data",
+        "geo"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 415,
+        "max_line_bytes": 102,
+        "root_element": "gpx",
+        "has_dtd": false,
+        "namespaces": [
+          "http://www.topografix.com/GPX/1/1",
+          "http://www.w3.org/2001/XMLSchema-instance"
+        ],
+        "track_points": 100,
+        "tracks": 1
+      },
+      "generator": "geo.gpx_track",
+      "generator_params": {
+        "points": 100
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "ini/config.ini",
       "url": "https://loremfile.dev/ini/config.ini",
       "format": "ini",
@@ -1221,6 +1399,79 @@
       "supersededBy": null
     },
     {
+      "path": "kml/placemarks-10.kml",
+      "url": "https://loremfile.dev/kml/placemarks-10.kml",
+      "format": "kml",
+      "ext": "kml",
+      "mime": "application/vnd.google-earth.kml+xml",
+      "bytes": 2394,
+      "sha256": "bb0a4902d30eb160b440839017b984b47d470ea3be9a73df1b9aa2272ccf5120",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A KML 2.2 document with ten Point placemarks, each with a name and description.",
+      "tags": [
+        "data",
+        "geo"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 57,
+        "max_line_bytes": 113,
+        "root_element": "kml",
+        "has_dtd": false,
+        "namespaces": [
+          "http://www.opengis.net/kml/2.2"
+        ],
+        "placemarks": 10
+      },
+      "generator": "geo.kml_placemarks",
+      "generator_params": {
+        "count": 10
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "kmz/placemarks-10.kmz",
+      "url": "https://loremfile.dev/kmz/placemarks-10.kmz",
+      "format": "kmz",
+      "ext": "kmz",
+      "mime": "application/vnd.google-earth.kmz",
+      "bytes": 790,
+      "sha256": "1912370c5f3ab5d9da84442c589ed3d5032c6000e6d3c261635040080f9f626b",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Ten Point placemarks zipped as KMZ, with doc.kml as the first entry as the format expects.",
+      "tags": [
+        "data",
+        "geo",
+        "archive"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 1,
+        "directories": 0,
+        "method": "deflate",
+        "encrypted": false,
+        "zip64": false,
+        "comment": "",
+        "placemarks": 10
+      },
+      "generator": "geo.kmz_placemarks",
+      "generator_params": {
+        "count": 10
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "log/json-lines-app-1000.log",
       "url": "https://loremfile.dev/log/json-lines-app-1000.log",
       "format": "log",
@@ -1352,6 +1603,100 @@
       "supersededBy": null
     },
     {
+      "path": "parquet/people-1000.parquet",
+      "url": "https://loremfile.dev/parquet/people-1000.parquet",
+      "format": "parquet",
+      "ext": "parquet",
+      "mime": "application/vnd.apache.parquet",
+      "bytes": 114469,
+      "sha256": "a1eda1fe1cdd535133b49af0a8fd63dbdd8e341759135366ef65872a665facad",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1,000 rows of the shared people dataset as Parquet, snappy-compressed, in a single row group. The same rows as every other people fixture.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "rows": 1000,
+        "columns": 14,
+        "row_groups": 1,
+        "compression": "snappy",
+        "column_names": [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "phone",
+          "street",
+          "city",
+          "country",
+          "birth_date",
+          "signup_at",
+          "balance",
+          "is_active",
+          "tags",
+          "bio"
+        ]
+      },
+      "generator": "columnar.parquet_people",
+      "generator_params": {
+        "rows": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "parquet/people-100k.parquet",
+      "url": "https://loremfile.dev/parquet/people-100k.parquet",
+      "format": "parquet",
+      "ext": "parquet",
+      "mime": "application/vnd.apache.parquet",
+      "bytes": 9756012,
+      "sha256": "341d373aa40ced687920b3e58d40d78bc7c8cd0d29ac1b9360c9bed5de1a7478",
+      "size_class": "free",
+      "phase": 1,
+      "description": "100,000 rows of the shared people dataset as Parquet, snappy-compressed, in a single row group. The same rows as every other people fixture.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "rows": 100000,
+        "columns": 14,
+        "row_groups": 1,
+        "compression": "snappy",
+        "column_names": [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "phone",
+          "street",
+          "city",
+          "country",
+          "birth_date",
+          "signup_at",
+          "balance",
+          "is_active",
+          "tags",
+          "bio"
+        ]
+      },
+      "generator": "columnar.parquet_people",
+      "generator_params": {
+        "rows": 100000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "sql/people-1000-inserts-portable.sql",
       "url": "https://loremfile.dev/sql/people-1000-inserts-portable.sql",
       "format": "sql",
@@ -1375,6 +1720,88 @@
         "max_line_bytes": 549
       },
       "generator": "data.sql_inserts",
+      "generator_params": {
+        "rows": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "sqlite/multi-table-with-fk-indexes-views.sqlite",
+      "url": "https://loremfile.dev/sqlite/multi-table-with-fk-indexes-views.sqlite",
+      "format": "sqlite",
+      "ext": "sqlite",
+      "mime": "application/vnd.sqlite3",
+      "bytes": 131072,
+      "sha256": "2cd9dd7ef369cfdbea875729d0bede93d029b10ba14006a596267a01ea5a7798",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Four tables with a foreign key from orders to people, two indexes, a view aggregating order totals, and an insert trigger. What a schema inspector should be tested against.",
+      "tags": [
+        "data",
+        "dataset-people",
+        "dataset-orders",
+        "dataset-products"
+      ],
+      "edge_case": false,
+      "props": {
+        "tables": 4,
+        "table_names": [
+          "audit",
+          "orders",
+          "people",
+          "products"
+        ],
+        "rows_total": 800,
+        "page_size": 4096,
+        "journal_mode": "delete",
+        "has_fts": false,
+        "views": 1,
+        "indexes": 2,
+        "triggers": 1
+      },
+      "generator": "columnar.sqlite_multi_table",
+      "generator_params": {
+        "people": 200,
+        "orders": 500
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "sqlite/people-1000.sqlite",
+      "url": "https://loremfile.dev/sqlite/people-1000.sqlite",
+      "format": "sqlite",
+      "ext": "sqlite",
+      "mime": "application/vnd.sqlite3",
+      "bytes": 270336,
+      "sha256": "8cdde9ab53003ef4b0c161acd2881f80569e0f50bb6f8484659258a8a982cbba",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A single table holding 1,000 rows of the shared people dataset. Page size 4096, journal mode DELETE, vacuumed so the file is byte-stable.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "tables": 1,
+        "table_names": [
+          "people"
+        ],
+        "rows_total": 1000,
+        "page_size": 4096,
+        "journal_mode": "delete",
+        "has_fts": false,
+        "views": 0,
+        "indexes": 0,
+        "triggers": 0
+      },
+      "generator": "columnar.sqlite_people",
       "generator_params": {
         "rows": 1000
       },

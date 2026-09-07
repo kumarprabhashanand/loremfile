@@ -2,6 +2,22 @@
   "catalog_version": "1.0.0",
   "formats": [
     {
+      "format": "arrow",
+      "count": 1,
+      "total_bytes": 260674,
+      "url": "https://loremfile.dev/arrow",
+      "index": "https://loremfile.dev/arrow/index.json",
+      "mime_default": "application/vnd.apache.arrow.file"
+    },
+    {
+      "format": "avro",
+      "count": 1,
+      "total_bytes": 109157,
+      "url": "https://loremfile.dev/avro",
+      "index": "https://loremfile.dev/avro/index.json",
+      "mime_default": "application/avro"
+    },
+    {
       "format": "bin",
       "count": 23,
       "total_bytes": 230715033,
@@ -18,6 +34,22 @@
       "mime_default": "text/csv"
     },
     {
+      "format": "geojson",
+      "count": 1,
+      "total_bytes": 35344,
+      "url": "https://loremfile.dev/geojson",
+      "index": "https://loremfile.dev/geojson/index.json",
+      "mime_default": "application/geo+json"
+    },
+    {
+      "format": "gpx",
+      "count": 1,
+      "total_bytes": 12873,
+      "url": "https://loremfile.dev/gpx",
+      "index": "https://loremfile.dev/gpx/index.json",
+      "mime_default": "application/gpx+xml"
+    },
+    {
       "format": "ini",
       "count": 1,
       "total_bytes": 468,
@@ -32,6 +64,22 @@
       "url": "https://loremfile.dev/json",
       "index": "https://loremfile.dev/json/index.json",
       "mime_default": "application/json"
+    },
+    {
+      "format": "kml",
+      "count": 1,
+      "total_bytes": 2394,
+      "url": "https://loremfile.dev/kml",
+      "index": "https://loremfile.dev/kml/index.json",
+      "mime_default": "application/vnd.google-earth.kml+xml"
+    },
+    {
+      "format": "kmz",
+      "count": 1,
+      "total_bytes": 790,
+      "url": "https://loremfile.dev/kmz",
+      "index": "https://loremfile.dev/kmz/index.json",
+      "mime_default": "application/vnd.google-earth.kmz"
     },
     {
       "format": "log",
@@ -58,12 +106,28 @@
       "mime_default": "application/x-ndjson"
     },
     {
+      "format": "parquet",
+      "count": 2,
+      "total_bytes": 9870481,
+      "url": "https://loremfile.dev/parquet",
+      "index": "https://loremfile.dev/parquet/index.json",
+      "mime_default": "application/vnd.apache.parquet"
+    },
+    {
       "format": "sql",
       "count": 1,
       "total_bytes": 429863,
       "url": "https://loremfile.dev/sql",
       "index": "https://loremfile.dev/sql/index.json",
       "mime_default": "application/sql"
+    },
+    {
+      "format": "sqlite",
+      "count": 2,
+      "total_bytes": 401408,
+      "url": "https://loremfile.dev/sqlite",
+      "index": "https://loremfile.dev/sqlite/index.json",
+      "mime_default": "application/vnd.sqlite3"
     },
     {
       "format": "toml",

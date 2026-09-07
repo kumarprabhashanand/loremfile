@@ -1,0 +1,17 @@
+# avro fixtures (docs/05 §3.7). Launch-set rows only; the rest are P1b.
+format: avro
+family: data
+mime: application/avro
+description: >-
+  The people dataset as Avro with an embedded schema, deflate-compressed.
+seo_title: "Sample Avro file for testing schema-aware pipelines — free, CC0"
+related: [parquet, arrow]
+fixtures:
+  - name: people-1000.avro
+    phase: 1
+    generator: columnar.avro_people
+    params: { rows: 1000 }
+    description: "1,000 rows of the shared people dataset as Avro, deflate-compressed, with the writer schema embedded in the file header."
+    tags: [data, dataset-people]
+    expect: { rows: 1000, columns: 14, compression: deflate }
+    size_class: free

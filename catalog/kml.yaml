@@ -1,0 +1,17 @@
+# kml fixtures (docs/05 §3.7). Launch-set rows only; the rest are P1b.
+format: kml
+family: data
+mime: application/vnd.google-earth.kml+xml
+description: >-
+  A KML document of Point placemarks.
+seo_title: "Sample KML file for testing mapping tools — free, CC0"
+related: [kmz, geojson, gpx]
+fixtures:
+  - name: placemarks-10.kml
+    phase: 1
+    generator: geo.kml_placemarks
+    params: { count: 10 }
+    description: "A KML 2.2 document with ten Point placemarks, each with a name and description."
+    tags: [data, geo]
+    expect: { placemarks: 10, root_element: kml }
+    size_class: free
