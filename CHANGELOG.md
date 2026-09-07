@@ -20,6 +20,17 @@ All notable changes to this project are documented here. The format follows
 - Pinned toolchain image: `tools/Dockerfile`, `tools/apt-versions.txt`,
   `tools/requirements.in`, `tools/requirements.lock` (89 packages, hashed),
   `tools/smoke.sh` and `tools/licences.py` (M1.2).
+- `.github/workflows/toolchain.yml` — builds the image, publishes it to GHCR, smoke-tests
+  the pushed digest and uploads a provenance artifact; `tools/TOOLCHAIN_DIGEST` records
+  the published reference (M1.3).
+- `tests/unit/test_requirements_lock.py` — asserts the lock is installable under
+  `pip install --require-hashes`.
+
+### Fixed
+
+- `tools/requirements.lock` left `pip` and `setuptools` unpinned, so the toolchain image
+  could not be built at all (`pip install --require-hashes` refused it). Regenerated with
+  `--allow-unsafe`; a unit test now checks the file itself.
 
 ### Changed
 
