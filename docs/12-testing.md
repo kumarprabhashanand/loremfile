@@ -36,7 +36,7 @@
 | Mode | Scope | Time |
 |---|---|---|
 | `smoke` | `/`, `/pdf`, `/pdf/`, `/manifest.json` count == local, one fixture per format (the smallest P1 fixture by bytes, ties by path order): HEAD status/length/type + header contract; OPTIONS preflight; Range on two files; `www` redirect | < 1 min |
-| `daily` | smoke + HEAD every fixture (parallel, ≤ 20 rps) + GET/hash for all < 1 MB + 5 % rotating sample of larger + site-key hashes against the checkout rebuild + expiry checks (RDAP, TLS, security.txt) | ≈ 3–5 min at launch (229 files), ≈ 6–10 min at 417 files; `health.yml`'s `timeout-minutes: 30` is the hard ceiling and must be raised before the catalog outgrows it |
+| `daily` | smoke + HEAD every fixture (parallel, ≤ 20 rps) + GET/hash for all < 1 MB + 5 % rotating sample of larger + site-key hashes against the checkout rebuild + expiry checks (RDAP, TLS, security.txt) | ≈ 3–5 min at launch (228 files), ≈ 6–10 min at 416 files; `health.yml`'s `timeout-minutes: 30` is the hard ceiling and must be raised before the catalog outgrows it |
 | `full` | daily + GET/hash of **every** fixture (≈ 0.6 GB at launch, ≈ 1.1 GB after P1b) | ≈ 15–30 min |
 
 Header contract checked per fixture (REQ-03/04/05): `content-type`, `content-length`, `cache-control`, `accept-ranges`, `x-content-type-options`, `cross-origin-resource-policy`, `x-robots-tag`, `access-control-allow-origin` (with `Origin`), CSP `sandbox` on markup fixtures and **absent** on PDFs/media; site pages have site CSP and `x-frame-options`, and no `x-robots-tag`. Also: encoded-path probes, warm-cache CORS probe, site-key integrity against a fresh `site build` of the checked-out commit; a 429 from our own rate limit is retried after 10 s.

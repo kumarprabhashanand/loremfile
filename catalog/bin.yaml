@@ -1,0 +1,222 @@
+# Raw byte fixtures (docs/05 §3.10).
+#
+# 23 rows: every phase-1 row in §3.10. `100mib.bin` is phase 2 and deliberately absent —
+# at 104,857,600 bytes it exceeds REQ-23's 100,000,000-byte cap, and `--all` selects
+# active fixtures regardless of phase, so carrying the row here would fail every full
+# build. It returns only if Q-22 raises the cap, which is a month-6 decision.
+format: bin
+family: binary
+mime: application/octet-stream
+description: >-
+  Raw byte blobs at exact sizes, for upload limits, range requests and checksum
+  plumbing. High-entropy, all-zero, all-ones and incrementing patterns.
+seo_title: "Sample binary files for testing uploads and size limits — free, CC0"
+related: [txt]  # edge joins this list when M3.8 adds catalog/edge.yaml
+fixtures:
+  - name: 1-byte.bin
+    phase: 1
+    generator: binary.zeros
+    params: { size: 1 }
+    description: "A single NUL byte. The smallest non-empty file, for minimum-size and off-by-one checks."
+    tags: [binary, boundary]
+    expect: { pattern: zeros }
+    size_class: exact
+    nominal_bytes: 1
+  - name: 1kb.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 1000 }
+    description: "Exactly 1,000 bytes of high-entropy SHAKE-256 output (decimal units). Incompressible, so transfer sizes are honest."
+    tags: [binary, sized]
+    expect: { pattern: shake256 }
+    size_class: exact
+    nominal_bytes: 1000
+  - name: 10kb.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 10000 }
+    description: "Exactly 10,000 bytes of high-entropy SHAKE-256 output (decimal units). Incompressible, so transfer sizes are honest."
+    tags: [binary, sized]
+    expect: { pattern: shake256 }
+    size_class: exact
+    nominal_bytes: 10000
+  - name: 100kb.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 100000 }
+    description: "Exactly 100,000 bytes of high-entropy SHAKE-256 output (decimal units). Incompressible, so transfer sizes are honest."
+    tags: [binary, sized]
+    expect: { pattern: shake256 }
+    size_class: exact
+    nominal_bytes: 100000
+  - name: 1mb.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 1000000 }
+    description: "Exactly 1,000,000 bytes of high-entropy SHAKE-256 output (decimal units). Incompressible, so transfer sizes are honest."
+    tags: [binary, sized]
+    expect: { pattern: shake256 }
+    size_class: exact
+    nominal_bytes: 1000000
+  - name: 10mb.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 10000000 }
+    description: "Exactly 10,000,000 bytes of high-entropy SHAKE-256 output (decimal units). Incompressible, so transfer sizes are honest."
+    tags: [binary, sized]
+    expect: { pattern: shake256 }
+    size_class: exact
+    nominal_bytes: 10000000
+  - name: 50mb.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 50000000 }
+    description: "Exactly 50,000,000 bytes of high-entropy SHAKE-256 output (decimal units). Incompressible, so transfer sizes are honest."
+    tags: [binary, sized]
+    expect: { pattern: shake256 }
+    size_class: exact
+    nominal_bytes: 50000000
+  - name: 100mb.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 100000000 }
+    description: "Exactly 100,000,000 bytes of high-entropy SHAKE-256 output (decimal units). Incompressible, so transfer sizes are honest."
+    tags: [binary, sized]
+    expect: { pattern: shake256 }
+    size_class: exact
+    nominal_bytes: 100000000
+  - name: 1kib.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 1024 }
+    description: "Exactly 1,024 bytes of high-entropy SHAKE-256 output (binary units). Incompressible, so transfer sizes are honest."
+    tags: [binary, sized]
+    expect: { pattern: shake256 }
+    size_class: exact
+    nominal_bytes: 1024
+  - name: 1mib.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 1048576 }
+    description: "Exactly 1,048,576 bytes of high-entropy SHAKE-256 output (binary units). Incompressible, so transfer sizes are honest."
+    tags: [binary, sized]
+    expect: { pattern: shake256 }
+    size_class: exact
+    nominal_bytes: 1048576
+  - name: 10mib.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 10485760 }
+    description: "Exactly 10,485,760 bytes of high-entropy SHAKE-256 output (binary units). Incompressible, so transfer sizes are honest."
+    tags: [binary, sized]
+    expect: { pattern: shake256 }
+    size_class: exact
+    nominal_bytes: 10485760
+  - name: 1mb-minus-1.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 999999 }
+    description: "Exactly one byte under 1mb, for testing an upload limit's boundary rather than its middle."
+    tags: [binary, boundary, sized]
+    expect: { pattern: shake256 }
+    size_class: boundary
+    nominal_bytes: 1000000
+  - name: 1mb-plus-1.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 1000001 }
+    description: "Exactly one byte over 1mb, for testing an upload limit's boundary rather than its middle."
+    tags: [binary, boundary, sized]
+    expect: { pattern: shake256 }
+    size_class: boundary
+    nominal_bytes: 1000000
+  - name: 10mb-minus-1.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 9999999 }
+    description: "Exactly one byte under 10mb, for testing an upload limit's boundary rather than its middle."
+    tags: [binary, boundary, sized]
+    expect: { pattern: shake256 }
+    size_class: boundary
+    nominal_bytes: 10000000
+  - name: 10mb-plus-1.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 10000001 }
+    description: "Exactly one byte over 10mb, for testing an upload limit's boundary rather than its middle."
+    tags: [binary, boundary, sized]
+    expect: { pattern: shake256 }
+    size_class: boundary
+    nominal_bytes: 10000000
+  - name: 1mib-minus-1.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 1048575 }
+    description: "Exactly one byte under 1mib, for testing an upload limit's boundary rather than its middle."
+    tags: [binary, boundary, sized]
+    expect: { pattern: shake256 }
+    size_class: boundary
+    nominal_bytes: 1048576
+  - name: 1mib-plus-1.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 1048577 }
+    description: "Exactly one byte over 1mib, for testing an upload limit's boundary rather than its middle."
+    tags: [binary, boundary, sized]
+    expect: { pattern: shake256 }
+    size_class: boundary
+    nominal_bytes: 1048576
+  - name: 10mib-minus-1.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 10485759 }
+    description: "Exactly one byte under 10mib, for testing an upload limit's boundary rather than its middle."
+    tags: [binary, boundary, sized]
+    expect: { pattern: shake256 }
+    size_class: boundary
+    nominal_bytes: 10485760
+  - name: 10mib-plus-1.bin
+    phase: 1
+    generator: binary.shake
+    params: { size: 10485761 }
+    description: "Exactly one byte over 10mib, for testing an upload limit's boundary rather than its middle."
+    tags: [binary, boundary, sized]
+    expect: { pattern: shake256 }
+    size_class: boundary
+    nominal_bytes: 10485760
+  - name: zeros-1mb.bin
+    phase: 1
+    generator: binary.zeros
+    params: { size: 1000000 }
+    description: "One megabyte of NUL bytes. Compresses to almost nothing, which is the point."
+    tags: [binary, sized]
+    expect: { pattern: zeros }
+    size_class: exact
+    nominal_bytes: 1000000
+  - name: zeros-10mb.bin
+    phase: 1
+    generator: binary.zeros
+    params: { size: 10000000 }
+    description: "Ten megabytes of NUL bytes, for compression and sparse-file behaviour."
+    tags: [binary, sized]
+    expect: { pattern: zeros }
+    size_class: exact
+    nominal_bytes: 10000000
+  - name: ones-1mb.bin
+    phase: 1
+    generator: binary.ones
+    params: { size: 1000000 }
+    description: "One megabyte of 0xFF bytes."
+    tags: [binary, sized]
+    expect: { pattern: ones }
+    size_class: exact
+    nominal_bytes: 1000000
+  - name: incrementing-1mb.bin
+    phase: 1
+    generator: binary.incrementing
+    params: { size: 1000000 }
+    description: "One megabyte of 0x00-0xFF repeating. Every byte value appears and any offset is obvious by eye, which makes range requests easy to check."
+    tags: [binary, sized]
+    expect: { pattern: incrementing }
+    size_class: exact
+    nominal_bytes: 1000000

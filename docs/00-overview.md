@@ -75,4 +75,4 @@ Existing "sample file" websites are ad-funded (filesamples.com, file-examples.co
 | **Toolchain image** | The pinned Docker image in which all generation runs, for reproducibility. |
 | **Edge case** | A fixture that is deliberately invalid, truncated, mismatched or unusual. Lives under `edge/` if it is not a valid instance of its format. |
 | **Desired state** | JSON files under `infra/` describing every Cloudflare setting; applied and audited by scripts. |
-| **Phase** | P1 = the launch set (the explicit list in `05` §9, 229 files); P1b = the remaining catalog rows marked phase 1, added in batches right after launch; P2–P4 = roadmap. Each fixture in the catalog carries its phase. |
+| **Phase** | P1 = the launch set (the explicit list in `05` §9, 228 files); P1b = the remaining catalog rows marked phase 1, added in batches right after launch; P2–P4 = roadmap. Each fixture in the catalog carries its phase. |

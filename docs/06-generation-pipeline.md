@@ -126,6 +126,8 @@ def basic(ctx: GeneratorContext, *, pages: int, page_size: str = "A4",
 
 `loremfile build` resolves `depends_on` into a DAG and generates in topological order, parallelising independent fixtures across `-j N` workers (default `os.cpu_count()`); generators marked `parallel_safe=False` run alone. Dataset generation runs once per process and is cached in memory.
 
+**As implemented in M3.1, generation is sequential and `-j` is not yet accepted.** The determinism guard patches process-global state — `os.urandom`, the clock, the `random` module — so two generators cannot run concurrently *in one process* without corrupting each other's stream; threads are therefore not an option and the parallel path has to be process-based. It is deferred to **M3.6**, where media encoding makes wall-clock time actually matter and separate processes make the patches safe again. The M3.1 set (43 fixtures, 243 MB) builds in about 8 seconds, so there is nothing to gain before then.
+
 **What gets generated (selection rule):**
 
 | Invocation | Selection |
@@ -238,11 +240,11 @@ Without Docker, most text/data/image/office generators run on a plain Python 3.1
 
 | Step | Budget (GitHub-hosted ubuntu runner, 4 vCPU) |
 |---|---|
-| Full phase-1 generation (≈ 417 files, ≈ 1.06 GB; the 229-file launch set is ≈ 620 MB of it) | ≤ 25 min (video ≈ 12 min, audio ≈ 3 min, data ≈ 4 min, rest ≈ 3 min) |
+| Full phase-1 generation (≈ 416 files, ≈ 0.96 GB; the 228-file launch set is ≈ 515 MB of it) | ≤ 25 min (video ≈ 12 min, audio ≈ 3 min, data ≈ 4 min, rest ≈ 3 min) |
 | Validation | ≤ 5 min |
 | Incremental PR build (typical: < 10 new fixtures) | ≤ 5 min |
 | Site build | ≤ 30 s |
-| Upload (≈ 620 MB launch set, first time) | ≤ 10 min (multipart, 16 MiB parts, 8 threads) |
+| Upload (≈ 515 MB launch set, first time) | ≤ 10 min (multipart, 16 MiB parts, 8 threads) |
 
 If the full build exceeds budget, split video generation into a matrix job (see `09` §3.1) before trimming scope.
 

@@ -1,0 +1,26 @@
+# Log fixtures (docs/05 §3.6).
+format: log
+family: text
+mime: text/plain
+description: >-
+  Log files in the two shapes tooling actually meets: nginx combined access logs
+  and one-JSON-object-per-line application logs.
+seo_title: "Sample log files for testing parsers and shippers — free, CC0"
+related: [txt]
+fixtures:
+  - name: nginx-access-1000-lines.log
+    phase: 1
+    generator: text.nginx_access_log
+    params: { count: 1000 }
+    description: "1,000 nginx combined-format access lines with fixed timestamps and RFC 5737 documentation IP addresses."
+    tags: [text, data]
+    expect: { lines: 1000, line_ending: lf }
+    size_class: free
+  - name: json-lines-app-1000.log
+    phase: 1
+    generator: text.json_lines_log
+    params: { count: 1000 }
+    description: "1,000 application log records, one JSON object per line."
+    tags: [text, data]
+    expect: { lines: 1000, line_ending: lf }
+    size_class: free

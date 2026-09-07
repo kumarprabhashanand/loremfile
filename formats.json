@@ -1,0 +1,45 @@
+{
+  "catalog_version": "1.0.0",
+  "formats": [
+    {
+      "format": "bin",
+      "count": 23,
+      "total_bytes": 230715033,
+      "url": "https://loremfile.dev/bin",
+      "index": "https://loremfile.dev/bin/index.json",
+      "mime_default": "application/octet-stream"
+    },
+    {
+      "format": "ini",
+      "count": 1,
+      "total_bytes": 468,
+      "url": "https://loremfile.dev/ini",
+      "index": "https://loremfile.dev/ini/index.json",
+      "mime_default": "text/plain"
+    },
+    {
+      "format": "log",
+      "count": 2,
+      "total_bytes": 277759,
+      "url": "https://loremfile.dev/log",
+      "index": "https://loremfile.dev/log/index.json",
+      "mime_default": "text/plain"
+    },
+    {
+      "format": "md",
+      "count": 1,
+      "total_bytes": 4096,
+      "url": "https://loremfile.dev/md",
+      "index": "https://loremfile.dev/md/index.json",
+      "mime_default": "text/markdown"
+    },
+    {
+      "format": "txt",
+      "count": 16,
+      "total_bytes": 23664843,
+      "url": "https://loremfile.dev/txt",
+      "index": "https://loremfile.dev/txt/index.json",
+      "mime_default": "text/plain"
+    }
+  ]
+}
