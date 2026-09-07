@@ -132,6 +132,22 @@ Read the failing step. `manifest check` hash diff → a generator drifted for a 
 2b. A **new format** also needs a bucket-lock rule: `loremfile infra locks --write` updates `infra/r2-locks.json`, and the owner applies it once with `wrangler r2 bucket lock set` (T3) before the deploy — add the owner step to the PR description.
 3. Update `CHANGELOG.md`. Open a PR; CI must be green; merge; deploy runs; tag a release when convenient.
 
+### 7.10 Data-subject request (access, erasure, objection, or the same right under another law)
+
+1. **We hold nothing but the email thread the requester started** — no accounts, no cookies, no analytics identifiers and no server logs (`13` §3a). Search the mailbox for their address and check the retention schedule in `13` §3a; that is the whole search.
+2. **Cloudflare holds the edge request logs** as our processor and we cannot query them. If the request concerns those, ask the requester for the approximate time and the URL, forward the request to Cloudflare, and tell the requester you have done so and when.
+3. **Reply within one month** using the template below, then record the request, what was held and the reply date in a private GitHub security advisory draft (never in a public issue — the request itself is personal data). If the requester asks for erasure of the thread, delete it and say so.
+
+Response template:
+
+> Thank you for your request of {date}.
+>
+> loremfile.dev has no accounts, sets no cookies, runs no analytics and keeps no server logs, so the only personal data we hold about you is this email thread — your address and what you wrote — which we delete no later than 24 months after the last message, or sooner if you ask.
+>
+> Requests to the site are delivered by Cloudflare, Inc., which processes IP addresses and request metadata as our processor; we have no access to those raw logs. {If applicable: we forwarded your request to Cloudflare on {date}.}
+>
+> Our privacy notice is at https://loremfile.dev/legal/privacy. You may complain to your supervisory authority — in the EU the one where you live or work, in the UK the Information Commissioner's Office.
+
 ## 8. `ops-log.md` format (on the `ops-log` branch)
 
 ```

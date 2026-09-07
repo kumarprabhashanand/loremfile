@@ -17,7 +17,7 @@ The site is static HTML rendered at build time from the manifest and stored in t
 | `/docs/contributing` | Rendered `CONTRIBUTING.md` | Links to the fixture-request issue template |
 | `/docs/security-policy` | `site/content/pages/security-policy.md` = `10` §7 verbatim | Referenced by security.txt |
 | `/docs` and `/legal` | Index pages listing their children (so `/docs/` and `/legal/` resolve after the trailing-slash rewrite) | |
-| `/legal/license`, `/legal/terms`, `/legal/privacy` | Legal | Full texts in `13` §1.1, §2, §3 |
+| `/legal/license`, `/legal/terms`, `/legal/privacy` | Legal | Full texts in `13` §1.1, §2, §3. `/legal/privacy` **cannot be rendered until Q-07 and Q-21 are answered** — it still carries the `<CONTACT_EMAIL>` and `<CONTROLLER>` placeholders (`13` §3, `18`) |
 | `/changelog` | Catalog versions | From `CHANGELOG.md` |
 | `/status` | Static page explaining that a daily health check runs and linking to the open `health` issues in GitHub | No dynamic status (nothing to host it) |
 
@@ -67,4 +67,4 @@ Then: format grid → "Popular right now" (static list) → "For agents" box lin
 
 ## 7. Analytics
 
-None on the page. Usage is read from Cloudflare zone analytics (request counts, bandwidth, cache ratio, top paths, referrers) which need no JavaScript and set no cookies. This keeps the privacy policy one paragraph and the CSP strict.
+None on the page. Usage is read from Cloudflare zone analytics (request counts, bandwidth, cache ratio, top paths, referrers) which need no JavaScript and set no cookies. This keeps the CSP strict and the privacy notice short — but not empty: Cloudflare still processes IP addresses and request metadata as our processor to deliver and protect the service, which `13` §3 sets out in full.

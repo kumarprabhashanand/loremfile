@@ -4,7 +4,7 @@ Seven milestones. Each task has an ID, an owner type (**O** = owner/human must d
 
 Assumed answers to open questions (see `18`): domain `loremfile.dev`; repo `github.com/<OWNER>/loremfile` under the owner's account; code MIT; fixtures CC0; no analytics; no AWS/Vercel; bucket location `auto`. **Placeholders:** `<OWNER>` and the contact mailbox can stay as placeholders through M1 and M3 (they live in `config.py`, the workflows, `security.txt` and `llms.txt` templates); M2 and M5 need the real values. M0 can happen in parallel with M1/M3 — only M2 and M5 wait for it.
 
-## M0 — Owner setup (O, 1.5 h) — prerequisites for everything else
+## M0 — Owner setup (O, 1.75 h) — prerequisites for everything else
 
 | ID | Task | DoD |
 |---|---|---|
@@ -13,6 +13,7 @@ Assumed answers to open questions (see `18`): domain `loremfile.dev`; repo `gith
 | M0.3 | Create the GitHub repository `<OWNER>/loremfile` (public, empty) and give the engineer/agent admin | Agent can push |
 | M0.4 | Enable R2; run `08` §2 steps 6–10b (bucket, apex custom domain, CORS, **bucket lock rules from `infra/r2-locks.json`** — note whether the API accepts ≈ 65 rules, list the token permission groups, delete T3, create T1/T2/T4) and paste secrets/variables into the GitHub `production` environment | `curl -sI https://loremfile.dev/` returns a Cloudflare 404; secrets present; lock rules listed in the bucket settings |
 | M0.5 | Email Routing (`hello@`, `security@`, `dmarc@`) and notifications | Test mail received |
+| M0.6 | Accept the Cloudflare Customer Data Processing Addendum for the account and record it: note the version and effective date actually in force at acceptance and the acceptance date, then replace the `<DPA_ACCEPTED_DATE>` placeholder in `13` §3a in a PR | `13` §3a names a version, an effective date and an acceptance date; no placeholder left |
 
 If the owner prefers, M0.4 can be executed by the agent in a session where the owner has logged in to wrangler (`npx wrangler login`), which avoids handling T3 manually.
 

@@ -68,4 +68,4 @@ loremfile/                      # public GitHub repository <OWNER>/loremfile
 
 ## Placeholders you must fill in
 
-`<OWNER>` (GitHub owner), the contact mailbox, `<ACCOUNT_ID>` and `<ZONE_ID>` appear in `config.py`, the workflows, `security.txt`, `llms.txt` and the legal pages. M1 and M3 can be built with the placeholders in place; replace them with `grep -rn '<OWNER>'` before M2 (infrastructure) and M5 (first deploy). The open questions that decide them are Q-03 and Q-07 in `18-open-questions.md`.
+`<OWNER>` (GitHub owner), the contact mailbox, `<ACCOUNT_ID>` and `<ZONE_ID>` appear in `config.py`, the workflows, `security.txt`, `llms.txt` and the legal pages. M1 and M3 can be built with the placeholders in place; replace them with `grep -rn '<OWNER>'` before M2 (infrastructure) and M5 (first deploy). `<CONTROLLER>`, `<CONTACT_EMAIL>` and `<DPA_ACCEPTED_DATE>` appear in the legal texts in `13-legal-and-policy.md` §3 and §3a and block M4.2 rather than M2. The open questions that decide them are Q-03, Q-07 and Q-21 in `18-open-questions.md`; `<DPA_ACCEPTED_DATE>` is filled in by M0.6.

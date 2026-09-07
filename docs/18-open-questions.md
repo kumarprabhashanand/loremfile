@@ -24,6 +24,9 @@ Each question lists the default assumed by this documentation. If the owner says
 | Q-18 | On a legal takedown, re-publish GitHub Release assets without the object and remove the generator parameters? | Yes | Completeness of removals |
 | Q-19 | Is the launch set in `05` §9 the right 229 fixtures, or should specific fixtures be swapped in or out? | As listed | Launch scope (ADR-024) |
 | Q-20 | Is the account pay-as-you-go (payment method on file)? If yes, the Usage Based Billing notification may be available as a second cost signal | Assume not; the automated check is the control | Cost detection |
+| Q-21 | Privacy notice: name the controller publicly (legal name and a postal address, which Art. 13 GDPR expects) or publish a contact address only and give the identity on request? | **No default** — the owner must answer | `13` §3/§3a cannot be rendered; blocks M4.2 |
+
+**Q-07 and Q-21 have no working default.** Every other question here falls back to the documented default if the owner says nothing; these two cannot. `13` §3 is a published legal text — an unreachable contact address or a missing controller identity is a defect in itself — so it keeps the `<CONTACT_EMAIL>` and `<CONTROLLER>` placeholders and **M4.2 is blocked** until both are answered. They are listed as open blockers in the "Implementation status" issue every session.
 
 ## Questions a reviewer may ask, answered
 

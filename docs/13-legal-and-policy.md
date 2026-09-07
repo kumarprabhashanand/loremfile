@@ -34,9 +34,114 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 ## 3. Privacy notice (`/legal/privacy`) — full text
 
 > **Privacy**
-> loremfile.dev sets no cookies, runs no analytics scripts and has no accounts. Requests are served by Cloudflare, which processes IP addresses and request metadata to deliver and protect the service; Cloudflare's privacy policy applies to that processing. We look at aggregated statistics (request counts, countries, referrers) that Cloudflare provides; these do not identify individuals. If you email us, we keep the email for as long as needed to answer. No data is sold or shared.
+>
+> **Who is responsible.** `<CONTROLLER>` is the controller for the personal data described
+> here. Contact: `<CONTACT_EMAIL>`.
+>
+> **What is processed, and by whom.** loremfile.dev has no server, no accounts, no logins,
+> no cookies and no analytics scripts. Every request is answered by Cloudflare's network in
+> front of a Cloudflare R2 bucket. To deliver and protect the service, Cloudflare processes:
+>
+> - your **IP address**;
+> - **request metadata**: timestamp, requested URL, HTTP method and status code, bytes
+>   served, user agent, referrer, TLS and protocol details, and the approximate country
+>   derived from the IP address.
+>
+> An IP address is personal data. Cloudflare, Inc. does this as our **processor** under the
+> Cloudflare Customer Data Processing Addendum; we are the controller. Cloudflare's own
+> privacy policy describes what it does with that data as a controller for its own security
+> purposes.
+>
+> **Legal basis.** Article 6(1)(f) GDPR — our legitimate interests in delivering the file you
+> asked for, keeping the service available, and protecting it from abuse (rate limiting,
+> blocking attack traffic). There is no profiling, no advertising, no automated
+> decision-making and no tracking across sites. You may object; see **Your rights**.
+>
+> **What the operator sees.** **We retain no server logs — there is no server.** We read only
+> aggregated statistics that Cloudflare produces: request counts, bandwidth, cache hit ratio,
+> countries, referrer hosts, top paths and status codes. Those aggregates identify nobody and
+> we do not try to re-identify anyone from them.
+>
+> **Email.** If you write to us we process your address and whatever you put in the message,
+> in order to answer you (Art. 6(1)(f); Art. 6(1)(c) where a legal notice obliges us to act).
+> We delete ordinary correspondence **no later than 24 months** after the last message in the
+> thread. Records of legal notices, takedown requests and law-enforcement requests are kept
+> for **6 years** after the request is resolved, so we can show why a file was removed.
+>
+> **Sharing.** Nothing is sold, rented, or shared for advertising — ever. The only recipient
+> of request data is Cloudflare, Inc. as our processor. If you choose to open an issue or a
+> pull request, GitHub, Inc. processes what you write there under its own terms and it is
+> public.
+>
+> **International transfers.** Cloudflare is a US company and serves requests from data
+> centres worldwide, so this data leaves your country. Cloudflare certifies under the
+> EU-U.S. Data Privacy Framework, its UK extension and the Swiss-U.S. Data Privacy Framework.
+> Where the Framework does not cover a transfer, the Cloudflare Customer DPA incorporates the
+> EU Standard Contractual Clauses (Module Two, controller to processor), amended by the UK
+> Addendum and the Swiss modifications. Details in §3a.
+>
+> **Your rights.** Under the GDPR and the UK GDPR you have the right of access,
+> rectification, erasure, restriction and portability, and the right to object to processing
+> based on legitimate interests. Write to `<CONTACT_EMAIL>`; we answer within one month.
+> In practice we hold nothing that identifies you except an email thread you started, so an
+> access or erasure request is normally answered with exactly that. For the data Cloudflare
+> processes on our behalf, send us the approximate time and the URL and we will pass the
+> request to Cloudflare. You may also complain to your supervisory authority — in the EU the
+> one where you live or work, in the UK the Information Commissioner's Office (ico.org.uk).
+>
+> **Changes.** This notice lives in the project's public repository; its version history is
+> the changelog.
 
-Rationale: no personal data is collected by us; no consent banner is required; GDPR/CCPA obligations are limited to Cloudflare's processor role and the mailbox.
+**Placeholders (blocking).** `<CONTROLLER>` (Q-21: named controller vs contact address only)
+and `<CONTACT_EMAIL>` (Q-07: which mailbox `hello@`/`security@` route to; the documents
+assume `hello@loremfile.dev`) are **not yet decided by the owner**. M4.2 must not render
+`/legal/privacy` while either placeholder is unresolved — an unreachable contact address or
+an absent controller identity is itself a defect under Art. 13 GDPR. Both are tracked as
+open blockers in the "Implementation status" issue.
+
+## 3a. Compliance posture
+
+**Processor agreement.** Cloudflare Customer Data Processing Addendum, **version 6.4,
+effective 2026-04-03** (https://www.cloudflare.com/dpa). It forms part of the Self-Serve
+Subscription Agreement, states that "the Customer is the Controller … and Cloudflare is a
+Processor", and requires affirmative acceptance by someone with authority to bind the
+customer. Accepted by the owner on `<DPA_ACCEPTED_DATE>` — **M0.6** records the date and the
+version actually in force at that moment and replaces this placeholder. (Verified
+2026-09-07: version, effective date, controller/processor roles, transfer clauses and the
+acceptance warranty read from the DPA text.)
+
+**Record of processing activities (GDPR Art. 30(1)).** This is the whole record; there is
+nothing else.
+
+| # | Art. 30(1) item | Entry |
+|---|---|---|
+| 1 | Controller and contact details | `<CONTROLLER>`, `<CONTACT_EMAIL>` (Q-21, Q-07) |
+| 2 | Joint controller, DPO, EU/UK representative | None. No DPO required (no large-scale or special-category processing, no systematic monitoring); Art. 27 representative not appointed — see §8 |
+| 3 | Processing activity | Delivery of a public, read-only static file service (loremfile.dev), and the contact mailbox |
+| 4 | Purposes | Serve the requested file; keep the service available; detect and mitigate abuse; answer correspondence and legal notices |
+| 5 | Categories of data subject | Visitors and automated clients of loremfile.dev; people who email us or open a GitHub issue |
+| 6 | Categories of personal data | IP address; request metadata (timestamp, URL, method, status, bytes, user agent, referrer, TLS/protocol, derived country); email address and message content. No special categories (Art. 9), no criminal-offence data (Art. 10), no data about children sought or knowingly processed |
+| 7 | Categories of recipient | Cloudflare, Inc. — processor (CDN, R2 storage, DNS, WAF, Email Routing) and its sub-processors per its published list; GitHub, Inc. — issues and pull requests the person chooses to open, public by design |
+| 8 | Third-country transfers | United States and Cloudflare's global network. Safeguards: EU-U.S. DPF, UK extension and Swiss-U.S. DPF; EU SCCs Module Two with the UK Addendum and Swiss modifications where the DPF does not apply (Cloudflare Customer DPA §6) |
+| 9 | Erasure time limits | Operator: **no server logs are kept at all**. Email: 24 months after the last message. Legal-notice records: 6 years after resolution. Cloudflare-side edge logs: Cloudflare's own retention policy — the operator has no access to raw logs and stores none |
+| 10 | Security measures (Art. 32) | No origin server and no public write path; TLS-only with HSTS; R2 bucket locks make published objects undeletable and unoverwritable; credentials exist only in the GitHub `production` environment and never on a personal machine (`10` §2); hardware-key 2FA on the Cloudflare and GitHub accounts; least-privilege scoped API tokens with expiry dates and quarterly rotation (`11` §7.3); daily automated integrity and health checks; the published files themselves contain no personal data (§5) |
+
+**Retention schedule.**
+
+| Data | Held by | Retention |
+|---|---|---|
+| IP address and request metadata | Cloudflare (processor) | Cloudflare's own retention policy; the operator neither receives nor stores raw logs |
+| Aggregated analytics (counts, bandwidth, hit ratio, countries, referrers, top paths) | Cloudflare dashboard; totals copied into `ops-log.md` | Aggregated, not personal data; the ops-log line is kept indefinitely |
+| Email correspondence | The owner's mailbox, via Cloudflare Email Routing | Deleted no later than 24 months after the last message in the thread |
+| Legal notices, takedown and law-enforcement requests | Private GitHub security advisory draft plus the mailbox | 6 years after the request is resolved |
+| GitHub issues and pull requests | GitHub, public | Public and permanent by design; created voluntarily by the person |
+| Published fixtures | R2 bucket | Permanent by design; synthetic, and §5 forbids content identifying a real person |
+
+**Transfer mechanism, in one line.** DPF first; EU SCCs Module Two (with the UK Addendum and
+the Swiss modifications) as the fallback — both supplied by the Cloudflare Customer DPA, no
+separate paperwork on our side.
+
+**Handling a request.** Runbook `11` §7.10.
 
 ## 4. Acceptable use for the project itself
 
@@ -66,11 +171,28 @@ The maintainers will not: add tracking, add ads, sell or paywall access, host an
 
 - Requests arrive via `hello@`/`security@` or GitHub issues. The project hosts no user content, so DMCA-style notices should be rare; if one arrives, verify it identifies a specific URL and a plausible right, then follow runbook §7.8, which removes the object from R2, from every GitHub Release asset, and removes the generator parameters (and generator code if it embodies the content) so the bytes cannot be trivially regenerated. Respond within 7 days.
 - Abuse reports about third parties hotlinking fixtures: the fixtures are inert; no action unless a court order or Cloudflare requires it.
-- Law-enforcement requests: forward to Cloudflare's processes as appropriate; the project holds no user data.
+- Law-enforcement requests: forward to Cloudflare's processes as appropriate. The project has no accounts and keeps no server logs, so it holds nothing to disclose; Cloudflare holds the edge request logs as our processor (§3a).
+- Data-subject requests (access, erasure, objection) follow runbook §7.10, not this procedure.
 
-## 8. Jurisdiction and export
+## 8. Jurisdiction, export and country-specific posture
 
-The service is content-neutral, hosts synthetic files, and uses no cryptographic export-controlled software beyond standard TLS. No known country-specific restriction applies. If a jurisdiction blocks Cloudflare or `.dev`, nothing can be done at this budget.
+The service is content-neutral, hosts synthetic files, and uses no cryptographic
+export-controlled software beyond standard TLS. If a jurisdiction blocks Cloudflare or
+`.dev`, nothing can be done at this budget.
+
+The project's own assessment of the regimes that could reach a free, non-commercial,
+globally reachable file service — not legal advice, reviewed annually and whenever the
+service changes character (for example if it ever charges money or adds accounts):
+
+| Regime | In scope? | Posture |
+|---|---|---|
+| **EU GDPR / UK GDPR** | Yes, in principle — visitors in the EU/UK and their IP addresses | Notice in §3, Art. 30 record and DPA in §3a, legal basis Art. 6(1)(f), rights procedure in `11` §7.10. No establishment in the EU or UK. **Art. 27 representative not appointed**: no special-category data, no behavioural monitoring for profiling, no server logs retained, and the only processing is delivery metadata handled by the processor. Revisit if the service becomes commercial or adds any tracking |
+| **CCPA / CPRA (California)** | No | The operator is not a "business" under Cal. Civ. Code §1798.140(d): it is not operated for profit and is below all three thresholds — annual gross revenue over USD 25 M (as adjusted for inflation); buying, selling or sharing the personal information of 100,000+ consumers or households; or 50 % or more of revenue from selling or sharing personal information. Nothing is sold or shared, so no "Do Not Sell or Share" link is required |
+| **India DPDP Act 2023** | Possibly, extraterritorially (processing connected with offering services to data principals in India) | Only delivery metadata, handled by the processor; no server logs retained; no advertising, no profiling. Data-principal requests are handled by the same procedure as GDPR requests (`11` §7.10). Reassess as the DPDP Rules' obligations come fully into force |
+| **Brazil LGPD** | Possibly, extraterritorially | Same posture as GDPR: legitimate-interests basis (Art. 7 IX), no logs retained, same rights procedure and the same contact address |
+| **Canada PIPEDA** | No | PIPEDA governs personal information collected in the course of **commercial activity**; this service is free, sells nothing and carries no advertising |
+| **China PIPL** | Possibly, extraterritorially | The service is not targeted at, marketed in, or localised for China, does no profiling, and no local representative is filed. Revisit only if that changes |
+| **European Accessibility Act** (Directive (EU) 2019/882, applicable since 28 June 2025) | Not as a covered service | The site is not e-commerce, banking, transport, telecoms, e-books or any other Annex I service, and is in any case provided by a micro-enterprise (fewer than 10 people, turnover ≤ EUR 2 M), which Art. 4(5) exempts from the service obligations. WCAG 2.1 AA remains the target regardless (§9) |
 
 ## 9. Accessibility statement (`/docs/faq#accessibility`)
 

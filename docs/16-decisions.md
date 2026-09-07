@@ -84,6 +84,7 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
 ## ADR-017 No analytics script; usage from Cloudflare zone analytics
 - **Context**: privacy, CSP strictness, no cookie banner.
 - **Decision**: no JS analytics; weekly numbers copied into `ops-log.md`.
+- **Consequences**: no consent banner is needed because nothing is stored on the visitor's device and no tracking happens — not because no personal data is processed. Cloudflare processes IP addresses and request metadata as our processor, so the controller obligations in `13` §3/§3a still apply.
 
 ## ADR-018 Loremfile Sans is a generated font, not a third-party font
 - **Context**: redistributing third-party fonts as CC0 fixtures is impossible; a font fixture is still needed.
