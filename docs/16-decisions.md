@@ -115,9 +115,9 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
 - **Decision**: one indefinite lock rule per `{format}/` prefix, applied by the owner with an admin token (`infra/r2-locks.json`); site keys and `_probe/` stay outside the locks. Takedowns lift one rule temporarily.
 - **Consequences**: a leaked T2 can add fixtures and rewrite site pages (caught by the daily integrity check) but cannot alter or remove published fixtures; new formats need an owner step; the lock-rule count limit is verified in M0.4 (RISK-20).
 
-## ADR-024 Launch with an explicit 229-fixture set; the rest of phase 1 follows in batches
-- **Context**: the full phase-1 catalog is ≈ 417 files, and building ~50 generator/validator pairs to that breadth before launch would take a quarter at the offered cadence.
-- **Decision**: `05` §9 lists the launch set (P1, 229 files, ≈ 620 MB); the remaining 188 phase-1 rows are P1b (M7). Every format family is represented at launch so the URL scheme, headers and site are complete from day one.
+## ADR-024 Launch with an explicit 228-fixture set; the rest of phase 1 follows in batches
+- **Context**: the full phase-1 catalog is ≈ 416 files, and building ~50 generator/validator pairs to that breadth before launch would take a quarter at the offered cadence.
+- **Decision**: `05` §9 lists the launch set (P1, 228 files, ≈ 515 MB); the remaining 188 phase-1 rows are P1b (M7). Every format family is represented at launch so the URL scheme, headers and site are complete from day one.
 - **Consequences**: earlier launch and feedback; some search-demand fixtures arrive later; the immutability rules apply from the first deploy.
 
 ## ADR-025 Cost control is an automated analytics read, not a billing alert

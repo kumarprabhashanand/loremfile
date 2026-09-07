@@ -22,10 +22,12 @@ Each question lists the default assumed by this documentation. If the owner says
 | Q-16 | Accept R2 bucket locks with the takedown ceremony (owner lifts one lock rule with an admin token, then re-adds it)? | Yes (ADR-023) | Immutability guarantee |
 | Q-17 | Should HTML/SVG fixtures render their own images, styles and media when opened directly, while staying script-free? | Yes (ADR-011 CSP allow-list) | Usability of markup fixtures |
 | Q-18 | On a legal takedown, re-publish GitHub Release assets without the object and remove the generator parameters? | Yes | Completeness of removals |
-| Q-19 | Is the launch set in `05` §9 the right 229 fixtures, or should specific fixtures be swapped in or out? | As listed | Launch scope (ADR-024) |
+| Q-19 | Is the launch set in `05` §9 the right 228 fixtures, or should specific fixtures be swapped in or out? | As listed | Launch scope (ADR-024) |
 | Q-20 | Is the account pay-as-you-go (payment method on file)? If yes, the Usage Based Billing notification may be available as a second cost signal | Assume not; the automated check is the control | Cost detection |
 | Q-21 | Privacy notice: name the controller publicly (legal name and a postal address, which Art. 13 GDPR expects) or publish a contact address only and give the identity on request? | **No default** — the owner must answer | `13` §3/§3a cannot be rendered; blocks M4.2 |
-| Q-22 | `bin/100mib.bin` is 104,857,600 bytes, over REQ-23's 100,000,000 cap, but `05` §3.10 lists it as phase 1 and `06` §3 says `allow_large` is never true in P1. Defer it to phase 2 (launch set becomes 228 files), or grant it `allow_large` with an ADR relaxing REQ-23 to the binary-unit 100 MiB? | **No default** — a MUST requirement and the catalog disagree | Launch scope, or a MUST requirement. The catalog holds it at phase 2 meanwhile |
+| Q-22 | Should `MAX_FIXTURE_BYTES` become 104,857,600 (100 MiB) so the top-end boundary pairs (`100mb-plus-1`, `100mib`, `100mib-plus-1`) become possible? The bandwidth rationale is unaffected — R2 egress is free, and one cache miss costs one Class B read regardless of object size — but the decision should follow operational data, not precede it. | **No change.** REQ-23 stays at 100,000,000; the three rows stay phase 2 | Revisit at the month-6 retrospective (`15` M6.4). Nothing gets an exception at launch |
+
+**Q-22 is not blocking.** It was raised by an oversight found in M3.1 — `bin/100mib.bin` was listed phase 1 while exceeding REQ-23 — and that oversight is already resolved: the row is phase 2 and the launch set is 228 files. Q-22 is only the forward-looking question of whether the cap itself should move, and its default (no change) is the shipping behaviour.
 
 **Q-07 and Q-21 have no working default.** Every other question here falls back to the documented default if the owner says nothing; these two cannot. `13` §3 is a published legal text — an unreachable contact address or a missing controller identity is a defect in itself — so it keeps the `<CONTACT_EMAIL>` and `<CONTROLLER>` placeholders and **M4.2 is blocked** until both are answered. They are listed as open blockers in the "Implementation status" issue every session.
 
@@ -87,7 +89,7 @@ A fresh-context review by a "junior implementer" reader produced 28 questions. E
 | 6 | Hit-ratio target scope; Tiered Cache required? | Aggregate zone-wide; Smart Tiered Cache is required desired state | REQ-22, `08` §5.4 |
 | 7 | AI-crawler settings after 2026-09-15? | `ai_bots_protection: disabled`, `cf_robots_variant: off`, `content_bots_protection: disabled` | `08` §4 |
 | 8 | Takedown: release assets and generator code? | Assets redacted (`release redact`); generator params removed, code removed only if it embodies the content | `09` §10, `11` §7.8, `13` §7 |
-| 9 | P1 = 417 deliberate? | No: launch set = the 229 files in `05` §9 (every family represented), the other 188 phase-1 rows are P1b | ADR-024, `15` M3/M7 |
+| 9 | P1 = 417 deliberate? | No: launch set = the 228 files in `05` §9 (every family represented), the other 188 phase-1 rows are P1b. Phase 1 is 416 rows since `bin/100mib.bin` moved to phase 2 (Q-22) | ADR-024, `15` M3/M7 |
 | 10 | Permission group names? | Owner pastes them from `GET /user/tokens/permission_groups` during M0.4 | `08` §2 step 7 |
 | 11 | CODEOWNERS vs 0 approvals? | Informational until a second maintainer exists | `09` §1, `02` §6 |
 | 12 | 60-day scheduled-workflow rule? | Monday ops-log commit from `health.yml` is the keep-alive; re-enable procedure documented | REQ-27, `11` §5, RISK-10 |

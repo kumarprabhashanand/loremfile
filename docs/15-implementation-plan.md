@@ -42,7 +42,7 @@ If the owner prefers, M0.4 can be executed by the agent in a session where the o
 
 ## M3 — Generators, validators, the P1 launch set (A, ≈ 45 h; needs M1)
 
-Scope for launch is the explicit list in `05` §9 (229 fixtures across every format family); the remaining 188 phase-1 rows (P1b) follow in M7 after launch. Implement in this order; each group is a PR with tests and catalog entries; the author runs `loremfile build --format <formats…> && loremfile validate --format <formats…> && loremfile manifest update` in the container and commits the manifest additions. M3.1's PR also adds the `build-and-validate` job to `ci.yml` and to the required checks. Every generator family ships with its validator, its negative test and its determinism test in the same PR — the estimates below include that.
+Scope for launch is the explicit list in `05` §9 (228 fixtures across every format family); the remaining 188 phase-1 rows (P1b) follow in M7 after launch. Implement in this order; each group is a PR with tests and catalog entries; the author runs `loremfile build --format <formats…> && loremfile validate --format <formats…> && loremfile manifest update` in the container and commits the manifest additions. M3.1's PR adds the `build-and-validate` job to `ci.yml`; it is added to the branch ruleset's **required** checks only once that job exists on `main`. Adding it earlier blocks every open pull request whose branch predates the job, because the check can never report on them — which is exactly what happened during M3.1 and had to be undone. Every generator family ships with its validator, its negative test and its determinism test in the same PR — the estimates below include that.
 
 | ID | Group | Estimate |
 |---|---|---|
@@ -71,7 +71,7 @@ Fallback if M3.9 exceeds the CI budget: matrix `--group`; if still over, defer t
 
 | ID | Task | DoD |
 |---|---|---|
-| M5.1 | Merge to `main` → `deploy.yml` uploads the ≈ 620 MB launch set, site, applies infra, smoke passes | Green run; https://loremfile.dev/ live |
+| M5.1 | Merge to `main` → `deploy.yml` uploads the ≈ 515 MB launch set, site, applies infra, smoke passes | Green run; https://loremfile.dev/ live |
 | M5.2 | `verify-live --mode full` from a local machine | 0 failures |
 | M5.3 | Manual QA checklist `12` §5 | All boxes ticked in an issue |
 | M5.4 | Hardening checklist `10` §5 | All boxes ticked |
@@ -87,7 +87,7 @@ Fallback if M3.9 exceeds the CI budget: matrix `--group`; if still over, defer t
 | M6.1 | Draft posts (Show HN, dev.to article "sample files you can hotlink", r/webdev, r/QualityAssurance, a short X/Bluesky thread) in `docs/launch/`; owner publishes | Posted |
 | M6.2 | README badge snippet and "Used by" section; answer the most common Stack Overflow questions **only if the owner wants to post** (agent drafts) | Drafts ready |
 | M6.3 | Weekly sessions per runbook; first monthly review; record metrics | `ops-log.md` on the `ops-log` branch has 4 automated weekly lines and 1 monthly line |
-| M6.4 | Retrospective: update `17-risks.md` likelihoods, pick Phase 2 batch 1 | Issue created |
+| M6.4 | Retrospective: update `17-risks.md` likelihoods, pick Phase 2 batch 1, and answer **Q-22** (whether `MAX_FIXTURE_BYTES` should become 104,857,600) from six months of real request and cost data | Issue created; Q-22 answered or explicitly deferred again |
 
 ## First-session script for a coding agent
 

@@ -240,11 +240,11 @@ Without Docker, most text/data/image/office generators run on a plain Python 3.1
 
 | Step | Budget (GitHub-hosted ubuntu runner, 4 vCPU) |
 |---|---|
-| Full phase-1 generation (≈ 417 files, ≈ 1.06 GB; the 229-file launch set is ≈ 620 MB of it) | ≤ 25 min (video ≈ 12 min, audio ≈ 3 min, data ≈ 4 min, rest ≈ 3 min) |
+| Full phase-1 generation (≈ 416 files, ≈ 0.96 GB; the 228-file launch set is ≈ 515 MB of it) | ≤ 25 min (video ≈ 12 min, audio ≈ 3 min, data ≈ 4 min, rest ≈ 3 min) |
 | Validation | ≤ 5 min |
 | Incremental PR build (typical: < 10 new fixtures) | ≤ 5 min |
 | Site build | ≤ 30 s |
-| Upload (≈ 620 MB launch set, first time) | ≤ 10 min (multipart, 16 MiB parts, 8 threads) |
+| Upload (≈ 515 MB launch set, first time) | ≤ 10 min (multipart, 16 MiB parts, 8 threads) |
 
 If the full build exceeds budget, split video generation into a matrix job (see `09` §3.1) before trimming scope.
 

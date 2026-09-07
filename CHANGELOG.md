@@ -53,6 +53,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- **Q-22 resolved: `bin/100mib.bin` is phase 2, and the launch set is 228 fixtures, not
+  229.** At 104,857,600 bytes it exceeded REQ-23's 100,000,000-byte cap while being
+  listed phase 1. Deferred rather than excepted — nothing gets an exception at launch.
+  Phase-1 total 417 → 416; P1b stays 188. `docs/05` §3.10's phase-2 note now states the
+  real reason on all three deferred rows instead of "storage budget".
+
 - `docs/13-legal-and-policy.md` §3 privacy notice rewritten and §3a "Compliance posture"
   added; §8 replaced with a per-regime posture table. The previous rationale — "no
   personal data is collected by us" — was wrong: IP addresses are personal data,
