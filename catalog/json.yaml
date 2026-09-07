@@ -1,0 +1,60 @@
+# json fixtures (docs/05 §3.7). Launch-set rows only; the rest are P1b.
+format: json
+family: data
+mime: application/json
+description: >-
+  JSON arrays of the shared people dataset, a file exercising every scalar shape a
+  parser must get right, and a 100-level nesting case for recursion limits.
+seo_title: "Sample JSON files for testing parsers and APIs — free, CC0"
+related: [ndjson, yaml, toml, xml]
+fixtures:
+  - name: people-10.json
+    phase: 1
+    generator: data.json_people
+    params: { rows: 10 }
+    description: "An array of 10 people objects, pretty-printed with two-space indentation."
+    tags: [data, dataset-people]
+    expect: { top_type: array, items: 10, max_depth: 3 }
+    size_class: free
+  - name: people-1000.json
+    phase: 1
+    generator: data.json_people
+    params: { rows: 1000 }
+    description: "An array of 1,000 people objects, pretty-printed with two-space indentation."
+    tags: [data, dataset-people]
+    expect: { top_type: array, items: 1000, max_depth: 3 }
+    size_class: free
+  - name: all-types.json
+    phase: 1
+    generator: data.json_all_types
+    params: {}
+    description: "Every JSON scalar shape worth testing: null, booleans, negative zero, exponents, integers beyond 2^53 and 2^63, unicode escapes, a surrogate pair, and empty containers."
+    tags: [data, unicode]
+    expect: { top_type: object, max_depth: 5 }
+    size_class: free
+  - name: nested-100-levels.json
+    phase: 1
+    generator: data.json_nested
+    params: { depth: 100 }
+    description: "An object nested 100 levels deep, for parsers with a recursion limit."
+    tags: [data, stress]
+    expect: { top_type: object, max_depth: 100 }
+    size_class: free
+  - name: 1mb.json
+    phase: 1
+    generator: data.json_sized
+    params: { size: 1000000 }
+    description: "About 1MB of people objects, fitted to within 5% of the nominal size."
+    tags: [data, dataset-people, sized]
+    expect: { top_type: array }
+    size_class: approx
+    nominal_bytes: 1000000
+  - name: 10mb.json
+    phase: 1
+    generator: data.json_sized
+    params: { size: 10000000 }
+    description: "About 10MB of people objects, fitted to within 5% of the nominal size."
+    tags: [data, dataset-people, sized]
+    expect: { top_type: array }
+    size_class: approx
+    nominal_bytes: 10000000

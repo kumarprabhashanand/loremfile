@@ -1,0 +1,18 @@
+# sql fixtures (docs/05 §3.7). Launch-set rows only; the rest are P1b.
+format: sql
+family: data
+mime: application/sql
+description: >-
+  Portable CREATE TABLE and INSERT statements for the shared people dataset,
+  with no vendor-specific syntax.
+seo_title: "Sample SQL dump for testing importers — free, CC0"
+related: [csv, json]
+fixtures:
+  - name: people-1000-inserts-portable.sql
+    phase: 1
+    generator: data.sql_inserts
+    params: { rows: 1000 }
+    description: "One CREATE TABLE and 1,000 INSERT statements for the shared people dataset, using only syntax that every major database accepts."
+    tags: [data, dataset-people]
+    expect: { line_ending: lf, bom: false }
+    size_class: free

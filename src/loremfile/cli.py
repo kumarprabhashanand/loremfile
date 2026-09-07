@@ -208,13 +208,23 @@ def validate_command(
             catalog_obj, only=only, formats=formats, group=group, phase=phase
         )
         directory = build_module.fixtures_dir()
+        # Validate what the preceding build produced, not everything in the catalog.
+        # `build --new` generates only the fixtures a pull request adds, and the bare
+        # `loremfile validate` that follows it in ci.yml has to mean "check those".
+        # Only paths named explicitly with --only are required to be present; anything
+        # else simply was not part of this build.
+        explicit = set(only)
+        present = [f for f in chosen if (directory / f.path).is_file()]
+        for path in sorted(explicit - {f.path for f in present}):
+            errors.append(f"{path}: not generated; run `loremfile build --only {path}` first")
+            items.append({"path": path, "status": "missing", "detail": ""})
+        if not present and not errors:
+            errors.append(
+                "nothing to validate: build/fixtures is empty. Run `loremfile build` first."
+            )
         passed = 0
-        for fixture in chosen:
+        for fixture in present:
             target = directory / fixture.path
-            if not target.is_file():
-                errors.append(f"{fixture.path}: not generated; run `loremfile build` first")
-                items.append({"path": fixture.path, "status": "missing", "detail": ""})
-                continue
             report = validators.validate(
                 target.read_bytes(), fixture, catalog_obj.mime_for(fixture)
             )
@@ -226,7 +236,11 @@ def validate_command(
                 items.append(
                     {"path": fixture.path, "status": "failed", "detail": "; ".join(report.failures)}
                 )
-        summary = {"validated": passed, "failed": len(chosen) - passed}
+        summary = {
+            "validated": passed,
+            "failed": len(present) - passed,
+            "skipped_not_built": len(chosen) - len(present),
+        }
     except (build_module.BuildError, CatalogError, ValueError, KeyError) as exc:
         errors.append(str(exc))
     sys.exit(

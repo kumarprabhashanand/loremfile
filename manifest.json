@@ -2,20 +2,28 @@
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
   "catalog_version": "1.0.0",
-  "generated_at": "2026-09-07T18:21:50Z",
+  "generated_at": "2026-09-07T19:17:22Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/<OWNER>/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:3ba29bb905b96fcb019b82f3f0e05f9b6472749af252fbff3f879460e0ef327c",
-  "count": 43,
-  "total_bytes": 254662199,
+  "count": 65,
+  "total_bytes": 303647804,
   "formats": [
     "bin",
+    "csv",
     "ini",
+    "json",
     "log",
     "md",
-    "txt"
+    "ndjson",
+    "sql",
+    "toml",
+    "tsv",
+    "txt",
+    "xml",
+    "yaml"
   ],
   "fixtures": [
     {
@@ -671,6 +679,308 @@
       "supersededBy": null
     },
     {
+      "path": "csv/10mb.csv",
+      "url": "https://loremfile.dev/csv/10mb.csv",
+      "format": "csv",
+      "ext": "csv",
+      "mime": "text/csv; charset=utf-8",
+      "bytes": 9749583,
+      "sha256": "2cc79929706451724223af6de04711327fcf0629bda08a623dfaa5397bc3eaf5",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 10MB of people rows, fitted to within 5% of the nominal size. Still a prefix of the same dataset.",
+      "tags": [
+        "data",
+        "dataset-people",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 38462,
+        "max_line_bytes": 379,
+        "rows": 38461,
+        "columns": 14,
+        "delimiter": ",",
+        "has_header": true,
+        "quoted_fields": false
+      },
+      "generator": "data.csv_sized",
+      "generator_params": {
+        "size": 10000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "csv/1mb.csv",
+      "url": "https://loremfile.dev/csv/1mb.csv",
+      "format": "csv",
+      "ext": "csv",
+      "mime": "text/csv; charset=utf-8",
+      "bytes": 965447,
+      "sha256": "349847940e5b32738c0984d0bb6b7d3e170c5ecd1afb47291da675b146f07726",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 1MB of people rows, fitted to within 5% of the nominal size. Still a prefix of the same dataset.",
+      "tags": [
+        "data",
+        "dataset-people",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 3847,
+        "max_line_bytes": 375,
+        "rows": 3846,
+        "columns": 14,
+        "delimiter": ",",
+        "has_header": true,
+        "quoted_fields": false
+      },
+      "generator": "data.csv_sized",
+      "generator_params": {
+        "size": 1000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "csv/people-10-quoted-newlines.csv",
+      "url": "https://loremfile.dev/csv/people-10-quoted-newlines.csv",
+      "format": "csv",
+      "ext": "csv",
+      "mime": "text/csv; charset=utf-8",
+      "bytes": 2697,
+      "sha256": "95f102f3c59a616c92bad2eadfae97c8081daee2722b87a11e5bddd0e061c160",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Ten people rows where the bio field contains a real newline inside a quoted field, which is where line-by-line splitting goes wrong.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 20,
+        "max_line_bytes": 202,
+        "rows": 10,
+        "columns": 14,
+        "delimiter": ",",
+        "has_header": true,
+        "quoted_fields": true
+      },
+      "generator": "data.csv_people",
+      "generator_params": {
+        "rows": 10,
+        "quoted_newlines": true
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "csv/people-10-semicolon.csv",
+      "url": "https://loremfile.dev/csv/people-10-semicolon.csv",
+      "format": "csv",
+      "ext": "csv",
+      "mime": "text/csv; charset=utf-8",
+      "bytes": 2679,
+      "sha256": "31a1de884bdb372bb6b5a5e0ada211f8acd4e07f2c8068458cedb3cc49c30346",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The same ten people rows delimited by semicolons, as European locales export.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 11,
+        "max_line_bytes": 342,
+        "rows": 10,
+        "columns": 14,
+        "delimiter": ";",
+        "has_header": true,
+        "quoted_fields": false
+      },
+      "generator": "data.csv_people",
+      "generator_params": {
+        "rows": 10,
+        "delimiter": ";"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "csv/people-10-utf8-bom.csv",
+      "url": "https://loremfile.dev/csv/people-10-utf8-bom.csv",
+      "format": "csv",
+      "ext": "csv",
+      "mime": "text/csv; charset=utf-8",
+      "bytes": 2682,
+      "sha256": "cf14b9d8523c5d3d6a26dd13ceaaf8c953b175a560044a5820fb117eeb1c69a5",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Ten people rows preceded by a UTF-8 byte-order mark, which many CSV readers leave attached to the first column name.",
+      "tags": [
+        "data",
+        "dataset-people",
+        "encoding"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": true,
+        "line_ending": "lf",
+        "lines": 11,
+        "max_line_bytes": 342,
+        "rows": 10,
+        "columns": 14,
+        "delimiter": ",",
+        "has_header": true,
+        "quoted_fields": false
+      },
+      "generator": "data.csv_people",
+      "generator_params": {
+        "rows": 10,
+        "bom": true
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "csv/people-10.csv",
+      "url": "https://loremfile.dev/csv/people-10.csv",
+      "format": "csv",
+      "ext": "csv",
+      "mime": "text/csv; charset=utf-8",
+      "bytes": 2679,
+      "sha256": "5b51c9c031ef0c7d098909ce79cd573300e75cb922ffe485bc47ebb8c8ea118b",
+      "size_class": "free",
+      "phase": 1,
+      "description": "10 rows of the shared synthetic people dataset with a header row. The same rows appear in every other people-10 fixture.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 11,
+        "max_line_bytes": 342,
+        "rows": 10,
+        "columns": 14,
+        "delimiter": ",",
+        "has_header": true,
+        "quoted_fields": false
+      },
+      "generator": "data.csv_people",
+      "generator_params": {
+        "rows": 10
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "csv/people-1000.csv",
+      "url": "https://loremfile.dev/csv/people-1000.csv",
+      "format": "csv",
+      "ext": "csv",
+      "mime": "text/csv; charset=utf-8",
+      "bytes": 249645,
+      "sha256": "415edcfa97d82e5e532d5582d854fb836ab7a2167a1ea49c74e4e851719b586f",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1,000 rows of the shared synthetic people dataset with a header row. The same rows appear in every other people-1000 fixture.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1001,
+        "max_line_bytes": 369,
+        "rows": 1000,
+        "columns": 14,
+        "delimiter": ",",
+        "has_header": true,
+        "quoted_fields": false
+      },
+      "generator": "data.csv_people",
+      "generator_params": {
+        "rows": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "csv/people-100k.csv",
+      "url": "https://loremfile.dev/csv/people-100k.csv",
+      "format": "csv",
+      "ext": "csv",
+      "mime": "text/csv; charset=utf-8",
+      "bytes": 25395296,
+      "sha256": "d698f2d2c402f109796d225b0a9ad7123347bdcdc31965a9cacf879a10a43885",
+      "size_class": "free",
+      "phase": 1,
+      "description": "100,000 rows of the shared synthetic people dataset with a header row. The same rows appear in every other people-100k fixture.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 100001,
+        "max_line_bytes": 380,
+        "rows": 100000,
+        "columns": 14,
+        "delimiter": ",",
+        "has_header": true,
+        "quoted_fields": false
+      },
+      "generator": "data.csv_people",
+      "generator_params": {
+        "rows": 100000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "ini/config.ini",
       "url": "https://loremfile.dev/ini/config.ini",
       "format": "ini",
@@ -695,6 +1005,216 @@
       },
       "generator": "text.ini_config",
       "generator_params": {},
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "json/10mb.json",
+      "url": "https://loremfile.dev/json/10mb.json",
+      "format": "json",
+      "ext": "json",
+      "mime": "application/json; charset=utf-8",
+      "bytes": 9996549,
+      "sha256": "1f68350e3e19ab908209cf0b8847098a8a1b195f42098e469bdfafdec9ea2cdd",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 10MB of people objects, fitted to within 5% of the nominal size.",
+      "tags": [
+        "data",
+        "dataset-people",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 353195,
+        "max_line_bytes": 229,
+        "top_type": "array",
+        "items": 19368,
+        "max_depth": 3
+      },
+      "generator": "data.json_sized",
+      "generator_params": {
+        "size": 10000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "json/1mb.json",
+      "url": "https://loremfile.dev/json/1mb.json",
+      "format": "json",
+      "ext": "json",
+      "mime": "application/json; charset=utf-8",
+      "bytes": 997720,
+      "sha256": "3ed7ca2999e2dbf99c56e11b0e950e6b524919c6ca8370180fcb00a70d392c3c",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 1MB of people objects, fitted to within 5% of the nominal size.",
+      "tags": [
+        "data",
+        "dataset-people",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 35430,
+        "max_line_bytes": 225,
+        "top_type": "array",
+        "items": 1942,
+        "max_depth": 3
+      },
+      "generator": "data.json_sized",
+      "generator_params": {
+        "size": 1000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "json/all-types.json",
+      "url": "https://loremfile.dev/json/all-types.json",
+      "format": "json",
+      "ext": "json",
+      "mime": "application/json; charset=utf-8",
+      "bytes": 708,
+      "sha256": "ad8102e4fb3e348ccd991bb1426cc8b233e83a4f4568a798f5314fc7001a8baf",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Every JSON scalar shape worth testing: null, booleans, negative zero, exponents, integers beyond 2^53 and 2^63, unicode escapes, a surrogate pair, and empty containers.",
+      "tags": [
+        "data",
+        "unicode"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 23,
+        "max_line_bytes": 81,
+        "top_type": "object",
+        "items": 21,
+        "max_depth": 5
+      },
+      "generator": "data.json_all_types",
+      "generator_params": {},
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "json/nested-100-levels.json",
+      "url": "https://loremfile.dev/json/nested-100-levels.json",
+      "format": "json",
+      "ext": "json",
+      "mime": "application/json; charset=utf-8",
+      "bytes": 1380,
+      "sha256": "ddb1c93ed61e7cdead0f4de82c7aea553e89c0c25d16e6d88bd1f1b7a861d001",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An object nested 100 levels deep, for parsers with a recursion limit.",
+      "tags": [
+        "data",
+        "stress"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1,
+        "max_line_bytes": 1379,
+        "top_type": "object",
+        "items": 1,
+        "max_depth": 100
+      },
+      "generator": "data.json_nested",
+      "generator_params": {
+        "depth": 100
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "json/people-10.json",
+      "url": "https://loremfile.dev/json/people-10.json",
+      "format": "json",
+      "ext": "json",
+      "mime": "application/json; charset=utf-8",
+      "bytes": 5186,
+      "sha256": "f7d7ab0e1247de87ab92d0bfe52166cc9b56a5e18bdb06f559759762a64bfad1",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An array of 10 people objects, pretty-printed with two-space indentation.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 182,
+        "max_line_bytes": 217,
+        "top_type": "array",
+        "items": 10,
+        "max_depth": 3
+      },
+      "generator": "data.json_people",
+      "generator_params": {
+        "rows": 10
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "json/people-1000.json",
+      "url": "https://loremfile.dev/json/people-1000.json",
+      "format": "json",
+      "ext": "json",
+      "mime": "application/json; charset=utf-8",
+      "bytes": 512687,
+      "sha256": "31eaccbd1d079346d0aa2abf75d6b4fdfedbec298b04ed1dbf13f10e3a5a62d8",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An array of 1,000 people objects, pretty-printed with two-space indentation.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 18237,
+        "max_line_bytes": 225,
+        "top_type": "array",
+        "items": 1000,
+        "max_depth": 3
+      },
+      "generator": "data.json_people",
+      "generator_params": {
+        "rows": 1000
+      },
       "added_in": "1.0.0",
       "status": "active",
       "deprecated": false,
@@ -790,6 +1310,149 @@
       "generator": "text.lorem_sized",
       "generator_params": {
         "size": 4096
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "ndjson/people-1000.ndjson",
+      "url": "https://loremfile.dev/ndjson/people-1000.ndjson",
+      "format": "ndjson",
+      "ext": "ndjson",
+      "mime": "application/x-ndjson; charset=utf-8",
+      "bytes": 408525,
+      "sha256": "dc26a29b2bc4f2e59721bf7bed312ccb4c4cf486954c229bd4869c3fcca14ead",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1,000 people objects, one compact JSON object per line.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1000,
+        "max_line_bytes": 531,
+        "top_type": "object",
+        "items": 1000,
+        "max_depth": 2
+      },
+      "generator": "data.ndjson_people",
+      "generator_params": {
+        "rows": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "sql/people-1000-inserts-portable.sql",
+      "url": "https://loremfile.dev/sql/people-1000-inserts-portable.sql",
+      "format": "sql",
+      "ext": "sql",
+      "mime": "application/sql",
+      "bytes": 429863,
+      "sha256": "7979a92f6555b6ab292a5a227728ed34df170fa53cc095d082cdcbcc00d08071",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One CREATE TABLE and 1,000 INSERT statements for the shared people dataset, using only syntax that every major database accepts.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1018,
+        "max_line_bytes": 549
+      },
+      "generator": "data.sql_inserts",
+      "generator_params": {
+        "rows": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "toml/config.toml",
+      "url": "https://loremfile.dev/toml/config.toml",
+      "format": "toml",
+      "ext": "toml",
+      "mime": "application/toml; charset=utf-8",
+      "bytes": 751,
+      "sha256": "a150205d8b5820503abc0b6f2465e098f4e5657ca4fff251ba531a9739aa0599",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Tables, nested tables, an array of tables, multi-line basic and literal strings, underscored integers, and offset, local, date and time values.",
+      "tags": [
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 39,
+        "max_line_bytes": 76,
+        "documents": 1,
+        "top_keys": [
+          "dates",
+          "endpoints",
+          "notes",
+          "owner",
+          "server",
+          "title"
+        ]
+      },
+      "generator": "data.toml_config",
+      "generator_params": {},
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "tsv/people-1000.tsv",
+      "url": "https://loremfile.dev/tsv/people-1000.tsv",
+      "format": "tsv",
+      "ext": "tsv",
+      "mime": "text/tab-separated-values; charset=utf-8",
+      "bytes": 249645,
+      "sha256": "e71259a6d256308cc3c10951a6925db712e10e3efc9a0196ba03ba7ad0526aaf",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1,000 rows of the shared people dataset, tab-delimited, with a header row.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1001,
+        "max_line_bytes": 369,
+        "rows": 1000,
+        "columns": 14,
+        "delimiter": "\t",
+        "has_header": true,
+        "quoted_fields": false
+      },
+      "generator": "data.csv_people",
+      "generator_params": {
+        "rows": 1000,
+        "delimiter": "\t"
       },
       "added_in": "1.0.0",
       "status": "active",
@@ -1311,6 +1974,151 @@
       "generator_params": {
         "encoding": "windows-1252"
       },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "xml/people-10.xml",
+      "url": "https://loremfile.dev/xml/people-10.xml",
+      "format": "xml",
+      "ext": "xml",
+      "mime": "application/xml; charset=utf-8",
+      "bytes": 5843,
+      "sha256": "c035826a1be09ddf4eeef67bdf76d0df62e35bacac731aadf6311b4e3378d672",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Ten people records as elements, one child element per column.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 153,
+        "max_line_bytes": 219,
+        "root_element": "people",
+        "has_dtd": false,
+        "namespaces": []
+      },
+      "generator": "data.xml_people",
+      "generator_params": {
+        "rows": 10
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "xml/rss2-feed.xml",
+      "url": "https://loremfile.dev/xml/rss2-feed.xml",
+      "format": "xml",
+      "ext": "xml",
+      "mime": "application/rss+xml; charset=utf-8",
+      "bytes": 4036,
+      "sha256": "f77ecc196c5974310057c1c08bda92de4b53c239412690e9235abab4adf9692d",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An RSS 2.0 feed with ten items and fixed publication dates.",
+      "tags": [
+        "data",
+        "web"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 80,
+        "max_line_bytes": 154,
+        "root_element": "rss",
+        "has_dtd": false,
+        "namespaces": []
+      },
+      "generator": "data.xml_rss2",
+      "generator_params": {
+        "items": 10
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "xml/with-namespaces.xml",
+      "url": "https://loremfile.dev/xml/with-namespaces.xml",
+      "format": "xml",
+      "ext": "xml",
+      "mime": "application/xml; charset=utf-8",
+      "bytes": 913,
+      "sha256": "04cd8c9a27b781647ca874f4c3dad82d7119c746bcf4cde532157e6402f948e5",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A default namespace, two prefixed namespaces, a namespaced attribute and xml:lang.",
+      "tags": [
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 18,
+        "max_line_bytes": 166,
+        "root_element": "catalogue",
+        "has_dtd": false,
+        "namespaces": [
+          "http://purl.org/dc/elements/1.1/",
+          "http://www.w3.org/2001/XMLSchema-instance",
+          "https://loremfile.dev/ns/catalogue"
+        ]
+      },
+      "generator": "data.xml_namespaces",
+      "generator_params": {},
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "yaml/config-all-types.yaml",
+      "url": "https://loremfile.dev/yaml/config-all-types.yaml",
+      "format": "yaml",
+      "ext": "yaml",
+      "mime": "application/yaml; charset=utf-8",
+      "bytes": 1091,
+      "sha256": "ce56ca74cf85cf6309bbfd65619875d0388fe2fcb40835dda390750dcd3b1217",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Anchors, aliases and a merge key, two documents in one stream, literal and folded block scalars, and every scalar type including .inf, .nan, dates and timestamps.",
+      "tags": [
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 56,
+        "max_line_bytes": 60,
+        "documents": 2,
+        "top_keys": [
+          "block_folded",
+          "block_literal",
+          "defaults",
+          "development",
+          "production",
+          "sequences",
+          "types"
+        ]
+      },
+      "generator": "data.yaml_config",
+      "generator_params": {},
       "added_in": "1.0.0",
       "status": "active",
       "deprecated": false,

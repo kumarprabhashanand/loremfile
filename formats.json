@@ -10,12 +10,28 @@
       "mime_default": "application/octet-stream"
     },
     {
+      "format": "csv",
+      "count": 8,
+      "total_bytes": 36370708,
+      "url": "https://loremfile.dev/csv",
+      "index": "https://loremfile.dev/csv/index.json",
+      "mime_default": "text/csv"
+    },
+    {
       "format": "ini",
       "count": 1,
       "total_bytes": 468,
       "url": "https://loremfile.dev/ini",
       "index": "https://loremfile.dev/ini/index.json",
       "mime_default": "text/plain"
+    },
+    {
+      "format": "json",
+      "count": 6,
+      "total_bytes": 11514230,
+      "url": "https://loremfile.dev/json",
+      "index": "https://loremfile.dev/json/index.json",
+      "mime_default": "application/json"
     },
     {
       "format": "log",
@@ -34,12 +50,60 @@
       "mime_default": "text/markdown"
     },
     {
+      "format": "ndjson",
+      "count": 1,
+      "total_bytes": 408525,
+      "url": "https://loremfile.dev/ndjson",
+      "index": "https://loremfile.dev/ndjson/index.json",
+      "mime_default": "application/x-ndjson"
+    },
+    {
+      "format": "sql",
+      "count": 1,
+      "total_bytes": 429863,
+      "url": "https://loremfile.dev/sql",
+      "index": "https://loremfile.dev/sql/index.json",
+      "mime_default": "application/sql"
+    },
+    {
+      "format": "toml",
+      "count": 1,
+      "total_bytes": 751,
+      "url": "https://loremfile.dev/toml",
+      "index": "https://loremfile.dev/toml/index.json",
+      "mime_default": "application/toml"
+    },
+    {
+      "format": "tsv",
+      "count": 1,
+      "total_bytes": 249645,
+      "url": "https://loremfile.dev/tsv",
+      "index": "https://loremfile.dev/tsv/index.json",
+      "mime_default": "text/tab-separated-values"
+    },
+    {
       "format": "txt",
       "count": 16,
       "total_bytes": 23664843,
       "url": "https://loremfile.dev/txt",
       "index": "https://loremfile.dev/txt/index.json",
       "mime_default": "text/plain"
+    },
+    {
+      "format": "xml",
+      "count": 3,
+      "total_bytes": 10792,
+      "url": "https://loremfile.dev/xml",
+      "index": "https://loremfile.dev/xml/index.json",
+      "mime_default": "application/xml"
+    },
+    {
+      "format": "yaml",
+      "count": 1,
+      "total_bytes": 1091,
+      "url": "https://loremfile.dev/yaml",
+      "index": "https://loremfile.dev/yaml/index.json",
+      "mime_default": "application/yaml"
     }
   ]
 }

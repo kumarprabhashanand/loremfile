@@ -26,7 +26,7 @@ from loremfile.util.determinism import deterministic
 
 #: Generator modules to import so their @generator decorators run. A family is added
 #: here by the milestone that writes it.
-GENERATOR_MODULES = ("binary", "text")
+GENERATOR_MODULES = ("binary", "text", "data")
 
 #: Format groups for `--group`, used to split the CI matrix (docs/06 §5).
 GROUPS: dict[str, frozenset[str]] = {
