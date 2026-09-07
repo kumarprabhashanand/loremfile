@@ -28,8 +28,17 @@ All notable changes to this project are documented here. The format follows
 - `src/loremfile/config.py`, `catalog.py`, `manifest.py`, `schema/manifest-v1.json`,
   `catalog/_tags.yaml` and `tools/check_lock.sh`; the `loremfile catalog validate` and
   `loremfile manifest check|update` commands (M1.6).
+- `util/determinism.py`, `util/sizing.py`, `util/zipnorm.py`, `util/lorem.py`,
+  `util/ffmpeg.py`, `datasets.py`, `generators/base.py`, the word lists, per-script
+  character inventories and the emoji list (M1.7).
 
 ### Fixed
+
+- The catalog loader appended `; charset=utf-8` only to `text/*`. `docs/06` §6 also
+  requires it for `application/json`, `application/xml`, `application/yaml`,
+  `application/toml`, `application/x-ndjson` and `application/geo+json`.
+- `util/ffmpeg.run` placed output-only options before the input, which is invalid
+  ffmpeg argument grammar and failed outright with `-f lavfi`.
 
 - `tools/requirements.lock` left `pip` and `setuptools` unpinned, so the toolchain image
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
