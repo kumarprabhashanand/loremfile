@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import importlib
 import json
+import os
 import shutil
 import subprocess
 from collections.abc import Iterable
@@ -106,7 +107,18 @@ def fixtures_dir() -> Path:
     return config.repo_root() / config.BUILD_DIR / "fixtures"
 
 
-def merge_base_manifest(base_ref: str = "origin/main") -> Manifest:
+def default_base_ref() -> str:
+    """The branch a `--new` build compares against.
+
+    On a pull request GitHub sets ``GITHUB_BASE_REF`` to the target branch, which is not
+    always ``main`` — a stacked pull request targets another branch, and comparing
+    against the wrong base would rebuild the world.
+    """
+    base = os.environ.get("GITHUB_BASE_REF") or "main"
+    return f"origin/{base.removeprefix('origin/')}"
+
+
+def merge_base_manifest(base_ref: str | None = None) -> Manifest:
     """The manifest as of the merge base, for ``--new`` (docs/06 §5).
 
     A fixture counts as new when its path is absent there. If the ref is unavailable —
@@ -114,9 +126,18 @@ def merge_base_manifest(base_ref: str = "origin/main") -> Manifest:
     silently treated as "everything is new", which would rebuild the world.
     """
     root = config.repo_root()
+    base_ref = base_ref or default_base_ref()
     git = shutil.which("git")
     if git is None:
         raise BuildError("git is not on PATH; --new compares against the merge base")
+    # The job runs as root while the checkout is owned by another uid, so git refuses
+    # the repository unless it is marked safe. actions/checkout does the same.
+    subprocess.run(  # noqa: S603
+        [git, "config", "--global", "--add", "safe.directory", str(root)],
+        capture_output=True,
+        check=False,
+        timeout=30,
+    )
     try:
         merge_base = subprocess.run(  # noqa: S603 - fixed argv, no shell
             [git, "merge-base", "HEAD", base_ref],
@@ -136,8 +157,11 @@ def merge_base_manifest(base_ref: str = "origin/main") -> Manifest:
         )
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as exc:
         raise BuildError(
-            f"cannot read {base_ref} to work out what is new: {exc}. "
-            "CI checks out with fetch-depth: 0 for exactly this reason."
+            f"cannot resolve {base_ref}, so --new cannot tell what is new: {exc}\n"
+            "The ref has to exist locally. actions/checkout does not create a "
+            "remote-tracking ref for the base branch even at fetch-depth: 0, so the "
+            "workflow fetches it explicitly before building. Locally, run "
+            f"`git fetch origin {base_ref.removeprefix('origin/')}` or pass --all."
         ) from exc
     if blob.returncode != 0:
         return Manifest()  # no manifest at the merge base: everything is new
@@ -158,7 +182,7 @@ def select(
     formats: Iterable[str] = (),
     group: str | None = None,
     phase: int | None = None,
-    base_ref: str = "origin/main",
+    base_ref: str | None = None,
 ) -> list[Fixture]:
     """Work out which fixtures to generate, then add the dependencies they need."""
     chosen = [f for f in catalog.fixtures() if f.status is Status.ACTIVE]

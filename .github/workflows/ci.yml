@@ -68,6 +68,16 @@ jobs:
       - name: Install the package
         run: pip install -e . --no-deps
 
+      - name: Fetch the base branch
+        # actions/checkout does not create a remote-tracking ref for the pull request's
+        # base branch, even at fetch-depth: 0, and `build --new` needs the merge base to
+        # know which fixtures this pull request adds. GITHUB_BASE_REF is the target
+        # branch, which is not always `main` when pull requests are stacked.
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git fetch --no-tags origin \
+            "+refs/heads/${GITHUB_BASE_REF}:refs/remotes/origin/${GITHUB_BASE_REF}"
+
       - name: Generate the fixtures this pull request adds
         run: loremfile build --new
 
