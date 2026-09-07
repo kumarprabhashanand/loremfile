@@ -1,0 +1,16 @@
+# docs/09-ci-cd.md §4.
+# Python updates change tools/requirements.in; the PR must also regenerate
+# tools/requirements.lock (pip-compile --generate-hashes) and bump
+# tools/TOOLCHAIN_DIGEST — tools/check_lock.sh in ci.yml fails otherwise.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /tools
+    schedule: { interval: weekly }
+    groups: { python-deps: { patterns: ["*"] } }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directory: /tools
+    schedule: { interval: weekly }
