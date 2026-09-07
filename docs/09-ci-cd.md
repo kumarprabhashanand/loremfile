@@ -15,6 +15,15 @@
 | Packages | GHCR package `loremfile-toolchain` public, linked to the repo |
 | Labels | `health`, `cost`, `rotation-due`, `determinism`, `infra-drift`, `fixture-request`, `security`, `good first fixture` |
 
+**Applied in M1.5 and verified by reading the settings back.** Ruleset id `22459996`, name `main`, enforcement `active`, targeting `~DEFAULT_BRANCH`; `GET /repos/{owner}/{repo}/rules/branches/main` confirms all five rules apply. Two things worth knowing that the table above does not say:
+
+- GitHub adds **`require_extra_approval_for_unattributed_changes: true`** to the `pull_request` rule by default, and it was left on. It does not conflict with `required_approving_review_count: 0` for ordinary pull requests — #5 was `MERGEABLE`/`CLEAN` under it — but a pull request containing commits authored by someone other than the person merging can need one approval. The automated digest-bump pull request from `toolchain.yml` is authored by `github-actions[bot]`, so expect to approve that one. Turn the parameter off if that friction is not wanted; leaving it on is the safer default and costs one click.
+- Actions permissions are `allowed_actions: selected` with `github_owned_allowed` and `verified_allowed` (no `patterns_allowed`), **plus `sha_pinning_required: true`** — GitHub now enforces SHA pinning at the repository level, so the platform rejects a floating tag as well as `tests/unit/test_workflows_pinned.py`. Default workflow permissions were already `read`.
+
+Security features were **all off** on the fresh repository and were enabled in M1.5: secret scanning, secret-scanning push protection, Dependabot alerts, Dependabot security updates, private vulnerability reporting. `secret_scanning_non_provider_patterns` and `secret_scanning_validity_checks` remain off — neither is needed for a repository that holds no credentials.
+
+Repository variables set in M1.5: `R2_BUCKET=loremfile-public`, `SITE_HOST=loremfile.dev`. `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_ZONE_ID` are **not knowable until M0.4** and are deliberately unset; the `production` environment exists with a deployment branch policy of `main` only, and holds no secrets yet.
+
 ## 2. Secrets and variables
 
 | Name | Kind | Scope | Source | Rotation |
@@ -94,6 +103,10 @@ jobs:
         if: failure()
         run: loremfile manifest check --json | python -m loremfile.ci_summary --explain >> "$GITHUB_STEP_SUMMARY"   # prints the exact entries to commit when a committed entry does not match
 ```
+
+**How this file is built up (M1.5 onwards).** The listing above is the finished workflow. Each step is added by the milestone that creates the thing it checks, so the job never calls a command that does not exist yet: **M1.5** lands `lint-and-test` with checkout, `pip install -e .`, ruff, `mypy src/` and `pytest tests/unit`; **M1.6** adds `tools/check_lock.sh` and `loremfile catalog validate` to the same job; **M3.1** adds the whole `build-and-validate` job and puts it in the branch ruleset. `lint-and-test` is added to the ruleset in M1.5, in the same pull request that introduces the job — a required check that never reports would block every pull request.
+
+The `container.image` digest in this file is rewritten by `toolchain.yml` whenever a new image is published (§3.6), and `tests/unit/test_workflows_pinned.py` fails the build if it ever stops matching `tools/TOOLCHAIN_DIGEST`, if any action is left on a floating tag, or if a job container names a tag rather than a digest.
 
 If the full P1 build (first catalog PRs, empty manifest on `main`) exceeds the 45-minute budget, split `build-and-validate` into a matrix over `--group {media,data,other}` and a final `manifest check` job that downloads the artifacts.
 
@@ -249,6 +262,13 @@ Triggered by a push touching `tools/Dockerfile`, `tools/apt-versions.txt`, `tool
 2. `pip install -e .` with the repository mounted, then `import loremfile` — the image deliberately does **not** contain the package (the repository is mounted at run time), so this proves the image can still host it.
 
 **Corrected in M1.3:** an earlier draft of this section said the workflow writes `dpkg -l > tools/apt-versions.txt`. It must not. That file is the pinned *input* the Dockerfile installs from and `smoke.sh` checks against; having the build overwrite it would be circular and would silently launder a drifted version into the pin. The full inventory (`dpkg-query` of every package, plus `pip freeze` and the image reference) is uploaded as the `toolchain-provenance` artifact instead, and `apt-versions.txt` changes only in a reviewed pull request.
+
+**Two things learned when this ran for the first time (M1.5), both verified:**
+
+- **`gh pr create` needs a repository setting, not just a token permission.** The job failed with `GitHub Actions is not permitted to create or approve pull requests (createPullRequest)` even with `pull-requests: write`. The switch is `can_approve_pull_request_reviews` on `PUT /repos/{owner}/{repo}/actions/permissions/workflow` (Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests"), which is **off** on a new repository. It was turned on; the job then opened the pull request on a re-run.
+- **The image build is not reproducible, so every build produces a new digest.** Two builds of identical inputs — same `Dockerfile`, same `apt-versions.txt`, same `requirements.lock` — produced `sha256:a976bbbf…` and `sha256:3ba29bb9…`. The *contents* are identical: `dpkg-query -W` and `pip freeze`, sorted and hashed, match exactly across both images, which is the pins doing their job. The image digest is simply not a content hash of the inputs. Consequence: a digest-bump pull request appears after **every** push that touches a trigger path, which is the intended flow, and a digest is only ever adopted after the smoke test has passed against it.
+
+One-time bootstrap ordering note: the first `propose-digest-bump` ran while `ci.yml` existed only on a feature branch, so its `sed` had no `ci.yml` on `main` to update and it proposed a `TOOLCHAIN_DIGEST` change alone. That would have left `main` with a digest that `tests/unit/test_workflows_pinned.py` flags as mismatched. It was resolved by folding the new digest into the pull request that introduces `ci.yml` and closing the automated one. Once both files are on `main` the `sed` updates them together and the situation cannot recur.
 
 `propose-digest-bump` runs **only on `main`**. If the new digest differs from `tools/TOOLCHAIN_DIGEST` it creates a branch updating that file and every `image:` line in the workflows, runs `loremfile manifest update` when a manifest and the CLI both exist (they do not before M1.6, so the step is conditional), and opens the pull request with `gh pr create` using `GITHUB_TOKEN` — no third-party action. CI on that pull request runs the determinism tests against the new image. On any other branch the author is already inside a pull request, so the digest is copied by hand from the job summary, which prints the exact line to paste.
 

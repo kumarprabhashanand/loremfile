@@ -1,0 +1,51 @@
+# Pull-request gate (docs/09 §3.1).
+#
+# Deliberately not run on push to main: deploy.yml re-runs the same generate, validate
+# and check steps on the merged commit, so a second run here would only duplicate compute.
+#
+# Every job runs inside the pinned toolchain image, referenced by the digest in
+# tools/TOOLCHAIN_DIGEST. toolchain.yml rewrites the image line below when it publishes a
+# new digest, so the two never drift.
+name: ci
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:3ba29bb905b96fcb019b82f3f0e05f9b6472749af252fbff3f879460e0ef327c
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The merge-base manifest and lock-file checks need real history.
+          fetch-depth: 0
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Type check
+        run: mypy src/
+
+      - name: Unit tests
+        run: pytest -q tests/unit
+
+      # Added by the milestone that creates the thing being checked, so the job never
+      # references a command that does not exist yet (docs/09 §3.1):
+      #   M1.6 — tools/check_lock.sh and `loremfile catalog validate`
+      #   M3.1 — the build-and-validate job, and its entry in the branch ruleset
