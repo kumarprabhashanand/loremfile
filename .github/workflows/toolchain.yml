@@ -50,6 +50,8 @@ jobs:
           # reference the image by digest, and a moving tag would be a mutable surface.
           tags: ${{ env.IMAGE }}:${{ github.sha }}
           provenance: false
+          build-args: |
+            SOURCE_URL=${{ github.server_url }}/${{ github.repository }}
 
       - name: Smoke test the image that was just pushed
         env:
