@@ -23,7 +23,10 @@ BOMS: tuple[tuple[bytes, str], ...] = (
     (b"\xfe\xff", "utf-16be"),
 )
 
-TEXT_FORMATS = ("txt", "md", "log", "ini", "csv", "tsv", "html", "css", "js", "srt", "vtt")
+#: Formats whose props are exactly the text ones (docs/04 §1.3). csv, tsv, json, xml,
+#: yaml and toml are text too, but they carry extra format-specific props, so their
+#: validators live in validators/data.py and call `text_props` from here.
+TEXT_FORMATS = ("txt", "md", "log", "ini", "html", "css", "js", "srt", "vtt", "sql", "rtf")
 
 
 def detect_bom(data: bytes) -> tuple[bool, str | None]:
@@ -54,7 +57,7 @@ def _max_line_bytes(data: bytes) -> int:
     return max((len(line) for line in normalised.split(b"\n")), default=0)
 
 
-def _validate_text(data: bytes, mime: str) -> dict[str, Any]:
+def text_props(data: bytes, mime: str) -> dict[str, Any]:
     charset = charset_of(mime) or "utf-8"
     has_bom, bom_encoding = detect_bom(data)
     try:
@@ -80,7 +83,7 @@ def make_validator(fmt: str) -> None:
 
     @register(fmt)
     def _validate(data: bytes, _fixture: Fixture, mime: str) -> dict[str, Any]:
-        return _validate_text(data, mime)
+        return text_props(data, mime)
 
 
 for _format in TEXT_FORMATS:

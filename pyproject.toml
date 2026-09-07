@@ -98,6 +98,15 @@ show_error_codes = true
 module = ["tests.*"]
 ignore_errors = true
 
+# lxml ships no inline types and `lxml-stubs` is both incomplete and a separate
+# dependency, which would mean regenerating requirements.lock and rebuilding the
+# toolchain image for a dev-only stub package. docs/06 §6 requires lxml for XML
+# parsing, so the import is not optional; only its typing is. The cost is confined
+# to validators/data.py's XML branch.
+[[tool.mypy.overrides]]
+module = ["lxml.*"]
+ignore_missing_imports = true
+
 # ---------------------------------------------------------------------------
 # pytest (docs/12)
 # ---------------------------------------------------------------------------

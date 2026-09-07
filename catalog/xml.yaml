@@ -1,0 +1,35 @@
+# xml fixtures (docs/05 §3.7). Launch-set rows only; the rest are P1b.
+format: xml
+family: data
+mime: application/xml
+description: >-
+  XML with the features that actually differ between parsers: namespaces with and
+  without prefixes, and a real RSS 2.0 feed.
+seo_title: "Sample XML files for testing parsers and feeds — free, CC0"
+related: [json, yaml]
+fixtures:
+  - name: people-10.xml
+    phase: 1
+    generator: data.xml_people
+    params: { rows: 10 }
+    description: "Ten people records as elements, one child element per column."
+    tags: [data, dataset-people]
+    expect: { root_element: people, has_dtd: false }
+    size_class: free
+  - name: with-namespaces.xml
+    phase: 1
+    generator: data.xml_namespaces
+    params: {}
+    description: "A default namespace, two prefixed namespaces, a namespaced attribute and xml:lang."
+    tags: [data]
+    expect: { root_element: catalogue, has_dtd: false }
+    size_class: free
+  - name: rss2-feed.xml
+    phase: 1
+    generator: data.xml_rss2
+    params: { items: 10 }
+    description: "An RSS 2.0 feed with ten items and fixed publication dates."
+    tags: [data, web]
+    expect: { root_element: rss, has_dtd: false }
+    size_class: free
+    mime: "application/rss+xml; charset=utf-8"

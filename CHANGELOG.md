@@ -44,6 +44,13 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Added — data formats (M3.2a)
+
+- `csv/` (8), `tsv/` (1), `json/` (6), `ndjson/` (1), `xml/` (3), `yaml/` (1),
+  `toml/` (1), `sql/` (1) — 22 launch fixtures, all serialising the shared `people`
+  dataset so the same record can be compared across formats.
+- `generators/data.py`, `validators/data.py`.
+
 ### Added — first fixtures
 
 - `bin/` (23 fixtures, 230,715,033 bytes) and the text formats `txt/`, `md/`, `log/`,
