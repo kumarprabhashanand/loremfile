@@ -1,0 +1,26 @@
+# 17 — Risk Register
+
+Likelihood/impact: L/M/H. Owner: O = owner, A = engineer/agent, C = CI automation. Reviewed quarterly (runbook §4).
+
+| ID | Risk | L | I | Mitigation | Early signal | Owner |
+|---|---|---|---|---|---|---|
+| RISK-01 | Nobody uses it; growth stays near zero | M | M | SEO pages targeting real queries; launch posts; `llms.txt`; badges; be linked from tutorials; measure monthly | Requests/day < 1,000 after 3 months | O/A |
+| RISK-02 | Cloudflare changes free-tier limits or terms (R2 free ops, rate limiting, cache-key options) | L | H | Design has no hard dependency on any single free feature except R2 egress; automated daily cost check; runbook big red button; off-Cloudflare archives enable moving | Cloudflare announcement; `cost` issue | O |
+| RISK-03 | Abuse drives R2 Class B ops past 10 M/month (unique-404 busting, per-origin fragmentation, low-rate botnets) | M | L | Cache with query strings ignored; rate limit; daily automated R2-operations read with a `cost` issue at 5 M (detection latency ≤ 1 day); ASN/custom-rule blocks; disable custom domain as last resort | `cost` issue; Class B > 5 M mid-month | C/A |
+| RISK-04 | Safe Browsing or an AV vendor flags the domain | L | H | Content policy; no hostile fixtures; `sandbox` CSP; Search Console monitoring; takedown procedure | Search Console security issue; user report | A |
+| RISK-05 | Domain lapses (card expired, renewal failure) | L | H | Auto-renew; health check RDAP warning at 45 days; monthly card check | Renewal-failed email; RDAP warning | O |
+| RISK-06 | Toolchain drift makes new fixtures inconsistent with old ones (e.g. different ffmpeg output for the same recipe) | M | L | Published bytes frozen; audit is advisory; pin digests; descriptions record generator versions | Determinism issue | A |
+| RISK-07 | CI budget exceeded on full rebuild (first build or restore) | M | L | `--group` matrix; deferrable list; incremental builds normally tiny | CI > 45 min | A |
+| RISK-08 | A published fixture is wrong (bad props, misleading name) | M | L | Validators with `expect`; immutability + `supersededBy` path; changelog | Issue from a user | A |
+| RISK-09 | Token leak | L | M | Scoping, expiry, rotation, secrets only in env | Cloudflare audit log; unexpected changes | A |
+| RISK-10 | Maintainer unavailable for months | M | M | Auto-renew; health issues accumulate harmlessly; the Monday commit to the `ops-log` branch keeps scheduled workflows alive (GitHub disables them after 60 days without repository activity — if that ever happens, re-enable them under Actions → the workflow → Enable); token expiry opens a `rotation-due` issue 30 days ahead; documentation allows any engineer/agent to resume | No ops-log entries for 8 weeks; workflows disabled | O |
+| RISK-11 | Apex R2 custom domain behaves differently than assumed (e.g. cannot attach apex, or `/` handling) | L | M | M2.4/M2.5 verification before any content work; fallback: `www` as the file host with apex redirect (costs UX) | M2 findings | A |
+| RISK-12 | Free-plan rule semantics differ (e.g. header phase sees raw path) | L | L | M2.4 behavioural probes; adjust expressions using `raw.` fields | audit probes fail | A |
+| RISK-13 | Large synthetic media flagged by Cloudflare as "disproportionate" | L | M | Served via R2 (a Developer Platform product, which the CDN terms name as the way to serve large files); the terms do not separately address free-tier R2, so if Cloudflare objects, move to Workers Paid (USD 5/month) rather than argue; keep usage honest | Cloudflare notice | O |
+| RISK-14 | Someone squats `loremfile.com`/`.org` for a copycat with ads | L | L | Optional defensive registrations (Q-02); brand is the URL people already use | Search results | O |
+| RISK-15 | Fixture request flood / low-quality PRs | L | L | Templates, `good first fixture` label, clear grammar; maintainer says no | Issue count | A |
+| RISK-16 | Legal complaint about an edge fixture (e.g. `../evil.txt` zip entry) | L | L | Documented rationale; inert content; takedown procedure | Email | O/A |
+| RISK-17 | GitHub Actions free minutes policy changes for public repos | L | M | Builds are small after the first; could move to a self-hosted runner or local sessions | GitHub announcement | A |
+| RISK-18 | Search engines ignore the site (thin content) | M | M | Real per-format content; structured data; internal links; patience | No impressions after 3 months | A |
+| RISK-19 | Cloudflare account lost or suspended while it also holds the domain registration | L | Critical | Hardware-key 2FA, transfer lock; honest RTO: a mirror hostname in one day, recovery of `loremfile.dev` itself depends on Cloudflare support (days to weeks); the repository README is the out-of-band pointer to the current host; Q-06 (separate registrar) would shorten domain recovery | Account access failure | O |
+| RISK-20 | Bucket-lock rule count limit below the number of format prefixes | L | M | M0.4 tests it; fallback locks the largest formats and records the gap | wrangler/API error in M0.4 | O/A |
