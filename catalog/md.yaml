@@ -1,0 +1,18 @@
+# Markdown fixtures (docs/05 §3.6).
+format: md
+family: text
+mime: text/markdown
+description: >-
+  Markdown documents: a README-shaped file and one exercising every common element.
+seo_title: "Sample Markdown files for testing parsers — free, CC0"
+related: [txt]
+fixtures:
+  - name: readme-style.md
+    phase: 1
+    generator: text.lorem_sized
+    params: { size: 4096 }
+    description: "A README-shaped Markdown document of exactly 4,096 bytes."
+    tags: [text, document]
+    expect: { line_ending: lf }
+    size_class: exact
+    nominal_bytes: 4096

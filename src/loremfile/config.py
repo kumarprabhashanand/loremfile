@@ -33,6 +33,12 @@ LICENSE: Final = "CC0-1.0"
 LICENSE_URL: Final = "https://creativecommons.org/publicdomain/zero/1.0/"
 SOURCE_URL: Final = f"https://github.com/{OWNER}/loremfile"
 SCHEMA_VERSION: Final = 1
+
+#: The catalog's semver (docs/09 §7). Minor = fixtures added or removed; patch =
+#: descriptions, tags, notes or site-only changes; major = a manifest schema or URL
+#: contract change. This is the source; manifest.json is generated from it, and a new
+#: fixture records it as `added_in`.
+CATALOG_VERSION: Final = "1.0.0"
 SCHEMA_URL: Final = f"{BASE_URL}schema/manifest-v{SCHEMA_VERSION}.json"
 
 

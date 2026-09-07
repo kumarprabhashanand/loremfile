@@ -126,6 +126,8 @@ def basic(ctx: GeneratorContext, *, pages: int, page_size: str = "A4",
 
 `loremfile build` resolves `depends_on` into a DAG and generates in topological order, parallelising independent fixtures across `-j N` workers (default `os.cpu_count()`); generators marked `parallel_safe=False` run alone. Dataset generation runs once per process and is cached in memory.
 
+**As implemented in M3.1, generation is sequential and `-j` is not yet accepted.** The determinism guard patches process-global state — `os.urandom`, the clock, the `random` module — so two generators cannot run concurrently *in one process* without corrupting each other's stream; threads are therefore not an option and the parallel path has to be process-based. It is deferred to **M3.6**, where media encoding makes wall-clock time actually matter and separate processes make the patches safe again. The M3.1 set (43 fixtures, 243 MB) builds in about 8 seconds, so there is nothing to gain before then.
+
 **What gets generated (selection rule):**
 
 | Invocation | Selection |

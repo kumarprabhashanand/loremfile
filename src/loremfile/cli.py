@@ -15,15 +15,18 @@ from __future__ import annotations
 
 import json
 import sys
+from collections.abc import Callable
 from typing import Any
 
 import click
 
-from loremfile import __version__, config
+from loremfile import __version__, config, validators
+from loremfile import build as build_module
 from loremfile.catalog import Catalog, CatalogError
 from loremfile.manifest import (
     Manifest,
     ManifestError,
+    build_entry,
     render_formats_json,
     render_sha256sums,
 )
@@ -107,6 +110,132 @@ def catalog_validate(as_json: bool) -> None:
     )
 
 
+# --- build and validate ----------------------------------------------------
+
+
+def _selection_options(func: Callable[..., None]) -> Callable[..., None]:
+    """The filters shared by `build` and `validate` (docs/06 §5)."""
+    for option in reversed(
+        [
+            click.option("--only", multiple=True, metavar="PATH", help="Exact fixture paths."),
+            click.option(
+                "--format",
+                "formats",
+                multiple=True,
+                metavar="FMT",
+                help="Restrict to these formats.",
+            ),
+            click.option(
+                "--group",
+                type=click.Choice(["media", "data", "other"]),
+                help="Restrict to a format group.",
+            ),
+            click.option("--phase", type=int, help="Restrict to a catalog phase."),
+            click.option("--json", "as_json", is_flag=True, help="Print one JSON object."),
+        ]
+    ):
+        func = option(func)
+    return func
+
+
+@main.command("build")
+@click.option(
+    "--new",
+    "selection",
+    flag_value="new",
+    help="Only fixtures absent from the merge-base manifest.",
+)
+@click.option(
+    "--missing-in-bucket",
+    "selection",
+    flag_value="missing-in-bucket",
+    help="Only fixtures absent from the bucket (M4.3).",
+)
+@click.option("--all", "selection", flag_value="all", default=True, help="Every active fixture.")
+@_selection_options
+def build_command(
+    selection: str,
+    only: tuple[str, ...],
+    formats: tuple[str, ...],
+    group: str | None,
+    phase: int | None,
+    as_json: bool,
+) -> None:
+    """Generate fixtures into build/fixtures/."""
+    errors: list[str] = []
+    items: list[Item] = []
+    summary: dict[str, Any] = {}
+    try:
+        catalog_obj = Catalog.load()
+        chosen = build_module.select(
+            catalog_obj,
+            selection=build_module.Selection(selection),
+            only=only,
+            formats=formats,
+            group=group,
+            phase=phase,
+        )
+        results = build_module.build(chosen)
+        summary = {"generated": len(results), "bytes": sum(len(r.data) for r in results)}
+        items = [
+            {"path": r.path, "status": "ok", "detail": f"{len(r.data)} bytes"} for r in results
+        ]
+    except (build_module.BuildError, CatalogError, ValueError, KeyError) as exc:
+        errors.append(str(exc))
+    sys.exit(
+        _emit("build", ok=not errors, summary=summary, items=items, errors=errors, as_json=as_json)
+    )
+
+
+@main.command("validate")
+@_selection_options
+def validate_command(
+    only: tuple[str, ...],
+    formats: tuple[str, ...],
+    group: str | None,
+    phase: int | None,
+    as_json: bool,
+) -> None:
+    """Run the validators over build/fixtures/."""
+    errors: list[str] = []
+    items: list[Item] = []
+    summary: dict[str, Any] = {}
+    try:
+        catalog_obj = Catalog.load()
+        build_module.load_generators()
+        validators.load()
+        chosen = build_module.select(
+            catalog_obj, only=only, formats=formats, group=group, phase=phase
+        )
+        directory = build_module.fixtures_dir()
+        passed = 0
+        for fixture in chosen:
+            target = directory / fixture.path
+            if not target.is_file():
+                errors.append(f"{fixture.path}: not generated; run `loremfile build` first")
+                items.append({"path": fixture.path, "status": "missing", "detail": ""})
+                continue
+            report = validators.validate(
+                target.read_bytes(), fixture, catalog_obj.mime_for(fixture)
+            )
+            if report.ok:
+                passed += 1
+                items.append({"path": fixture.path, "status": "ok", "detail": ""})
+            else:
+                errors += [f"{fixture.path}: {failure}" for failure in report.failures]
+                items.append(
+                    {"path": fixture.path, "status": "failed", "detail": "; ".join(report.failures)}
+                )
+        summary = {"validated": passed, "failed": len(chosen) - passed}
+    except (build_module.BuildError, CatalogError, ValueError, KeyError) as exc:
+        errors.append(str(exc))
+    sys.exit(
+        _emit(
+            "validate", ok=not errors, summary=summary, items=items, errors=errors, as_json=as_json
+        )
+    )
+
+
 # --- manifest --------------------------------------------------------------
 
 
@@ -129,6 +258,47 @@ def _check_manifest_against_catalog() -> tuple[Manifest, list[str]]:
     errors += loaded.check_removals(catalog_paths, removable)
     errors += loaded.check_total_bytes()
     return loaded, errors
+
+
+def _entries_from_build(
+    catalog_obj: Catalog, committed: Manifest
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Build manifest entries from whatever is in build/fixtures/.
+
+    Only fixtures that were actually generated are considered, so `manifest update`
+    after a partial build adds only what that build produced. Every entry is validated
+    first: an entry never reaches the manifest without its props being measured.
+    """
+    build_module.load_generators()
+    validators.load()
+    directory = build_module.fixtures_dir()
+    entries: list[dict[str, Any]] = []
+    errors: list[str] = []
+    existing = committed.by_path
+
+    for fixture in catalog_obj.fixtures():
+        target = directory / fixture.path
+        if not target.is_file():
+            continue
+        data = target.read_bytes()
+        mime = catalog_obj.mime_for(fixture)
+        report = validators.validate(data, fixture, mime)
+        if not report.ok:
+            errors += [f"{fixture.path}: {failure}" for failure in report.failures]
+            continue
+        entry = build_entry(
+            fixture,
+            data,
+            report.props,
+            mime,
+            added_in=existing.get(fixture.path, {}).get("added_in", config.CATALOG_VERSION),
+        )
+        entries.append(entry)
+
+    # The lock rule is the point of the whole exercise: refuse before writing.
+    diffs = committed.check_lock({e["path"]: e for e in entries})
+    errors += [str(diff) for diff in diffs]
+    return entries, errors
 
 
 @manifest.command("check")
@@ -175,7 +345,29 @@ def manifest_update(as_json: bool) -> None:
     try:
         catalog_obj = Catalog.load()
         mime_defaults = {fmt.format: fmt.mime for fmt in catalog_obj.formats}
-        loaded.touch(changed=False)
+        added, lock_errors = _entries_from_build(catalog_obj, loaded)
+        if lock_errors:
+            sys.exit(
+                _emit(
+                    "manifest update",
+                    ok=False,
+                    summary={},
+                    items=[],
+                    errors=lock_errors,
+                    as_json=as_json,
+                )
+            )
+        by_path = loaded.by_path
+        # docs/06 §7 step 5: generated_at moves only when something actually changed,
+        # so an unchanged rebuild produces no diff at all. Comparing the assembled
+        # entries — not merely "did we build anything" — is what makes that true.
+        changed = any(by_path.get(entry["path"]) != entry for entry in added)
+        for entry in added:
+            by_path[entry["path"]] = entry
+        loaded.entries = sorted(by_path.values(), key=lambda e: e["path"])
+        changed = changed or loaded.catalog_version != config.CATALOG_VERSION
+        loaded.catalog_version = config.CATALOG_VERSION
+        loaded.touch(changed=changed)
         loaded.save()
         config.sha256sums_path().write_text(
             render_sha256sums(loaded), encoding="utf-8", newline="\n"

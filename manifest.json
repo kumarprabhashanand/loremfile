@@ -1,0 +1,1320 @@
+{
+  "$schema": "https://loremfile.dev/schema/manifest-v1.json",
+  "schema_version": 1,
+  "catalog_version": "1.0.0",
+  "generated_at": "2026-09-07T18:21:50Z",
+  "base_url": "https://loremfile.dev/",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "https://github.com/<OWNER>/loremfile",
+  "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:3ba29bb905b96fcb019b82f3f0e05f9b6472749af252fbff3f879460e0ef327c",
+  "count": 43,
+  "total_bytes": 254662199,
+  "formats": [
+    "bin",
+    "ini",
+    "log",
+    "md",
+    "txt"
+  ],
+  "fixtures": [
+    {
+      "path": "bin/1-byte.bin",
+      "url": "https://loremfile.dev/bin/1-byte.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 1,
+      "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "A single NUL byte. The smallest non-empty file, for minimum-size and off-by-one checks.",
+      "tags": [
+        "binary",
+        "boundary"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "zeros"
+      },
+      "generator": "binary.zeros",
+      "generator_params": {
+        "size": 1
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/100kb.bin",
+      "url": "https://loremfile.dev/bin/100kb.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 100000,
+      "sha256": "1cafc20f3681bd54dadc3ca599da92f3c872a230877f1a02d8443abe5e31e6ab",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 100,000 bytes of high-entropy SHAKE-256 output (decimal units). Incompressible, so transfer sizes are honest.",
+      "tags": [
+        "binary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 100000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/100mb.bin",
+      "url": "https://loremfile.dev/bin/100mb.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 100000000,
+      "sha256": "91c606b058d7574e4464aecb439f2cb35610e3256e792e1ddcaf59f8cc6daa06",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 100,000,000 bytes of high-entropy SHAKE-256 output (decimal units). Incompressible, so transfer sizes are honest.",
+      "tags": [
+        "binary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 100000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/10kb.bin",
+      "url": "https://loremfile.dev/bin/10kb.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 10000,
+      "sha256": "4324b36a696da2adca177b18e7ef92e9bff56539c139f02e131d900d7a4bd4c8",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 10,000 bytes of high-entropy SHAKE-256 output (decimal units). Incompressible, so transfer sizes are honest.",
+      "tags": [
+        "binary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 10000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/10mb-minus-1.bin",
+      "url": "https://loremfile.dev/bin/10mb-minus-1.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 9999999,
+      "sha256": "e902c1449d86f1c3a0d429235df6d00668b2e137cbe5d050acf5480936a75c72",
+      "size_class": "boundary",
+      "phase": 1,
+      "description": "Exactly one byte under 10mb, for testing an upload limit's boundary rather than its middle.",
+      "tags": [
+        "binary",
+        "boundary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 9999999
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/10mb-plus-1.bin",
+      "url": "https://loremfile.dev/bin/10mb-plus-1.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 10000001,
+      "sha256": "b87d12c8003dd2147e04d77ddde17d6ac91b410d1cda0f3c6937a62aaa64aa4c",
+      "size_class": "boundary",
+      "phase": 1,
+      "description": "Exactly one byte over 10mb, for testing an upload limit's boundary rather than its middle.",
+      "tags": [
+        "binary",
+        "boundary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 10000001
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/10mb.bin",
+      "url": "https://loremfile.dev/bin/10mb.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 10000000,
+      "sha256": "c1c3d1806aab7902ef54c5a115b49d13c75bf33aab2ace9690059cc47746f3c8",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 10,000,000 bytes of high-entropy SHAKE-256 output (decimal units). Incompressible, so transfer sizes are honest.",
+      "tags": [
+        "binary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 10000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/10mib-minus-1.bin",
+      "url": "https://loremfile.dev/bin/10mib-minus-1.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 10485759,
+      "sha256": "47fbe2a6260da9b09b1316f17e4fbce517a276356ee705ab9c8c5881f5bc9c6c",
+      "size_class": "boundary",
+      "phase": 1,
+      "description": "Exactly one byte under 10mib, for testing an upload limit's boundary rather than its middle.",
+      "tags": [
+        "binary",
+        "boundary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 10485759
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/10mib-plus-1.bin",
+      "url": "https://loremfile.dev/bin/10mib-plus-1.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 10485761,
+      "sha256": "c278c7fb096eb6b2c6afe0d9745088d51ff1b23f3e8f292a527237739fd8b243",
+      "size_class": "boundary",
+      "phase": 1,
+      "description": "Exactly one byte over 10mib, for testing an upload limit's boundary rather than its middle.",
+      "tags": [
+        "binary",
+        "boundary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 10485761
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/10mib.bin",
+      "url": "https://loremfile.dev/bin/10mib.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 10485760,
+      "sha256": "8b61143960294ef0b15ef78c9bdf8a93d348bc6eb5b4d25b5275786deb7286a5",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 10,485,760 bytes of high-entropy SHAKE-256 output (binary units). Incompressible, so transfer sizes are honest.",
+      "tags": [
+        "binary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 10485760
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/1kb.bin",
+      "url": "https://loremfile.dev/bin/1kb.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 1000,
+      "sha256": "b181d555c3239350cc0cb7909cf775b9713886ef832333fdc6f4e16fa29a67ff",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 1,000 bytes of high-entropy SHAKE-256 output (decimal units). Incompressible, so transfer sizes are honest.",
+      "tags": [
+        "binary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/1kib.bin",
+      "url": "https://loremfile.dev/bin/1kib.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 1024,
+      "sha256": "349f21852239b51841dad4077a2ee623ccbc63689a9b7332f6b9b505cf0f5321",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 1,024 bytes of high-entropy SHAKE-256 output (binary units). Incompressible, so transfer sizes are honest.",
+      "tags": [
+        "binary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 1024
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/1mb-minus-1.bin",
+      "url": "https://loremfile.dev/bin/1mb-minus-1.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 999999,
+      "sha256": "f166cac06117b42d76eac5e83c66758ed8c15d363d8d0f06888efe21378112be",
+      "size_class": "boundary",
+      "phase": 1,
+      "description": "Exactly one byte under 1mb, for testing an upload limit's boundary rather than its middle.",
+      "tags": [
+        "binary",
+        "boundary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 999999
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/1mb-plus-1.bin",
+      "url": "https://loremfile.dev/bin/1mb-plus-1.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 1000001,
+      "sha256": "0471e9355c40fc85716d52f00e088146c4028f166c24d14362be41166b547444",
+      "size_class": "boundary",
+      "phase": 1,
+      "description": "Exactly one byte over 1mb, for testing an upload limit's boundary rather than its middle.",
+      "tags": [
+        "binary",
+        "boundary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 1000001
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/1mb.bin",
+      "url": "https://loremfile.dev/bin/1mb.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 1000000,
+      "sha256": "03eae64884613c3475a6dc48fc80cae57effc51a2a8e99f8566648c8c0eb6305",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 1,000,000 bytes of high-entropy SHAKE-256 output (decimal units). Incompressible, so transfer sizes are honest.",
+      "tags": [
+        "binary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 1000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/1mib-minus-1.bin",
+      "url": "https://loremfile.dev/bin/1mib-minus-1.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 1048575,
+      "sha256": "cada4eefeb3c0ae79f80f6760d5bb695dc8d25d9c49098a20edd32501f804f4d",
+      "size_class": "boundary",
+      "phase": 1,
+      "description": "Exactly one byte under 1mib, for testing an upload limit's boundary rather than its middle.",
+      "tags": [
+        "binary",
+        "boundary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 1048575
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/1mib-plus-1.bin",
+      "url": "https://loremfile.dev/bin/1mib-plus-1.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 1048577,
+      "sha256": "d40cc51ba5f93b8660d0efae0f51ed47e23cfdaa3ad365afc19d9f84d75d64b9",
+      "size_class": "boundary",
+      "phase": 1,
+      "description": "Exactly one byte over 1mib, for testing an upload limit's boundary rather than its middle.",
+      "tags": [
+        "binary",
+        "boundary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 1048577
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/1mib.bin",
+      "url": "https://loremfile.dev/bin/1mib.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 1048576,
+      "sha256": "16671d869f6fe6f2dd2947e602b1c20da20e385dd12cc5b53ea88412de4f0c18",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 1,048,576 bytes of high-entropy SHAKE-256 output (binary units). Incompressible, so transfer sizes are honest.",
+      "tags": [
+        "binary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 1048576
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/50mb.bin",
+      "url": "https://loremfile.dev/bin/50mb.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 50000000,
+      "sha256": "7b9f6b2383880b89d5cb2e702028221ec8caf6bb92eada9117b25fc8ae2d8353",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 50,000,000 bytes of high-entropy SHAKE-256 output (decimal units). Incompressible, so transfer sizes are honest.",
+      "tags": [
+        "binary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "binary.shake",
+      "generator_params": {
+        "size": 50000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/incrementing-1mb.bin",
+      "url": "https://loremfile.dev/bin/incrementing-1mb.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 1000000,
+      "sha256": "67870dfc9c64e7aa270a3f7e8051ae65d207f93fc3df04d7572e6365af69cd0d",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "One megabyte of 0x00-0xFF repeating. Every byte value appears and any offset is obvious by eye, which makes range requests easy to check.",
+      "tags": [
+        "binary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "incrementing"
+      },
+      "generator": "binary.incrementing",
+      "generator_params": {
+        "size": 1000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/ones-1mb.bin",
+      "url": "https://loremfile.dev/bin/ones-1mb.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 1000000,
+      "sha256": "bfa872a3021d48c84643f831ee5f9358bceccf3ad6a5f8b3a7a00e0b3f22bdbc",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "One megabyte of 0xFF bytes.",
+      "tags": [
+        "binary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "ones"
+      },
+      "generator": "binary.ones",
+      "generator_params": {
+        "size": 1000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/zeros-10mb.bin",
+      "url": "https://loremfile.dev/bin/zeros-10mb.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 10000000,
+      "sha256": "f5e02aa71e67f41d79023a128ca35bad86cf7b6656967bfe0884b3a3c4325eaf",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Ten megabytes of NUL bytes, for compression and sparse-file behaviour.",
+      "tags": [
+        "binary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "zeros"
+      },
+      "generator": "binary.zeros",
+      "generator_params": {
+        "size": 10000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "bin/zeros-1mb.bin",
+      "url": "https://loremfile.dev/bin/zeros-1mb.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 1000000,
+      "sha256": "d29751f2649b32ff572b5e0a9f541ea660a50f94ff0beedfb0b692b924cc8025",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "One megabyte of NUL bytes. Compresses to almost nothing, which is the point.",
+      "tags": [
+        "binary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "zeros"
+      },
+      "generator": "binary.zeros",
+      "generator_params": {
+        "size": 1000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "ini/config.ini",
+      "url": "https://loremfile.dev/ini/config.ini",
+      "format": "ini",
+      "ext": "ini",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 468,
+      "sha256": "886ca94c8f0a4761e944f6fbe8c5842bbecec1d942d1a80b5d62bb52e3593502",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A configuration file with sections, ';' and '#' comments, quoted and empty values, a comma list and non-ASCII characters.",
+      "tags": [
+        "text",
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 26,
+        "max_line_bytes": 51
+      },
+      "generator": "text.ini_config",
+      "generator_params": {},
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "log/json-lines-app-1000.log",
+      "url": "https://loremfile.dev/log/json-lines-app-1000.log",
+      "format": "log",
+      "ext": "log",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 167666,
+      "sha256": "77dda5f5c4be751d238e25d7c9a997d3c4276003e064c47d8dff6ef2e801370f",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1,000 application log records, one JSON object per line.",
+      "tags": [
+        "text",
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1000,
+        "max_line_bytes": 208
+      },
+      "generator": "text.json_lines_log",
+      "generator_params": {
+        "count": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "log/nginx-access-1000-lines.log",
+      "url": "https://loremfile.dev/log/nginx-access-1000-lines.log",
+      "format": "log",
+      "ext": "log",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 110093,
+      "sha256": "542b5e7e5bea196e34ae724d9837e0f7de2554a9ea66d51fe28ff2c688c9e2fc",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1,000 nginx combined-format access lines with fixed timestamps and RFC 5737 documentation IP addresses.",
+      "tags": [
+        "text",
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1000,
+        "max_line_bytes": 127
+      },
+      "generator": "text.nginx_access_log",
+      "generator_params": {
+        "count": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "md/readme-style.md",
+      "url": "https://loremfile.dev/md/readme-style.md",
+      "format": "md",
+      "ext": "md",
+      "mime": "text/markdown; charset=utf-8",
+      "bytes": 4096,
+      "sha256": "6a7ceaf6516842df270d3dff9c02eba86776437f290cd80336fc49b431025603",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "A README-shaped Markdown document of exactly 4,096 bytes.",
+      "tags": [
+        "text",
+        "document"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 19,
+        "max_line_bytes": 754
+      },
+      "generator": "text.lorem_sized",
+      "generator_params": {
+        "size": 4096
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/crlf.txt",
+      "url": "https://loremfile.dev/txt/crlf.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 8981,
+      "sha256": "db7bb5580f83f7b3e1807b7a4d7d52785732effcdbcf37c9e677b1aedf145fa2",
+      "size_class": "free",
+      "phase": 1,
+      "description": "100 lines of Lorem Ipsum with Windows (CRLF) line endings.",
+      "tags": [
+        "text",
+        "encoding"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "crlf",
+        "lines": 100,
+        "max_line_bytes": 155
+      },
+      "generator": "text.lines",
+      "generator_params": {
+        "count": 100,
+        "line_ending": "crlf"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/emoji-only.txt",
+      "url": "https://loremfile.dev/txt/emoji-only.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 1488,
+      "sha256": "f90d2f4614647353750bb7f20cf73e6b03cc0a50d00f327a60ff3f3c750094e6",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Nothing but emoji sequences, including ZWJ families and skin-tone modifiers.",
+      "tags": [
+        "text",
+        "unicode"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1,
+        "max_line_bytes": 1487
+      },
+      "generator": "text.emoji_only",
+      "generator_params": {
+        "count": 200
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/latin1.txt",
+      "url": "https://loremfile.dev/txt/latin1.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=iso-8859-1",
+      "bytes": 1151,
+      "sha256": "02bb4b88958fc264d39cb56f5476b0d9e6ecc74f33e1c7759cf5014af2dc29eb",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Western European text encoded as ISO-8859-1, not UTF-8.",
+      "tags": [
+        "text",
+        "encoding"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "iso-8859-1",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 5,
+        "max_line_bytes": 455
+      },
+      "generator": "text.encoded",
+      "generator_params": {
+        "encoding": "iso-8859-1"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/lf.txt",
+      "url": "https://loremfile.dev/txt/lf.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 9039,
+      "sha256": "fab8f35fccc97eb2f1583dc4628b0674ab7c5536eb009381ddc600f735a5048e",
+      "size_class": "free",
+      "phase": 1,
+      "description": "100 lines of Lorem Ipsum with Unix (LF) line endings.",
+      "tags": [
+        "text",
+        "encoding"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 100,
+        "max_line_bytes": 137
+      },
+      "generator": "text.lines",
+      "generator_params": {
+        "count": 100,
+        "line_ending": "lf"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/lorem-100kb.txt",
+      "url": "https://loremfile.dev/txt/lorem-100kb.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 100000,
+      "sha256": "a24a2ab8e69194a3d817cb9e6fb86e3a73e7aa12dc6635741b0cdc4736bf1ac3",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 100,000 bytes of Lorem Ipsum, LF line endings, cut at a word boundary and space-padded before the final newline.",
+      "tags": [
+        "text",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 439,
+        "max_line_bytes": 771
+      },
+      "generator": "text.lorem_sized",
+      "generator_params": {
+        "size": 100000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/lorem-10mb.txt",
+      "url": "https://loremfile.dev/txt/lorem-10mb.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 10000000,
+      "sha256": "b1a1c37be326340f697ab957c5af1ebc43dfd4e4239b4cb7181eadcd1eb6dcdd",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 10,000,000 bytes of Lorem Ipsum, LF line endings, cut at a word boundary and space-padded before the final newline.",
+      "tags": [
+        "text",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 44503,
+        "max_line_bytes": 887
+      },
+      "generator": "text.lorem_sized",
+      "generator_params": {
+        "size": 10000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/lorem-10mib.txt",
+      "url": "https://loremfile.dev/txt/lorem-10mib.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 10485760,
+      "sha256": "6467fe2431f62ae95d09722be1019d3b6ed57672a8e675bc48b155ca15e31c6d",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 10,485,760 bytes of Lorem Ipsum, LF line endings, cut at a word boundary and space-padded before the final newline.",
+      "tags": [
+        "text",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 46823,
+        "max_line_bytes": 911
+      },
+      "generator": "text.lorem_sized",
+      "generator_params": {
+        "size": 10485760
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/lorem-1kb.txt",
+      "url": "https://loremfile.dev/txt/lorem-1kb.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 1000,
+      "sha256": "c69d094dae487a6ce9de7ab9799d434f8e854d954483a8f651ec724f25c7db90",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 1,000 bytes of Lorem Ipsum, LF line endings, cut at a word boundary and space-padded before the final newline.",
+      "tags": [
+        "text",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 3,
+        "max_line_bytes": 622
+      },
+      "generator": "text.lorem_sized",
+      "generator_params": {
+        "size": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/lorem-1mb.txt",
+      "url": "https://loremfile.dev/txt/lorem-1mb.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 1000000,
+      "sha256": "5fb5c9e02b0837a5c297fb74a67bd79a488d478e7e030bccdba428f2ea145103",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 1,000,000 bytes of Lorem Ipsum, LF line endings, cut at a word boundary and space-padded before the final newline.",
+      "tags": [
+        "text",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 4431,
+        "max_line_bytes": 839
+      },
+      "generator": "text.lorem_sized",
+      "generator_params": {
+        "size": 1000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/lorem-1mib.txt",
+      "url": "https://loremfile.dev/txt/lorem-1mib.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 1048576,
+      "sha256": "0f976858fc030ad2ccff5f50261a133a7599baf176add2cc61ea6eec3a113455",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 1,048,576 bytes of Lorem Ipsum, LF line endings, cut at a word boundary and space-padded before the final newline.",
+      "tags": [
+        "text",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 4657,
+        "max_line_bytes": 871
+      },
+      "generator": "text.lorem_sized",
+      "generator_params": {
+        "size": 1048576
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/shift-jis.txt",
+      "url": "https://loremfile.dev/txt/shift-jis.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=shift_jis",
+      "bytes": 1709,
+      "sha256": "597585152de45f66efb67135b47f171fef3859dc5c8ac0af8fee88868b7a1c45",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Japanese pseudo-text encoded as Shift-JIS; every character is representable in that charset.",
+      "tags": [
+        "text",
+        "encoding",
+        "unicode"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "shift_jis",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 5,
+        "max_line_bytes": 602
+      },
+      "generator": "text.encoded",
+      "generator_params": {
+        "encoding": "shift_jis",
+        "script": "kanji"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/utf16le-bom.txt",
+      "url": "https://loremfile.dev/txt/utf16le-bom.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-16",
+      "bytes": 2788,
+      "sha256": "ec5892e24c0322d8a4a6a46fa452b2c6de44d7cf21fe6c2a91665986c5dba55b",
+      "size_class": "free",
+      "phase": 1,
+      "description": "UTF-16 little-endian text with a byte-order mark.",
+      "tags": [
+        "text",
+        "encoding",
+        "unicode"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-16",
+        "bom": true,
+        "line_ending": "lf",
+        "lines": 6,
+        "max_line_bytes": 1279
+      },
+      "generator": "text.encoded",
+      "generator_params": {
+        "encoding": "utf-16le",
+        "bom": true
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/utf8-bom.txt",
+      "url": "https://loremfile.dev/txt/utf8-bom.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 1437,
+      "sha256": "2cf3006be8a86c0f719d6eeaa6f2d5ae7c8a66bc6c80918113470f7c3b75ea5d",
+      "size_class": "free",
+      "phase": 1,
+      "description": "UTF-8 text preceded by a byte-order mark, which many parsers mishandle.",
+      "tags": [
+        "text",
+        "encoding",
+        "unicode"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": true,
+        "line_ending": "lf",
+        "lines": 5,
+        "max_line_bytes": 545
+      },
+      "generator": "text.encoded",
+      "generator_params": {
+        "encoding": "utf-8",
+        "bom": true
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/utf8-multilingual.txt",
+      "url": "https://loremfile.dev/txt/utf8-multilingual.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 1308,
+      "sha256": "ec651bc33c7e034df11b7c37ef8b67bbf771fac912011499b6824d52f3704fd7",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One line per script — Latin, Greek, Cyrillic, Arabic, Hebrew, Devanagari, Thai, CJK, Hangul — plus emoji, combining marks, bidi controls and unusual space characters.",
+      "tags": [
+        "text",
+        "unicode",
+        "encoding"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 14,
+        "max_line_bytes": 141
+      },
+      "generator": "text.multilingual",
+      "generator_params": {},
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/very-long-line-1mb.txt",
+      "url": "https://loremfile.dev/txt/very-long-line-1mb.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 1000000,
+      "sha256": "c0314c69c483887c5e636a2177176a76f575f72d689438ca1c8b7332df257135",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "A single line of exactly 1,000,000 bytes, for tools that read a whole line into memory.",
+      "tags": [
+        "text",
+        "sized",
+        "stress"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1,
+        "max_line_bytes": 999999
+      },
+      "generator": "text.one_long_line",
+      "generator_params": {
+        "size": 1000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "txt/windows-1252.txt",
+      "url": "https://loremfile.dev/txt/windows-1252.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=windows-1252",
+      "bytes": 1606,
+      "sha256": "13bb24eb82b605e91396d2c17801b39a9dbed5c4bbfbd7db2f0a1afdc5cf9014",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Text encoded as Windows-1252, the charset mislabelled as Latin-1 most often.",
+      "tags": [
+        "text",
+        "encoding"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "windows-1252",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 5,
+        "max_line_bytes": 628
+      },
+      "generator": "text.encoded",
+      "generator_params": {
+        "encoding": "windows-1252"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    }
+  ]
+}

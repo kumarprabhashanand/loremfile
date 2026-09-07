@@ -44,6 +44,13 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Added — first fixtures
+
+- `bin/` (23 fixtures, 230,715,033 bytes) and the text formats `txt/`, `md/`, `log/`,
+  `ini/` (20 fixtures): generators, validators, catalogs, and the first `manifest.json`,
+  `sha256sums.txt` and `formats.json` (M3.1).
+- `loremfile build` and `loremfile validate`; the `build-and-validate` CI job.
+
 ### Changed
 
 - `docs/13-legal-and-policy.md` §3 privacy notice rewritten and §3a "Compliance posture"

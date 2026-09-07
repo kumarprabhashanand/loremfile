@@ -230,7 +230,19 @@ Family "Loremfile Sans", generated with fontTools: ASCII printable glyphs drawn 
 | `incrementing-1mb.bin` | 1 | `0x00..0xFF` repeating | exact |
 | `100mb-plus-1.bin`, `100mib-plus-1.bin` | 2 | | (storage budget) |
 
-Total P1 `bin/` = 335,572,633 bytes (≈ 336 MB).
+Total P1 `bin/` = 335,572,633 bytes (≈ 336 MB) **as listed above**.
+
+> **Open contradiction (found in M3.1, tracked as Q-22).** `100mib.bin` is 104,857,600
+> bytes, which exceeds REQ-23's cap of 100,000,000 bytes per fixture; `05` §1 rule 4 and
+> `13` §5 say the same, and `06` §3 says `allow_large` is "never true in P1". The
+> `-plus-1` variant was already deferred to phase 2 for storage budget, so the base row
+> looks like an oversight rather than a deliberate exception. Deferring it to phase 2
+> does not help — REQ-23 caps every fixture regardless of phase — so until Q-22 is
+> answered `catalog/bin.yaml` simply **omits the row**, which makes the P1 `bin/` set 23
+> rows and **230,715,033 bytes**, and the launch set 228 files rather than 229. The
+> counts elsewhere in this document, in `00` §6, `12`, `15`, `16` (ADR-024) and `18`
+> still say 229; they are deliberately left alone until the decision is made, because
+> either answer is a one-line change to this catalog.
 
 ### 3.11 Calendar, contacts, mail
 

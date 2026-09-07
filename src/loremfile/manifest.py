@@ -8,6 +8,7 @@ the committed manifest, its ``sha256``, ``bytes`` and ``mime`` can never change.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -15,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from loremfile import config
+from loremfile.catalog import Fixture
 
 #: Fields frozen once a path is published. Changing any of them is the one thing the
 #: whole project promises never to do.
@@ -204,6 +206,44 @@ class Manifest:
         if changed or self.generated_at is None:
             self.generated_at = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         self.toolchain_image = config.toolchain_digest()
+
+
+def build_entry(
+    fixture: Fixture,
+    data: bytes,
+    props: dict[str, Any],
+    mime: str,
+    *,
+    added_in: str,
+) -> dict[str, Any]:
+    """Assemble a manifest entry from a generated fixture and its measured props.
+
+    Field order follows docs/04 §1.2 so the committed JSON reads like the specification.
+    ``sha256`` and ``bytes`` are computed here from the actual bytes — never passed in —
+    so an entry can never claim a hash the file does not have.
+    """
+    return {
+        "path": fixture.path,
+        "url": f"{config.BASE_URL}{fixture.path}",
+        "format": fixture.format,
+        "ext": fixture.ext,
+        "mime": mime,
+        "bytes": len(data),
+        "sha256": hashlib.sha256(data).hexdigest(),
+        "size_class": str(fixture.size_class),
+        "phase": fixture.phase,
+        "description": fixture.description,
+        "tags": list(fixture.tags),
+        "edge_case": fixture.edge_case,
+        "props": props,
+        "generator": fixture.generator,
+        "generator_params": dict(fixture.params),
+        "added_in": added_in,
+        "status": "active",
+        "deprecated": False,
+        "supersededBy": None,
+        **({"notes": fixture.notes} if fixture.notes else {}),
+    }
 
 
 def make_tombstone(entry: dict[str, Any], reason: str, removed_at: str) -> dict[str, Any]:
