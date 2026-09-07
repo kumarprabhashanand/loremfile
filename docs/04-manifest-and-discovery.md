@@ -17,7 +17,7 @@ Location: repository root (committed) and `https://loremfile.dev/manifest.json` 
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/<OWNER>/loremfile",
   "toolchain_image": "ghcr.io/<OWNER>/loremfile-toolchain@sha256:<digest>",
-  "count": 417,
+  "count": 416,
   "total_bytes": 1060000000,
   "formats": ["avif", "bin", "csv", "..."],
   "fixtures": [ { "...": "see 1.2" } ]

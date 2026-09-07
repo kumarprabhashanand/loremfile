@@ -1,0 +1,162 @@
+"""Integration checks over everything in build/fixtures/ (docs/12 §3).
+
+These run in CI's `build-and-validate` job, after `loremfile build`. They are the
+whole-set checks that a per-fixture validator cannot make: total size against the
+budget, the policy scan over every byte published, and agreement between the catalog,
+the generated files and the committed manifest.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+
+import pytest
+
+from loremfile import build as build_module
+from loremfile import config, validators
+from loremfile.catalog import Catalog, Status
+from loremfile.manifest import Manifest
+from loremfile.validators import policy
+
+FIXTURES = build_module.fixtures_dir()
+pytestmark = pytest.mark.skipif(
+    not FIXTURES.is_dir(), reason="run `loremfile build` first; CI does this before pytest"
+)
+
+
+@pytest.fixture(scope="module")
+def catalog() -> Catalog:
+    build_module.load_generators()
+    validators.load()
+    return Catalog.load()
+
+
+def built_paths() -> list[Path]:
+    return sorted(p for p in FIXTURES.rglob("*") if p.is_file())
+
+
+def test_something_was_built() -> None:
+    assert built_paths(), "build/fixtures is empty"
+
+
+def test_every_built_file_is_in_the_catalog(catalog: Catalog) -> None:
+    known = {f.path for f in catalog.fixtures()}
+    extra = sorted(str(p.relative_to(FIXTURES)) for p in built_paths())
+    unknown = [p for p in extra if p not in known]
+    assert not unknown, f"built files with no catalog entry: {unknown}"
+
+
+def test_total_bytes_are_within_the_budget() -> None:
+    total = sum(p.stat().st_size for p in built_paths())
+    assert total <= config.MAX_TOTAL_BYTES, (
+        f"{total} bytes exceeds MAX_TOTAL_BYTES {config.MAX_TOTAL_BYTES}"
+    )
+
+
+def test_no_fixture_exceeds_the_per_file_cap(catalog: Catalog) -> None:
+    by_path = catalog.by_path
+    over = [
+        str(p.relative_to(FIXTURES))
+        for p in built_paths()
+        if p.stat().st_size > config.MAX_FIXTURE_BYTES
+        and not by_path[str(p.relative_to(FIXTURES))].allow_large
+    ]
+    assert not over, f"over MAX_FIXTURE_BYTES without allow_large: {over}"
+
+
+def test_policy_scan_over_every_built_byte(catalog: Catalog) -> None:
+    """The scan a per-format validator cannot be trusted to do for every format."""
+    by_path = catalog.by_path
+    violations: list[str] = []
+    for path in built_paths():
+        relative = str(path.relative_to(FIXTURES))
+        fixture = by_path[relative]
+        violations += [
+            str(v)
+            for v in policy.scan(relative, path.read_bytes(), exceptions=fixture.policy_exceptions)
+        ]
+    assert not violations, "\n  ".join(["content policy violations:", *violations])
+
+
+def test_every_built_fixture_validates(catalog: Catalog) -> None:
+    by_path = catalog.by_path
+    failures: list[str] = []
+    for path in built_paths():
+        relative = str(path.relative_to(FIXTURES))
+        fixture = by_path[relative]
+        report = validators.validate(path.read_bytes(), fixture, catalog.mime_for(fixture))
+        failures += [f"{relative}: {f}" for f in report.failures]
+    assert not failures, "\n  ".join(["validation failures:", *failures])
+
+
+# --- agreement with the committed manifest --------------------------------
+
+
+def test_committed_manifest_matches_the_built_bytes() -> None:
+    """Every built fixture that is already in the manifest must hash the same.
+
+    This is the lock rule seen from the other side: the manifest in git is a claim
+    about bytes, and this proves the claim.
+    """
+    manifest = Manifest.load()
+    if not manifest.entries:
+        pytest.skip("no manifest.json yet")
+    committed = manifest.by_path
+    mismatches = []
+    for path in built_paths():
+        relative = str(path.relative_to(FIXTURES))
+        entry = committed.get(relative)
+        if entry is None:
+            continue
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        if digest != entry["sha256"]:
+            mismatches.append(
+                f"{relative}: manifest {entry['sha256'][:12]}… vs built {digest[:12]}…"
+            )
+        if path.stat().st_size != entry["bytes"]:
+            mismatches.append(f"{relative}: byte count differs from the manifest")
+    assert not mismatches, "\n  ".join(["manifest disagrees with the built bytes:", *mismatches])
+
+
+def test_sha256sums_matches_the_manifest() -> None:
+    sums = config.sha256sums_path()
+    manifest = Manifest.load()
+    if not manifest.entries or not sums.is_file():
+        pytest.skip("nothing published yet")
+    lines = {
+        line.split("  ", 1)[1]: line.split("  ", 1)[0]
+        for line in sums.read_text(encoding="utf-8").splitlines()
+    }
+    expected = {e["path"]: e["sha256"] for e in manifest.active}
+    assert lines == expected
+
+
+def test_formats_json_matches_the_manifest() -> None:
+    path = config.formats_json_path()
+    manifest = Manifest.load()
+    if not manifest.entries or not path.is_file():
+        pytest.skip("nothing published yet")
+    document = json.loads(path.read_text(encoding="utf-8"))
+    counts = {row["format"]: row["count"] for row in document["formats"]}
+    actual: dict[str, int] = {}
+    for entry in manifest.active:
+        actual[entry["format"]] = actual.get(entry["format"], 0) + 1
+    assert counts == actual
+
+
+def test_catalog_active_fixtures_all_have_manifest_entries(catalog: Catalog) -> None:
+    """Anything active in the catalog and built must be published, or the deploy would
+    silently skip it."""
+    manifest = Manifest.load()
+    if not manifest.entries:
+        pytest.skip("no manifest.json yet")
+    committed = set(manifest.by_path)
+    built = {str(p.relative_to(FIXTURES)) for p in built_paths()}
+    missing = sorted(
+        f.path
+        for f in catalog.fixtures()
+        if f.status is Status.ACTIVE and f.path in built and f.path not in committed
+    )
+    assert not missing, f"built and active but absent from manifest.json: {missing}"

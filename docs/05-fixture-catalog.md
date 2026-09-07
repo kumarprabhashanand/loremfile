@@ -9,7 +9,7 @@ This document is the authoritative list of fixtures. It is transcribed into `cat
 3. **Safe.** No scripts in PDFs; no external entity references in XML; no executables (no MZ/ELF/Mach-O magic); no EICAR string; no decompression ratios above 1000:1 in archives (`zip64-70000-empty-files.zip` is the largest ratio and is whitelisted with its ratio recorded); no private keys; no macros (`.xlsm`, `.docm` are excluded).
 4. **Sizes.** ≤ 100,000,000 bytes per fixture. `bin/` and `txt/lorem-*` are exact; `-plus-1`/`-minus-1` are exact boundaries; other size-named fixtures are `approx` (±5 %).
 5. **Every fixture has a one-line description** written for a reader deciding whether it fits, and `tags` from the controlled vocabulary.
-6. **Phases.** Rows marked phase 1 total ≈ 417 files / ≈ 1.06 GB (§5). The **launch set (P1)** is the explicit list in §9 (229 files, ≈ 620 MB, every family represented); the remaining phase-1 rows are **P1b**, added in batches right after launch (`15` M7). Phase 2 (P2) is the roadmap. Anything not in this document needs a catalog PR that also updates this document.
+6. **Phases.** Rows marked phase 1 total ≈ 416 files / ≈ 0.96 GB (§5). The **launch set (P1)** is the explicit list in §9 (228 files, ≈ 515 MB, every family represented); the remaining phase-1 rows are **P1b**, added in batches right after launch (`15` M7). Phase 2 (P2) is the roadmap. Anything not in this document needs a catalog PR that also updates this document.
 7. **Charsets.** Every text-like fixture's `mime` carries an explicit charset; the default appended by the catalog loader is `utf-8`. The only overrides are: `txt/utf16le-bom.txt`, `txt/utf16be-bom.txt` → `text/plain; charset=utf-16`; `txt/utf32le-bom.txt` → `text/plain; charset=utf-32`; `txt/latin1.txt` → `text/plain; charset=iso-8859-1`; `txt/windows-1252.txt` → `text/plain; charset=windows-1252`; `txt/shift-jis.txt` → `text/plain; charset=shift_jis`; `txt/gb2312.txt` → `text/plain; charset=gb2312`; `csv/people-10-latin1.csv` → `text/csv; charset=iso-8859-1`; `csv/people-10-utf16le.csv` → `text/csv; charset=utf-16`; `xml/utf16.xml` → `application/xml; charset=utf-16`; `xhtml` → `application/xhtml+xml; charset=utf-8`. Edge fixtures with `defect: invalid-encoding` keep the charset their name claims.
 8. **Sizes for `-plus-1`/`-minus-1`** exist only in `bin/`. Sizing recipes for every size-named fixture are in §6.
 
@@ -223,14 +223,28 @@ Family "Loremfile Sans", generated with fontTools: ASCII printable glyphs drawn 
 |---|---|---|---|
 | `1-byte.bin` | 1 | `0x00` | 1 |
 | `1kb.bin`, `10kb.bin`, `100kb.bin`, `1mb.bin`, `10mb.bin`, `50mb.bin`, `100mb.bin` | 1 | `hashlib.shake_256(ctx.seed).digest(n)` — the standard seed (`sha256("loremfile:" + path)`) | 10^3 … 10^8 exact |
-| `1kib.bin`, `1mib.bin`, `10mib.bin`, `100mib.bin` | 1 | same | 2^10, 2^20, 10·2^20, 100·2^20 |
+| `1kib.bin`, `1mib.bin`, `10mib.bin` | 1 | same | 2^10, 2^20, 10·2^20 |
 | `1mb-minus-1.bin`, `1mb-plus-1.bin`, `10mb-minus-1.bin`, `10mb-plus-1.bin`, `1mib-minus-1.bin`, `1mib-plus-1.bin`, `10mib-minus-1.bin`, `10mib-plus-1.bin` | 1 | same | nominal ∓ 1 |
 | `zeros-1mb.bin`, `zeros-10mb.bin` | 1 | all `0x00` | exact |
 | `ones-1mb.bin` | 1 | all `0xFF` | exact |
 | `incrementing-1mb.bin` | 1 | `0x00..0xFF` repeating | exact |
-| `100mb-plus-1.bin`, `100mib-plus-1.bin` | 2 | | (storage budget) |
+| `100mib.bin`, `100mb-plus-1.bin`, `100mib-plus-1.bin` | 2 | | (exceeds REQ-23's 100,000,000-byte cap; needs the cap revisited — see Q-22) |
 
-Total P1 `bin/` = 335,572,633 bytes (≈ 336 MB).
+Total P1 `bin/` = **230,715,033 bytes** (23 rows), **measured** from the built fixtures in
+M3.1, not estimated.
+
+> **Why `100mib.bin` is phase 2 (resolved 2026-09-07).** At 104,857,600 bytes it exceeds
+> REQ-23's cap of 100,000,000 bytes per fixture, which `05` §1 rule 4 and `13` §5 restate
+> and which `06` §3 says `allow_large` may not override in P1. The row was listed as
+> phase 1 by oversight — its `-plus-1` variant was already deferred. It is deferred
+> rather than excepted: **nothing gets an exception at launch.** Whether the cap itself
+> should become 104,857,600 so the top-end boundary pairs become possible is Q-22, to be
+> answered from operational data at the month-6 retrospective (`15` M6.4), not now.
+>
+> `catalog/bin.yaml` does not carry the row at all. The catalog is what `loremfile build`
+> reads, and `--all` selects every active fixture regardless of phase, so a phase-2 row
+> over the cap would fail validation on every full build. The row returns to the catalog
+> only if Q-22 raises the cap.
 
 ### 3.11 Calendar, contacts, mail
 
@@ -283,11 +297,11 @@ Total P1 `bin/` = 335,572,633 bytes (≈ 336 MB).
 | data | csv, tsv, json, ndjson, xml, yaml, toml, parquet, avro, arrow, sqlite, sql, geojson, gpx, kml, kmz | 80 | 200 MB |
 | archives | zip, tar, gz, bz2, xz, zst, 7z | 33 | 135 MB |
 | fonts | ttf, otf, woff, woff2 | 4 | < 1 MB |
-| binary | bin, wasm | 25 | 336 MB |
+| binary | bin, wasm | 24 | 231 MB (`bin/` **measured**: 230,715,033) |
 | calendar-mail | ics, vcf, eml, mbox | 15 | < 1 MB |
 | certificates | pem, der | 3 | < 1 MB |
 | edge | edge | 38 | 30 MB |
-| **Total** | | **417** | **≈ 1.06 GB** |
+| **Total** | | **416** | **≈ 0.96 GB** |
 
 Many fixtures are cheap variants; the byte budget (≤ 8 GB) and the generation time budget (≤ 25 min in CI, see `06`) are the binding constraints, not the file count. If CI time is exceeded, defer `4k-5s.mp4`, `1080p-60s.mp4`, `100mb.zip`, `100mb.wav` and the 100k-row family to P2 — the implementation plan lists this fallback. M3.9 replaces the estimates above with measured values.
 
@@ -325,7 +339,9 @@ Many fixtures are cheap variants; the byte budget (≤ 8 GB) and the generation 
 
 ## 9. Launch set (P1) — the fixtures that must exist on launch day
 
-Everything else marked phase 1 in §3 (188 files) is P1b. Chosen for search demand, boundary testing and at least one representative per family: 229 files, ≈ 620 MB.
+Everything else marked phase 1 in §3 (188 files) is P1b. Chosen for search demand, boundary testing and at least one representative per family: **228 files, ≈ 515 MB**.
+
+P1b stays **188**: `100mib.bin` moved out of phase 1 entirely, so it left both the phase-1 total (417 → 416) and the launch set (229 → 228), and 416 − 228 = 188. Deferring a launch row to phase 2 does not add it to P1b.
 
 | Family | Launch fixtures |
 |---|---|
@@ -344,6 +360,6 @@ Everything else marked phase 1 in §3 (188 files) is P1b. Chosen for search dema
 | xml, yaml, toml, parquet, avro, arrow, sqlite, sql, geojson, gpx, kml, kmz | `xml/people-10`, `xml/with-namespaces`, `xml/rss2-feed`, `yaml/config-all-types`, `toml/config`, `parquet/people-1000`, `parquet/people-100k`, `avro/people-1000`, `arrow/people-1000`, `sqlite/people-1000`, `sqlite/multi-table-with-fk-indexes-views`, `sql/people-1000-inserts-portable`, `geojson/points-100`, `gpx/track-100-points`, `kml/placemarks-10`, `kmz/placemarks-10` |
 | zip, tar, gz, bz2, xz, zst, 7z | `zip/3-text-files`, `zip/nested-directories`, `zip/empty`, `zip/mixed-fixtures`, `zip/aes256-password-loremfile`, `zip/1mb`, `zip/10mb`, `zip/100mb`, `tar/3-text-files.tar`, `tar/3-text-files.tar.gz`, `tar/3-text-files.tar.xz`, `gz/lorem-1mb.txt.gz`, `gz/multi-member-3`, `bz2/lorem-1mb.txt.bz2`, `xz/lorem-1mb.txt.xz`, `zst/lorem-1mb.txt.zst`, `7z/3-text-files` |
 | ttf, otf, woff, woff2 | all four `loremfile-sans` files |
-| bin | all 24 P1 rows of §3.10 |
+| bin | all 23 P1 rows of §3.10 |
 | ics, vcf, eml, mbox, pem, der, wasm | `ics/single-event`, `ics/recurring-weekly-rrule`, `vcf/vcard3-single`, `vcf/vcard4-single`, `eml/plain-text`, `eml/with-attachments`, `mbox/3-messages`, `pem/self-signed-ed25519-cert`, `der/self-signed-ed25519-cert`, `wasm/minimal-add` |
 | edge | all seven `zero-byte.*`, `pdf-truncated-60pct`, `jpg-truncated-50pct`, `mp4-truncated-50pct`, `zip-truncated-50pct`, `png-with-pdf-extension`, `pdf-with-png-extension`, `json-trailing-comma`, `json-bom`, `csv-ragged-rows`, `xml-unclosed-tag`, `utf8-invalid-bytes`, `zip-directory-traversal-name` |
