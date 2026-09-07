@@ -25,6 +25,9 @@ All notable changes to this project are documented here. The format follows
   the published reference (M1.3).
 - `tests/unit/test_requirements_lock.py` — asserts the lock is installable under
   `pip install --require-hashes`.
+- `src/loremfile/config.py`, `catalog.py`, `manifest.py`, `schema/manifest-v1.json`,
+  `catalog/_tags.yaml` and `tools/check_lock.sh`; the `loremfile catalog validate` and
+  `loremfile manifest check|update` commands (M1.6).
 
 ### Fixed
 
