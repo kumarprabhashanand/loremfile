@@ -42,10 +42,17 @@ jobs:
       - name: Type check
         run: mypy src/
 
+      - name: Dependency lock is consistent
+        # Fails if tools/requirements.in changed without the lock and the digest
+        # changing too. Needs the full history fetched above.
+        run: tools/check_lock.sh
+
+      - name: Validate the catalog
+        run: loremfile catalog validate
+
       - name: Unit tests
         run: pytest -q tests/unit
 
       # Added by the milestone that creates the thing being checked, so the job never
       # references a command that does not exist yet (docs/09 §3.1):
-      #   M1.6 — tools/check_lock.sh and `loremfile catalog validate`
       #   M3.1 — the build-and-validate job, and its entry in the branch ruleset

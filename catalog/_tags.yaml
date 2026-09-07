@@ -1,0 +1,43 @@
+# Controlled tag vocabulary (docs/05 §4). A fixture may only use tags listed here;
+# tests/unit/test_catalog.py fails on anything else. Adding a tag is a catalog PR that
+# also updates docs/05 §4.
+tags:
+  # families
+  - document
+  - image
+  - video
+  - audio
+  - data
+  - archive
+  - font
+  - text
+  - binary
+  - mail
+  - calendar
+  - geo
+  - web
+  # properties
+  - multi-page
+  - animated
+  - transparent
+  - sized
+  - boundary
+  - encoding
+  - unicode
+  - large
+  - stress
+  - encrypted
+  # defects (edge fixtures)
+  - invalid
+  - truncated
+  - mismatched
+  # shared datasets
+  - dataset-people
+  - dataset-orders
+  - dataset-products
+  # codecs
+  - codec-h264
+  - codec-vp9
+  - codec-aac
+  - codec-opus
+  - codec-mp3
