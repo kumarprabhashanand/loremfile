@@ -29,14 +29,19 @@ PR builds never receive the `production` environment, so they cannot upload or c
 
 ## 3. Workflows
 
-All actions are pinned to full commit SHAs (Dependabot keeps them current). `<SHA-…>` placeholders below are resolved in M1.4 with `gh api repos/<action-owner>/<action-repo>/commits/<tag> --jq .sha`; the version tag stays in a trailing comment.
+All actions are pinned to full commit SHAs (Dependabot keeps them current), resolved with `gh api repos/<action-owner>/<action-repo>/commits/<tag> --jq .sha`; the version tag stays in a trailing comment.
 
-| Action | Tag to resolve in M1.4 | Used by |
-|---|---|---|
-| `actions/checkout` | latest `v4.x` | all workflows |
-| `actions/upload-artifact`, `actions/download-artifact` | latest `v4.x` | `ci.yml` |
-| `docker/login-action` | latest `v3.x` | `toolchain.yml` |
-| `docker/build-push-action` | latest `v6.x` | `toolchain.yml` |
+**Resolved 2026-09-07.** The major versions this document originally assumed (`checkout` v4, `login-action` v3, `build-push-action` v6, artifacts v4) were all out of date by the time the first workflow was written; the table below is what the registries actually served on that date.
+
+| Action | Version | Commit SHA | Used by |
+|---|---|---|---|
+| `actions/checkout` | `v7.0.1` | `3d3c42e5aac5ba805825da76410c181273ba90b1` | all workflows |
+| `actions/upload-artifact` | `v7.0.1` | `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` | `ci.yml`, `toolchain.yml` |
+| `actions/download-artifact` | `v8.0.1` | `3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c` | `ci.yml` |
+| `docker/login-action` | `v4.6.0` | `dbcb813823bdd20940b903addbd779551569679f` | `toolchain.yml` |
+| `docker/build-push-action` | `v7.3.0` | `53b7df96c91f9c12dcc8a07bcb9ccacbed38856a` | `toolchain.yml` |
+
+`upload-artifact` v7 and `download-artifact` v8 are the current majors of each; confirm they interoperate when `ci.yml` first passes an artifact between jobs (M1.5).
 
 Chicken-and-egg note: `ci.yml` references the toolchain image by digest, so `toolchain.yml` must run once (M1.3) **before** `ci.yml` is enabled (M1.5).
 
@@ -236,7 +241,18 @@ Runs `loremfile infra audit` (unreadable settings are warnings; opens/updates an
 
 ### 3.6 `toolchain.yml` — on changes under `tools/`
 
-Needs `permissions: { contents: write, packages: write, pull-requests: write }`. Builds `tools/Dockerfile`, runs a smoke test inside the image (`git --version && gh --version && ffmpeg -version && python -c 'import loremfile'`), records `dpkg -l > tools/apt-versions.txt` and `pip freeze`, pushes to `ghcr.io/<OWNER>/loremfile-toolchain:<git-sha>` and prints the digest. The workflow then creates a branch that updates `tools/TOOLCHAIN_DIGEST`, every `container.image` line and `toolchain_image` in the manifest (`loremfile manifest update`), and opens the PR with `gh pr create` using `GITHUB_TOKEN` (no third-party action); CI on that PR runs the determinism tests against the new image. Run it once in M1.3 before enabling `ci.yml`.
+Triggered by a push touching `tools/Dockerfile`, `tools/apt-versions.txt`, `tools/requirements.lock`, `tools/smoke.sh` or the workflow itself, and by `workflow_dispatch`. Permissions are per job and least-privilege: the `build` job takes `contents: read, packages: write`; only `propose-digest-bump` takes `contents: write, pull-requests: write`.
+
+`build` builds `tools/Dockerfile`, pushes to `ghcr.io/<OWNER>/loremfile-toolchain:<git-sha>` (**no `latest` tag** — workflows reference the image by digest and a moving tag would be a mutable surface), then smoke-tests **the pushed digest**, not a local build:
+
+1. `tools/smoke.sh` inside the image — asserts every apt version matches `tools/apt-versions.txt`, all twelve ffmpeg encoders are present, SQLite answers an FTS5 `MATCH`, 31 Python modules import, `zstandard` round-trips, and the four determinism environment variables are set. It exits non-zero on the first failure.
+2. `pip install -e .` with the repository mounted, then `import loremfile` — the image deliberately does **not** contain the package (the repository is mounted at run time), so this proves the image can still host it.
+
+**Corrected in M1.3:** an earlier draft of this section said the workflow writes `dpkg -l > tools/apt-versions.txt`. It must not. That file is the pinned *input* the Dockerfile installs from and `smoke.sh` checks against; having the build overwrite it would be circular and would silently launder a drifted version into the pin. The full inventory (`dpkg-query` of every package, plus `pip freeze` and the image reference) is uploaded as the `toolchain-provenance` artifact instead, and `apt-versions.txt` changes only in a reviewed pull request.
+
+`propose-digest-bump` runs **only on `main`**. If the new digest differs from `tools/TOOLCHAIN_DIGEST` it creates a branch updating that file and every `image:` line in the workflows, runs `loremfile manifest update` when a manifest and the CLI both exist (they do not before M1.6, so the step is conditional), and opens the pull request with `gh pr create` using `GITHUB_TOKEN` — no third-party action. CI on that pull request runs the determinism tests against the new image. On any other branch the author is already inside a pull request, so the digest is copied by hand from the job summary, which prints the exact line to paste.
+
+Run it once in M1.3 before enabling `ci.yml`.
 
 ## 4. Dependabot — `.github/dependabot.yml`
 

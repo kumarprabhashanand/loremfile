@@ -14,6 +14,14 @@
 # tools/apt-versions.txt and tools/TOOLCHAIN_DIGEST.
 FROM python:3.12-slim-bookworm@sha256:782412e85d0f0984994c290652577d4018aff08145c85b262bb63dc0c7522254
 
+# Links the GHCR package to this repository (docs/09 §1) and is what makes the
+# package page show the source, README and licence. toolchain.yml overrides SOURCE_URL
+# from the workflow context so it cannot drift; the default keeps local builds correct.
+ARG SOURCE_URL="https://github.com/kumarprabhashanand/loremfile"
+LABEL org.opencontainers.image.source="${SOURCE_URL}" \
+      org.opencontainers.image.description="Pinned toolchain for generating the loremfile.dev fixtures" \
+      org.opencontainers.image.licenses="MIT"
+
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ=UTC \
     LANG=C.UTF-8 \
