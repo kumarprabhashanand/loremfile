@@ -70,6 +70,19 @@ block M4.2 — do not invent values for them.
 - Never expand scope. The launch set is the 229 fixtures in `docs/05-fixture-catalog.md` §9,
   not all 417.
 
+## Determinism
+
+**Spike determinism on any unfamiliar format before writing its catalog entry.** Generate
+twice under the guard and compare bytes. A nondeterministic fixture that reaches the
+manifest is frozen there permanently — `sha256`, `bytes` and `mime` can never change at a
+published path, so there is no later opportunity to fix it.
+
+This is not theoretical. `docs/06` §4 lists what each library does about randomness and
+timestamps; one of those claims was simply wrong (fastavro draws its sync marker from a
+compiled C extension, below the layer the determinism guard patches). The list is
+assumption-shaped, and every entry carries a proving fixture and a verification date for
+that reason.
+
 ## Verification discipline
 
 Do not assert a vendor fact you have not checked in the current session. Every `[VERIFY]`

@@ -44,6 +44,21 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Added — PDF (M3.4)
+
+- `pdf/` — 12 launch fixtures: A4 and Letter, portrait and landscape, with images,
+  with a table, encrypted, blank, a hand-written minimal file, and two sized.
+- `generators/pdf.py`, `validators/pdf.py` (pypdf plus `qpdf --check`).
+
+### Changed — determinism claims are now checkable
+
+- `docs/06` §4's prose list of library determinism claims became a table with a proving
+  fixture and a verification date per row. `tests/unit/test_determinism.py` parses it and
+  fails if a verified claim has no run-twice test, if a test claims a row the table does
+  not have, or if a row still marked unverified has been quietly parametrised.
+- `AGENTS.md`: spike determinism before writing a catalog entry.
+- `docs/06` §13: validators assert structure, not parseability.
+
 ### Added — images (M3.3)
 
 - `png/` (8), `jpg/` (9), `gif/` (2), `webp/` (2), `avif/` (1), `bmp/` (1), `tiff/` (1),

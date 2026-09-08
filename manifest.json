@@ -2,14 +2,14 @@
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
   "catalog_version": "1.0.0",
-  "generated_at": "2026-09-08T05:33:43Z",
+  "generated_at": "2026-09-08T05:55:03Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/<OWNER>/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:3ba29bb905b96fcb019b82f3f0e05f9b6472749af252fbff3f879460e0ef327c",
-  "count": 102,
-  "total_bytes": 327964295,
+  "count": 114,
+  "total_bytes": 338919311,
   "formats": [
     "arrow",
     "avif",
@@ -30,6 +30,7 @@
     "md",
     "ndjson",
     "parquet",
+    "pdf",
     "png",
     "sql",
     "sqlite",
@@ -2210,6 +2211,422 @@
       "generator_params": {
         "rows": 100000
       },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/10mb.pdf",
+      "url": "https://loremfile.dev/pdf/10mb.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 9924917,
+      "sha256": "909a9462ffec89a92fa03e7fe255eb0fb0143725bbd6fac39392527937bb1752",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 10MB: A4 pages each embedding one incompressible seeded-noise JPEG plate, so the size is honest rather than padded.",
+      "tags": [
+        "document",
+        "sized",
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 42,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": true
+      },
+      "generator": "pdf.sized",
+      "generator_params": {
+        "size": 10000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/1mb.pdf",
+      "url": "https://loremfile.dev/pdf/1mb.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 976137,
+      "sha256": "59b7ad1fb978ba412c8cfce57b263cf3bbfa01ce5fdc05584c3be32ed535d615",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 1MB: A4 pages each embedding one incompressible seeded-noise JPEG plate, so the size is honest rather than padded.",
+      "tags": [
+        "document",
+        "sized",
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 4,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": true
+      },
+      "generator": "pdf.sized",
+      "generator_params": {
+        "size": 1000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/a4-10pages.pdf",
+      "url": "https://loremfile.dev/pdf/a4-10pages.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 11246,
+      "sha256": "20cf4cec5afaab709b5ebd0401784bac289415a17b92ce6b9ffdbf78418079ba",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A4 portrait, 10 pages of Lorem Ipsum in the Helvetica core font with page numbers. No embedded fonts.",
+      "tags": [
+        "document",
+        "multi-page",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 10,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": false
+      },
+      "generator": "pdf.basic",
+      "generator_params": {
+        "pages": 10,
+        "page_numbers": true
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/a4-1page.pdf",
+      "url": "https://loremfile.dev/pdf/a4-1page.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 1795,
+      "sha256": "0c547013439f2cf2c21e675485907ce0809da702dd75921afcc81a5fb46721e9",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A4 portrait, 1 page of Lorem Ipsum in the Helvetica core font. No embedded fonts.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 1,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": false
+      },
+      "generator": "pdf.basic",
+      "generator_params": {
+        "pages": 1
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/a4-3pages.pdf",
+      "url": "https://loremfile.dev/pdf/a4-3pages.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 4351,
+      "sha256": "2eb9f305a958647fc9bab6c64ec975f61c7ad0031f62b142a8ebe21c2cb6f67e",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A4 portrait, 3 pages of Lorem Ipsum in the Helvetica core font with page numbers. No embedded fonts.",
+      "tags": [
+        "document",
+        "multi-page",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 3,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": false
+      },
+      "generator": "pdf.basic",
+      "generator_params": {
+        "pages": 3,
+        "page_numbers": true
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/a4-encrypted-1page.pdf",
+      "url": "https://loremfile.dev/pdf/a4-encrypted-1page.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 1875,
+      "sha256": "b148ac457d4d79017820716429c77441309e1a9610f52990646073d350b931be",
+      "size_class": "free",
+      "phase": 1,
+      "description": "AES-128 encrypted. User password 'loremfile', owner password 'loremfile-owner' - both are published here on purpose, because an encrypted fixture nobody can open would be useless. Printing and copying are permitted.",
+      "tags": [
+        "document",
+        "encrypted"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 1,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": true,
+        "pdf_version": "1.5",
+        "has_outline": false,
+        "has_images": false
+      },
+      "generator": "pdf.encrypted",
+      "generator_params": {
+        "user_password": "loremfile",
+        "owner_password": "loremfile-owner",
+        "pages": 1
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/a4-landscape-1page.pdf",
+      "url": "https://loremfile.dev/pdf/a4-landscape-1page.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 1682,
+      "sha256": "6ed3118f1cdfc2468a55eb680217469a5e881a2a22d46c89301757153665e205",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A4 landscape, one page — the page box is wider than it is tall.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 1,
+        "page_width_pt": 841.89,
+        "page_height_pt": 595.28,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": false
+      },
+      "generator": "pdf.basic",
+      "generator_params": {
+        "pages": 1,
+        "orientation": "landscape"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/a4-with-images-2pages.pdf",
+      "url": "https://loremfile.dev/pdf/a4-with-images-2pages.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 27542,
+      "sha256": "26ef320881bbdd870ce1aa6e7c6d0948d86a6cc13fe5b3f1381380321ad49126",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Two pages, each embedding a published image fixture: the 640x480 PNG and the 640x480 JPEG. Built from the published bytes, not regenerated.",
+      "tags": [
+        "document",
+        "image",
+        "multi-page"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 2,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": true
+      },
+      "generator": "pdf.with_images",
+      "generator_params": {
+        "png": "png/640x480.png",
+        "jpg": "jpg/640x480.jpg"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/a4-with-table-1page.pdf",
+      "url": "https://loremfile.dev/pdf/a4-with-table-1page.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 2059,
+      "sha256": "6e0645e0898ad29c906d74bb027c753c74205cfcd984fed2531634466939cbc2",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One page holding a ten-row table of the shared people dataset.",
+      "tags": [
+        "document",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 1,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": false
+      },
+      "generator": "pdf.with_table",
+      "generator_params": {
+        "rows": 10
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/blank-1page.pdf",
+      "url": "https://loremfile.dev/pdf/blank-1page.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 966,
+      "sha256": "d730ea6cd76242e13cebf6cbb939345f8abef28e5ad60fba13b7ed4579947b49",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A structurally valid PDF with one page and no content at all.",
+      "tags": [
+        "document"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 1,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": false
+      },
+      "generator": "pdf.blank",
+      "generator_params": {
+        "pages": 1
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/letter-1page.pdf",
+      "url": "https://loremfile.dev/pdf/letter-1page.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 1860,
+      "sha256": "edcde03faebda8e404a57d923871172223cbefa7a28e25acf17ae99d7bf5da5d",
+      "size_class": "free",
+      "phase": 1,
+      "description": "US Letter portrait, one page. Same content as the A4 fixture, different page box.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 1,
+        "page_width_pt": 612.0,
+        "page_height_pt": 792.0,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": false
+      },
+      "generator": "pdf.basic",
+      "generator_params": {
+        "pages": 1,
+        "page_size": "letter"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/minimal.pdf",
+      "url": "https://loremfile.dev/pdf/minimal.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 586,
+      "sha256": "07508e71a1366a3e60af7b58c027fc07ebc774e9feac52e937dd82ab1a1c6e43",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The smallest structurally valid PDF this catalog offers: one page, the word 'Hello', a hand-written cross-reference table and nothing else.",
+      "tags": [
+        "document"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 1,
+        "page_width_pt": 595.0,
+        "page_height_pt": 842.0,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": false
+      },
+      "generator": "pdf.minimal",
+      "generator_params": {},
       "added_in": "1.0.0",
       "status": "active",
       "deprecated": false,

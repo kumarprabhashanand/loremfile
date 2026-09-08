@@ -154,6 +154,14 @@
       "mime_default": "application/vnd.apache.parquet"
     },
     {
+      "format": "pdf",
+      "count": 12,
+      "total_bytes": 10955016,
+      "url": "https://loremfile.dev/pdf",
+      "index": "https://loremfile.dev/pdf/index.json",
+      "mime_default": "application/pdf"
+    },
+    {
       "format": "png",
       "count": 8,
       "total_bytes": 1031116,
