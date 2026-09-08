@@ -23,6 +23,34 @@ Everything runs in one Cloudflare account, one zone (`loremfile.dev`), one R2 bu
 
 ## 2. One-time manual setup (owner, ~45 minutes)
 
+> **Progress, 2026-09-08.** Steps 1–3 and 5 are done. Step 4 (DNSSEC), step 7 (bucket,
+> apex, CORS) and step 14 (repository variables) were applied through the Cloudflare MCP
+> API session rather than a T3 token, so **steps 6 and 8 — create and then delete a T3
+> setup token — were not needed and should be skipped.** No admin token ever existed on
+> a machine, which is the outcome those two steps were protecting.
+>
+> Applied and verified: DNSSEC `pending` with the zone already signed (SOA carries an
+> RRSIG; Cloudflare Registrar publishes the DS automatically); bucket `loremfile-public`
+> (location `auto` resolved to EEUR, Standard class); apex `loremfile.dev` attached with
+> min TLS 1.2; CORS exactly as §7; the `pub-*.r2.dev` URL confirmed **disabled**;
+> `curl -sI https://loremfile.dev/` returns a Cloudflare 404. Repository variables
+> `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_ZONE_ID` are set.
+>
+> **Lock rules (step 7's fourth command) are deliberately deferred to M2.** They make a
+> prefix permanently immutable, and M3 is still adding formats; applying them now would
+> force the lift-and-re-add ceremony of `11` §7.9 step 2b for every new format.
+>
+> Still outstanding and owner-only: steps 9, 10, 10b (tokens T1/T2/T4 — the API session
+> cannot mint tokens, `/user/tokens` returns `9109 Unauthorized`, which is correct),
+> step 11 (Email Routing, blocked on Q-07), step 12 (notifications) and step 13 (bot
+> settings, if `apply.py` cannot set them).
+>
+> **The account holds two unrelated zones**, `mcpreflex.dev` and `shameher.com`. Every
+> call above was scoped to the `loremfile.dev` zone id and both were verified unchanged
+> afterwards. Anything applied to this zone in future must be scoped the same way.
+
+
+
 Do these in order. Each step says how to verify it.
 
 1. **Cloudflare account hygiene.** Sign in → My Profile → Authentication: enable 2FA with a hardware key or passkey **and** an authenticator app; download and store recovery codes offline. Verify: 2FA badge shown.

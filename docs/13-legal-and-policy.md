@@ -105,10 +105,26 @@ open blockers in the "Implementation status" issue.
 effective 2026-04-03** (https://www.cloudflare.com/dpa). It forms part of the Self-Serve
 Subscription Agreement, states that "the Customer is the Controller … and Cloudflare is a
 Processor", and requires affirmative acceptance by someone with authority to bind the
-customer. Accepted by the owner on `<DPA_ACCEPTED_DATE>` — **M0.6** records the date and the
-version actually in force at that moment and replaces this placeholder. (Verified
-2026-09-07: version, effective date, controller/processor roles, transfer clauses and the
-acceptance warranty read from the DPA text.)
+customer.
+
+**Acceptance (M0.6, recorded 2026-09-08).** The DPA is in force for this account: it
+forms part of the Self-Serve Subscription Agreement, which the owner accepted when the
+Cloudflare account was created, and its own opening clause is what makes that so for
+self-serve customers. There is no separate DPA click and Cloudflare exposes no
+per-account acceptance record through its API, so what this section cites is the version
+in force — **v6.4, effective 2026-04-03** — rather than an acceptance artefact. Cloudflare
+publishes DPA revisions that supersede earlier ones, so the current version is the one
+that governs, and §8's annual review re-reads it.
+
+No acceptance date is published here. Art. 28 requires a processor contract to exist and
+Art. 30(1) lists what the record must contain; neither asks for a date, and the account's
+creation date is personal operational metadata that would sit in a public repository for
+no compliance benefit. If a supervisory authority ever asks, the date is retrievable from
+`GET /accounts/{account_id}` (`created_on`) and Cloudflare support can confirm the
+agreement independently.
+
+(Verified 2026-09-07: version, effective date, controller/processor roles, transfer
+clauses and the acceptance warranty read from the DPA text itself.)
 
 **Record of processing activities (GDPR Art. 30(1)).** This is the whole record; there is
 nothing else.
