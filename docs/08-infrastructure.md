@@ -23,6 +23,34 @@ Everything runs in one Cloudflare account, one zone (`loremfile.dev`), one R2 bu
 
 ## 2. One-time manual setup (owner, ~45 minutes)
 
+> **Progress, 2026-09-08.** Steps 1–3 and 5 are done. Step 4 (DNSSEC), step 7 (bucket,
+> apex, CORS) and step 14 (repository variables) were applied through the Cloudflare MCP
+> API session rather than a T3 token, so **steps 6 and 8 — create and then delete a T3
+> setup token — were not needed and should be skipped.** No admin token ever existed on
+> a machine, which is the outcome those two steps were protecting.
+>
+> Applied and verified: DNSSEC `pending` with the zone already signed (SOA carries an
+> RRSIG; Cloudflare Registrar publishes the DS automatically); bucket `loremfile-public`
+> (location `auto` resolved to EEUR, Standard class); apex `loremfile.dev` attached with
+> min TLS 1.2; CORS exactly as §7; the `pub-*.r2.dev` URL confirmed **disabled**;
+> `curl -sI https://loremfile.dev/` returns a Cloudflare 404. Repository variables
+> `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_ZONE_ID` are set.
+>
+> **Lock rules (step 7's fourth command) are deliberately deferred to M2.** They make a
+> prefix permanently immutable, and M3 is still adding formats; applying them now would
+> force the lift-and-re-add ceremony of `11` §7.9 step 2b for every new format.
+>
+> Still outstanding and owner-only: steps 9, 10, 10b (tokens T1/T2/T4 — the API session
+> cannot mint tokens, `/user/tokens` returns `9109 Unauthorized`, which is correct),
+> step 11 (Email Routing, blocked on Q-07), step 12 (notifications) and step 13 (bot
+> settings, if `apply.py` cannot set them).
+>
+> **The account holds two unrelated zones**, `mcpreflex.dev` and `shameher.com`. Every
+> call above was scoped to the `loremfile.dev` zone id and both were verified unchanged
+> afterwards. Anything applied to this zone in future must be scoped the same way.
+
+
+
 Do these in order. Each step says how to verify it.
 
 1. **Cloudflare account hygiene.** Sign in → My Profile → Authentication: enable 2FA with a hardware key or passkey **and** an authenticator app; download and store recovery codes offline. Verify: 2FA badge shown.
@@ -41,7 +69,7 @@ Do these in order. Each step says how to verify it.
    Pin the wrangler version instead of `@latest` because this shell holds an admin token. Also run `curl -s -H "Authorization: Bearer $T3" https://api.cloudflare.com/client/v4/user/tokens/permission_groups` and paste the zone permission names for redirect rules, bot management, DNSSEC and cache settings into step 9 (the dashboard token builder labels them differently across plans).
    Attaching the apex **replaces** any existing A/AAAA records at the root with the R2 record (observed behaviour). Verify: `curl -sI https://loremfile.dev/` returns a Cloudflare response with a 404 (expected until the site is uploaded), and in R2 → bucket → Settings the **r2.dev public URL is disabled** (it must stay disabled; the custom domain is the only public path). CORS and headers are verified in M2.4 by the probe workflow, not here.
 8. **Delete T3.** My Profile → API Tokens → delete.
-9. **Create T1 (zone CI token).** Custom token, name `loremfile-ci-zone`, permissions: `Zone → Zone Settings → Edit`, `Zone → Transform Rules → Edit`, `Zone → Cache Rules → Edit`, `Zone → Zone WAF → Edit`, `Zone → Cache Purge → Purge`, `Zone → DNS → Edit`, `Zone → Zone → Read`, plus the permissions the token builder shows for **Single Redirects** ("Dynamic Redirect" edit), **Bot Management** (edit) and **Config/Cache Settings** if listed; zone resources: include `loremfile.dev` only; client IP filtering: none; TTL: 180 days (set an end date). §6 lists every endpoint apply.py calls with the fallback when a permission is missing. Copy the token into the GitHub `production` environment secret `CLOUDFLARE_API_TOKEN` (see `09`). Verify: `curl -s -H "Authorization: Bearer $T" https://api.cloudflare.com/client/v4/user/tokens/verify` → `"status":"active"`.
+9. **Create T1 (zone CI token).** Custom token, name `loremfile-ci-zone`, permissions: `Zone → Zone Settings → Edit`, `Zone → Transform Rules → Edit`, `Zone → Cache Rules → Edit`, `Zone → Zone WAF → Edit`, `Zone → Cache Purge → Purge`, `Zone → DNS → Edit`, `Zone → Zone → Read`, `Zone → Single Redirect → Edit`, and `Zone → Bot Management → Edit` if listed. **Corrected 2026-09-08 against the live token builder:** the entry is **Single Redirect**, not "Dynamic Redirect"; and **do not add `Zone → Config Rule`** — that is Configuration Rules (`http_config_settings`), a phase `apply.py` never writes. The six phases it does write are `http_ratelimit`, `http_request_cache_settings`, `http_request_dynamic_redirect`, `http_request_firewall_managed`, `http_request_transform` and `http_response_headers_transform`; rate limiting rules are part of WAF, so `Zone WAF: Edit` is expected to cover `http_ratelimit`. **To watch at M2.3:** Cloudflare's cache-rules page also lists `Account Rulesets → Edit` and `Account Filter Lists → Edit`. Those are account-scoped and would widen the token past this one zone, so T1 stays zone-only; if `apply.py` gets a 403 on the cache phase, add them then, with the error as evidence; zone resources: include `loremfile.dev` only; client IP filtering: none; TTL: 180 days (set an end date). §6 lists every endpoint apply.py calls with the fallback when a permission is missing. Copy the token into the GitHub `production` environment secret `CLOUDFLARE_API_TOKEN` (see `09`). Verify: `curl -s -H "Authorization: Bearer $T" https://api.cloudflare.com/client/v4/user/tokens/verify` → `"status":"active"`.
 10. **Create T2 (R2 object token).** R2 → Manage R2 API Tokens → Create: name `loremfile-ci-r2`, permission **Object Read & Write**, specify bucket `loremfile-public` only, TTL 180 days. Copy the S3 **Access Key ID** and **Secret Access Key** into the GitHub secrets `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`. Verify: the uploader's `--dry-run` lists the bucket. Whether this permission can delete objects is not stated in the docs; M2.4's `probe --down` establishes it (**[VERIFY]**) — with bucket locks in place it only matters for `_probe/` and tombstoned keys.
 10b. **Create T4 (read-only analytics token).** Custom token, name `loremfile-ci-analytics`, permissions `Account → Account Analytics → Read` and `Zone → Analytics → Read` for `loremfile.dev`, TTL 365 days. GitHub secret `CLOUDFLARE_ANALYTICS_TOKEN`. Used only by `health.yml` to read R2 operations and zone traffic; it can change nothing.
 11. **Email Routing.** Websites → loremfile.dev → Email → Email Routing → Enable → add destination (your mailbox, confirm the verification mail) → routes: `hello@`, `security@`, `dmarc@` → destination. Accept the automatic MX/SPF DNS records. Verify: send a mail to `hello@loremfile.dev`.
@@ -235,7 +263,7 @@ Endpoints, expected token permissions and the fallback when the API answers 403 
 | 2 | `/zones/{id}/bot_management` | Bot Management: Edit **[VERIFY]** | §2 step 13 |
 | 3 | `/zones/{id}/dnssec` | DNS: Edit (or Zone Settings: Edit) **[VERIFY]** | DNS → Settings → Enable DNSSEC |
 | 4 | `/zones/{id}/dns_records` | DNS: Edit | DNS → Records |
-| 5 | `/zones/{id}/rulesets/phases/http_request_dynamic_redirect/entrypoint` | Dynamic Redirect: Edit **[VERIFY name]** | Rules → Redirect Rules |
+| 5 | `/zones/{id}/rulesets/phases/http_request_dynamic_redirect/entrypoint` | **Zone → Single Redirect → Edit** (**resolved 2026-09-08**: the token builder has no "Dynamic Redirect" entry; Cloudflare's own docs name *Zone → Single Redirect → Edit* as the required permission for this phase. The API phase kept the older internal name) | Rules → Redirect Rules |
 | 5 | `…/http_request_transform`, `…/http_response_headers_transform` | Transform Rules: Edit | Rules → Transform Rules |
 | 5 | `…/http_request_cache_settings` | Cache Rules: Edit | Caching → Cache Rules |
 | 5 | `…/http_ratelimit`, `…/http_request_firewall_managed` | Zone WAF: Edit | Security → WAF |

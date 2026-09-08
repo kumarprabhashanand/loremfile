@@ -1,0 +1,23 @@
+{
+  "_comment": "Dates only, never secrets. health.yml reads this to open a `rotation-due` issue 30 days before each expiry (docs/08 §6, docs/11 §7.3). Update it in the same PR as any rotation.",
+  "T1": {
+    "name": "loremfile-ci-zone",
+    "secret": "CLOUDFLARE_API_TOKEN",
+    "expires": "2027-03-01",
+    "created": "2026-09-08"
+  },
+  "T2": {
+    "name": "loremfile-ci-r2",
+    "secret": "R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY",
+    "expires": "2027-03-08",
+    "created": "2026-09-08",
+    "note": "Owner set a 6-month TTL; the date here is derived from the creation date rather than read from the dashboard. Correct it if the dashboard disagrees — a rotation reminder is only as good as its date."
+  },
+  "T4": {
+    "name": "loremfile-ci-analytics",
+    "secret": "CLOUDFLARE_ANALYTICS_TOKEN",
+    "expires": "2027-03-01",
+    "created": "2026-09-08",
+    "note": "docs/10 §4 specifies 365 days for this token; the owner set ~174. Shorter is safer, and it means all three expire together in early March 2027 — one rotation event, but also a single cliff. docs/11 §7.3 stays the procedure."
+  }
+}

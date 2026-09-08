@@ -1,0 +1,75 @@
+# Maintainer operations against Cloudflare, without credentials on any machine
+# (docs/09 §3.2b, ADR-022). The tokens live in the `production` environment and are only
+# ever read by a job running here.
+#
+# This is the first slice of M2.3. Only the `verify-tokens` mode is implemented; the
+# audit, apply, probe, restore and redact modes arrive with M2.2's apply.py and audit.py.
+# A mode that does not exist yet is not offered, so the workflow can never look like it
+# checked something it did not.
+name: infra
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: What to run
+        required: true
+        default: verify-tokens
+        type: choice
+        options:
+          - verify-tokens
+
+permissions:
+  contents: read
+
+jobs:
+  verify-tokens:
+    if: inputs.mode == 'verify-tokens'
+    runs-on: ubuntu-latest
+    # Only this environment holds the secrets, and it is restricted to main.
+    environment: production
+    container:
+      image: ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:3ba29bb905b96fcb019b82f3f0e05f9b6472749af252fbff3f879460e0ef327c
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      - name: Verify every credential can do its job
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ANALYTICS_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+        run: |
+          python - <<'PY'
+          import sys
+          from loremfile.infra.tokens import verify_all
+
+          report = verify_all()
+          print(report.render())
+          print()
+          print("all credentials usable" if report.ok else "one or more credentials failed")
+          sys.exit(0 if report.ok else 1)
+          PY
+
+      - name: Token expiry reminder
+        # Dates only; infra/token-expiry.json never holds a secret.
+        run: |
+          python - <<'PY'
+          import datetime as dt, json, pathlib
+          data = json.loads(pathlib.Path("infra/token-expiry.json").read_text())
+          today = dt.date.today()
+          for key, row in sorted(data.items()):
+              if key.startswith("_"):
+                  continue
+              due = dt.date.fromisoformat(row["expires"])
+              days = (due - today).days
+              flag = "  <-- rotate soon" if days <= 30 else ""
+              print(f"  {row['name']:24s} expires {row['expires']}  ({days} days){flag}")
+          PY
