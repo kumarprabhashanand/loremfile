@@ -44,6 +44,30 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Added — office documents and e-books (M3.5)
+
+- `docx/` (5), `xlsx/` (6), `pptx/` (3), `rtf/` (1), `epub/` (1) — 16 launch fixtures.
+- `generators/office.py`, `validators/office.py`. The validators read every OOXML
+  package a second time as a plain zip, because python-docx and openpyxl both read back
+  their own conventions and will reopen a package Word would refuse.
+- `xlsx/with-formulas.xlsx` carries **cached results** for every formula. openpyxl has no
+  API for them and writes an empty `<v/>`, which reads back as `None` in pandas — a
+  formula fixture without them parses perfectly and is useless.
+
+### Fixed — openpyxl was never reproducible on its own
+
+- `docs/06` §4 credited python-docx, openpyxl and python-pptx with deterministic *part
+  names*. The M3.5 spike showed the claim was aimed at the wrong thing: openpyxl spools
+  each worksheet to a temporary file and adds it with `ZipFile.write`, so that entry is
+  stamped from the filesystem, which no clock patch can reach. Raw output changed on six
+  of eight consecutive runs. `util.zipnorm` is what makes xlsx stable. The row is now
+  three rows, one per library, each with its own proving fixture.
+- The RTF validator counted `\par` as a substring, so `\pard` — which opens every
+  paragraph — was counted twice. `rtf` also moved out of the shared text validator list
+  into `validators/office.py`, keeping its text props and gaining a brace-balance check:
+  an unbalanced RTF opens as an empty document in some readers and garbage in others,
+  and neither reports an error.
+
 ### Added — PDF (M3.4)
 
 - `pdf/` — 12 launch fixtures: A4 and Letter, portrait and landscape, with images,

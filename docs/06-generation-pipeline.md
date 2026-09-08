@@ -135,7 +135,15 @@ def basic(ctx: GeneratorContext, *, pages: int, page_size: str = "A4",
 | **py7zr** | Timestamps come from the patched clock | `7z/3-text-files.7z` | **unverified — spike in M3.7** |
 | **cryptography** | X.509 serial fixed to `0x4c6f72656d66696c65`, subject/issuer `CN=fixture.example, O=loremfile fixtures`, SAN `fixture.example` (never the production hostname), validity 2020-01-01 to 2120-01-01, Ed25519 key from `sha256(b"loremfile:cert:ed25519")` and never written to disk | `pem/self-signed-ed25519-cert.pem` | **unverified — spike in M3.7** |
 | **mutagen** | ID3 tags written with fixed values and no timestamps | `mp3/sine-440hz-3s.mp3` | **unverified — spike in M3.6** |
-| **python-docx / openpyxl / python-pptx** | Internal part names are deterministic; core properties must also be set explicitly because `docProps/core.xml` is inside the zip | `docx/1page.docx` | **unverified — spike in M3.5** |
+| python-docx | Builds its package in memory, so every entry takes the patched clock. Core properties set explicitly, and the epoch value built at call time — inside the guard `datetime.datetime` is a stand-in class and python-docx type-checks its argument against whichever class is installed | `docx/1page.docx` | 2026-09-08 |
+| openpyxl | **Not reproducible on its own.** It spools each worksheet to a temporary file and adds it with `ZipFile.write`, so that entry is stamped from the filesystem — beyond the reach of any clock patch. Raw output changed on six of eight consecutive runs while every other entry sat at the epoch. `util.zipnorm` is what makes it stable, so it is mandatory here, not cosmetic | `xlsx/1sheet-10rows.xlsx` | 2026-09-08 (claim corrected) |
+| python-pptx | Builds its package in memory, like python-docx; core properties set explicitly. Slide size is set explicitly too — the bundled template is 4:3, which would otherwise be a silent default | `pptx/1slide.pptx` | 2026-09-08 |
+
+  **Import these three libraries at module scope, never inside the guard.** They do
+  `from datetime import datetime` at import time; imported inside `deterministic()` they
+  bind the guard's stand-in class permanently and then reject real datetimes once it
+  exits — openpyxl raised `TypeError: expected _FixedDatetime` inside the *validator*,
+  in the same process, long after the generator had finished.
 
   If a library draws randomness below the Python layer and its run-twice test fails,
   pass an explicit IV, salt or marker where the API allows it — as fastavro now does —

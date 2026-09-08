@@ -40,6 +40,13 @@ MAGIC: dict[str, tuple[bytes, ...]] = {
     "flac": (b"fLaC",),
     "ogg": (b"OggS",),
     "zip": (b"PK\x03\x04", b"PK\x05\x06"),
+    # OOXML and EPUB are zip containers; the format-specific structure is checked by
+    # validators/office.py, which is the only thing that can tell them apart.
+    "docx": (b"PK\x03\x04",),
+    "xlsx": (b"PK\x03\x04",),
+    "pptx": (b"PK\x03\x04",),
+    "epub": (b"PK\x03\x04",),
+    "rtf": (b"{\\rtf1",),
     "7z": (b"7z\xbc\xaf\x27\x1c",),
     "gz": (b"\x1f\x8b",),
     "bz2": (b"BZh",),
@@ -102,7 +109,7 @@ _REGISTRY: dict[str, ValidatorFunc] = {}
 #: Validator modules to import so their @register decorators run. A family is added
 #: here by the same pull request that adds its generator — docs/06 §13 requires the two
 #: to ship together, and an unregistered validator is how that rule gets broken quietly.
-VALIDATOR_MODULES = ("binary", "text", "data", "columnar", "geo", "image", "pdf")
+VALIDATOR_MODULES = ("binary", "text", "data", "columnar", "geo", "image", "pdf", "office")
 
 
 def load() -> None:
