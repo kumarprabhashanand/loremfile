@@ -52,6 +52,10 @@ MAGIC: dict[str, tuple[bytes, ...]] = {
     "ttf": (b"\x00\x01\x00\x00",),
     "otf": (b"OTTO",),
     "wasm": (b"\x00asm",),
+    "webp": (b"RIFF",),
+    "bmp": (b"BM",),
+    "tiff": (b"II*\x00", b"MM\x00*"),
+    "ico": (b"\x00\x00\x01\x00",),
 }
 
 #: Floats in `expect` are compared to this tolerance (docs/06 §6 step 3).
@@ -98,7 +102,7 @@ _REGISTRY: dict[str, ValidatorFunc] = {}
 #: Validator modules to import so their @register decorators run. A family is added
 #: here by the same pull request that adds its generator — docs/06 §13 requires the two
 #: to ship together, and an unregistered validator is how that rule gets broken quietly.
-VALIDATOR_MODULES = ("binary", "text", "data", "columnar", "geo")
+VALIDATOR_MODULES = ("binary", "text", "data", "columnar", "geo", "image")
 
 
 def load() -> None:

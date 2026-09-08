@@ -1,0 +1,25 @@
+# webp fixtures (docs/05 §3.2). Launch-set rows only; the rest are P1b.
+format: webp
+family: images
+mime: image/webp
+description: >-
+  A lossy WebP and one with an alpha channel.
+seo_title: "Sample WebP images for testing — free, CC0"
+related: [png, jpg, avif]
+fixtures:
+  - name: lossy-640x480.webp
+    phase: 1
+    generator: image.testcard
+    params: { width: 640, height: 480, fmt: WEBP, quality: 80 }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, saved as lossy WebP at quality 80."
+    tags: [image]
+    expect: { width: 640, height: 480 }
+    size_class: free
+  - name: alpha-256x256.webp
+    phase: 1
+    generator: image.testcard
+    params: { width: 256, height: 256, fmt: WEBP, mode: RGBA, quality: 100 }
+    description: "A lossless WebP with an alpha ramp."
+    tags: [image, transparent]
+    expect: { width: 256, height: 256 }
+    size_class: free

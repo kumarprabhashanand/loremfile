@@ -1,0 +1,18 @@
+# avif fixtures (docs/05 §3.2). Launch-set rows only; the rest are P1b.
+format: avif
+family: images
+mime: image/avif
+description: >-
+  An AVIF encoded by avifenc from the PNG test card, single-threaded so the output
+  reproduces byte for byte.
+seo_title: "Sample AVIF image for testing modern decoders — free, CC0"
+related: [webp, png, jpg]
+fixtures:
+  - name: 640x480.avif
+    phase: 1
+    generator: image.avif_from_png
+    params: { width: 640, height: 480, quality: 60 }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, encoded to AVIF with avifenc at speed 6, single-threaded."
+    tags: [image]
+    expect: { width: 640, height: 480 }
+    size_class: free

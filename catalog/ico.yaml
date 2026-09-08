@@ -1,0 +1,17 @@
+# ico fixtures (docs/05 §3.2). Launch-set rows only; the rest are P1b.
+format: ico
+family: images
+mime: image/x-icon
+description: >-
+  A multi-resolution favicon.
+seo_title: "Sample ICO favicon for testing — free, CC0"
+related: [png]
+fixtures:
+  - name: favicon-16-32-48.ico
+    phase: 1
+    generator: image.ico_multi
+    params: { sizes: [16, 32, 48] }
+    description: "A favicon containing 16x16, 32x32 and 48x48 images in one file, the shape a real favicon.ico has."
+    tags: [image]
+    expect: { sizes: [16, 32, 48] }
+    size_class: free
