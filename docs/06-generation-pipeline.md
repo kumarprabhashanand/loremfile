@@ -112,7 +112,36 @@ def basic(ctx: GeneratorContext, *, pages: int, page_size: str = "A4",
 - **`ctx.dependency(path)` never regenerates a published fixture.** Resolution order: (1) `build/fixtures/<path>` if present in this build; (2) if `path` is in the committed manifest: download `BASE_URL + path`, verify `sha256` against the manifest, cache under `build/deps/`; (3) otherwise (the dependency is new in the same PR) generate it first (topological order). A hash mismatch in (2) aborts the build with an integrity error.
 - Return `bytes` for small outputs or a `Path` to a file written in `ctx.workdir` for large ones. The framework moves it to `build/fixtures/<path>` and hashes it.
 - Generators MUST NOT read wall-clock time, environment variables (other than through ctx), the network (`ctx.dependency` is the only sanctioned download), or locale. `util/determinism.py` **patches** the ambient sources of nondeterminism for the duration of a generator call rather than raising, because third-party libraries use them: `time.time`/`time.time_ns` return the epoch, `datetime.datetime.now/utcnow` return `2020-01-01T00:00:00Z`, `os.urandom`, `secrets.token_bytes`, `random.random` and friends, and `uuid.uuid4` draw from a SHAKE-256 stream seeded with `ctx.seed`; `locale` is forced to `C.UTF-8`; `TZ=UTC`; `PYTHONHASHSEED=0`. Generators themselves still use `ctx.rng` (a unit test greps generator modules for `random.` and `datetime.now` and fails on hits). The patches apply only inside `loremfile build`; `manifest update` and `verify-live` run unpatched and may use the clock (e.g. `generated_at`); `site build` runs unpatched too but deliberately uses the commit date instead of the clock so that its output is reproducible (`07` §4).
-- Library-specific determinism notes (each is an assumption about third-party internals that only the run-twice test in `12` §2 proves; if a library draws randomness below the Python layer and the test fails, pass an explicit IV/salt where the library API allows it, otherwise move that fixture to P1b with a `notes` entry rather than publish nondeterministic bytes): **pyzipper** AES salt/IV and **fpdf2** encryption IV come from the patched `os.urandom`; **py7zr** takes timestamps from the patched clock; **cryptography** X.509: serial fixed to `0x4c6f72656d66696c65`, subject/issuer `CN=fixture.example, O=loremfile fixtures` with SAN `fixture.example` (never the production hostname), `not_before=2020-01-01T00:00:00Z`, `not_after=2120-01-01T00:00:00Z`, Ed25519 key derived as `Ed25519PrivateKey.from_private_bytes(sha256(b"loremfile:cert:ed25519"))` and never written to disk — the fixture description states that the key is publicly derivable and the certificate must not be trusted for anything; **avifenc** is invoked with `--jobs 1 --speed 6`; **mutagen** ID3 tags written with fixed values and no timestamps; **fastavro** writes a sync marker that the guard does **not** reach — `fastavro._write` is a compiled C extension, so it draws below the Python layer; M3.2b's run-twice spike caught it, and the marker is now passed explicitly as `sync_marker=ctx.stream(16)`, which is this list's own prescribed remedy (**verified 2026-09-07**); **pyarrow** Parquet/Arrow are deterministic for pinned versions; **python-pptx/python-docx/openpyxl** internal part names are deterministic.
+- **Library determinism claims.** Every row below is an *assumption about a third-party
+  library's internals*, and only the run-twice test named in "Proving fixture" turns it
+  into evidence. One of these was confirmed wrong (fastavro), which is why none of the
+  unverified rows counts as evidence for the others. When a group is catalogued, spike
+  its libraries first and correct this table in that group's own pull request.
+
+  `tests/unit/test_determinism.py` parses this table and fails if a row marked verified
+  has no proving fixture in its parametrisation, so a verified claim cannot sit here
+  without a test behind it (docs/12 §2).
+
+| Library | Claim | Proving fixture | Verified |
+|---|---|---|---|
+| fastavro | Sync marker is **not** reachable by the guard — `fastavro._write` is a compiled C extension — so it is passed explicitly as `sync_marker=ctx.stream(16)` | `avro/people-1000.avro` | 2026-09-07 (claim corrected) |
+| avifenc | Invoked `--jobs 1 --speed 6`; multi-threaded AV1 makes timing-dependent choices | `avif/640x480.avif` | 2026-09-07 |
+| fpdf2 | Encryption IV comes from the patched `os.urandom`; creation date, producer and creator set explicitly because fpdf2 formats the date itself | `pdf/a4-encrypted-1page.pdf` | 2026-09-08 |
+| pyarrow | Parquet and Arrow are deterministic for a pinned version; the pandas metadata block is suppressed because it embeds a pandas version string | `parquet/people-1000.parquet` | 2026-09-07 |
+| Pillow | `ImageFont.load_default(size)` and every save path are deterministic for a pinned Pillow | `png/640x480.png` | 2026-09-07 |
+| SQLite | Fixed `page_size`, `journal_mode=DELETE` and a closing `VACUUM` make the page layout depend on contents, not insertion order | `sqlite/people-1000.sqlite` | 2026-09-07 |
+| `util.zipnorm` | Sorted entries, fixed timestamps and permissions make any zip-based file byte-stable | `kmz/placemarks-10.kmz` | 2026-09-07 |
+| **pyzipper** | AES salt/IV come from the patched `os.urandom` | `zip/aes256-password-loremfile.zip` | **unverified — spike in M3.7** |
+| **py7zr** | Timestamps come from the patched clock | `7z/3-text-files.7z` | **unverified — spike in M3.7** |
+| **cryptography** | X.509 serial fixed to `0x4c6f72656d66696c65`, subject/issuer `CN=fixture.example, O=loremfile fixtures`, SAN `fixture.example` (never the production hostname), validity 2020-01-01 to 2120-01-01, Ed25519 key from `sha256(b"loremfile:cert:ed25519")` and never written to disk | `pem/self-signed-ed25519-cert.pem` | **unverified — spike in M3.7** |
+| **mutagen** | ID3 tags written with fixed values and no timestamps | `mp3/sine-440hz-3s.mp3` | **unverified — spike in M3.6** |
+| **python-docx / openpyxl / python-pptx** | Internal part names are deterministic; core properties must also be set explicitly because `docProps/core.xml` is inside the zip | `docx/1page.docx` | **unverified — spike in M3.5** |
+
+  If a library draws randomness below the Python layer and its run-twice test fails,
+  pass an explicit IV, salt or marker where the API allows it — as fastavro now does —
+  and otherwise move that fixture to P1b with a `notes` entry rather than publish
+  nondeterministic bytes.
+
 - Generators for zip-based formats (docx/xlsx/pptx/epub/kmz/zip) MUST pass their output through `util.zipnorm.normalize(bytes) -> bytes`: entries rewritten in sorted order (except EPUB's `mimetype` first and stored), all timestamps `1980-01-01 00:00:00` (zip minimum) — note this is the one place the fixed epoch is not 2020 because zip cannot represent it identically across libraries; `external_attr` fixed; UTF-8 flag set for non-ASCII names; deflate level 6; ZIP64 only when required.
 - Office generators MUST also set document core properties (`created`, `modified`, `creator="loremfile.dev"`, `lastModifiedBy` same, `revision=1`) explicitly to the epoch, because `docProps/core.xml` is inside the zip.
 - ffmpeg invocations MUST use `util.ffmpeg.run(...)`, which adds `-hide_banner -nostdin -y -threads 1 -map_metadata -1 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact` and sets `-metadata encoder=`(empty) to strip the Lavf version string where the muxer allows it.
@@ -254,4 +283,11 @@ If the full build exceeds budget, split video generation into a matrix job (see 
 - No global state; generators are pure functions of `(ctx, params)`.
 - Every generator has a unit test that runs it twice and asserts identical bytes (`tests/unit/test_determinism.py` parametrised over the catalog, phase 1, with small params where the catalog params would be slow).
 - Every validator has a negative test (a corrupted input must fail).
+- **Validators assert structure, not merely parseability.** A fixture that parses but is
+  semantically wrong is worse than one that fails to parse, because it ships and looks
+  correct. The standard set in M3.2b: the GeoJSON validator range-checks every position,
+  so a file with latitude and longitude swapped is rejected rather than accepted as
+  valid JSON; the SQLite multi-table fixture is checked for orphaned foreign keys, so a
+  relational example that does not actually relate cannot be published. Ask what a
+  *plausible but wrong* file would look like in this format, and assert against that.
 - Docstrings state the exact output properties the generator guarantees.

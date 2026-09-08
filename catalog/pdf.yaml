@@ -1,0 +1,110 @@
+# PDF fixtures (docs/05 §3.1). Launch-set rows only; the rest are P1b.
+format: pdf
+family: documents
+mime: application/pdf
+description: >-
+  PDFs for viewers, parsers and upload forms: A4 and Letter, portrait and landscape,
+  with images, with a table, encrypted, blank, and a hand-written minimal file.
+  No embedded fonts and no scripts.
+seo_title: "Sample PDF files for testing — free, CC0, hotlinkable"
+related: [png, jpg]  # docx and epub join when M3.5 adds their catalogs
+fixtures:
+  - name: a4-1page.pdf
+    phase: 1
+    generator: pdf.basic
+    params: { pages: 1 }
+    description: "A4 portrait, 1 page of Lorem Ipsum in the Helvetica core font. No embedded fonts."
+    tags: [document, text]
+    expect: { pages: 1, page_width_pt: 595.28, page_height_pt: 841.89, encrypted: false }
+    size_class: free
+  - name: a4-3pages.pdf
+    phase: 1
+    generator: pdf.basic
+    params: { pages: 3, page_numbers: true }
+    description: "A4 portrait, 3 pages of Lorem Ipsum in the Helvetica core font with page numbers. No embedded fonts."
+    tags: [document, multi-page, text]
+    expect: { pages: 3, page_width_pt: 595.28, page_height_pt: 841.89, encrypted: false }
+    size_class: free
+  - name: a4-10pages.pdf
+    phase: 1
+    generator: pdf.basic
+    params: { pages: 10, page_numbers: true }
+    description: "A4 portrait, 10 pages of Lorem Ipsum in the Helvetica core font with page numbers. No embedded fonts."
+    tags: [document, multi-page, text]
+    expect: { pages: 10, page_width_pt: 595.28, page_height_pt: 841.89, encrypted: false }
+    size_class: free
+  - name: letter-1page.pdf
+    phase: 1
+    generator: pdf.basic
+    params: { pages: 1, page_size: letter }
+    description: "US Letter portrait, one page. Same content as the A4 fixture, different page box."
+    tags: [document, text]
+    expect: { pages: 1, page_width_pt: 612.0, page_height_pt: 792.0 }
+    size_class: free
+  - name: a4-landscape-1page.pdf
+    phase: 1
+    generator: pdf.basic
+    params: { pages: 1, orientation: landscape }
+    description: "A4 landscape, one page — the page box is wider than it is tall."
+    tags: [document, text]
+    expect: { pages: 1, page_width_pt: 841.89, page_height_pt: 595.28 }
+    size_class: free
+  - name: a4-with-images-2pages.pdf
+    phase: 1
+    generator: pdf.with_images
+    params: { png: "png/640x480.png", jpg: "jpg/640x480.jpg" }
+    description: "Two pages, each embedding a published image fixture: the 640x480 PNG and the 640x480 JPEG. Built from the published bytes, not regenerated."
+    tags: [document, image, multi-page]
+    expect: { pages: 2, has_images: true }
+    size_class: free
+    depends_on: ["png/640x480.png", "jpg/640x480.jpg"]
+  - name: a4-with-table-1page.pdf
+    phase: 1
+    generator: pdf.with_table
+    params: { rows: 10 }
+    description: "One page holding a ten-row table of the shared people dataset."
+    tags: [document, dataset-people]
+    expect: { pages: 1, has_images: false }
+    size_class: free
+  - name: a4-encrypted-1page.pdf
+    phase: 1
+    generator: pdf.encrypted
+    params: { user_password: "loremfile", owner_password: "loremfile-owner", pages: 1 }
+    description: "AES-128 encrypted. User password 'loremfile', owner password 'loremfile-owner' - both are published here on purpose, because an encrypted fixture nobody can open would be useless. Printing and copying are permitted."
+    tags: [document, encrypted]
+    expect: { pages: 1, encrypted: true }
+    size_class: free
+  - name: blank-1page.pdf
+    phase: 1
+    generator: pdf.blank
+    params: { pages: 1 }
+    description: "A structurally valid PDF with one page and no content at all."
+    tags: [document]
+    expect: { pages: 1, has_images: false, encrypted: false }
+    size_class: free
+  - name: minimal.pdf
+    phase: 1
+    generator: pdf.minimal
+    params: {}
+    description: "The smallest structurally valid PDF this catalog offers: one page, the word 'Hello', a hand-written cross-reference table and nothing else."
+    tags: [document]
+    expect: { pages: 1 }
+    size_class: free
+  - name: 1mb.pdf
+    phase: 1
+    generator: pdf.sized
+    params: { size: 1000000 }
+    description: "About 1MB: A4 pages each embedding one incompressible seeded-noise JPEG plate, so the size is honest rather than padded."
+    tags: [document, sized, image]
+    expect: { has_images: true }
+    size_class: approx
+    nominal_bytes: 1000000
+  - name: 10mb.pdf
+    phase: 1
+    generator: pdf.sized
+    params: { size: 10000000 }
+    description: "About 10MB: A4 pages each embedding one incompressible seeded-noise JPEG plate, so the size is honest rather than padded."
+    tags: [document, sized, image]
+    expect: { has_images: true }
+    size_class: approx
+    nominal_bytes: 10000000
