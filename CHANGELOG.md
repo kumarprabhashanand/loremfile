@@ -44,6 +44,12 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Added — images (M3.3)
+
+- `png/` (8), `jpg/` (9), `gif/` (2), `webp/` (2), `avif/` (1), `bmp/` (1), `tiff/` (1),
+  `ico/` (1), `svg/` (2) — 27 launch fixtures.
+- `generators/image.py`, `generators/svg.py`, `validators/image.py`.
+
 ### Added — columnar, database and geographic formats (M3.2b)
 
 - `parquet/` (2), `arrow/` (1), `avro/` (1), `sqlite/` (2), `geojson/` (1), `gpx/` (1),

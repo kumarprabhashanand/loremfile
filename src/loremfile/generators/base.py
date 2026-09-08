@@ -16,7 +16,7 @@ import random
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Protocol, TypeVar
 
 from loremfile import datasets
 from loremfile.config import SOURCE_DATE_EPOCH
@@ -25,6 +25,11 @@ from loremfile.util.ffmpeg import tool as _tool
 
 #: A generator returns raw bytes, or a path to a file it wrote in ``ctx.workdir``.
 GeneratorResult = bytes | Path
+
+#: Bound to the decorated function so `@generator()` preserves its exact signature.
+#: Without this every generator would appear to return `bytes | Path` to callers, and a
+#: generator calling another one would have to re-narrow the type for no reason.
+GeneratorFunc = TypeVar("GeneratorFunc", bound=Callable[..., GeneratorResult])
 
 
 class DependencyResolver(Protocol):
@@ -146,9 +151,7 @@ class GeneratorRegistry:
 REGISTRY = GeneratorRegistry()
 
 
-def generator(
-    *, parallel_safe: bool = True
-) -> Callable[[Callable[..., GeneratorResult]], Callable[..., GeneratorResult]]:
+def generator(*, parallel_safe: bool = True) -> Callable[[GeneratorFunc], GeneratorFunc]:
     """Register a generator.
 
     ``parallel_safe=False`` for the memory-heavy ones — an 8000x8000 PNG, a 100k-row
@@ -159,7 +162,7 @@ def generator(
     matches the catalog verbatim.
     """
 
-    def decorate(func: Callable[..., GeneratorResult]) -> Callable[..., GeneratorResult]:
+    def decorate(func: GeneratorFunc) -> GeneratorFunc:
         module = func.__module__.rsplit(".", 1)[-1]
         REGISTRY.register(
             Generator(name=f"{module}.{func.__name__}", func=func, parallel_safe=parallel_safe)

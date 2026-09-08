@@ -2,22 +2,27 @@
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
   "catalog_version": "1.0.0",
-  "generated_at": "2026-09-07T20:06:55Z",
+  "generated_at": "2026-09-08T05:33:43Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/<OWNER>/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:3ba29bb905b96fcb019b82f3f0e05f9b6472749af252fbff3f879460e0ef327c",
-  "count": 75,
-  "total_bytes": 314340925,
+  "count": 102,
+  "total_bytes": 327964295,
   "formats": [
     "arrow",
+    "avif",
     "avro",
     "bin",
+    "bmp",
     "csv",
     "geojson",
+    "gif",
     "gpx",
+    "ico",
     "ini",
+    "jpg",
     "json",
     "kml",
     "kmz",
@@ -25,11 +30,15 @@
     "md",
     "ndjson",
     "parquet",
+    "png",
     "sql",
     "sqlite",
+    "svg",
+    "tiff",
     "toml",
     "tsv",
     "txt",
+    "webp",
     "xml",
     "yaml"
   ],
@@ -74,6 +83,41 @@
       "generator": "columnar.arrow_people",
       "generator_params": {
         "rows": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "avif/640x480.avif",
+      "url": "https://loremfile.dev/avif/640x480.avif",
+      "format": "avif",
+      "ext": "avif",
+      "mime": "image/avif",
+      "bytes": 1284,
+      "sha256": "c8e3c01650f906bed2073056b23fdaf3f7373b23bbb4ad006d8b06ef30d7c681",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, encoded to AVIF with avifenc at speed 6, single-threaded.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "avif",
+        "progressive": false
+      },
+      "generator": "image.avif_from_png",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "quality": 60
       },
       "added_in": "1.0.0",
       "status": "active",
@@ -779,6 +823,41 @@
       "supersededBy": null
     },
     {
+      "path": "bmp/24bit-256x256.bmp",
+      "url": "https://loremfile.dev/bmp/24bit-256x256.bmp",
+      "format": "bmp",
+      "ext": "bmp",
+      "mime": "image/bmp",
+      "bytes": 196662,
+      "sha256": "f6030a36778514f5f7bcb74a2266d24a3614730668e104cfb58b970ad0fd8a30",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, uncompressed 24-bit BMP.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 256,
+        "height": 256,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "bmp",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 256,
+        "height": 256,
+        "fmt": "BMP"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "csv/10mb.csv",
       "url": "https://loremfile.dev/csv/10mb.csv",
       "format": "csv",
@@ -1119,6 +1198,79 @@
       "supersededBy": null
     },
     {
+      "path": "gif/1x1.gif",
+      "url": "https://loremfile.dev/gif/1x1.gif",
+      "format": "gif",
+      "ext": "gif",
+      "mime": "image/gif",
+      "bytes": 43,
+      "sha256": "52aa9dc78b0daa1ea5bdec0d17e8acd7a4ea0c237d5c5a2398fcf530a62e9ff0",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A single-pixel GIF: the smallest useful image of this format.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 1,
+        "height": 1,
+        "mode": "P",
+        "frames": 1,
+        "animated": false,
+        "format": "gif",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 1,
+        "height": 1,
+        "fmt": "GIF"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "gif/animated-10frames-256x256.gif",
+      "url": "https://loremfile.dev/gif/animated-10frames-256x256.gif",
+      "format": "gif",
+      "ext": "gif",
+      "mime": "image/gif",
+      "bytes": 37550,
+      "sha256": "064f3026cf7096dea94ff7c948765d1c3972d6adb69cc0ac05069e202f1aaeb5",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An animated GIF of 10 frames at 100 ms, looping forever.",
+      "tags": [
+        "image",
+        "animated"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 256,
+        "height": 256,
+        "mode": "P",
+        "frames": 10,
+        "animated": true,
+        "format": "gif",
+        "progressive": false
+      },
+      "generator": "image.animated",
+      "generator_params": {
+        "width": 256,
+        "height": 256,
+        "frames": 10,
+        "fmt": "GIF",
+        "duration_ms": 100
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "gpx/track-100-points.gpx",
       "url": "https://loremfile.dev/gpx/track-100-points.gpx",
       "format": "gpx",
@@ -1159,6 +1311,48 @@
       "supersededBy": null
     },
     {
+      "path": "ico/favicon-16-32-48.ico",
+      "url": "https://loremfile.dev/ico/favicon-16-32-48.ico",
+      "format": "ico",
+      "ext": "ico",
+      "mime": "image/x-icon",
+      "bytes": 1507,
+      "sha256": "db56d2d53c213822ca18b51cd58592ebc88774a3c93a1fd1e75377100b3170ae",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A favicon containing 16x16, 32x32 and 48x48 images in one file, the shape a real favicon.ico has.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 48,
+        "height": 48,
+        "mode": "RGBA",
+        "frames": 1,
+        "animated": false,
+        "format": "ico",
+        "progressive": false,
+        "sizes": [
+          16,
+          32,
+          48
+        ]
+      },
+      "generator": "image.ico_multi",
+      "generator_params": {
+        "sizes": [
+          16,
+          32,
+          48
+        ]
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "ini/config.ini",
       "url": "https://loremfile.dev/ini/config.ini",
       "format": "ini",
@@ -1183,6 +1377,331 @@
       },
       "generator": "text.ini_config",
       "generator_params": {},
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "jpg/100x100.jpg",
+      "url": "https://loremfile.dev/jpg/100x100.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 4615,
+      "sha256": "5c738d2f9ffa80a8294e2dde32ebfd400a71ae5db26cc9742de982b4ea53a3b3",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 100x100, quality 85, 4:2:0 chroma subsampling.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 100,
+        "height": 100,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 100,
+        "height": 100,
+        "fmt": "JPEG",
+        "quality": 85
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "jpg/10mb.jpg",
+      "url": "https://loremfile.dev/jpg/10mb.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 10006097,
+      "sha256": "9c0aafe20bc223c40b33dde4c15581994be7ac49b0285cf88693a81de6585bbe",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 10MB of seeded noise at quality 95, 4:4:4 — noise does not compress, so the size is honest.",
+      "tags": [
+        "image",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 1024,
+        "height": 4035,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false
+      },
+      "generator": "image.noise_sized",
+      "generator_params": {
+        "size": 10000000,
+        "fmt": "JPEG",
+        "quality": 95
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "jpg/1920x1080.jpg",
+      "url": "https://loremfile.dev/jpg/1920x1080.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 56817,
+      "sha256": "071f0c721c4efa457b26160300ef2d6f2e3fa82b4667f3ba6e687d77005c0330",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 1920x1080, quality 85, 4:2:0 chroma subsampling.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 1920,
+        "height": 1080,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 1920,
+        "height": 1080,
+        "fmt": "JPEG",
+        "quality": 85
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "jpg/1mb.jpg",
+      "url": "https://loremfile.dev/jpg/1mb.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 991379,
+      "sha256": "63382ed1cbb89249822074bf9675d58829e444934f32a3acd7ee2facbd7f27e2",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 1MB of seeded noise at quality 95, 4:4:4 — noise does not compress, so the size is honest.",
+      "tags": [
+        "image",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 1024,
+        "height": 400,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false
+      },
+      "generator": "image.noise_sized",
+      "generator_params": {
+        "size": 1000000,
+        "fmt": "JPEG",
+        "quality": 95
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "jpg/4000x3000.jpg",
+      "url": "https://loremfile.dev/jpg/4000x3000.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 279204,
+      "sha256": "d2acbce8dafa6e22f458735c1f817e6e87e4465373e55288574ec6d18f507d7a",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 4000x3000, quality 85, 4:2:0 chroma subsampling.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 4000,
+        "height": 3000,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 4000,
+        "height": 3000,
+        "fmt": "JPEG",
+        "quality": 85
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "jpg/640x480.jpg",
+      "url": "https://loremfile.dev/jpg/640x480.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 14992,
+      "sha256": "9ce1d9c344dc3fb5a9f893729d098422d753295d540539110dbb91db7c43166d",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 640x480, quality 85, 4:2:0 chroma subsampling.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "fmt": "JPEG",
+        "quality": 85
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "jpg/cmyk-640x480.jpg",
+      "url": "https://loremfile.dev/jpg/cmyk-640x480.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 25267,
+      "sha256": "492ccd56ac18fee7453597967e56b517f03c75f837efa9201f0b6b2b593a1d58",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A CMYK JPEG, the colour space that trips pipelines expecting RGB.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 640,
+        "mode": "CMYK",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 640,
+        "height": 640,
+        "fmt": "JPEG",
+        "mode": "CMYK"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "jpg/exif-orientation-6-640x480.jpg",
+      "url": "https://loremfile.dev/jpg/exif-orientation-6-640x480.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 16048,
+      "sha256": "bba067a21d2463486b5f51d34951d7bcaea760762ad20179ca832d86c3e48bec",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Pixels stored rotated with EXIF orientation 6. The label reads upright only when the viewer honours the tag, so a viewer that ignores EXIF shows it sideways.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 480,
+        "height": 640,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false,
+        "exif_orientation": 6
+      },
+      "generator": "image.exif_orientation",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "orientation": 6
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "jpg/progressive-1920x1080.jpg",
+      "url": "https://loremfile.dev/jpg/progressive-1920x1080.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 30994,
+      "sha256": "0079d22b465f5ef8c79d702feec659d880ac9e521d3a2437d6e05b40d3166255",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, saved as a progressive JPEG rather than baseline.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 1920,
+        "height": 1080,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": true
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 1920,
+        "height": 1080,
+        "fmt": "JPEG",
+        "quality": 85,
+        "progressive": true
+      },
       "added_in": "1.0.0",
       "status": "active",
       "deprecated": false,
@@ -1697,6 +2216,292 @@
       "supersededBy": null
     },
     {
+      "path": "png/100x100.png",
+      "url": "https://loremfile.dev/png/100x100.png",
+      "format": "png",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 1387,
+      "sha256": "aad08c4f806eefeccf9bcec1430b4fe2a55ee176ff154c3999541f971b178b56",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 100x100, RGB.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 100,
+        "height": 100,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "png",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 100,
+        "height": 100,
+        "fmt": "PNG"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "png/1920x1080.png",
+      "url": "https://loremfile.dev/png/1920x1080.png",
+      "format": "png",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 11110,
+      "sha256": "94b8e6784b271a17691abde4552c2886876ce3d5861d6fd4df860f110ce4e85d",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 1920x1080, RGB.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 1920,
+        "height": 1080,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "png",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 1920,
+        "height": 1080,
+        "fmt": "PNG"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "png/1mb.png",
+      "url": "https://loremfile.dev/png/1mb.png",
+      "format": "png",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 1000147,
+      "sha256": "fa5e0d23a88567931ecf49361fe7643c9e5282d7cbe80a99538d5d9fdec26bf2",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 1 MB of seeded RGB noise. Incompressible, so the size is honest.",
+      "tags": [
+        "image",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 1024,
+        "height": 325,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "png",
+        "progressive": false
+      },
+      "generator": "image.noise_sized",
+      "generator_params": {
+        "size": 1000000,
+        "fmt": "PNG"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "png/1x1.png",
+      "url": "https://loremfile.dev/png/1x1.png",
+      "format": "png",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 69,
+      "sha256": "c47dd9465c00e9a0c8b85e9ea58d3034a0d23b9cf926113602f3460752a4eb96",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A single white pixel: the smallest useful PNG.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 1,
+        "height": 1,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "png",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 1,
+        "height": 1,
+        "fmt": "PNG"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "png/640x480.png",
+      "url": "https://loremfile.dev/png/640x480.png",
+      "format": "png",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 4208,
+      "sha256": "5329c9114fbac502ca9dd40c79414c1ba1c43f90e26da1f0f8edbe546a3fb4ff",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 640x480, RGB.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "png",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "fmt": "PNG"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "png/animated-apng-10frames-128x128.png",
+      "url": "https://loremfile.dev/png/animated-apng-10frames-128x128.png",
+      "format": "png",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 9083,
+      "sha256": "e4f0fcbc246f86af0b366de27935e75610ffad8153f8db94c04d7d03a4131068",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An animated PNG of 10 frames at 100 ms, the colour bars rotating one step per frame so the animation is obviously running.",
+      "tags": [
+        "image",
+        "animated"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 128,
+        "height": 128,
+        "mode": "RGB",
+        "frames": 10,
+        "animated": true,
+        "format": "png",
+        "progressive": false
+      },
+      "generator": "image.animated",
+      "generator_params": {
+        "width": 128,
+        "height": 128,
+        "frames": 10,
+        "fmt": "PNG",
+        "duration_ms": 100
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "png/grayscale-512x512.png",
+      "url": "https://loremfile.dev/png/grayscale-512x512.png",
+      "format": "png",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 1881,
+      "sha256": "ecc0db02f7b421e5007b4b589f39058ed24c2372646ea2b152d754c67913dc16",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, converted to 8-bit greyscale.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 512,
+        "height": 512,
+        "mode": "L",
+        "frames": 1,
+        "animated": false,
+        "format": "png",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 512,
+        "height": 512,
+        "fmt": "PNG",
+        "mode": "L"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "png/transparent-256x256.png",
+      "url": "https://loremfile.dev/png/transparent-256x256.png",
+      "format": "png",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 3231,
+      "sha256": "7a1101a249d2324d0ce7629b2bb0eea0dc08dbc91b7c71454e2a2e341c754367",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, with a horizontal alpha ramp so transparency is visible rather than uniform.",
+      "tags": [
+        "image",
+        "transparent"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 256,
+        "height": 256,
+        "mode": "RGBA",
+        "frames": 1,
+        "animated": false,
+        "format": "png",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 256,
+        "height": 256,
+        "fmt": "PNG",
+        "mode": "RGBA"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "sql/people-1000-inserts-portable.sql",
       "url": "https://loremfile.dev/sql/people-1000-inserts-portable.sql",
       "format": "sql",
@@ -1804,6 +2609,120 @@
       "generator": "columnar.sqlite_people",
       "generator_params": {
         "rows": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "svg/simple-shapes.svg",
+      "url": "https://loremfile.dev/svg/simple-shapes.svg",
+      "format": "svg",
+      "ext": "svg",
+      "mime": "image/svg+xml",
+      "bytes": 683,
+      "sha256": "55a2a8d63fdef8350da3bd380634b1a9b603e276786736e8f806342129e7924e",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A rectangle, a circle and a polyline path with explicit width and height attributes. No script, no external references.",
+      "tags": [
+        "image",
+        "web"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 12,
+        "max_line_bytes": 84,
+        "root_element": "svg",
+        "width": "200",
+        "height": "200",
+        "viewbox": "0 0 200 200",
+        "has_dtd": false,
+        "elements": 7
+      },
+      "generator": "svg.simple_shapes",
+      "generator_params": {
+        "width": 200,
+        "height": 200
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "svg/with-embedded-png.svg",
+      "url": "https://loremfile.dev/svg/with-embedded-png.svg",
+      "format": "svg",
+      "ext": "svg",
+      "mime": "image/svg+xml",
+      "bytes": 3370,
+      "sha256": "ddbcd340a5cba962c152010335d57494ac25d8e2bf09ebcc8486260e337e104b",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An SVG whose only raster content is a PNG data URI, so nothing is fetched from the network when it renders.",
+      "tags": [
+        "image",
+        "web"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 15,
+        "max_line_bytes": 1394,
+        "root_element": "svg",
+        "width": "200",
+        "height": "200",
+        "viewbox": "0 0 200 200",
+        "has_dtd": false,
+        "elements": 7
+      },
+      "generator": "svg.with_embedded_png",
+      "generator_params": {
+        "width": 200,
+        "height": 200
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "tiff/rgb-640x480.tiff",
+      "url": "https://loremfile.dev/tiff/rgb-640x480.tiff",
+      "format": "tiff",
+      "ext": "tiff",
+      "mime": "image/tiff",
+      "bytes": 921740,
+      "sha256": "c51242d1fb3ac0b3ba42832ba5769958cfaa98932a8701dd58e2fdfba7cc65c6",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, uncompressed RGB TIFF.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "tiff",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "fmt": "TIFF",
+        "compression": "raw"
       },
       "added_in": "1.0.0",
       "status": "active",
@@ -2400,6 +3319,80 @@
       "generator": "text.encoded",
       "generator_params": {
         "encoding": "windows-1252"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "webp/alpha-256x256.webp",
+      "url": "https://loremfile.dev/webp/alpha-256x256.webp",
+      "format": "webp",
+      "ext": "webp",
+      "mime": "image/webp",
+      "bytes": 1168,
+      "sha256": "c56166dff21de8391239c6e176401f2394878b43ca9d8bec0d357994a2bcb6cb",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A lossless WebP with an alpha ramp.",
+      "tags": [
+        "image",
+        "transparent"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 256,
+        "height": 256,
+        "mode": "RGBA",
+        "frames": 1,
+        "animated": false,
+        "format": "webp",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 256,
+        "height": 256,
+        "fmt": "WEBP",
+        "mode": "RGBA",
+        "quality": 100
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "webp/lossy-640x480.webp",
+      "url": "https://loremfile.dev/webp/lossy-640x480.webp",
+      "format": "webp",
+      "ext": "webp",
+      "mime": "image/webp",
+      "bytes": 2834,
+      "sha256": "098d2de4aca416a400f01efa1c8b9ff575411dd7215facf1e034c23951fb8c00",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, saved as lossy WebP at quality 80.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "webp",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "fmt": "WEBP",
+        "quality": 80
       },
       "added_in": "1.0.0",
       "status": "active",

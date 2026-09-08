@@ -1,0 +1,25 @@
+# gif fixtures (docs/05 §3.2). Launch-set rows only; the rest are P1b.
+format: gif
+family: images
+mime: image/gif
+description: >-
+  A minimal GIF and an animated one.
+seo_title: "Sample GIF images for testing — free, CC0"
+related: [png, webp]
+fixtures:
+  - name: 1x1.gif
+    phase: 1
+    generator: image.testcard
+    params: { width: 1, height: 1, fmt: GIF }
+    description: "A single-pixel GIF: the smallest useful image of this format."
+    tags: [image]
+    expect: { width: 1, height: 1, animated: false }
+    size_class: free
+  - name: animated-10frames-256x256.gif
+    phase: 1
+    generator: image.animated
+    params: { width: 256, height: 256, frames: 10, fmt: GIF, duration_ms: 100 }
+    description: "An animated GIF of 10 frames at 100 ms, looping forever."
+    tags: [image, animated]
+    expect: { width: 256, height: 256, frames: 10, animated: true }
+    size_class: free

@@ -1,0 +1,17 @@
+# bmp fixtures (docs/05 §3.2). Launch-set rows only; the rest are P1b.
+format: bmp
+family: images
+mime: image/bmp
+description: >-
+  An uncompressed 24-bit BMP.
+seo_title: "Sample BMP image for testing — free, CC0"
+related: [png, tiff]
+fixtures:
+  - name: 24bit-256x256.bmp
+    phase: 1
+    generator: image.testcard
+    params: { width: 256, height: 256, fmt: BMP }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, uncompressed 24-bit BMP."
+    tags: [image]
+    expect: { width: 256, height: 256, mode: RGB }
+    size_class: free

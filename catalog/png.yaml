@@ -1,0 +1,75 @@
+# png fixtures (docs/05 §3.2). Launch-set rows only; the rest are P1b.
+format: png
+family: images
+mime: image/png
+description: >-
+  PNG test cards at the sizes people actually need, plus transparency, greyscale
+  and an animated APNG.
+seo_title: "Sample PNG images for testing uploads and viewers — free, CC0"
+related: [jpg, webp, avif, gif, svg]
+fixtures:
+  - name: 1x1.png
+    phase: 1
+    generator: image.testcard
+    params: { width: 1, height: 1, fmt: PNG }
+    description: "A single white pixel: the smallest useful PNG."
+    tags: [image]
+    expect: { width: 1, height: 1, mode: RGB, animated: false }
+    size_class: free
+  - name: 100x100.png
+    phase: 1
+    generator: image.testcard
+    params: { width: 100, height: 100, fmt: PNG }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 100x100, RGB."
+    tags: [image]
+    expect: { width: 100, height: 100, mode: RGB, animated: false }
+    size_class: free
+  - name: 640x480.png
+    phase: 1
+    generator: image.testcard
+    params: { width: 640, height: 480, fmt: PNG }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 640x480, RGB."
+    tags: [image]
+    expect: { width: 640, height: 480, mode: RGB, animated: false }
+    size_class: free
+  - name: 1920x1080.png
+    phase: 1
+    generator: image.testcard
+    params: { width: 1920, height: 1080, fmt: PNG }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 1920x1080, RGB."
+    tags: [image]
+    expect: { width: 1920, height: 1080, mode: RGB, animated: false }
+    size_class: free
+  - name: transparent-256x256.png
+    phase: 1
+    generator: image.testcard
+    params: { width: 256, height: 256, fmt: PNG, mode: RGBA }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, with a horizontal alpha ramp so transparency is visible rather than uniform."
+    tags: [image, transparent]
+    expect: { width: 256, height: 256, mode: RGBA }
+    size_class: free
+  - name: grayscale-512x512.png
+    phase: 1
+    generator: image.testcard
+    params: { width: 512, height: 512, fmt: PNG, mode: L }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, converted to 8-bit greyscale."
+    tags: [image]
+    expect: { width: 512, height: 512, mode: L }
+    size_class: free
+  - name: animated-apng-10frames-128x128.png
+    phase: 1
+    generator: image.animated
+    params: { width: 128, height: 128, frames: 10, fmt: PNG, duration_ms: 100 }
+    description: "An animated PNG of 10 frames at 100 ms, the colour bars rotating one step per frame so the animation is obviously running."
+    tags: [image, animated]
+    expect: { width: 128, height: 128, frames: 10, animated: true }
+    size_class: free
+  - name: 1mb.png
+    phase: 1
+    generator: image.noise_sized
+    params: { size: 1000000, fmt: PNG }
+    description: "About 1 MB of seeded RGB noise. Incompressible, so the size is honest."
+    tags: [image, sized]
+    expect: { mode: RGB }
+    size_class: approx
+    nominal_bytes: 1000000

@@ -1,0 +1,84 @@
+# jpg fixtures (docs/05 §3.2). Launch-set rows only; the rest are P1b.
+format: jpg
+family: images
+mime: image/jpeg
+description: >-
+  JPEG test cards including a progressive scan, a CMYK colour space and an EXIF
+  orientation case that only displays correctly if the tag is honoured.
+seo_title: "Sample JPEG images for testing uploads and viewers — free, CC0"
+related: [png, webp, avif, tiff]
+fixtures:
+  - name: 100x100.jpg
+    phase: 1
+    generator: image.testcard
+    params: { width: 100, height: 100, fmt: JPEG, quality: 85 }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 100x100, quality 85, 4:2:0 chroma subsampling."
+    tags: [image]
+    expect: { width: 100, height: 100, mode: RGB }
+    size_class: free
+  - name: 640x480.jpg
+    phase: 1
+    generator: image.testcard
+    params: { width: 640, height: 480, fmt: JPEG, quality: 85 }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 640x480, quality 85, 4:2:0 chroma subsampling."
+    tags: [image]
+    expect: { width: 640, height: 480, mode: RGB }
+    size_class: free
+  - name: 1920x1080.jpg
+    phase: 1
+    generator: image.testcard
+    params: { width: 1920, height: 1080, fmt: JPEG, quality: 85 }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 1920x1080, quality 85, 4:2:0 chroma subsampling."
+    tags: [image]
+    expect: { width: 1920, height: 1080, mode: RGB }
+    size_class: free
+  - name: 4000x3000.jpg
+    phase: 1
+    generator: image.testcard
+    params: { width: 4000, height: 3000, fmt: JPEG, quality: 85 }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 4000x3000, quality 85, 4:2:0 chroma subsampling."
+    tags: [image]
+    expect: { width: 4000, height: 3000, mode: RGB }
+    size_class: free
+  - name: progressive-1920x1080.jpg
+    phase: 1
+    generator: image.testcard
+    params: { width: 1920, height: 1080, fmt: JPEG, quality: 85, progressive: true }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, saved as a progressive JPEG rather than baseline."
+    tags: [image]
+    expect: { width: 1920, height: 1080, progressive: true }
+    size_class: free
+  - name: cmyk-640x480.jpg
+    phase: 1
+    generator: image.testcard
+    params: { width: 640, height: 640, fmt: JPEG, mode: CMYK }
+    description: "A CMYK JPEG, the colour space that trips pipelines expecting RGB."
+    tags: [image]
+    expect: { mode: CMYK }
+    size_class: free
+  - name: exif-orientation-6-640x480.jpg
+    phase: 1
+    generator: image.exif_orientation
+    params: { width: 640, height: 480, orientation: 6 }
+    description: "Pixels stored rotated with EXIF orientation 6. The label reads upright only when the viewer honours the tag, so a viewer that ignores EXIF shows it sideways."
+    tags: [image]
+    expect: { exif_orientation: 6 }
+    size_class: free
+  - name: 1mb.jpg
+    phase: 1
+    generator: image.noise_sized
+    params: { size: 1000000, fmt: JPEG, quality: 95 }
+    description: "About 1MB of seeded noise at quality 95, 4:4:4 — noise does not compress, so the size is honest."
+    tags: [image, sized]
+    expect: { mode: RGB }
+    size_class: approx
+    nominal_bytes: 1000000
+  - name: 10mb.jpg
+    phase: 1
+    generator: image.noise_sized
+    params: { size: 10000000, fmt: JPEG, quality: 95 }
+    description: "About 10MB of seeded noise at quality 95, 4:4:4 — noise does not compress, so the size is honest."
+    tags: [image, sized]
+    expect: { mode: RGB }
+    size_class: approx
+    nominal_bytes: 10000000

@@ -1,0 +1,26 @@
+# svg fixtures (docs/05 §3.2). Launch-set rows only; the rest are P1b.
+format: svg
+family: images
+mime: image/svg+xml
+description: >-
+  Hand-written SVG with no script, no event handlers and no external references.
+  Served with a sandbox CSP so it renders its own shapes but can execute nothing.
+seo_title: "Sample SVG images for testing renderers — free, CC0"
+related: [png, webp]
+fixtures:
+  - name: simple-shapes.svg
+    phase: 1
+    generator: svg.simple_shapes
+    params: { width: 200, height: 200 }
+    description: "A rectangle, a circle and a polyline path with explicit width and height attributes. No script, no external references."
+    tags: [image, web]
+    expect: { root_element: svg, width: "200", height: "200" }
+    size_class: free
+  - name: with-embedded-png.svg
+    phase: 1
+    generator: svg.with_embedded_png
+    params: { width: 200, height: 200 }
+    description: "An SVG whose only raster content is a PNG data URI, so nothing is fetched from the network when it renders."
+    tags: [image, web]
+    expect: { root_element: svg, width: "200" }
+    size_class: free
