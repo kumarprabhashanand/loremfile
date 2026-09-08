@@ -107,6 +107,71 @@ def fixtures_dir() -> Path:
     return config.repo_root() / config.BUILD_DIR / "fixtures"
 
 
+#: Written beside build/fixtures/ by every `build`, read by every `validate`.
+RECEIPT_NAME = "selection.json"
+
+
+@dataclass(frozen=True)
+class Receipt:
+    """What the last `build` set out to generate."""
+
+    selection: str
+    selected: tuple[str, ...]
+    filters: dict[str, object]
+
+
+def receipt_path(directory: Path | None = None) -> Path:
+    """Where `build` records its selection, beside the fixtures rather than among them.
+
+    Without it `validate` cannot tell a build that correctly selected nothing — a pull
+    request touching no catalog entry, where `build --new` is a no-op — from a `validate`
+    run before any build at all. Both leave build/fixtures empty; only one is a failure.
+    Kept out of build/fixtures/ because everything in there is a publishable fixture.
+    """
+    return (directory or fixtures_dir()).parent / RECEIPT_NAME
+
+
+def write_receipt(
+    fixtures: list[Fixture],
+    *,
+    selection: str,
+    filters: dict[str, object],
+    directory: Path | None = None,
+) -> Path:
+    target = receipt_path(directory)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        json.dumps(
+            {
+                "selection": selection,
+                "filters": filters,
+                "selected": [f.path for f in fixtures],
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+    return target
+
+
+def read_receipt(directory: Path | None = None) -> Receipt | None:
+    """The last build's receipt, or None if no build has run here."""
+    source = receipt_path(directory)
+    if not source.is_file():
+        return None
+    try:
+        loaded = json.loads(source.read_text())
+        return Receipt(
+            selection=str(loaded["selection"]),
+            selected=tuple(str(p) for p in loaded["selected"]),
+            filters=dict(loaded.get("filters", {})),
+        )
+    except (json.JSONDecodeError, KeyError, TypeError) as exc:
+        raise BuildError(
+            f"{source}: unreadable build receipt ({exc}); run `loremfile build`"
+        ) from exc
+
+
 def default_base_ref() -> str:
     """The branch a `--new` build compares against.
 
@@ -285,6 +350,9 @@ def build(
     """
     load_generators()
     directory = into or fixtures_dir()
+    # Even a build that generates nothing leaves the directory, so that consumers
+    # (ci.yml's inventory step, `validate`) meet an empty directory, not a missing one.
+    directory.mkdir(parents=True, exist_ok=True)
     results: list[Built] = []
     produced: dict[str, bytes] = {}
 
@@ -317,3 +385,4 @@ def clean(into: Path | None = None) -> None:
     directory = into or fixtures_dir()
     if directory.exists():
         shutil.rmtree(directory)
+    receipt_path(directory).unlink(missing_ok=True)

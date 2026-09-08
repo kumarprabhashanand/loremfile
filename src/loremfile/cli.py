@@ -176,6 +176,16 @@ def build_command(
             phase=phase,
         )
         results = build_module.build(chosen)
+        build_module.write_receipt(
+            chosen,
+            selection=selection,
+            filters={
+                "only": list(only),
+                "formats": list(formats),
+                "group": group,
+                "phase": phase,
+            },
+        )
         summary = {"generated": len(results), "bytes": sum(len(r.data) for r in results)}
         items = [
             {"path": r.path, "status": "ok", "detail": f"{len(r.data)} bytes"} for r in results
@@ -218,7 +228,22 @@ def validate_command(
         for path in sorted(explicit - {f.path for f in present}):
             errors.append(f"{path}: not generated; run `loremfile build --only {path}` first")
             items.append({"path": path, "status": "missing", "detail": ""})
-        if not present and not errors:
+
+        # The receipt says what the last build set out to generate. Anything it selected
+        # that is not on disk is a build that half-failed, whatever its exit code said.
+        receipt = build_module.read_receipt()
+        expected = (
+            {p for p in receipt.selected if p in {f.path for f in chosen}} if receipt else set()
+        )
+        for path in sorted(expected - {f.path for f in present}):
+            errors.append(f"{path}: selected by the last build but never written")
+            items.append({"path": path, "status": "missing", "detail": ""})
+
+        if not present and not errors and receipt is None:
+            # No receipt means no build ran here. An empty directory with a receipt is a
+            # build that correctly selected nothing — the shape of a pull request that
+            # changes no catalog entry — and reporting that as a failure would make
+            # ci.yml red on every infrastructure-only change.
             errors.append(
                 "nothing to validate: build/fixtures is empty. Run `loremfile build` first."
             )
@@ -240,6 +265,7 @@ def validate_command(
             "validated": passed,
             "failed": len(present) - passed,
             "skipped_not_built": len(chosen) - len(present),
+            "selected_by_last_build": len(receipt.selected) if receipt else "no build receipt",
         }
     except (build_module.BuildError, CatalogError, ValueError, KeyError) as exc:
         errors.append(str(exc))

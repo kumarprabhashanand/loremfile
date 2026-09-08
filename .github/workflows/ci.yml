@@ -79,6 +79,9 @@ jobs:
             "+refs/heads/${GITHUB_BASE_REF}:refs/remotes/origin/${GITHUB_BASE_REF}"
 
       - name: Generate the fixtures this pull request adds
+        # On a pull request that touches no catalog entry this correctly generates
+        # nothing, leaves an empty build/fixtures and a build/selection.json saying so,
+        # and the steps below all have to survive that.
         run: loremfile build --new
 
       - name: Validate them
@@ -103,7 +106,7 @@ jobs:
         run: |
           cd build/fixtures
           find . -type f -printf '%s\t%p\n' | sort -k2 > "$GITHUB_WORKSPACE/inventory.txt"
-          find . -type f -print0 | sort -z | xargs -0 sha256sum \
+          find . -type f -print0 | sort -z | xargs -0 --no-run-if-empty sha256sum \
             >> "$GITHUB_WORKSPACE/inventory.txt"
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

@@ -166,6 +166,16 @@ def basic(ctx: GeneratorContext, *, pages: int, page_size: str = "A4",
 | `loremfile build --all [--audit]` (monthly audit, restore) | Every active fixture; `--audit` reports drift instead of failing. |
 | `--only <path…>` / `--format <fmt…>` / `--group <media\|data\|other>` / `--phase N` | Filters applied on top of the selection above (or, if none of the three modes is given, on the whole catalog). Groups: `media` = mp4 webm mkv mov avi ogv ts hls mp3 wav flac ogg opus m4a aac aiff; `data` = csv tsv json ndjson xml yaml toml ini parquet avro arrow sqlite sql geojson gpx kml kmz; `other` = everything else. |
 
+**A build that selects nothing is a success, and `validate` has to be able to tell.** Every `build` writes `build/selection.json` — the selection mode, the filters and the paths it chose — beside `build/fixtures/`, not inside it, because everything inside is publishable. `validate` then reads it:
+
+| `build/selection.json` | `build/fixtures/` | `validate` |
+|---|---|---|
+| absent | empty | **error** — no build ran here |
+| present, selected nothing | empty | **ok**, `validated=0` — a pull request that touches no catalog entry, which is what every infrastructure-only change looks like |
+| present, selected *N* | missing some of them | **error**, naming each — a build that half-failed, whatever its exit code said |
+
+Without the receipt those three cases are one empty directory. The first version of this check had only the directory to go on, so it failed `ci.yml` on the M0 infrastructure pull request, which correctly built nothing.
+
 ## 6. Validators
 
 For each generated file, `validators.validate(path, catalog_entry) -> props`:
