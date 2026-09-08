@@ -1,0 +1,19 @@
+# EPUB e-books (docs/05 §3.5). Launch-set rows only; the rest are P1b.
+format: epub
+family: documents
+mime: application/epub+zip
+description: >-
+  EPUB 3 e-books for readers, converters and validators. A real package document, a real
+  navigation document and XHTML chapters — not a renamed zip. The `mimetype` entry is
+  first and stored uncompressed, as the container format requires.
+seo_title: "Sample EPUB files for testing — free, CC0, hotlinkable"
+related: [pdf, docx, txt]  # zip joins in M3.7
+fixtures:
+  - name: epub3-3chapters.epub
+    phase: 1
+    generator: office.epub3
+    params: { chapters: 3, paragraphs: 4 }
+    description: "EPUB 3.0: three XHTML chapters of Lorem Ipsum, a nav document with a table of contents, and a stylesheet. Identifier and modification date are fixed, so the bytes never move."
+    tags: [document, text, multi-page]
+    expect: { chapters: 3, documents: 4, epub_version: "3.0", has_nav: true }
+    size_class: free

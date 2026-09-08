@@ -1,0 +1,19 @@
+# Rich Text Format (docs/05 §3.5). Launch-set rows only; the rest are P1b.
+format: rtf
+family: documents
+mime: application/rtf
+description: >-
+  Rich Text Format, written by hand rather than by a library: plain ASCII, a font table
+  and paragraph breaks. RTF is the format that survives everywhere, which makes it a
+  useful control when a .docx importer misbehaves.
+seo_title: "Sample RTF files for testing — free, CC0, hotlinkable"
+related: [docx, txt, pdf]
+fixtures:
+  - name: simple.rtf
+    phase: 1
+    generator: office.rtf_simple
+    params: { paragraphs: 3 }
+    description: "Three paragraphs of Lorem Ipsum in Times New Roman. Every byte is ASCII, so no reader has to guess an encoding."
+    tags: [document, text]
+    expect: { paragraphs: 3, has_font_table: true, encoding: "utf-8", bom: false }
+    size_class: free

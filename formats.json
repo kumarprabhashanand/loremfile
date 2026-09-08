@@ -50,6 +50,22 @@
       "mime_default": "text/csv"
     },
     {
+      "format": "docx",
+      "count": 5,
+      "total_bytes": 11251430,
+      "url": "https://loremfile.dev/docx",
+      "index": "https://loremfile.dev/docx/index.json",
+      "mime_default": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    },
+    {
+      "format": "epub",
+      "count": 1,
+      "total_bytes": 4871,
+      "url": "https://loremfile.dev/epub",
+      "index": "https://loremfile.dev/epub/index.json",
+      "mime_default": "application/epub+zip"
+    },
+    {
       "format": "geojson",
       "count": 1,
       "total_bytes": 35344,
@@ -170,6 +186,22 @@
       "mime_default": "image/png"
     },
     {
+      "format": "pptx",
+      "count": 3,
+      "total_bytes": 1094475,
+      "url": "https://loremfile.dev/pptx",
+      "index": "https://loremfile.dev/pptx/index.json",
+      "mime_default": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    },
+    {
+      "format": "rtf",
+      "count": 1,
+      "total_bytes": 1694,
+      "url": "https://loremfile.dev/rtf",
+      "index": "https://loremfile.dev/rtf/index.json",
+      "mime_default": "application/rtf"
+    },
+    {
       "format": "sql",
       "count": 1,
       "total_bytes": 429863,
@@ -232,6 +264,14 @@
       "url": "https://loremfile.dev/webp",
       "index": "https://loremfile.dev/webp/index.json",
       "mime_default": "image/webp"
+    },
+    {
+      "format": "xlsx",
+      "count": 6,
+      "total_bytes": 11250551,
+      "url": "https://loremfile.dev/xlsx",
+      "index": "https://loremfile.dev/xlsx/index.json",
+      "mime_default": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     },
     {
       "format": "xml",

@@ -164,6 +164,9 @@ PROVING_FIXTURES = [
     "png/640x480.png",
     "sqlite/people-1000.sqlite",
     "kmz/placemarks-10.kmz",
+    "docx/1page.docx",
+    "xlsx/1sheet-10rows.xlsx",
+    "pptx/1slide.pptx",
 ]
 
 DETERMINISM_TABLE_HEADER = "| Library | Claim | Proving fixture | Verified |"

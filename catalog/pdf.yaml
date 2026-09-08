@@ -7,7 +7,7 @@ description: >-
   with images, with a table, encrypted, blank, and a hand-written minimal file.
   No embedded fonts and no scripts.
 seo_title: "Sample PDF files for testing — free, CC0, hotlinkable"
-related: [png, jpg]  # docx and epub join when M3.5 adds their catalogs
+related: [png, jpg, docx, epub]
 fixtures:
   - name: a4-1page.pdf
     phase: 1

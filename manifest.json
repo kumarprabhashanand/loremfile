@@ -2,14 +2,14 @@
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
   "catalog_version": "1.0.0",
-  "generated_at": "2026-09-08T05:55:03Z",
+  "generated_at": "2026-09-08T21:21:54Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/<OWNER>/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:3ba29bb905b96fcb019b82f3f0e05f9b6472749af252fbff3f879460e0ef327c",
-  "count": 114,
-  "total_bytes": 338919311,
+  "count": 130,
+  "total_bytes": 362522332,
   "formats": [
     "arrow",
     "avif",
@@ -17,6 +17,8 @@
     "bin",
     "bmp",
     "csv",
+    "docx",
+    "epub",
     "geojson",
     "gif",
     "gpx",
@@ -32,6 +34,8 @@
     "parquet",
     "pdf",
     "png",
+    "pptx",
+    "rtf",
     "sql",
     "sqlite",
     "svg",
@@ -40,6 +44,7 @@
     "tsv",
     "txt",
     "webp",
+    "xlsx",
     "xml",
     "yaml"
   ],
@@ -1154,6 +1159,205 @@
       "generator": "data.csv_people",
       "generator_params": {
         "rows": 100000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "docx/10mb.docx",
+      "url": "https://loremfile.dev/docx/10mb.docx",
+      "format": "docx",
+      "ext": "docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "bytes": 10110885,
+      "sha256": "167506d57ee99c0537bb27f77f45a4ab379c9a1bf0eaf75b6dd948d808dcb7e6",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 10MB: one Lorem Ipsum paragraph per embedded incompressible seeded-noise PNG, so the size is honest rather than padded.",
+      "tags": [
+        "document",
+        "sized",
+        "image",
+        "large"
+      ],
+      "edge_case": false,
+      "props": {
+        "paragraphs": 52,
+        "tables": 0,
+        "table_rows": 0,
+        "images": 51,
+        "words": 3371
+      },
+      "generator": "office.docx_sized",
+      "generator_params": {
+        "size": 10000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "docx/1mb.docx",
+      "url": "https://loremfile.dev/docx/1mb.docx",
+      "format": "docx",
+      "ext": "docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "bytes": 1024867,
+      "sha256": "fa18a9869daf153cf362bf10cb0df3b5658a000190cda563af586a86e7742525",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 1MB: one Lorem Ipsum paragraph per embedded incompressible seeded-noise PNG, so the size is honest rather than padded.",
+      "tags": [
+        "document",
+        "sized",
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "paragraphs": 6,
+        "tables": 0,
+        "table_rows": 0,
+        "images": 5,
+        "words": 354
+      },
+      "generator": "office.docx_sized",
+      "generator_params": {
+        "size": 1000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "docx/1page.docx",
+      "url": "https://loremfile.dev/docx/1page.docx",
+      "format": "docx",
+      "ext": "docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "bytes": 37209,
+      "sha256": "955ad6f8d4da5ce212dc0ce961598e2ccc8cfe26a5940ed925da59941e29f3c8",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One page: a heading and three paragraphs of Lorem Ipsum in the default Word styles. The page count is what Word renders it as; .docx stores no page count of its own.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "paragraphs": 4,
+        "tables": 0,
+        "table_rows": 0,
+        "images": 0,
+        "words": 170
+      },
+      "generator": "office.docx_basic",
+      "generator_params": {
+        "paragraphs": 3
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "docx/with-images.docx",
+      "url": "https://loremfile.dev/docx/with-images.docx",
+      "format": "docx",
+      "ext": "docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "bytes": 41377,
+      "sha256": "232214dc50d763d22c43c8c351897e59ee9525b58b262e401d0a3589601e68ea",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Two published PNG fixtures embedded as pictures, read from the bytes that were actually published rather than regenerated.",
+      "tags": [
+        "document",
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "paragraphs": 3,
+        "tables": 0,
+        "table_rows": 0,
+        "images": 2,
+        "words": 167
+      },
+      "generator": "office.docx_with_images",
+      "generator_params": {
+        "images": [
+          "png/100x100.png",
+          "png/640x480.png"
+        ]
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "docx/with-table.docx",
+      "url": "https://loremfile.dev/docx/with-table.docx",
+      "format": "docx",
+      "ext": "docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "bytes": 37092,
+      "sha256": "8d3f871d805825bf26ed9cb92ff05b8b196aa29d14f93531db5c4787ee57844f",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A ten-row table of the shared people dataset with a bold header row, in the Table Grid style.",
+      "tags": [
+        "document",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "paragraphs": 1,
+        "tables": 1,
+        "table_rows": 11,
+        "images": 0,
+        "words": 1
+      },
+      "generator": "office.docx_with_table",
+      "generator_params": {
+        "rows": 10
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "epub/epub3-3chapters.epub",
+      "url": "https://loremfile.dev/epub/epub3-3chapters.epub",
+      "format": "epub",
+      "ext": "epub",
+      "mime": "application/epub+zip",
+      "bytes": 4871,
+      "sha256": "a4e177da44becedc8cfe1016d37b4b0a7c3e447b892842d9814c9cbecfc18090",
+      "size_class": "free",
+      "phase": 1,
+      "description": "EPUB 3.0: three XHTML chapters of Lorem Ipsum, a nav document with a table of contents, and a stylesheet. Identifier and modification date are fixed, so the bytes never move.",
+      "tags": [
+        "document",
+        "text",
+        "multi-page"
+      ],
+      "edge_case": false,
+      "props": {
+        "chapters": 3,
+        "documents": 4,
+        "epub_version": "3.0",
+        "has_nav": true
+      },
+      "generator": "office.epub3",
+      "generator_params": {
+        "chapters": 3,
+        "paragraphs": 4
       },
       "added_in": "1.0.0",
       "status": "active",
@@ -2919,6 +3123,141 @@
       "supersededBy": null
     },
     {
+      "path": "pptx/10slides.pptx",
+      "url": "https://loremfile.dev/pptx/10slides.pptx",
+      "format": "pptx",
+      "ext": "pptx",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "bytes": 37736,
+      "sha256": "fe9207f2d294a9648dd05b01fa5186bae9b9acc3540db910192a7531fc3583f3",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Ten 16:9 title-and-content slides of Lorem Ipsum, each with its own title.",
+      "tags": [
+        "document",
+        "multi-page",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "slides": 10,
+        "layouts": 1,
+        "images": 0,
+        "slide_width_emu": 12191695,
+        "slide_height_emu": 6858000,
+        "notes": 0
+      },
+      "generator": "office.pptx_basic",
+      "generator_params": {
+        "slides": 10
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pptx/1mb.pptx",
+      "url": "https://loremfile.dev/pptx/1mb.pptx",
+      "format": "pptx",
+      "ext": "pptx",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "bytes": 1028118,
+      "sha256": "a4604de2925c140890f78dae6cdb8dde6ed09edd436c40c158817f9fb8740386",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 1MB: one slide per embedded incompressible seeded-noise PNG, each with a speaker note, so the size is honest rather than padded.",
+      "tags": [
+        "document",
+        "sized",
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "slides": 5,
+        "layouts": 1,
+        "images": 5,
+        "slide_width_emu": 12191695,
+        "slide_height_emu": 6858000,
+        "notes": 5
+      },
+      "generator": "office.pptx_sized",
+      "generator_params": {
+        "size": 1000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pptx/1slide.pptx",
+      "url": "https://loremfile.dev/pptx/1slide.pptx",
+      "format": "pptx",
+      "ext": "pptx",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "bytes": 28621,
+      "sha256": "4b5e7d13384211f5f1287f5ff9118849fb824c6e723d7838ab5ad2b2078c1069",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A single 16:9 title-and-content slide of Lorem Ipsum.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "slides": 1,
+        "layouts": 1,
+        "images": 0,
+        "slide_width_emu": 12191695,
+        "slide_height_emu": 6858000,
+        "notes": 0
+      },
+      "generator": "office.pptx_basic",
+      "generator_params": {
+        "slides": 1
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "rtf/simple.rtf",
+      "url": "https://loremfile.dev/rtf/simple.rtf",
+      "format": "rtf",
+      "ext": "rtf",
+      "mime": "application/rtf",
+      "bytes": 1694,
+      "sha256": "c7d9d289bfe739af9adcc14890294c2aea3d3b3d69d3cb4c751d1624ab8792e0",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three paragraphs of Lorem Ipsum in Times New Roman. Every byte is ASCII, so no reader has to guess an encoding.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 5,
+        "max_line_bytes": 740,
+        "paragraphs": 3,
+        "has_font_table": true
+      },
+      "generator": "office.rtf_simple",
+      "generator_params": {
+        "paragraphs": 3
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "sql/people-1000-inserts-portable.sql",
       "url": "https://loremfile.dev/sql/people-1000-inserts-portable.sql",
       "format": "sql",
@@ -3811,6 +4150,207 @@
         "fmt": "WEBP",
         "quality": 80
       },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "xlsx/10mb.xlsx",
+      "url": "https://loremfile.dev/xlsx/10mb.xlsx",
+      "format": "xlsx",
+      "ext": "xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 10081121,
+      "sha256": "9919c76878e9627e29ceb287417436c3e336f7b5ee3b4733ef17ac9ae35d6da1",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 10MB: a people sheet plus a second sheet of embedded incompressible seeded-noise PNGs, so the size is honest rather than padded.",
+      "tags": [
+        "document",
+        "sized",
+        "image",
+        "large"
+      ],
+      "edge_case": false,
+      "props": {
+        "sheets": 2,
+        "sheet_names": "People,Plates",
+        "rows": 52,
+        "columns": 14,
+        "formulas": 0,
+        "images": 51
+      },
+      "generator": "office.xlsx_sized",
+      "generator_params": {
+        "size": 10000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "xlsx/1mb.xlsx",
+      "url": "https://loremfile.dev/xlsx/1mb.xlsx",
+      "format": "xlsx",
+      "ext": "xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 994556,
+      "sha256": "2d4e7aa8d162b6eb3903be1e983323e2d9992e46c540ff08ea030c74220630ef",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 1MB: a people sheet plus a second sheet of embedded incompressible seeded-noise PNGs, so the size is honest rather than padded.",
+      "tags": [
+        "document",
+        "sized",
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "sheets": 2,
+        "sheet_names": "People,Plates",
+        "rows": 6,
+        "columns": 14,
+        "formulas": 0,
+        "images": 5
+      },
+      "generator": "office.xlsx_sized",
+      "generator_params": {
+        "size": 1000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "xlsx/1sheet-1000rows.xlsx",
+      "url": "https://loremfile.dev/xlsx/1sheet-1000rows.xlsx",
+      "format": "xlsx",
+      "ext": "xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 156719,
+      "sha256": "1319893c8f4022a2cb64c886d3ede05a77ea44d2465bad1affbd39935a166af8",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One sheet: a bold, frozen header row plus a thousand records of the shared people dataset. The first ten rows are the same records as the ten-row fixture.",
+      "tags": [
+        "document",
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "sheets": 1,
+        "sheet_names": "People",
+        "rows": 1001,
+        "columns": 14,
+        "formulas": 0,
+        "images": 0
+      },
+      "generator": "office.xlsx_people",
+      "generator_params": {
+        "rows": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "xlsx/1sheet-10rows.xlsx",
+      "url": "https://loremfile.dev/xlsx/1sheet-10rows.xlsx",
+      "format": "xlsx",
+      "ext": "xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 7150,
+      "sha256": "e5987a192162d29bd6b01a13a78179481f1b08c41152094af1c086bd65613392",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One sheet: a bold, frozen header row plus ten records of the shared people dataset across all fourteen columns.",
+      "tags": [
+        "document",
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "sheets": 1,
+        "sheet_names": "People",
+        "rows": 11,
+        "columns": 14,
+        "formulas": 0,
+        "images": 0
+      },
+      "generator": "office.xlsx_people",
+      "generator_params": {
+        "rows": 10
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "xlsx/with-formulas.xlsx",
+      "url": "https://loremfile.dev/xlsx/with-formulas.xlsx",
+      "format": "xlsx",
+      "ext": "xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 5489,
+      "sha256": "f9c1b3642a8fef407a0b967599d4602a9a989677453ca41b4d9fb8f13a7e1c08",
+      "size_class": "free",
+      "phase": 1,
+      "description": "SUM, AVERAGE, IF and VLOOKUP over a ten-line order table, each with its result cached in the file. Readers that do not calculate — pandas, openpyxl's data_only mode — still see the values.",
+      "tags": [
+        "document",
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "sheets": 1,
+        "sheet_names": "Orders",
+        "rows": 11,
+        "columns": 7,
+        "formulas": 14,
+        "images": 0
+      },
+      "generator": "office.xlsx_with_formulas",
+      "generator_params": {
+        "rows": 10
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "xlsx/with-types-and-formats.xlsx",
+      "url": "https://loremfile.dev/xlsx/with-types-and-formats.xlsx",
+      "format": "xlsx",
+      "ext": "xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 5516,
+      "sha256": "e46713d1324b5e5c7f6e8d47a44460747d6f81640147a36f6b7c6dc1ca6d7b4b",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One row per cell type and number format: text, integer, float, negative, booleans, date, time, datetime, percentage, currency, scientific, an empty cell, and text that only looks numeric ('007', '2020-01-01', a phone number).",
+      "tags": [
+        "document",
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "sheets": 1,
+        "sheet_names": "Types",
+        "rows": 17,
+        "columns": 2,
+        "formulas": 0,
+        "images": 0
+      },
+      "generator": "office.xlsx_with_types",
+      "generator_params": {},
       "added_in": "1.0.0",
       "status": "active",
       "deprecated": false,
