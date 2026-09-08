@@ -1,0 +1,18 @@
+# Opus audio (docs/05 §3.4). Launch-set rows only; the rest are P1b.
+format: opus
+family: audio
+mime: audio/opus
+description: >-
+  Opus in an Ogg container — the codec browsers and real-time systems standardised on.
+  Note that Opus always reports 48 kHz, whatever it was fed.
+seo_title: "Sample Opus audio files for testing — free, CC0, hotlinkable"
+related: [ogg, mp3, m4a]
+fixtures:
+  - name: 30s.opus
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: opus, duration: 30, bitrate: 96k }
+    description: "A 440 Hz sine wave, thirty seconds, stereo Opus at 96 kbps."
+    tags: [audio, codec-opus]
+    expect: { acodec: opus, channels: 2 }
+    size_class: free

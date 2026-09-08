@@ -2,12 +2,36 @@
   "catalog_version": "1.0.0",
   "formats": [
     {
+      "format": "aac",
+      "count": 1,
+      "total_bytes": 490385,
+      "url": "https://loremfile.dev/aac",
+      "index": "https://loremfile.dev/aac/index.json",
+      "mime_default": "audio/aac"
+    },
+    {
+      "format": "aiff",
+      "count": 1,
+      "total_bytes": 529254,
+      "url": "https://loremfile.dev/aiff",
+      "index": "https://loremfile.dev/aiff/index.json",
+      "mime_default": "audio/aiff"
+    },
+    {
       "format": "arrow",
       "count": 1,
       "total_bytes": 260674,
       "url": "https://loremfile.dev/arrow",
       "index": "https://loremfile.dev/arrow/index.json",
       "mime_default": "application/vnd.apache.arrow.file"
+    },
+    {
+      "format": "avi",
+      "count": 1,
+      "total_bytes": 1734596,
+      "url": "https://loremfile.dev/avi",
+      "index": "https://loremfile.dev/avi/index.json",
+      "mime_default": "video/x-msvideo"
     },
     {
       "format": "avif",
@@ -66,6 +90,14 @@
       "mime_default": "application/epub+zip"
     },
     {
+      "format": "flac",
+      "count": 1,
+      "total_bytes": 411820,
+      "url": "https://loremfile.dev/flac",
+      "index": "https://loremfile.dev/flac/index.json",
+      "mime_default": "audio/flac"
+    },
+    {
       "format": "geojson",
       "count": 1,
       "total_bytes": 35344,
@@ -88,6 +120,14 @@
       "url": "https://loremfile.dev/gpx",
       "index": "https://loremfile.dev/gpx/index.json",
       "mime_default": "application/gpx+xml"
+    },
+    {
+      "format": "hls",
+      "count": 6,
+      "total_bytes": 4122346,
+      "url": "https://loremfile.dev/hls",
+      "index": "https://loremfile.dev/hls/index.json",
+      "mime_default": "application/vnd.apple.mpegurl"
     },
     {
       "format": "ico",
@@ -146,6 +186,14 @@
       "mime_default": "text/plain"
     },
     {
+      "format": "m4a",
+      "count": 1,
+      "total_bytes": 486931,
+      "url": "https://loremfile.dev/m4a",
+      "index": "https://loremfile.dev/m4a/index.json",
+      "mime_default": "audio/mp4"
+    },
+    {
       "format": "md",
       "count": 1,
       "total_bytes": 4096,
@@ -154,12 +202,68 @@
       "mime_default": "text/markdown"
     },
     {
+      "format": "mkv",
+      "count": 1,
+      "total_bytes": 1971254,
+      "url": "https://loremfile.dev/mkv",
+      "index": "https://loremfile.dev/mkv/index.json",
+      "mime_default": "video/x-matroska"
+    },
+    {
+      "format": "mov",
+      "count": 1,
+      "total_bytes": 1974629,
+      "url": "https://loremfile.dev/mov",
+      "index": "https://loremfile.dev/mov/index.json",
+      "mime_default": "video/quicktime"
+    },
+    {
+      "format": "mp3",
+      "count": 7,
+      "total_bytes": 11690256,
+      "url": "https://loremfile.dev/mp3",
+      "index": "https://loremfile.dev/mp3/index.json",
+      "mime_default": "audio/mpeg"
+    },
+    {
+      "format": "mp4",
+      "count": 9,
+      "total_bytes": 79774316,
+      "url": "https://loremfile.dev/mp4",
+      "index": "https://loremfile.dev/mp4/index.json",
+      "mime_default": "video/mp4"
+    },
+    {
       "format": "ndjson",
       "count": 1,
       "total_bytes": 408525,
       "url": "https://loremfile.dev/ndjson",
       "index": "https://loremfile.dev/ndjson/index.json",
       "mime_default": "application/x-ndjson"
+    },
+    {
+      "format": "ogg",
+      "count": 1,
+      "total_bytes": 95083,
+      "url": "https://loremfile.dev/ogg",
+      "index": "https://loremfile.dev/ogg/index.json",
+      "mime_default": "audio/ogg"
+    },
+    {
+      "format": "ogv",
+      "count": 1,
+      "total_bytes": 3801030,
+      "url": "https://loremfile.dev/ogv",
+      "index": "https://loremfile.dev/ogv/index.json",
+      "mime_default": "video/ogg"
+    },
+    {
+      "format": "opus",
+      "count": 1,
+      "total_bytes": 431592,
+      "url": "https://loremfile.dev/opus",
+      "index": "https://loremfile.dev/opus/index.json",
+      "mime_default": "audio/opus"
     },
     {
       "format": "parquet",
@@ -242,6 +346,14 @@
       "mime_default": "application/toml"
     },
     {
+      "format": "ts",
+      "count": 1,
+      "total_bytes": 2054840,
+      "url": "https://loremfile.dev/ts",
+      "index": "https://loremfile.dev/ts/index.json",
+      "mime_default": "video/mp2t"
+    },
+    {
       "format": "tsv",
       "count": 1,
       "total_bytes": 249645,
@@ -256,6 +368,22 @@
       "url": "https://loremfile.dev/txt",
       "index": "https://loremfile.dev/txt/index.json",
       "mime_default": "text/plain"
+    },
+    {
+      "format": "wav",
+      "count": 2,
+      "total_bytes": 10529244,
+      "url": "https://loremfile.dev/wav",
+      "index": "https://loremfile.dev/wav/index.json",
+      "mime_default": "audio/wav"
+    },
+    {
+      "format": "webm",
+      "count": 1,
+      "total_bytes": 621241,
+      "url": "https://loremfile.dev/webm",
+      "index": "https://loremfile.dev/webm/index.json",
+      "mime_default": "video/webm"
     },
     {
       "format": "webp",

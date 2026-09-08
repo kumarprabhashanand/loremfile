@@ -1,0 +1,18 @@
+# MPEG transport stream (docs/05 §3.3). Launch-set rows only; the rest are P1b.
+format: ts
+family: video
+mime: video/mp2t
+description: >-
+  An MPEG-2 transport stream carrying H.264 and AAC — the container HLS segments use,
+  offered on its own so a demuxer can be tested without a playlist.
+seo_title: "Sample TS video files for testing — free, CC0, hotlinkable"
+related: [hls, mp4]
+fixtures:
+  - name: 720p-5s.ts
+    phase: 1
+    generator: media_video.mp4
+    params: { width: 1280, height: 720, duration: 5, container: mpegts }
+    description: "1280x720 at 30 fps, five seconds, H.264 plus AAC in an MPEG-2 transport stream."
+    tags: [video, codec-h264, codec-aac]
+    expect: { width: 1280, height: 720, vcodec: h264, acodec: aac }
+    size_class: free

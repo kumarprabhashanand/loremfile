@@ -44,6 +44,32 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Added — video, audio and HLS (M3.6)
+
+- `mp4/` (9), `webm/`, `mkv/`, `mov/`, `avi/`, `ogv/`, `ts/` (1 each), `hls/` (6),
+  `mp3/` (7), `wav/` (2), `flac/`, `ogg/`, `opus/`, `m4a/`, `aac/`, `aiff/` (1 each) —
+  36 launch fixtures. All synthetic: ffmpeg's `testsrc2` pattern and a 440 Hz tone, so
+  no third-party footage or recording is redistributed.
+- `generators/media_video.py`, `generators/media_audio.py`, `generators/hls.py`,
+  `validators/media.py` (ffprobe, plus the structural checks ffprobe cannot make).
+- `wav/10mb.wav` is **exactly** 10,000,000 bytes — an `exact` size class, not `approx`.
+- `docs/06` §4 gains an ffmpeg row and marks mutagen verified.
+
+### Fixed — three recipes that were wrong before they were run
+
+- **docs/06 §4's mutagen row named a proving fixture with no tags on it**
+  (`mp3/sine-440hz-3s.mp3`). The tagged fixture is `mp3/with-id3v2-tags-3s.mp3`. The
+  cross-check test could not have caught this: it verifies that a proving fixture is
+  parametrised, not that it exercises the claim.
+- **docs/05 §6's MP4 bitrate formula** discounted the analytic bitrate by 0.97 for muxer
+  overhead. Measured, the overhead is far smaller: the discount put `1mb.mp4` 4.85 %
+  under target — inside the 5 % tolerance, but one encoder change from failing the
+  build. Undiscounted, the three sized MP4s land at −2.09 %, +0.63 % and +0.17 %.
+- **HLS segments came out 8 seconds long, not 2.** The segmenter can only cut on a
+  keyframe and libx264's default GOP is 250 frames, so a 10-second source produced two
+  segments where the catalog declares five. Keyframes are now forced at every segment
+  boundary with scene-cut detection off.
+
 ### Added — office documents and e-books (M3.5)
 
 - `docx/` (5), `xlsx/` (6), `pptx/` (3), `rtf/` (1), `epub/` (1) — 16 launch fixtures.

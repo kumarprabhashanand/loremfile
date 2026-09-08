@@ -1,0 +1,18 @@
+# AIFF audio (docs/05 §3.4). Launch-set rows only; the rest are P1b.
+format: aiff
+family: audio
+mime: audio/aiff
+description: >-
+  Uncompressed big-endian PCM in Apple's AIFF container — the byte-order counterpart to
+  WAV, and a useful check that a reader is not assuming little-endian.
+seo_title: "Sample AIFF audio files for testing — free, CC0, hotlinkable"
+related: [wav, flac]
+fixtures:
+  - name: 3s.aiff
+    phase: 1
+    generator: media_audio.pcm
+    params: { duration: 3, sample_rate: 44100, bits: 16, channels: 2, container: aiff }
+    description: "A 440 Hz sine wave: three seconds of 44.1 kHz, 16-bit, stereo big-endian PCM."
+    tags: [audio]
+    expect: { sample_rate: 44100, channels: 2, duration_ms: 3000 }
+    size_class: free

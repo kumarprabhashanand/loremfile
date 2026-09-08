@@ -1,0 +1,19 @@
+# WebM video (docs/05 §3.3). Launch-set rows only; the rest are P1b.
+format: webm
+family: video
+mime: video/webm
+description: >-
+  VP9 video with Opus audio in WebM — the royalty-free pair browsers decode natively.
+  Encoded single-threaded with row multi-threading off, which is what makes the bytes
+  reproducible.
+seo_title: "Sample WebM video files for testing — free, CC0, hotlinkable"
+related: [mp4, mkv, ogv]
+fixtures:
+  - name: 720p-5s-vp9.webm
+    phase: 1
+    generator: media_video.webm
+    params: { width: 1280, height: 720, duration: 5 }
+    description: "1280x720 at 30 fps, five seconds, VP9 video with Opus audio."
+    tags: [video, codec-vp9, codec-opus]
+    expect: { width: 1280, height: 720, vcodec: vp9, acodec: opus }
+    size_class: free

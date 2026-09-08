@@ -93,6 +93,11 @@ files = ["src"]
 strict = true
 warn_unreachable = true
 show_error_codes = true
+# mutagen ships py.typed, but its ID3 frame classes take (*args, **kwargs) with no
+# annotations, so every `TIT2(...)` is an untyped call in a strict context. This excludes
+# calls *into* mutagen from that one check — our own code is still fully checked, which a
+# per-module `disallow_untyped_calls = false` on generators/media_audio.py would not be.
+untyped_calls_exclude = ["mutagen"]
 
 [[tool.mypy.overrides]]
 module = ["tests.*"]
