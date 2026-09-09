@@ -29,16 +29,25 @@ from loremfile.infra.cloudflare_api import (
     ZoneScopeError,
 )
 
-#: Ruleset phases this project owns. No other phase is ever read or written: a full PUT
-#: on a phase someone else configured would replace their rules with ours.
-PHASES = (
+#: Ruleset phases this project writes. No other phase is ever read or written: a full
+#: PUT on a phase someone else configured would replace their rules with ours.
+WRITTEN_PHASES = (
     "http_request_dynamic_redirect",
     "http_request_transform",
     "http_response_headers_transform",
     "http_request_cache_settings",
     "http_ratelimit",
-    "http_request_firewall_managed",
 )
+
+#: Verified by GET, never written (docs/08 §5.6, resolved 2026-09-09). Cloudflare deploys
+#: its managed ruleset into this phase itself; the zone has no entry point of its own, and
+#: `GET .../phases/http_request_firewall_managed/entrypoint` answers `10003: could not
+#: find entrypoint ruleset`. Creating one to add our `execute` rule would be writing a
+#: phase Cloudflare owns, so apply confirms the managed ruleset is deployed and stops.
+MANAGED_PHASE = "http_request_firewall_managed"
+
+#: Every phase with a file in infra/rulesets/.
+PHASES = (*WRITTEN_PHASES, MANAGED_PHASE)
 
 #: docs/08 §6: the dashboard path to print when the API refuses a step.
 FALLBACKS = {
@@ -56,7 +65,9 @@ FALLBACKS = {
     "url-normalization": "Rules → Settings → Normalize incoming URLs",
 }
 
-FREE_MANAGED_RULESET_NAME = "Cloudflare Free Managed Ruleset"
+#: The zone reports this name. docs/08 §5.6 had the words transposed ("Cloudflare Free
+#: Managed Ruleset"), so a name match would never have succeeded — corrected 2026-09-09.
+FREE_MANAGED_RULESET_NAME = "Cloudflare Managed Free Ruleset"
 
 #: A refused permission is reported as `manual` with a dashboard path; a missing
 #: endpoint means the API shape in docs/08 §6 is wrong and M2.3 has to record that.
@@ -198,39 +209,27 @@ def apply_dns(client: Client, report: Report) -> None:
             report.add(f"dns:{record['type']} {record['name']}", "failed", response.errors)
 
 
-def _resolve_free_managed_ruleset(client: Client) -> str | None:
-    """The Free Managed Ruleset's id, looked up rather than trusted as a constant."""
-    try:
-        for ruleset in client.paginate(f"/accounts/{client.account_id}/rulesets"):
-            if ruleset.get("name") == FREE_MANAGED_RULESET_NAME:
-                return str(ruleset["id"])
-    except CloudflareError:
+def managed_ruleset_deployed(client: Client) -> dict[str, Any] | None:
+    """The managed ruleset deployed in the firewall phase, read **zone-scoped**.
+
+    Deliberately not `GET /accounts/{id}/rulesets`: T1 is a zone token and listing
+    account rulesets would mean widening it to account scope, which is the token working
+    as designed rather than a problem to solve. The zone's own ruleset list answers the
+    only question that matters — is the managed ruleset deployed here.
+    """
+    response = client.get(f"/zones/{client.zone_id}/rulesets")
+    if not response.ok:
         return None
+    for ruleset in response.result or []:
+        if ruleset.get("phase") == MANAGED_PHASE and ruleset.get("kind") == "managed":
+            return dict(ruleset)
     return None
 
 
 def apply_rulesets(client: Client, report: Report) -> None:
-    for phase in PHASES:
+    for phase in WRITTEN_PHASES:
         path = f"/zones/{client.zone_id}/rulesets/phases/{phase}/entrypoint"
-        desired = _load(f"rulesets/{phase}.json")
-        rules = desired["rules"]
-
-        if phase == "http_request_firewall_managed":
-            resolved = _resolve_free_managed_ruleset(client)
-            if resolved is None:
-                report.add(phase, "skipped", "could not list account rulesets to resolve the id")
-                continue
-            rules = [{**rule, "action_parameters": {"id": resolved}} for rule in rules]
-            current = client.get(path)
-            executed = {
-                (r.get("action_parameters") or {}).get("id")
-                for r in ((current.result or {}).get("rules") or [])
-                if r.get("action") == "execute"
-            }
-            if resolved in executed:
-                report.add(phase, "unchanged", "already executed by the entry point")
-                continue
-
+        rules = _load(f"rulesets/{phase}.json")["rules"]
         response = client.put(path, {"rules": rules})
         if response.ok:
             report.add(phase, "updated", f"{len(rules)} rule(s)")
@@ -238,6 +237,28 @@ def apply_rulesets(client: Client, report: Report) -> None:
             report.add(phase, "manual", FALLBACKS[phase])
         else:
             report.add(phase, "failed", response.errors)
+
+    verify_managed_ruleset(client, report)
+
+
+def verify_managed_ruleset(client: Client, report: Report) -> None:
+    """Confirm Cloudflare's managed ruleset is deployed; never write this phase."""
+    deployed = managed_ruleset_deployed(client)
+    if deployed is None:
+        report.add(
+            MANAGED_PHASE,
+            "failed",
+            "no managed ruleset is deployed in this phase. docs/08 §5.6 assumes Free "
+            "zones receive it automatically; if that is no longer true the zone is "
+            "running without the Free Managed Ruleset and the assumption needs revisiting.",
+        )
+        return
+    report.add(
+        MANAGED_PHASE,
+        "skipped",
+        f"deployed by Cloudflare as {deployed.get('name')!r} ({deployed.get('id')}); "
+        "verified by GET, never written",
+    )
 
 
 def apply_tiered_cache(client: Client, report: Report) -> None:
