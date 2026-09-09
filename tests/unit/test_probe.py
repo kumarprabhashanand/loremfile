@@ -69,10 +69,10 @@ def everything_ok(path: str, **_: Any) -> Fetched:
 
 
 #: Every check that reads the edge. Each must refuse to evaluate against a 404.
-#: `404-caching-absent` is excluded: a 404 is its *subject*, not a missing precondition,
+#: `404-caching` is excluded: a 404 is its *subject*, not a missing precondition,
 #: so driving it against one tests nothing. Every other edge check must refuse.
 EDGE_CHECKS = sorted(
-    set(probe.SITE_CHECKS) - {"www-redirect", "404-caching-absent", "rate-limit", "rate-limit-rule"}
+    set(probe.SITE_CHECKS) - {"www-redirect", "404-caching", "rate-limit", "rate-limit-rule"}
 )
 
 
@@ -425,8 +425,8 @@ def test_the_rate_limit_check_does_not_settle() -> None:
 def test_no_check_passes_on_an_uncacheable_response(monkeypatch: pytest.MonkeyPatch) -> None:
     """DYNAMIC means nothing was cached, and a check that names the cache must fail on it.
 
-    `404-caching` was in this sweep until ADR-026 made uncached 404s the accepted state;
-    it now asserts the opposite and is covered by its own pair of tests above.
+    `404-caching` is not in this sweep: a 404 is its subject rather than a missing
+    precondition, and it has its own tests above.
     """
     dynamic = {**OK_HEADERS, "cf-cache-status": "DYNAMIC"}
 
@@ -440,38 +440,45 @@ def test_no_check_passes_on_an_uncacheable_response(monkeypatch: pytest.MonkeyPa
         assert report.results[0].state == "fail", f"{name} passed on cf-cache-status DYNAMIC"
 
 
-def test_the_404_check_passes_when_no_age_is_ever_observed(
+def test_the_404_check_passes_when_a_non_zero_age_appears(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Absence of a non-zero Age across every sample is the documented behaviour."""
-    responder(monkeypatch, Fetched(status=404, headers={"age": "0"}, body=b""))
-    assert "not served from cache" in probe.check_404_caching_is_still_absent()
-
-
-def test_the_404_check_fires_on_a_non_zero_age(monkeypatch: pytest.MonkeyPatch) -> None:
-    """A non-zero Age is proof the 404 came from a populated entry — a real change.
-
-    `cf-cache-status: HIT` is not, and was what made run 6's reading inconclusive.
-    """
+    """Runs 7-9 each saw one on the first sample; that is the behaviour being asserted."""
     calls = {"n": 0}
 
     def answer(_path: str, **_kwargs: Any) -> Fetched:
         calls["n"] += 1
-        return Fetched(status=404, headers={"age": "5" if calls["n"] > 1 else "0"}, body=b"")
+        return Fetched(status=404, headers={"age": "3" if calls["n"] > 1 else "0"}, body=b"")
 
     responder(monkeypatch, answer)
+    assert "served from cache" in probe.check_404s_are_cached()
+
+
+def test_the_404_check_fires_if_caching_stops(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The direction that matters: docs/19 §3's cost model counts on this caching.
+
+    Inverted twice now — once when the evidence said uncached, back again when better
+    evidence said otherwise. It asserts the measured behaviour either way, so it reports a
+    *change* rather than standing as a permanent complaint.
+    """
+    responder(monkeypatch, Fetched(status=404, headers={"age": "0"}, body=b""))
     with pytest.raises(CheckFailed) as failure:
-        probe.check_404_caching_is_still_absent()
+        probe.check_404s_are_cached()
     message = str(failure.value)
-    assert "served from cache" in message
-    assert "ADR-026's conclusion does not depend on the premise" in message
+    assert "no longer served from cache" in message
+    assert "RISK-22" in message
 
 
 def test_the_404_check_carries_its_evidence(monkeypatch: pytest.MonkeyPatch) -> None:
     """Whether it passes or fails, the reading goes in the detail."""
-    responder(monkeypatch, Fetched(status=404, headers={"age": "0"}, body=b""))
-    detail = probe.check_404_caching_is_still_absent()
-    assert "samples" in detail
+    calls = {"n": 0}
+
+    def answer(_path: str, **_kwargs: Any) -> Fetched:
+        calls["n"] += 1
+        return Fetched(status=404, headers={"age": "3" if calls["n"] > 1 else "0"}, body=b"")
+
+    responder(monkeypatch, answer)
+    assert "Age 3s" in probe.check_404s_are_cached()
 
 
 # --- cf-cache-status is retired as an instrument -----------------------------

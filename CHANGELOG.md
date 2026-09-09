@@ -44,6 +44,33 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Verified — 404s are cached after all; the rate limit's real limit is its counting key
+
+M2.4 probe runs 7-9, against thresholds **pre-registered before the runs**.
+
+- **404s are cached.** A non-zero `Age` on the **first** sample of all three runs — branch
+  (a), 3/3 positive with `K ≤ 2`. `docs/03` §3's **original** 3-minute claim was closer to
+  right than the correction that replaced it; that correction rested on `MISS/MISS`
+  readings of `cf-cache-status`, which cannot establish it. Caching is verified; the
+  **duration** is not — 3 minutes is Cloudflare's documented default for 404/410, not a
+  measurement.
+- **ADR-026's premise flips, and its conclusion is unchanged.** A status-code TTL would
+  now replace a *working* 3-minute default with Free's 2-hour floor — **less** justified
+  than adding one where nothing existed, and still carrying the G3 purge dependency.
+- **The rate limit enforces consistently when the load reaches one counter**: runs 6 and 9
+  both fired at request **294**, at 262 and 252 req/s from a single data centre. Runs 4-5's
+  apparent intermittency was not approximate counting — the identity sampling showed one
+  runner's traffic spread across **3, then 6** data centres. The rule counts per
+  `(ip.src, cf.colo.id)`, so **a client distributed across N data centres gets roughly N
+  times the budget**. That is the property to plan against.
+- **RISK-22: both controls exist and are evidenced.** `docs/19` §3's scenarios are
+  unchanged — they already assume every request is an R2 read.
+
+**Verified list, corrected.** Now verified on evidence: ADR-013 (query-string cache key,
+`Age`-based), 404 caching, rate-limit enforcement at a single identity. Still **not**
+verified: the 404 cache **duration**, rate-limit behaviour across a split identity, and
+whether R2 bills a 404 as a Class B read (needs `loremfile usage`, M4.3).
+
 ### Verified — ADR-013 at the edge; and the rate limit is *not* reliably enforcing
 
 M2.4 probe run 5, 13 checks, 1 failed.

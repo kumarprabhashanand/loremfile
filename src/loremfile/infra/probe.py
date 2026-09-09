@@ -717,38 +717,25 @@ def _recover() -> None:
     )
 
 
-def check_404_caching_is_still_absent() -> str:
-    """404s are not served from cache — asserted with `Age`, not `cf-cache-status`.
+def check_404s_are_cached() -> str:
+    """404s **are** served from cache, and this fires if that stops being true.
 
-    **The claim is under measurement.** `docs/03` §3 and ADR-026 were written on
-    `MISS/MISS` readings, which are not evidence: a MISS means only that *this* edge node
-    had not seen it. Run 6 then reported `first=MISS second=HIT age=0`, equally
-    uninformative in the other direction, since `Age 0` does not establish an earlier
-    entry either.
+    Measured M2.4 runs 7-9: a non-zero `Age` on the first sample of every run
+    (`Age 3s after 1 sample(s)`, three times). That is **pre-registered branch (a)** —
+    3/3 runs positive with `K <= 2` — decided before any of the runs were read, with the
+    full three-branch matrix and its thresholds recorded on issue #20 so the standard is
+    auditable rather than remembered.
 
-    **Pre-registered before any of it was run**, so that a distributed edge cannot be
-    rounded to whichever answer suits. **Three runs of `CACHE_SAMPLES` samples each — 18
-    observations.** A run is *positive* if any sample reports a non-zero `Age`, and `K` is
-    the sample number at which that first happened (1..6).
+    The history is worth keeping, because the wrong answer was recorded twice. The
+    original `docs/03` §3 claimed Cloudflare's 3-minute default for 404s. That was
+    "corrected" to *not cached* on `MISS/MISS` readings of `cf-cache-status` — which is
+    not evidence, since a MISS means only that *this* edge node had not seen it. The
+    original claim was closer to right than the correction that replaced it.
 
-    (a) **404s are cached.** 3/3 runs positive, and `K <= 2` in at least two of them.
-        `docs/03` §3's **original** three-minute claim was closer to right than the
-        correction that replaced it; ADR-026's premise flips; RISK-22 **improves**,
-        because both cost controls then exist. To be stated plainly, not softened.
-
-    (b) **404s are not cached.** 0/3 runs positive — no non-zero `Age` in any of the 18
-        samples. The current statement stands, now on evidence rather than on a
-        `MISS/MISS` reading.
-
-    (c) **Cached per edge node, with no promotion.** Anything else: 1/3 or 2/3 runs
-        positive, or 3/3 positive but needing `K >= 3` in two or more of them. The most
-        likely outcome on a distributed edge, and the one that invites rounding. Decided
-        in advance to mean: **caching exists but is weak** — it bounds repeat requests
-        only on nodes that have already seen the path, so it is not a control the cost
-        model may lean on, and `docs/19` §3's scenarios are unchanged.
-
-    In every branch, `docs/03` §3, ADR-026's premise, RISK-22 and the changelog's
-    verified list are revised **together, in one pull request**, on the evidence.
+    What is verified is that 404s are cached. The **duration** is not: `Age 3s` is the age
+    at sampling, not a TTL. Three minutes is Cloudflare's documented default for 404/410
+    when the origin sends no `Cache-Control`, and R2 sends none — consistent with the
+    observation, but unmeasured here.
     """
     missing = f"/{PROBE_PREFIX}definitely-not-here-{int(time.time())}"
     first = fetch(missing)
@@ -756,13 +743,12 @@ def check_404_caching_is_still_absent() -> str:
 
     cached, evidence = served_from_cache(missing, expect_status=HTTP_NOT_FOUND)
     check(
-        not cached,
-        f"a repeated 404 was served from cache ({evidence}) — the first measurement of "
-        "this with an instrument that can prove it. This changes the premise of docs/03 "
-        "§3 and ADR-026; revise the cost model. ADR-026's conclusion does not depend on "
-        "the premise, so a corrected premise is not a reason to revisit the decision.",
+        cached,
+        f"404s are no longer served from cache ({evidence}). docs/19 §3's cost model "
+        "counts on this: without it every unique missing path is an R2 read. Revisit "
+        "RISK-22 — it would leave the rate limit as the only bound again.",
     )
-    return f"404s not served from cache ({evidence})"
+    return f"404s served from cache ({evidence})"
 
 
 #: Every check the probe runs against the live site.
@@ -775,7 +761,7 @@ SITE_CHECKS: dict[str, Check] = {
     "www-redirect": check_www_redirects_to_apex,
     "query-string-cache-key": check_query_strings_share_one_cache_entry,
     "dir-key-coexistence": check_key_named_dir_coexists_with_its_index,
-    "404-caching-absent": check_404_caching_is_still_absent,
+    "404-caching": check_404s_are_cached,
     "rate-limit-rule": check_rate_limit_rule_is_deployed,
     "rate-limit": check_rate_limit_blocks_a_burst,
 }
