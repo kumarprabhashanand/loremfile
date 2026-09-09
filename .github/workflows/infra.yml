@@ -24,6 +24,7 @@ on:
           - verify-tokens
           - apply-dry-run
           - apply
+          - probe
 
 permissions:
   contents: read
@@ -126,3 +127,35 @@ jobs:
           CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
         run: loremfile infra apply
+
+  probe:
+    if: inputs.mode == 'probe'
+    needs: setup
+    runs-on: ubuntu-24.04
+    environment: production
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      R2_BUCKET: ${{ vars.R2_BUCKET }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      - name: Upload the objects the checks read
+        run: loremfile probe --up
+
+      - name: Probe
+        run: loremfile probe
+
+      # Always: a failed probe must still clean up after itself, or the next run starts
+      # against objects it did not write. `_probe/` is outside every lock rule precisely
+      # so this can succeed (docs/08 §7b). `_locktest/probe` is deliberately left behind.
+      - name: Clean up
+        if: always()
+        run: loremfile probe --down

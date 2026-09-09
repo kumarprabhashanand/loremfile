@@ -44,6 +44,24 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Added — `loremfile probe`, M2.4
+
+- Ten edge checks and two bucket checks, plus `--up` / `--down`, and an `infra.yml`
+  `probe` mode that cleans up with `if: always()`.
+- **No check may pass vacuously.** Each states its preconditions, and an unmet
+  precondition is a **failure** — never a skip and never a pass. A parametrised sweep
+  drives every edge check against a 404 and asserts it fails for that reason, so a check
+  added later is covered without anyone remembering to write a test for it.
+- The probe raises explicitly rather than using `assert`: `python -O` strips assertions,
+  which would turn the entire probe green while testing nothing.
+- `probe.fetch` has **no retry logic at all**, rather than a flag that could be set
+  wrongly: `verify-live` treats a 429 from our own rate limit as retry-after-10s, and
+  the probe treats its absence as failure. An AST test fails if a loop or a sleep appears
+  in it — checked on the tree, not the text, because the first version grepped the source
+  and tripped on the docstring explaining the rule.
+- `_locktest/` is a real result now that M2.3 applied the 53 rules: creation succeeds,
+  overwrite and delete are both refused, and the original byte is still there afterwards.
+
 ### Fixed — the toolchain digest now lives in exactly one place
 
 - `propose-digest-bump` had never been able to run: the digest bump rewrote
