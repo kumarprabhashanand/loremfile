@@ -1,0 +1,37 @@
+# THROWAWAY. Proves one vendor fact before any workflow is rewritten around it:
+# does `jobs.<id>.container.image` accept an expression referencing needs.*.outputs.*
+# on a GitHub-hosted runner? Deleted in the same pull request that uses the answer.
+name: spike-container-image
+
+on:
+  push:
+    branches: [spike/container-image-from-outputs]
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-24.04
+    outputs:
+      digest: ${{ steps.read.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: read
+        run: |
+          digest="$(cat tools/TOOLCHAIN_DIGEST)"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "read: $digest"
+
+  use-it:
+    needs: setup
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    steps:
+      - name: Prove we are inside the pinned image
+        run: |
+          echo "container image resolved from an output"
+          python --version
+          ffmpeg -hide_banner -version | head -1
+          test -f /etc/os-release && grep -m1 PRETTY /etc/os-release
