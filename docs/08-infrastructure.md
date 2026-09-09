@@ -239,7 +239,13 @@ Free-plan constraints (verified): 1 rule, period 10 s, mitigation timeout 10 s, 
 ] }
 ```
 
-Free zones already receive this ruleset; apply.py first `GET`s the entry point and only adds the rule if no rule executes that ID. If the API rejects the write on the Free plan, apply.py records "managed by Cloudflare by default" and audit.py verifies via `GET`. The ID is confirmed by listing `GET /accounts/<ACCOUNT_ID>/rulesets` and matching `name == "Cloudflare Free Managed Ruleset"`; apply.py does this lookup rather than trusting the constant.
+**Resolved 2026-09-09 against the live zone — this phase is verified, never written.**
+
+The zone has **no entry point** in `http_request_firewall_managed`: `GET /zones/{id}/rulesets/phases/http_request_firewall_managed/entrypoint` answers `10003: could not find entrypoint ruleset in the http_request_firewall_managed phase`. Cloudflare deploys its managed ruleset into the phase directly, and it appears in the zone's own ruleset list as `{"name": "Cloudflare Managed Free Ruleset", "kind": "managed", "phase": "http_request_firewall_managed"}` with id `77454fe2d30c4220b5701f6fdfb893ba`. Creating an entry point to add our `execute` rule would be writing a phase Cloudflare owns.
+
+So `apply.py` **confirms the managed ruleset is deployed and stops** — a permanent skip with a reason, not a fallback — and `audit.py` verifies the same way. The file above stays as the record of what is expected to be executing.
+
+**Two corrections this produced.** The name is **"Cloudflare Managed Free Ruleset"**, not "Cloudflare Free Managed Ruleset" as this section said; a `name ==` match against the old string would never have succeeded. And the lookup is **zone-scoped** (`GET /zones/{id}/rulesets`), not `GET /accounts/{id}/rulesets`: T1 is a zone token, and it failing to list account rulesets is the token working as designed, not a permission to widen. The id in the constant was correct.
 
 ## 6. `apply.py` and `audit.py`
 
@@ -281,7 +287,8 @@ Endpoints, expected token permissions and the fallback when the API answers 403 
 | 5 | `/zones/{id}/rulesets/phases/http_request_dynamic_redirect/entrypoint` | **Zone → Single Redirect → Edit** (**resolved 2026-09-08**: the token builder has no "Dynamic Redirect" entry; Cloudflare's own docs name *Zone → Single Redirect → Edit* as the required permission for this phase. The API phase kept the older internal name) | Rules → Redirect Rules |
 | 5 | `…/http_request_transform`, `…/http_response_headers_transform` | Transform Rules: Edit | Rules → Transform Rules |
 | 5 | `…/http_request_cache_settings` | Cache Rules: Edit | Caching → Cache Rules |
-| 5 | `…/http_ratelimit`, `…/http_request_firewall_managed` | Zone WAF: Edit | Security → WAF |
+| 5 | `…/http_ratelimit` | Zone WAF: Edit | Security → WAF |
+| 5 | `…/http_request_firewall_managed` | **none — never written** (**resolved 2026-09-09**: no zone entry point exists; Cloudflare deploys the managed ruleset itself, verified zone-scoped via `GET /zones/{id}/rulesets`) | n/a |
 | 6 | `/zones/{id}/cache/tiered_cache_smart_topology_enable` | Cache Settings: Edit (endpoint verified) | Caching → Tiered Cache |
 | 7 | `/zones/{id}/url_normalization` (read; write only if off) | Zone Settings: Edit **[VERIFY endpoint]** | Rules → Settings → Normalize incoming URLs |
 | health | GraphQL Analytics `r2OperationsAdaptiveGroups` (T4) | Account → Account Analytics: Read **[VERIFY in M0.4 when T4 is created]** | Read R2 usage in the dashboard |
@@ -316,9 +323,16 @@ R2 bucket locks "prevent the deletion and overwriting of objects" under a prefix
 
 The committed file has one entry for every format directory in `05` §3 (≈ 65 rules; the three above are illustrative) plus the `_locktest/` rule, which exists so that M2.4 can prove lock behaviour: the probe writes one 1-byte object `_locktest/probe` once (it then stays forever, harmless) and verifies that overwriting and deleting it are refused. Fixture prefixes are never probed that way.
 
-Consequences: `upload --fixtures` can only ever add objects; a leaked T2 cannot overwrite or delete a fixture; site keys (root, `docs/`, `legal/`, `assets/`, discovery files) and `_probe/` are outside every locked prefix and stay writable; a takedown requires the owner to remove the affected prefix's rule with an admin token, delete the object, and re-add the rule (`11` §7.8) — the right amount of ceremony for a legal removal. The maximum number of lock rules per bucket is not stated in the docs (**[VERIFY]** in M0.4: if the API rejects ≈ 65 rules, lock the largest formats first and record the rest as a known gap in `17`). Adding a new format later means adding its rule (owner step with T3, listed in `11` §7.9).
+Consequences: `upload --fixtures` can only ever add objects; a leaked T2 cannot overwrite or delete a fixture; site keys (root, `docs/`, `legal/`, `assets/`, discovery files) and `_probe/` are outside every locked prefix and stay writable; a takedown requires the owner to remove the affected prefix's rule with an admin token, delete the object, and re-add the rule (`11` §7.8) — the right amount of ceremony for a legal removal. **Resolved 2026-09-09 (M2.3): the API accepted all 53 rules in one `PUT /accounts/{account_id}/r2/buckets/loremfile-public/lock`, and a read-back returned 53, every one `Indefinite` and enabled.** The rules are applied and stay applied: the bucket is empty, and R2 locks never block *creation* — only overwrite and delete — so uploads are unaffected. Formats added in M3.7 add their rules as they land, and M4.4's gate verifies the final set covers every prefix. The documented maximum is still unstated, so the ceiling above 53 remains unknown; RISK-20 is retained at reduced likelihood rather than closed. Adding a new format later means adding its rule (owner step with T3, listed in `11` §7.9).
 
-## 8. Cloudflare features that must stay OFF (checked by audit.py where readable, otherwise in the monthly checklist)
+## 8. Cloudflare features that must stay OFF
+
+> **`fonts` and `speed_brain` resolved 2026-09-09 (M2.3): they are not zone settings on this zone.**
+> `GET /zones/{id}/settings` returns 56 ids and neither appears, nor does anything matching
+> `font`, `speed` or `brain`. They are therefore **not** in `zone-settings.json` — a key the API
+> does not offer would be reported as `skipped: not offered on this plan` on every run, which is
+> noise that trains people to ignore the summary. If they appear later as settings, add them then.
+> All 22 keys `zone-settings.json` does declare were confirmed present on the zone. (checked by audit.py where readable, otherwise in the monthly checklist)
 
 Read and enforced by `infra audit` via zone settings: Rocket Loader, Email Address Obfuscation, Automatic HTTPS Rewrites, Server-side Excludes, Hotlink Protection, Browser Integrity Check, Polish, Mirage, Early Hints, plus (via the bot-management endpoint, if readable) Bot Fight Mode, Block AI Bots, Managed robots.txt, and URL normalization (must stay **on**). Cloudflare Fonts and Speed Brain have zone-setting IDs (`fonts`, `speed_brain`) that M2.3 confirms **[VERIFY]** and then adds to `zone-settings.json` as `off`. Checked manually in the monthly checklist because they are separate products without a simple setting: Zaraz (never enabled), Web Analytics automatic injection (never add the site), Crawler Hints, Under Attack Mode (only during an incident).
 
