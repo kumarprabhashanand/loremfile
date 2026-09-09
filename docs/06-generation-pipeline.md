@@ -352,12 +352,15 @@ git push                              # green
 | Step | Budget (GitHub-hosted ubuntu runner, 4 vCPU) |
 |---|---|
 | Full phase-1 generation (≈ 416 files, ≈ 0.96 GB; the 228-file launch set is ≈ 515 MB of it) | ≤ 25 min (video ≈ 12 min, audio ≈ 3 min, data ≈ 4 min, rest ≈ 3 min) |
+| **Measured, M3.6:** the launch media set — 36 fixtures, the expensive fraction — **253 s sequentially** on a CI runner (AMD EPYC 9V74), with no `-j` | Budget above assumes `-j 4`; sequential is comfortably inside it for the launch set |
 | Validation | ≤ 5 min |
 | Incremental PR build (typical: < 10 new fixtures) | ≤ 5 min |
 | Site build | ≤ 30 s |
 | Upload (≈ 515 MB launch set, first time) | ≤ 10 min (multipart, 16 MiB parts, 8 threads) |
 
 If the full build exceeds budget, split video generation into a matrix job (see `09` §3.1) before trimming scope.
+
+**`-j` is still not implemented, and M3.6 measured why that is affordable for now.** The determinism guard patches process-global state, so parallelism has to be process-based (§5); it was deferred from M3.1 to M3.6 and then again, because the measurement removes the urgency: the launch media set builds in **253 s sequentially**, so M3.9's `build --all --audit` over the 228-file launch set lands near six minutes against a 45-minute job ceiling. It becomes a live concern in **M7**, where P1b roughly triples the media set — at which point the matrix split above is the cheaper fix than process pools, because it needs no change to the guard at all.
 
 ## 13. Coding standards
 

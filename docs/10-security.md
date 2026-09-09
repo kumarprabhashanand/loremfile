@@ -40,6 +40,24 @@
 | T16 | Site defacement through T2 (site keys are writable) | Low | High (phishing page on the domain) | Strict site CSP; `health.yml` rebuilds the site from the checked-out commit (deterministic build) and hashes every live site key against it — the baseline is the repository, not a file in the bucket; a mismatch opens a `health` issue; `deploy.yml` `force_site` restores from a clean checkout; rotate T2 |
 | T17 | Header rules bypassed by an encoded path if URL normalization is turned off | Very low | Medium | Normalization is in the desired state and audited; daily probes request `%2E`-encoded paths; optional response-type-keyed CSP rule |
 
+
+**Accepted deviation, M0.4 (2026-09-08): the Cloudflare MCP OAuth session was used in place of T3.**
+`08` §2 steps 6 and 8 called for minting an admin token (T3) and deleting it afterwards. Instead the
+configuration was applied through the owner's authorised MCP session, so **no admin token ever existed
+on a machine** — which is the outcome those two steps were protecting, achieved more completely than by
+following them.
+
+The deviation worth recording is the blast radius. That session carries **account-wide** scope, wider
+than T3's design, on an account that also holds two unrelated production zones (`mcpreflex.dev`,
+`shameher.com`). Mitigations actually applied, not merely intended: every call was scoped to the
+`loremfile.dev` zone id, and both other zones were read back afterwards and confirmed unchanged. The
+session could not mint credentials — `/user/tokens` returned `9109 Unauthorized`, which is correct for a
+session that should not be able to create long-lived tokens.
+
+**Standing rule for future infrastructure work through that session: scope every call to the zone id and
+verify the untouched zones afterwards.** Recorded here so it is not rediscovered as an anomaly in a later
+audit.
+
 ## 4. Credential inventory and rotation
 
 | Credential | Where stored | Scope | Expiry | Rotation procedure (runbook §7.3) |

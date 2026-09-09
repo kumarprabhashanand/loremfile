@@ -36,9 +36,24 @@ Everything runs in one Cloudflare account, one zone (`loremfile.dev`), one R2 bu
 > `curl -sI https://loremfile.dev/` returns a Cloudflare 404. Repository variables
 > `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_ZONE_ID` are set.
 >
-> **Lock rules (step 7's fourth command) are deliberately deferred to M2.** They make a
-> prefix permanently immutable, and M3 is still adding formats; applying them now would
-> force the lift-and-re-add ceremony of `11` §7.9 step 2b for every new format.
+> **Lock rules (step 7's fourth command) are deliberately deferred to M2 — corrected
+> rationale.** The original note here claimed that applying them early would force the
+> "lift-and-re-add ceremony of `11` §7.9 step 2b for every new format". That was wrong:
+> §7.9 step 2b *adds* a rule for a new prefix and lifts nothing. Lifting is §7.8, and
+> only for a legal takedown.
+>
+> The real reason is narrower and expires: **before first publication, mistakes must
+> still be correctable.** M3.6 demonstrated exactly that — five manifest entries
+> described bytes that had never been published and could not be rebuilt, and the remedy
+> was to withdraw them (`03` §7.1). Locks are the storage-layer half of a promise that
+> only begins at publication.
+>
+> **That argument ends at the first deploy, and the deferral must not outlive it.**
+> ADR-023, RISK-20, T3 and T12 all assume locks exist. A first deploy onto an unlocked
+> bucket leaves published fixtures mutable by a leaked T2 — precisely the threat locks
+> were introduced for. `deploy.yml` therefore refuses to upload to any prefix not covered
+> by a lock rule (`09` §3.2), and M4.4 is not done until the rules are applied and
+> verified.
 >
 > Still outstanding and owner-only: steps 9, 10, 10b (tokens T1/T2/T4 — the API session
 > cannot mint tokens, `/user/tokens` returns `9109 Unauthorized`, which is correct),

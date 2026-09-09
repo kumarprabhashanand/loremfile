@@ -120,6 +120,11 @@ If the full P1 build (first catalog PRs, empty manifest on `main`) exceeds the 4
 
 ### 3.2 `deploy.yml` — push to `main` only
 
+**Two blocking gates before any object is written (added M3.6).**
+
+1. **No upload to an unlocked prefix.** `upload --fixtures` refuses, and the job fails, if any prefix it is about to write is not covered by a rule in `infra/r2-locks.json` as applied to the bucket. Locks are deferred through M3 so that pre-publication mistakes stay correctable (`08` §2), and that argument expires precisely here: a first deploy onto an unlocked bucket leaves published fixtures mutable by a leaked T2, which is the threat ADR-023 exists to close. The gate is what stops the deferral outliving its reason.
+2. **No regeneration of `expected_drift` paths.** Those bytes cannot be rebuilt on other hardware (`06` §4), so the deploy consumes the `carry-forward-fixtures` artifact for them and **fails if it is absent or does not match the manifest** rather than substituting a rebuild.
+
 ```yaml
 name: deploy
 on:
