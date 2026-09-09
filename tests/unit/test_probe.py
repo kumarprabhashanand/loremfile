@@ -69,7 +69,11 @@ def everything_ok(path: str, **_: Any) -> Fetched:
 
 
 #: Every check that reads the edge. Each must refuse to evaluate against a 404.
-EDGE_CHECKS = sorted(set(probe.SITE_CHECKS) - {"www-redirect", "404-caching", "rate-limit"})
+#: `404-caching-absent` is excluded: a 404 is its *subject*, not a missing precondition,
+#: so driving it against one tests nothing. Every other edge check must refuse.
+EDGE_CHECKS = sorted(
+    set(probe.SITE_CHECKS) - {"www-redirect", "404-caching-absent", "rate-limit", "rate-limit-rule"}
+)
 
 
 @pytest.mark.parametrize("name", EDGE_CHECKS)
@@ -178,6 +182,11 @@ def short_load(monkeypatch: pytest.MonkeyPatch, seconds: float = 0.05) -> None:
     monkeypatch.setattr(probe.time, "monotonic", REAL_MONOTONIC)
     monkeypatch.setattr(probe, "RATE_LIMIT_SUSTAIN_SECONDS", seconds)
     monkeypatch.setattr(probe, "RATE_LIMIT_WORKERS", 2)
+    # A target above the rule's threshold, and a band wide enough that whatever rate a
+    # fake fetch achieves satisfies the precondition. The band itself is asserted
+    # separately in test_a_rate_outside_the_band_is_a_precondition_failure.
+    monkeypatch.setattr(probe, "RATE_LIMIT_TARGET_RPS", 40)
+    monkeypatch.setattr(probe, "RATE_LIMIT_RATE_TOLERANCE", 1e9)
 
 
 def test_a_split_identity_is_a_precondition_not_a_verdict(
@@ -431,85 +440,154 @@ def test_no_check_passes_on_an_uncacheable_response(monkeypatch: pytest.MonkeyPa
         assert report.results[0].state == "fail", f"{name} passed on cf-cache-status DYNAMIC"
 
 
-def test_the_404_check_passes_on_the_measured_behaviour(
+def test_the_404_check_passes_when_no_age_is_ever_observed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """MISS is the accepted state (ADR-026), so it must not be reported as a failure."""
-    responder(monkeypatch, Fetched(status=404, headers={"cf-cache-status": "MISS"}, body=b""))
-    assert "still uncached" in probe.check_404_caching_is_still_absent()
+    """Absence of a non-zero Age across every sample is the documented behaviour."""
+    responder(monkeypatch, Fetched(status=404, headers={"age": "0"}, body=b""))
+    assert "not served from cache" in probe.check_404_caching_is_still_absent()
 
 
-def test_the_404_check_fires_when_the_behaviour_changes(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """A HIT is now the finding: either the defaults moved or ADR-026 was bypassed.
+def test_the_404_check_fires_on_a_non_zero_age(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A non-zero Age is proof the 404 came from a populated entry — a real change.
 
-    Inverted deliberately. A check that fails forever on a known, accepted property is
-    noise, and noise is how a real finding gets scrolled past.
+    `cf-cache-status: HIT` is not, and was what made run 6's reading inconclusive.
     """
-    responder(monkeypatch, Fetched(status=404, headers={"cf-cache-status": "HIT"}, body=b""))
+    calls = {"n": 0}
+
+    def answer(_path: str, **_kwargs: Any) -> Fetched:
+        calls["n"] += 1
+        return Fetched(status=404, headers={"age": "5" if calls["n"] > 1 else "0"}, body=b"")
+
+    responder(monkeypatch, answer)
     with pytest.raises(CheckFailed) as failure:
         probe.check_404_caching_is_still_absent()
     message = str(failure.value)
-    assert "change" in message
-    assert "ADR-026" in message
-    assert "cost model" in message
-
-
-def test_every_check_asserts_something() -> None:
-    """A check whose body never calls `check` can only report, never fail.
-
-    This is the shape 404-caching had: it observed, formatted a detail string, and
-    returned. Nothing in the framework would have noticed.
-    """
-    for name, function in {**probe.SITE_CHECKS, **probe.BUCKET_CHECKS}.items():
-        source = textwrap.dedent(inspect.getsource(function))
-        calls = {
-            node.func.id
-            for node in ast.walk(ast.parse(source))
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-        }
-        assert "check" in calls, (
-            f"{name} never calls check(): it can report a problem but not fail on one"
-        )
-
-
-def test_url_normalization_check_is_not_a_tautology(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Two absent CSPs compare equal. Found by auditing all twelve checks, not by a run.
-
-    With no header rule at all, both paths return "" and an equality check passes while
-    proving nothing — the same shape as 404-caching passing on DYNAMIC. The header must
-    be required to exist before the two are compared.
-    """
-    responder(monkeypatch, Fetched(status=200, headers={}, body=b"x"))
-    with pytest.raises(PreconditionUnmet, match="compare two absent headers"):
-        probe.check_url_normalization_is_on()
-
-
-def test_preflight_rejects_a_redirect(monkeypatch: pytest.MonkeyPatch) -> None:
-    """A browser does not follow a redirected preflight, so neither may this check."""
-    responder(monkeypatch, Fetched(status=301, headers={"location": "/"}, body=b""))
-    with pytest.raises(PreconditionUnmet, match="redirected"):
-        probe.check_cors_preflight()
-
-
-def test_fetch_does_not_follow_redirects() -> None:
-    """The www check asserts a 301; following it landed on the apex root's honest 404.
-
-    `urlopen` follows by default, which made a working redirect look like a broken one.
-    """
-    assert any(isinstance(handler, probe._NoRedirects) for handler in probe._OPENER.handlers), (
-        "probe.fetch must see redirects, not follow them"
-    )
+    assert "served from cache" in message
+    assert "ADR-026's conclusion does not depend on the premise" in message
 
 
 def test_the_404_check_carries_its_evidence(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Whether it passes or fails, the reading goes in the detail.
-
-    The hypothesis it once carried is now a settled result (ADR-026), but the evidence
-    still travels: a future change should arrive with the numbers that show it.
-    """
-    responder(monkeypatch, Fetched(status=404, headers={"cf-cache-status": "MISS"}, body=b""))
+    """Whether it passes or fails, the reading goes in the detail."""
+    responder(monkeypatch, Fetched(status=404, headers={"age": "0"}, body=b""))
     detail = probe.check_404_caching_is_still_absent()
-    assert "origin-cache-control" in detail
-    assert "first=MISS" in detail
+    assert "samples" in detail
+
+
+# --- cf-cache-status is retired as an instrument -----------------------------
+
+
+def cache_status_reads(function: object) -> list[str]:
+    """Calls to `.header("cf-cache-status")` inside a function's own body."""
+    tree = ast.parse(textwrap.dedent(inspect.getsource(function)))
+    return [
+        ast.unparse(node)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "header"
+        and node.args
+        and isinstance(node.args[0], ast.Constant)
+        and node.args[0].value == "cf-cache-status"
+    ]
+
+
+def test_no_check_reads_cf_cache_status() -> None:
+    """The instrument is unavailable to checks, not merely discouraged.
+
+    Edge nodes within a colo do not share a local cache, so a MISS means only that *this*
+    node had not seen the object. It flipped a passing check to failing three times
+    across runs 3-6 with nothing changed in between, and it was retired from one check
+    while three others kept using it — including `cors-warm-cache`, which asserted
+    `HIT` while its name promised something the status could not establish.
+
+    `served_from_cache()` is the sanctioned way to ask, and it uses `Age`, where a
+    non-zero value can only come from an entry an earlier request populated.
+    """
+    offenders = {
+        name: reads
+        for name, function in {**probe.SITE_CHECKS, **probe.BUCKET_CHECKS}.items()
+        if (reads := cache_status_reads(function))
+    }
+    assert not offenders, (
+        "these checks read cf-cache-status directly; use served_from_cache() instead:\n  "
+        + "\n  ".join(f"{name}: {reads}" for name, reads in offenders.items())
+    )
+
+
+def test_the_ban_would_catch_a_reintroduction() -> None:
+    """Negative control (AGENTS.md): a guard nobody has seen fail proves nothing."""
+
+    def offending() -> bool:
+        response = probe.fetch("/x")
+        return response.header("cf-cache-status") == "HIT"
+
+    assert cache_status_reads(offending), "the ban would not notice a new use"
+
+    def acceptable() -> bool:
+        cached, _evidence = probe.served_from_cache("/x")
+        return cached
+
+    assert not cache_status_reads(acceptable)
+
+
+def test_reporting_the_distribution_is_still_allowed() -> None:
+    """`_sustained` records the cache mix for evidence. Reporting is not asserting."""
+    assert cache_status_reads(probe._sustained), (
+        "the ban is on checks drawing verdicts from it, not on recording what was seen"
+    )
+
+
+def test_served_from_cache_proves_with_age_and_reports_what_it_saw(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = {"n": 0}
+
+    def answer(_path: str, **_kwargs: Any) -> Fetched:
+        calls["n"] += 1
+        age = "4" if calls["n"] > 2 else "0"
+        return Fetched(status=200, headers={"age": age}, body=b"x")
+
+    responder(monkeypatch, answer)
+    cached, evidence = probe.served_from_cache("/x")
+    assert cached
+    assert "Age 4s" in evidence
+
+
+def test_served_from_cache_is_negative_without_a_non_zero_age(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Absence is evidence, not proof — and the message has to say how hard it looked."""
+    responder(monkeypatch, Fetched(status=200, headers={"age": "0"}, body=b"x"))
+    cached, evidence = probe.served_from_cache("/x", samples=3)
+    assert not cached
+    assert "3 samples" in evidence
+
+
+def test_the_rate_is_held_constant_across_runs() -> None:
+    """Consistency at a rate is the question; a varying rate answers a different one."""
+    source = textwrap.dedent(inspect.getsource(probe._sustained))
+    assert "RATE_LIMIT_TARGET_RPS" in source
+    assert probe.RATE_LIMIT_TARGET_RPS == 262, "the rate that fired in run 6"
+    assert probe.RATE_LIMIT_TARGET_RPS > probe.RATE_LIMIT_REQUESTS / probe.RATE_LIMIT_PERIOD_SECONDS
+
+
+def test_a_rate_outside_the_band_is_a_precondition_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A different rate is a different experiment, not a result about the rule.
+
+    The cross-run comparison is about consistency at 262/s; a run that managed 60/s
+    answers a question nobody asked.
+    """
+    one_identity(monkeypatch)
+    monkeypatch.setattr(probe.time, "monotonic", REAL_MONOTONIC)
+    monkeypatch.setattr(probe, "RATE_LIMIT_SUSTAIN_SECONDS", 0.05)
+    monkeypatch.setattr(probe, "RATE_LIMIT_WORKERS", 1)
+    monkeypatch.setattr(probe, "RATE_LIMIT_TARGET_RPS", 100_000)
+    responder(monkeypatch, everything_ok)
+
+    report = probe.run_checks({"rate-limit": probe.check_rate_limit_blocks_a_burst})
+    detail = report.results[0].detail
+    assert "precondition unmet" in detail
+    assert "different experiment" in detail

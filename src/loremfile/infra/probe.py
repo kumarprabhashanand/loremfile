@@ -66,11 +66,21 @@ RATE_LIMIT_PERIOD_SECONDS = 10
 RATE_LIMIT_REQUESTS = 300
 #: Enough concurrency to clear 30 requests/second. A sequential burst manages 12-20/s
 #: and cannot provoke the rule at all, which is what made the first version unfalsifiable.
-RATE_LIMIT_WORKERS = 24
+RATE_LIMIT_WORKERS = 48
 
 #: Load is sustained for a duration, not a request count: a fixed count conflates rate
 #: with coverage of the counting window, and run 5 showed that conflation matters.
 RATE_LIMIT_SUSTAIN_SECONDS = 25
+
+#: Held constant across runs, at the rate that fired in run 6. The open question is
+#: *consistency at a given rate*; varying the rate measures the probability curve instead
+#: and answers neither. If three runs fire here, consistency is established at this rate,
+#: and the 45-69/s non-firing becomes a separate documented property — approximate below
+#: some rate — rather than an unexplained intermittency.
+RATE_LIMIT_TARGET_RPS = 262
+#: Outside this tolerance the run is a precondition failure: the load was not the load
+#: the cross-run comparison is about.
+RATE_LIMIT_RATE_TOLERANCE = 0.2
 
 #: Cloudflare's trace endpoint on this zone. Reports the `ip` and `colo` the edge sees —
 #: exactly the two characteristics the rule counts on.
@@ -212,10 +222,48 @@ def settle(
     return last
 
 
+#: `cf-cache-status` is **not** a sanctioned instrument for asserting cache behaviour.
+#: Edge nodes within a colo do not share a local cache, so a MISS means only that *this*
+#: node had not seen the object — it flipped passing checks to failing across runs 3-6
+#: with nothing changed in between. `Age` is positive evidence: a non-zero value can only
+#: come from an entry an earlier request populated. A test fails if any check reads the
+#: header directly, so the instrument is unavailable rather than discouraged.
+CACHE_SAMPLES = 6
+
+
+def served_from_cache(
+    path: str, *, samples: int = CACHE_SAMPLES, expect_status: int = HTTP_OK
+) -> tuple[bool, str]:
+    """Is `path` served from the edge cache? The only sanctioned way to ask.
+
+    Populates the entry, waits long enough for `Age` to become non-zero, then samples.
+    **One non-zero `Age` is proof**; absence across every sample is evidence but not
+    proof, since each request may land on a cold node. Returns the verdict and what was
+    observed, so a caller's failure message can carry it.
+    """
+    populate = fetch(path)
+    require(
+        populate.status == expect_status,
+        f"GET {path} returned {populate.status}, expected {expect_status}; there is "
+        "nothing to observe, and an absent Age would mean only that",
+    )
+    time.sleep(AGE_SETTLE_SECONDS)
+
+    observations = []
+    for _ in range(samples):
+        response = fetch(path)
+        age = response.header("age")
+        observations.append(f"age={age or '-'}")
+        if age.isdigit() and int(age) > 0:
+            return True, f"Age {age}s after {len(observations)} sample(s)"
+        time.sleep(1)
+    return False, f"no non-zero Age in {samples} samples ({', '.join(observations)})"
+
+
 @dataclass
 class Result:
     name: str
-    state: str  # pass | fail | measured
+    state: str  # pass | fail
     detail: str = ""
 
 
@@ -339,25 +387,23 @@ def check_file_headers() -> str:
 def check_cors_is_open_and_survives_the_cache() -> str:
     """A **cached** response must still answer cross-origin. Both halves are asserted.
 
-    The first version of this check named the cache in its title, printed
-    `cf-cache-status` in its detail, and never asserted it — so it would have passed on a
-    `DYNAMIC` response that was never cached at all, proving only half of what it claimed.
+    The cache half is measured with `Age` via :func:`served_from_cache`. It previously
+    asserted `cf-cache-status == HIT`, inheriting the flaw the query-string check had
+    already been fixed for — a status that flips with edge-node locality rather than with
+    configuration. Found by sweeping every check rather than by another failing run.
     """
     path = f"/{PROBE_PREFIX}file.bin"
-    warm = settle(
-        f"a cached response for {path}",
-        lambda: fetch(path, extra_headers={"Origin": "https://example.org"}),
-        lambda r: r.status == HTTP_OK and r.header("cf-cache-status").upper() == "HIT",
-    )
-    allow = warm.header("access-control-allow-origin")
-    check(allow == "*", f"access-control-allow-origin is {allow!r} on a warm cache hit")
-    status = warm.header("cf-cache-status").upper()
+    cached, evidence = served_from_cache(path)
     check(
-        status not in UNCACHEABLE_STATUSES,
-        f"cf-cache-status is {status}, so the response was never cached and this check "
-        "proves nothing about CORS surviving the cache",
+        cached,
+        f"{path} is never served from cache, so this proves nothing about CORS surviving "
+        f"the cache ({evidence})",
     )
-    return f"allow-origin * on a {status}"
+    warm = fetch(path, extra_headers={"Origin": "https://example.org"})
+    require(warm.status == HTTP_OK, f"GET {path} with Origin returned {warm.status}")
+    allow = warm.header("access-control-allow-origin")
+    check(allow == "*", f"access-control-allow-origin is {allow!r} on a cached response")
+    return f"allow-origin * on a cached response ({evidence})"
 
 
 def check_cors_preflight() -> str:
@@ -412,10 +458,6 @@ def check_query_strings_share_one_cache_entry() -> str:
     path = f"/{PROBE_PREFIX}file.bin"
     populate = fetch(f"{path}?x=1")
     require(populate.status == HTTP_OK, f"GET {path}?x=1 returned {populate.status}")
-    require(
-        bool(populate.header("cf-cache-status")),
-        "no cf-cache-status at all, so cache behaviour cannot be observed",
-    )
     # Long enough that a served-from-cache response reports a whole second of Age.
     time.sleep(AGE_SETTLE_SECONDS)
 
@@ -424,7 +466,7 @@ def check_query_strings_share_one_cache_entry() -> str:
         response = fetch(f"{path}?x={attempt + 2}")
         require(response.status == HTTP_OK, f"GET {path}?x= returned {response.status}")
         age = response.header("age")
-        observations.append(f"{response.header('cf-cache-status') or 'none'}/age={age or '-'}")
+        observations.append(f"age={age or '-'}")
         if age.isdigit() and int(age) > 0:
             return (
                 f"?x={attempt + 2} served with Age {age}s from the entry ?x=1 populated: "
@@ -532,14 +574,16 @@ def observed_identity() -> dict[str, set[str]]:
 
 
 def _sustained(make_path: Callable[[int], str]) -> tuple[list[int], dict[str, int], float]:
-    """Keep requesting for RATE_LIMIT_SUSTAIN_SECONDS. Returns statuses, cache mix, rate.
+    """Request at RATE_LIMIT_TARGET_RPS for RATE_LIMIT_SUSTAIN_SECONDS.
 
-    Sustained by **duration**, not request count: a fixed count conflates rate with
-    coverage of the counting window, and run 5 showed that conflation matters.
+    Paced rather than as-fast-as-possible: the question is whether the rule fires
+    consistently *at a given rate*, so the rate is the controlled variable. Enough
+    workers to reach the target on a slow runner, each sleeping to hold its share.
     """
     from concurrent.futures import ThreadPoolExecutor  # noqa: PLC0415
 
     deadline = time.monotonic() + RATE_LIMIT_SUSTAIN_SECONDS
+    interval = RATE_LIMIT_WORKERS / RATE_LIMIT_TARGET_RPS
     counter = itertools.count()
     statuses: list[int] = []
     cache: dict[str, int] = {}
@@ -547,6 +591,7 @@ def _sustained(make_path: Callable[[int], str]) -> tuple[list[int], dict[str, in
 
     def worker(_n: int) -> None:
         while time.monotonic() < deadline:
+            began = time.monotonic()
             response = fetch(make_path(next(counter)))
             label = response.header("cf-cache-status").upper() or "none"
             with lock:
@@ -554,6 +599,9 @@ def _sustained(make_path: Callable[[int], str]) -> tuple[list[int], dict[str, in
                 cache[label] = cache.get(label, 0) + 1
             if response.status == HTTP_TOO_MANY_REQUESTS:
                 return
+            pause = interval - (time.monotonic() - began)
+            if pause > 0:
+                time.sleep(pause)
 
     started = time.monotonic()
     with ThreadPoolExecutor(max_workers=RATE_LIMIT_WORKERS) as pool:
@@ -614,10 +662,18 @@ def check_rate_limit_blocks_a_burst() -> str:
     path = f"/{PROBE_PREFIX}file.bin"
     cached_statuses, cached_cache, cached_rate = _sustained(lambda n: f"{path}?burst={n}")
     required = RATE_LIMIT_REQUESTS / RATE_LIMIT_PERIOD_SECONDS
+    low = RATE_LIMIT_TARGET_RPS * (1 - RATE_LIMIT_RATE_TOLERANCE)
+    high = RATE_LIMIT_TARGET_RPS * (1 + RATE_LIMIT_RATE_TOLERANCE)
     require(
-        cached_rate > required,
-        f"sustained only {cached_rate:.1f} requests/second; the rule triggers above "
-        f"{required:.0f}/s. **This is not evidence about the rule.**",
+        low <= cached_rate <= high,
+        f"sustained {cached_rate:.0f} requests/second, outside {low:.0f}-{high:.0f}/s. "
+        f"The cross-run comparison is about consistency **at {RATE_LIMIT_TARGET_RPS}/s**, "
+        "so a different rate is a different experiment. **Not evidence about the rule.**",
+    )
+    check(
+        required < RATE_LIMIT_TARGET_RPS,
+        f"the target rate is at or below the rule's {required:.0f}/s threshold; the "
+        "experiment cannot provoke it by construction",
     )
     if HTTP_TOO_MANY_REQUESTS in cached_statuses:
         blocked = cached_statuses.index(HTTP_TOO_MANY_REQUESTS)
@@ -662,42 +718,28 @@ def _recover() -> None:
 
 
 def check_404_caching_is_still_absent() -> str:
-    """404s are **not** cached, and this asserts that rather than complaining about it.
+    """404s are not served from cache — asserted with `Age`, not `cf-cache-status`.
 
-    Measured in M2.4 run 4: `first=MISS second=MISS origin-cache-control='none'`. The
-    cache rule sets `edge_ttl.mode: respect_origin` (docs/08 §5.4) and R2 sends no
-    `Cache-Control` on a 404, so there is nothing to respect. Caching them deliberately
-    by status code was considered and rejected (ADR-026).
-
-    The check was inverted once that became a settled property. A check that fails
-    forever on a known, accepted behaviour is noise, and noise is how a real finding gets
-    scrolled past; a check that fires when the behaviour *changes* is a finding — either
-    Cloudflare's defaults moved or someone added a status-code TTL without reopening
-    ADR-026, and both are worth knowing. `docs/19` §3's cost model assumes exactly this
-    (every request to a missing path reaches R2), so a change would revise the model.
+    **The claim is under measurement.** `docs/03` §3 and ADR-026 were written on
+    `MISS/MISS` readings, which are not evidence: a MISS means only that *this* edge node
+    had not seen it. Run 6 then reported `first=MISS second=HIT age=0`, equally
+    uninformative in the other direction, since `Age 0` does not establish an earlier
+    entry either. Three consecutive runs with this instrument decide, and `docs/03` §3,
+    ADR-026's premise and RISK-22 are revised together on that evidence.
     """
     missing = f"/{PROBE_PREFIX}definitely-not-here-{int(time.time())}"
     first = fetch(missing)
     check(first.status == HTTP_NOT_FOUND, f"expected 404, got {first.status}")
-    require(
-        bool(first.header("cf-cache-status")),
-        "no cf-cache-status on a 404, so cache behaviour cannot be observed at all",
-    )
-    second = fetch(missing)
-    status = second.header("cf-cache-status").upper()
-    evidence = (
-        f"first={first.header('cf-cache-status') or 'none'} second={status or 'none'} "
-        f"origin-cache-control={first.header('cache-control') or 'none'!r} "
-        f"age={second.header('age') or 'none'}"
-    )
+
+    cached, evidence = served_from_cache(missing, expect_status=HTTP_NOT_FOUND)
     check(
-        status != "HIT",
-        f"a repeated 404 was served from cache ({evidence}). This is a **change** from "
-        "the behaviour ADR-026 and docs/19 §3 are written against, not a failure: 404s "
-        "were measured as uncached in M2.4. Either Cloudflare's defaults moved or a "
-        "status-code TTL was added without reopening ADR-026. Revisit the cost model.",
+        not cached,
+        f"a repeated 404 was served from cache ({evidence}) — the first measurement of "
+        "this with an instrument that can prove it. This changes the premise of docs/03 "
+        "§3 and ADR-026; revise the cost model. ADR-026's conclusion does not depend on "
+        "the premise, so a corrected premise is not a reason to revisit the decision.",
     )
-    return f"404s still uncached, as ADR-026 assumes ({evidence})"
+    return f"404s not served from cache ({evidence})"
 
 
 #: Every check the probe runs against the live site.
