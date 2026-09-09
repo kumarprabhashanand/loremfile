@@ -228,7 +228,7 @@
     {
       "format": "mp4",
       "count": 9,
-      "total_bytes": 79774316,
+      "total_bytes": 79768921,
       "url": "https://loremfile.dev/mp4",
       "index": "https://loremfile.dev/mp4/index.json",
       "mime_default": "video/mp4"

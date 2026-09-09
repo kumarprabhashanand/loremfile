@@ -2,14 +2,14 @@
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
   "catalog_version": "1.0.0",
-  "generated_at": "2026-09-08T22:07:07Z",
+  "generated_at": "2026-09-09T06:46:40Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/<OWNER>/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:3ba29bb905b96fcb019b82f3f0e05f9b6472749af252fbff3f879460e0ef327c",
   "count": 166,
-  "total_bytes": 483241149,
+  "total_bytes": 483235754,
   "formats": [
     "aac",
     "aiff",
@@ -3077,45 +3077,45 @@
       "supersededBy": null
     },
     {
-      "path": "mp4/1080p-10s.mp4",
-      "url": "https://loremfile.dev/mp4/1080p-10s.mp4",
-      "format": "mp4",
-      "ext": "mp4",
-      "mime": "video/mp4",
-      "bytes": 7830536,
-      "sha256": "cc9a8051d0729d6634cae798892d51334e63ce86e29b87c2406d77e7f9886d11",
-      "size_class": "free",
-      "phase": 1,
+      "added_in": "1.0.0",
+      "bytes": 7829045,
+      "deprecated": false,
       "description": "1920x1080 at 30 fps, ten seconds, H.264 plus AAC.",
+      "edge_case": false,
+      "ext": "mp4",
+      "format": "mp4",
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "duration": 10,
+        "height": 1080,
+        "width": 1920
+      },
+      "mime": "video/mp4",
+      "path": "mp4/1080p-10s.mp4",
+      "phase": 1,
+      "props": {
+        "acodec": "aac",
+        "audio_streams": 1,
+        "channels": 1,
+        "duration_ms": 10000,
+        "fps": 30.0,
+        "height": 1080,
+        "sample_rate": 48000,
+        "subtitle_streams": 0,
+        "vcodec": "h264",
+        "video_streams": 1,
+        "width": 1920
+      },
+      "sha256": "273b21cdfcbb07a07992a40adac102209dceab2e888d08f4ba0ac4b608e3c2a7",
+      "size_class": "free",
+      "status": "active",
+      "supersededBy": null,
       "tags": [
         "video",
         "codec-h264",
         "codec-aac"
       ],
-      "edge_case": false,
-      "props": {
-        "duration_ms": 10000,
-        "video_streams": 1,
-        "audio_streams": 1,
-        "subtitle_streams": 0,
-        "width": 1920,
-        "height": 1080,
-        "vcodec": "h264",
-        "fps": 30.0,
-        "acodec": "aac",
-        "sample_rate": 48000,
-        "channels": 1
-      },
-      "generator": "media_video.mp4",
-      "generator_params": {
-        "width": 1920,
-        "height": 1080,
-        "duration": 10
-      },
-      "added_in": "1.0.0",
-      "status": "active",
-      "deprecated": false,
-      "supersededBy": null
+      "url": "https://loremfile.dev/mp4/1080p-10s.mp4"
     },
     {
       "path": "mp4/10mb.mp4",
@@ -3240,45 +3240,45 @@
       "supersededBy": null
     },
     {
-      "path": "mp4/50mb.mp4",
-      "url": "https://loremfile.dev/mp4/50mb.mp4",
-      "format": "mp4",
-      "ext": "mp4",
-      "mime": "video/mp4",
-      "bytes": 50086335,
-      "sha256": "21ebf9345c71046903319281c01a9dc02644535a98d54a91bf8d8ae0f609579b",
-      "size_class": "approx",
-      "phase": 1,
+      "added_in": "1.0.0",
+      "bytes": 50082431,
+      "deprecated": false,
       "description": "About 50MB: 1280x720 at 30 fps for two minutes, two-pass at a flat bitrate. The largest video in the launch set.",
+      "edge_case": false,
+      "ext": "mp4",
+      "format": "mp4",
+      "generator": "media_video.mp4_sized",
+      "generator_params": {
+        "duration": 120,
+        "size": 50000000
+      },
+      "mime": "video/mp4",
+      "path": "mp4/50mb.mp4",
+      "phase": 1,
+      "props": {
+        "acodec": "aac",
+        "audio_streams": 1,
+        "channels": 1,
+        "duration_ms": 120000,
+        "fps": 30.0,
+        "height": 720,
+        "sample_rate": 48000,
+        "subtitle_streams": 0,
+        "vcodec": "h264",
+        "video_streams": 1,
+        "width": 1280
+      },
+      "sha256": "309271b3e49219d0c21934f389a6bfbd5385784ad65f054d74b6babf2b7097c2",
+      "size_class": "approx",
+      "status": "active",
+      "supersededBy": null,
       "tags": [
         "video",
         "sized",
         "codec-h264",
         "large"
       ],
-      "edge_case": false,
-      "props": {
-        "duration_ms": 120000,
-        "video_streams": 1,
-        "audio_streams": 1,
-        "subtitle_streams": 0,
-        "width": 1280,
-        "height": 720,
-        "vcodec": "h264",
-        "fps": 30.0,
-        "acodec": "aac",
-        "sample_rate": 48000,
-        "channels": 1
-      },
-      "generator": "media_video.mp4_sized",
-      "generator_params": {
-        "size": 50000000,
-        "duration": 120
-      },
-      "added_in": "1.0.0",
-      "status": "active",
-      "deprecated": false,
-      "supersededBy": null
+      "url": "https://loremfile.dev/mp4/50mb.mp4"
     },
     {
       "path": "mp4/720p-5s.mp4",
@@ -3552,40 +3552,40 @@
       "supersededBy": null
     },
     {
-      "path": "opus/30s.opus",
-      "url": "https://loremfile.dev/opus/30s.opus",
-      "format": "opus",
-      "ext": "opus",
-      "mime": "audio/opus",
+      "added_in": "1.0.0",
       "bytes": 431592,
-      "sha256": "31bd52b1593ccffc4b250b4ba78886fe5967581793be06c8ce8abe67e04f2a4a",
-      "size_class": "free",
-      "phase": 1,
+      "deprecated": false,
       "description": "A 440 Hz sine wave, thirty seconds, stereo Opus at 96 kbps.",
+      "edge_case": false,
+      "ext": "opus",
+      "format": "opus",
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "bitrate": "96k",
+        "codec": "opus",
+        "duration": 30
+      },
+      "mime": "audio/opus",
+      "path": "opus/30s.opus",
+      "phase": 1,
+      "props": {
+        "acodec": "opus",
+        "audio_streams": 1,
+        "channels": 2,
+        "duration_ms": 30006,
+        "sample_rate": 48000,
+        "subtitle_streams": 0,
+        "video_streams": 0
+      },
+      "sha256": "1f7d7244e2a34ce8bd9c455992c4e52ed575ed4f0962314d50e4b5075785328c",
+      "size_class": "free",
+      "status": "active",
+      "supersededBy": null,
       "tags": [
         "audio",
         "codec-opus"
       ],
-      "edge_case": false,
-      "props": {
-        "duration_ms": 30006,
-        "video_streams": 0,
-        "audio_streams": 1,
-        "subtitle_streams": 0,
-        "acodec": "opus",
-        "sample_rate": 48000,
-        "channels": 2
-      },
-      "generator": "media_audio.encoded",
-      "generator_params": {
-        "codec": "opus",
-        "duration": 30,
-        "bitrate": "96k"
-      },
-      "added_in": "1.0.0",
-      "status": "active",
-      "deprecated": false,
-      "supersededBy": null
+      "url": "https://loremfile.dev/opus/30s.opus"
     },
     {
       "path": "parquet/people-1000.parquet",
@@ -5459,45 +5459,45 @@
       "supersededBy": null
     },
     {
-      "path": "webm/720p-5s-vp9.webm",
-      "url": "https://loremfile.dev/webm/720p-5s-vp9.webm",
-      "format": "webm",
-      "ext": "webm",
-      "mime": "video/webm",
+      "added_in": "1.0.0",
       "bytes": 621241,
-      "sha256": "3e080ccefcd8b8d99f09fe06d621f9633209d060b910a0edb95ff79f84ab59da",
-      "size_class": "free",
-      "phase": 1,
+      "deprecated": false,
       "description": "1280x720 at 30 fps, five seconds, VP9 video with Opus audio.",
+      "edge_case": false,
+      "ext": "webm",
+      "format": "webm",
+      "generator": "media_video.webm",
+      "generator_params": {
+        "duration": 5,
+        "height": 720,
+        "width": 1280
+      },
+      "mime": "video/webm",
+      "path": "webm/720p-5s-vp9.webm",
+      "phase": 1,
+      "props": {
+        "acodec": "opus",
+        "audio_streams": 1,
+        "channels": 1,
+        "duration_ms": 5008,
+        "fps": 30.0,
+        "height": 720,
+        "sample_rate": 48000,
+        "subtitle_streams": 0,
+        "vcodec": "vp9",
+        "video_streams": 1,
+        "width": 1280
+      },
+      "sha256": "ee1b5c73dcdb3b78c7060e8477363462bf64072b65ba06318371f9faac31ecd5",
+      "size_class": "free",
+      "status": "active",
+      "supersededBy": null,
       "tags": [
         "video",
         "codec-vp9",
         "codec-opus"
       ],
-      "edge_case": false,
-      "props": {
-        "duration_ms": 5008,
-        "video_streams": 1,
-        "audio_streams": 1,
-        "subtitle_streams": 0,
-        "width": 1280,
-        "height": 720,
-        "vcodec": "vp9",
-        "fps": 30.0,
-        "acodec": "opus",
-        "sample_rate": 48000,
-        "channels": 1
-      },
-      "generator": "media_video.webm",
-      "generator_params": {
-        "width": 1280,
-        "height": 720,
-        "duration": 5
-      },
-      "added_in": "1.0.0",
-      "status": "active",
-      "deprecated": false,
-      "supersededBy": null
+      "url": "https://loremfile.dev/webm/720p-5s-vp9.webm"
     },
     {
       "path": "webp/alpha-256x256.webp",

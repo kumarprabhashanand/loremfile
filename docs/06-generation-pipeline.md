@@ -140,6 +140,22 @@ def basic(ctx: GeneratorContext, *, pages: int, page_size: str = "A4",
 | openpyxl | **Not reproducible on its own.** It spools each worksheet to a temporary file and adds it with `ZipFile.write`, so that entry is stamped from the filesystem — beyond the reach of any clock patch. Raw output changed on six of eight consecutive runs while every other entry sat at the epoch. `util.zipnorm` is what makes it stable, so it is mandatory here, not cosmetic | `xlsx/1sheet-10rows.xlsx` | 2026-09-08 (claim corrected) |
 | python-pptx | Builds its package in memory, like python-docx; core properties set explicitly. Slide size is set explicitly too — the bundled template is 4:3, which would otherwise be a silent default | `pptx/1slide.pptx` | 2026-09-08 |
 
+  **The pinned image is necessary but not sufficient for media.** `libx264`, `libvpx`
+  and `libopus` each choose SIMD kernels from the CPU features they find at runtime, and
+  no ffmpeg option reaches that choice — `-cpuflags 0` and `-cpuflags sse2` produce
+  byte-identical output, so this is the encoders' own dispatch, not ffmpeg's. In M3.6,
+  four of 36 media fixtures hashed differently on GitHub's runners than on the author's
+  machine: `mp4/1080p-10s.mp4`, `mp4/50mb.mp4`, `opus/30s.opus` and
+  `webm/720p-5s-vp9.webm`. The other 32, and every fixture from M3.1–M3.5, matched.
+
+  **CI is the authority**, because CI builds the bytes the deploy uploads. When an
+  author's machine disagrees, `manifest check` prints the entries to commit and
+  `manifest adopt --from` takes them — it refuses any path already published on the base
+  branch, so "take CI's answer" can never rewrite frozen bytes. Two CI runs an hour
+  apart on different runners produced identical bytes for all four, which is the evidence
+  that made freezing them acceptable; a future change to GitHub's runner fleet could
+  still break that, and `docs/17` carries the risk.
+
   **Import these three libraries at module scope, never inside the guard.** They do
   `from datetime import datetime` at import time; imported inside `deterministic()` they
   bind the guard's stand-in class permanently and then reject real datetimes once it

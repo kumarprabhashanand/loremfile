@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 import click
@@ -400,6 +401,91 @@ def manifest_check(as_json: bool) -> None:
             "manifest check",
             ok=not errors,
             summary=summary,
+            items=items,
+            errors=errors,
+            as_json=as_json,
+        )
+    )
+
+
+@manifest.command("adopt")
+@click.option(
+    "--from",
+    "source",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="JSON array of entries, as `manifest check` prints them.",
+)
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def manifest_adopt(source: Path, as_json: bool) -> None:
+    """Take CI's entries for fixtures this machine cannot reproduce (docs/06 §4).
+
+    libx264, libvpx and libopus dispatch on the CPU features they find, so an author's
+    machine and CI can produce different bytes for the same fixture and no ffmpeg flag
+    reaches that choice. CI is the authority, because CI is what builds the bytes the
+    deploy uploads — so its entries have to be committable without hand-editing the
+    manifest, which AGENTS.md forbids for good reason.
+
+    The refusal that matters is the last one: a fixture already published on the base
+    branch may never change its bytes, whatever any machine now produces. Adopting is
+    only ever allowed for paths this branch is adding.
+    """
+    errors: list[str] = []
+    items: list[Item] = []
+    adopted: list[dict[str, Any]] = []
+    try:
+        incoming = json.loads(source.read_text(encoding="utf-8"))
+        if not isinstance(incoming, list):
+            raise ValueError("expected a JSON array of manifest entries")
+        loaded = Manifest.load()
+        catalog_obj = Catalog.load()
+        mime_defaults = {fmt.format: fmt.mime for fmt in catalog_obj.formats}
+        known = catalog_obj.by_path
+        published = build_module.merge_base_manifest().by_path
+
+        for entry in incoming:
+            path = entry.get("path")
+            if path not in known:
+                errors.append(f"{path}: not in the catalog")
+                continue
+            missing = [f for f in (*LOCKED_FIELDS, "path", "props") if f not in entry]
+            if missing:
+                errors.append(f"{path}: entry is missing {missing}")
+                continue
+            was = published.get(path)
+            if was is not None:
+                frozen = [f for f in LOCKED_FIELDS if was.get(f) != entry.get(f)]
+                if frozen:
+                    errors.append(
+                        f"{path}: already published on the base branch and {frozen} would "
+                        "change. Published bytes are frozen forever (docs/01 REQ-2): "
+                        "publish a new path with supersededBy instead."
+                    )
+                    continue
+            adopted.append(entry)
+            items.append({"path": path, "status": "adopted", "detail": entry["sha256"][:12]})
+
+        if not errors:
+            by_path = loaded.by_path
+            changed = any(by_path.get(e["path"]) != e for e in adopted)
+            for entry in adopted:
+                by_path[entry["path"]] = entry
+            loaded.entries = sorted(by_path.values(), key=lambda e: e["path"])
+            loaded.touch(changed=changed)
+            loaded.save()
+            config.sha256sums_path().write_text(
+                render_sha256sums(loaded), encoding="utf-8", newline="\n"
+            )
+            config.formats_json_path().write_text(
+                render_formats_json(loaded, mime_defaults), encoding="utf-8", newline="\n"
+            )
+    except (ManifestError, CatalogError, OSError, ValueError, KeyError) as exc:
+        errors.append(str(exc))
+    sys.exit(
+        _emit(
+            "manifest adopt",
+            ok=not errors,
+            summary={"adopted": len(adopted) if not errors else 0},
             items=items,
             errors=errors,
             as_json=as_json,
