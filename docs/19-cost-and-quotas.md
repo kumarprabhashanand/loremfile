@@ -48,7 +48,21 @@ Alerts: the Free plan has **no** usage-based billing notification (that is a Pro
 > The scenarios below already assume every request is an R2 read, so neither result moves
 > them. What changed is that both controls are evidenced rather than assumed.
 
-Conventions: R2 Class B reads at USD 0.36 per million after the 10 M free tier; the free tier is subtracted in every row; detection latency is the daily health/cost check (≤ 1 day) plus the weekly session to act (≤ 7 days). Query strings are excluded from the cache key, so `?random` busting costs nothing; the remaining read-amplification vectors are unique non-existent paths (each a 404 read cached 3 minutes), distinct `Origin` values (each a cache entry) and many IPs below DDoS thresholds. **Assumption [VERIFY in M2.4]:** a GET for a missing key is billed as a Class B operation. R2's pricing FAQ exempts only unauthorized (401) requests and says nothing about 404s, so the model conservatively counts them; M2.4 measures it (`loremfile usage` before and after 1,000 probe 404s). If 404s turn out to be free, the first two rows below shrink to almost nothing.
+Conventions: R2 Class B reads at USD 0.36 per million after the 10 M free tier; the free tier is subtracted in every row; detection latency is the daily health/cost check (≤ 1 day) plus the weekly session to act (≤ 7 days). Query strings are excluded from the cache key, so `?random` busting costs nothing; the remaining read-amplification vectors are unique non-existent paths (each a 404 read cached 3 minutes), distinct `Origin` values (each a cache entry) and many IPs below DDoS thresholds. **Assumption [VERIFY]:** a GET for a missing key is billed as a Class B operation. R2's pricing FAQ exempts only unauthorized (401) requests and says nothing about 404s, so the model conservatively counts them.
+
+**The measurement, pre-registered before it is run.** The 404 result changed what it has to measure: with 404s confirmed cached (`03` §3), repeating one path would measure the *cache* rather than the billing. So it fires **1,000 unique paths**, each a guaranteed miss.
+
+Attribution is by dimension rather than by a total. `r2OperationsAdaptiveGroups` reports `actionType: GetObject` with `actionStatus: userError` — a GET for a key that does not exist — so the delta in *that* counter is those requests and nothing else, rather than a total that other traffic also moves.
+
+| Branch | Threshold | Meaning |
+|---|---|---|
+| **(a) they count** | delta ≥ 900 of 1,000 | Scenario 1's arithmetic holds. RISK-22's residual moves from accepted-on-assumption to **accepted-on-evidence**. |
+| **(b) they do not** | delta ≤ 50 | Both cost scenarios shrink substantially and this section needs **recomputing downward** — a larger revision than it sounds, since the rows below are built on it. |
+| **(c) ambiguous** | anything between, or a baseline that is still moving | **Precondition failure, not a verdict.** Re-run in a quiet window. |
+
+Procedure: read the counter twice **10 minutes apart** and require the two to agree before starting (a moving baseline means other traffic is in flight); fire the 1,000; wait **10 minutes** for analytics to settle; read again, twice, and require *those* to agree. No deploy, probe or upload may run in the window.
+
+**One distinction this cannot collapse.** The metric records what R2 counts as an **operation**. Whether Cloudflare **bills** a recorded `userError` GetObject is its pricing policy applied to that record, and no API reports it. The recorded operation is the best available proxy, and this section says so rather than eliding it.
 
 | Scenario | Reads / cost | Stop condition |
 |---|---|---|

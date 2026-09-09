@@ -44,6 +44,24 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Added — `loremfile usage`, and the Class B measurement pre-registered (M4.3)
+
+- `infra/usage.py` and `loremfile usage [--days N]`: R2 operations from the GraphQL
+  Analytics API, split into Class A and Class B, with the query shape verified against
+  the live API before being written against.
+- **Attribution is by dimension, not by a total.** `r2OperationsAdaptiveGroups` reports
+  `actionType: GetObject` with `actionStatus: userError` — a GET for a key that does not
+  exist — so a delta in *that* counter is 404s and nothing else. A 24-hour read already
+  shows **1,329** of them, which are this project's own probe bursts.
+- **The measurement is pre-registered in `docs/19` §3 and on #22**, and the 404 result
+  re-scoped it: with 404s confirmed cached, repeating one path would measure the *cache*
+  rather than the billing, so it fires **1,000 unique paths**. Thresholds, the quiet
+  window and the baseline-stability requirement are fixed before the run; an unstable
+  baseline is a **precondition failure, not a verdict**.
+- **One distinction the metric cannot collapse**, stated in `docs/19` §3: this records
+  what R2 counts as an **operation**. Whether Cloudflare **bills** a recorded `userError`
+  GetObject is pricing policy applied to that record, and no API reports it.
+
 ### Verified — 404s are cached after all; the rate limit's real limit is its counting key
 
 M2.4 probe runs 7-9, against thresholds **pre-registered before the runs**.
