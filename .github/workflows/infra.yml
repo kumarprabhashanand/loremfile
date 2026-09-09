@@ -141,6 +141,12 @@ jobs:
       R2_BUCKET: ${{ vars.R2_BUCKET }}
       R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      # `rate-limit-rule` reads the deployed rule back from the zone (T1, zone-scoped).
+      # Without these the read cannot authenticate, and no statement about the rate
+      # limit is supportable — the burst alone cannot tell a missing rule from an
+      # unprovoked one.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 

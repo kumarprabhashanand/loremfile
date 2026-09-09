@@ -164,9 +164,10 @@ def test_the_rate_limit_check_asserts_the_429(monkeypatch: pytest.MonkeyPatch) -
     """Its absence is the failure. The probe must not treat a 429 as retry-and-continue."""
     responder(monkeypatch, everything_ok)
     # A clock fast enough that the load precondition is satisfied, so the check reaches
-    # the assertion under test rather than stopping short of it.
-    monkeypatch.setattr(probe.time, "monotonic", iter([0.0, 1.0]).__next__)
-    with pytest.raises(CheckFailed, match="no 429"):
+    # the assertion under test rather than stopping short of it. Four values: both
+    # bursts are timed.
+    monkeypatch.setattr(probe.time, "monotonic", iter([0.0, 1.0, 2.0, 3.0]).__next__)
+    with pytest.raises(CheckFailed, match="no 429 from either burst"):
         probe.check_rate_limit_blocks_a_burst()
 
 
@@ -432,8 +433,7 @@ def test_the_rate_limit_burst_is_concurrent() -> None:
 
     The first version drew a conclusion about the rule from load it never generated.
     """
-    source = textwrap.dedent(inspect.getsource(probe.check_rate_limit_blocks_a_burst))
-    assert "ThreadPoolExecutor" in source
+    assert "ThreadPoolExecutor" in textwrap.dedent(inspect.getsource(probe._burst))
     assert probe.RATE_LIMIT_WORKERS > 1
 
 
@@ -451,3 +451,53 @@ def test_insufficient_load_is_a_precondition_not_a_verdict(
     assert "precondition unmet" in detail
     assert "could not provoke" in detail
     assert "not in effect" not in detail, "it must not conclude anything about the rule"
+
+
+def test_the_burst_distinguishes_cached_traffic_from_traffic_that_reaches_the_counter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A 429 only from unique paths is a finding about what the rule counts.
+
+    All 600 `?burst=N` requests share one cache entry, because the cache key ignores
+    query strings — so if edge-served requests never reach the counter, that burst can
+    never produce a 429 however fast it runs. That is a cheaper explanation than "the
+    rule does not enforce" and has to be ruled out before the rule is blamed.
+    """
+    monkeypatch.setattr(probe.time, "monotonic", iter([0.0, 1.0, 2.0, 3.0]).__next__)
+
+    def answer(path: str, **_: Any) -> Fetched:
+        if "recovered" in path:
+            return Fetched(status=200, headers={}, body=b"")
+        if "absent-" in path:  # unique paths reach the origin, and the rule counts them
+            return Fetched(status=429, headers={"cf-cache-status": "MISS"}, body=b"")
+        return Fetched(status=200, headers={"cf-cache-status": "HIT"}, body=b"")
+
+    responder(monkeypatch, answer)
+    detail = probe.check_rate_limit_blocks_a_burst()
+    assert "edge-served requests do not reach the rate-limit counter" in detail
+    assert "HIT" in detail and "MISS" in detail, "both distributions must be reported"
+
+
+def test_the_404_failure_names_the_respect_origin_hypothesis(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A failure that does not carry its evidence costs another round trip to diagnose."""
+    responder(monkeypatch, Fetched(status=404, headers={"cf-cache-status": "MISS"}, body=b""))
+    with pytest.raises(CheckFailed) as failure:
+        probe.check_404_is_cached()
+    message = str(failure.value)
+    assert "respect_origin" in message
+    assert "origin-cache-control" in message
+
+
+def test_the_rate_limit_message_does_not_assert_what_it_cannot_know(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`rate-limit-rule` may itself have failed, so this must not claim the rule exists."""
+    monkeypatch.setattr(probe.time, "monotonic", iter([0.0, 1.0, 2.0, 3.0]).__next__)
+    responder(monkeypatch, everything_ok)
+    with pytest.raises(CheckFailed) as failure:
+        probe.check_rate_limit_blocks_a_burst()
+    message = str(failure.value)
+    assert "If `rate-limit-rule` passed" in message
+    assert "cannot attribute the absence" in message
