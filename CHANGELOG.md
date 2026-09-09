@@ -44,6 +44,28 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Verified — ADR-013 at the edge; and the rate limit is *not* reliably enforcing
+
+M2.4 probe run 5, 13 checks, 1 failed.
+
+- **ADR-013 is verified.** `?x=2 served with Age 15s from the entry ?x=1 populated` — one
+  observation is proof, since a non-zero `Age` can only come from an entry an earlier
+  request populated, and that request carried a different query string. It took changing
+  the instrument to get there: `cf-cache-status` passed on run 3 and failed on run 4
+  unchanged, because edge nodes within a colo do not share a local cache.
+- **`404-caching-absent` passes**, so the inverted check reports the accepted state.
+- **The rate limit did not enforce this run, and that revises run 4's verdict.** Run 4
+  blocked at request 547 at 156 req/s; run 5 was unblocked at 69 req/s (cached) and
+  45 req/s (unique paths), both above the 30 req/s threshold — and the slower run had
+  **more** headroom after crossing it (4.3 s against 1.9 s), so window coverage does not
+  explain it. `docs/08` §5.5 and RISK-22 now say deployment is verified and **consistency
+  is not**. It matters more than it would have: with 404 caching confirmed absent, this is
+  the only bound, and an intermittent bound is closer to no bound.
+- The probe's two unmeasured variables are now measured: load is sustained for a fixed
+  **duration** rather than a fixed count, and the `ip`/`colo` the edge attributes the run
+  to is sampled from `/cdn-cgi/trace` on our own zone — the counter is per
+  `(ip.src, cf.colo.id)`, so a split identity is a **precondition failure**, not a verdict.
+
 ### Changed — status-code TTL for 404s rejected (ADR-026); the check inverted
 
 - **ADR-026**: a status-code edge TTL was considered and **rejected**. What was verified
