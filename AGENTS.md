@@ -82,6 +82,12 @@ twice under the guard and compare bytes. A nondeterministic fixture that reaches
 manifest is frozen there permanently — `sha256`, `bytes` and `mime` can never change at a
 published path, so there is no later opportunity to fix it.
 
+**Every guard ships with a negative control that proves it fires.** A guard that cannot
+fire is indistinguishable from a working one, and a green check is not evidence about it.
+Introduce the violation deliberately and watch it fail. This is not hypothetical: the
+workflow-digest guard's first pattern was double-escaped and matched nothing, and only its
+control caught that — it would otherwise have passed forever while checking nothing.
+
 This is not theoretical. `docs/06` §4 lists what each library does about randomness and
 timestamps; one of those claims was simply wrong (fastavro draws its sync marker from a
 compiled C extension, below the layer the determinism guard patches). The list is
