@@ -44,6 +44,29 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Added — the uploader's plan and its two gates (M4.3, first part)
+
+- `infra/upload.py`: `plan_fixtures`, `plan_removals`, `plan_site` as **pure functions**,
+  so every rule is testable without a bucket, plus `tests/unit/test_upload_plan.py`.
+- **There is no overwrite action.** A live object whose hash differs from the manifest
+  fails the job: at that point either the manifest or the bucket is wrong and guessing
+  which is how a published byte changes. Asserted on the enum, so one cannot be added
+  by accident.
+- **Gate: no upload to an unlocked prefix.** M3's lock deferral stops here, which is what
+  keeps it from outliving its reason (`docs/08` §2). A disabled rule does not count as
+  coverage.
+- **Gate: never rebuild an `expected_drift` path.** The deploy fails when the
+  carry-forward artifact is missing rather than regenerating — a rebuild produces
+  different bytes on other hardware. All five missing paths are named in one run.
+- `docs/09` §7: **a digest bump is never merged as routine automation.** Bumps batch into
+  one deliberate PR at the M3 → M4 boundary that also runs `build --all --audit`. The
+  automated PR carries **no checks at all** — GitHub does not run workflows on pull
+  requests opened with `GITHUB_TOKEN` — so it is a notification that a new image exists,
+  not a change ready to land.
+- `AGENTS.md`: the three shapes of an assertion that is not assertable — *passes on
+  absence*, *cannot fire*, *asserts something else* — each with its detection question and
+  the instance that produced it.
+
 ### Fixed — four probe checks that could not fail for the reason they named
 
 Found by running the probe against production and then auditing all twelve checks

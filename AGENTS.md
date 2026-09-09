@@ -82,6 +82,20 @@ twice under the guard and compare bytes. A nondeterministic fixture that reaches
 manifest is frozen there permanently — `sha256`, `bytes` and `mime` can never change at a
 published path, so there is no later opportunity to fix it.
 
+**Three shapes of assertion that is not assertable.** One family — a check that cannot
+report the thing it names — but they present differently enough that a single rule misses
+two of them. Each has its own detection question, and each was found the hard way:
+
+| Shape | Ask | Found in |
+|---|---|---|
+| **Passes on absence** — it compares or reports without requiring the subject to exist | *Would this still pass if the thing it inspects were not there at all?* | `url-normalization` comparing two absent CSPs as `"" == ""`; `404-caching` reporting `cf-cache-status` and passing on `DYNAMIC` |
+| **Cannot fire** — the check runs, matches nothing, and is indistinguishable from a passing one | *Have I watched it fail?* | the double-escaped `ghcr\\.io` pattern that matched no workflow; `python -O` stripping every `assert` in the probe |
+| **Asserts something else** — it fails or passes on a fact adjacent to the one it names | *Could this fail for a reason other than the thing it names? If the named thing broke, would this fail?* | `www-redirect` following the redirect and asserting the apex root's honest 404; `rate-limit` concluding "the rule is not in effect" from load it never generated |
+
+The first is caught by driving the check against nothing. The second by the negative
+control. The third only by reading each check and asking both questions — no sweep finds
+it, which is why an audit of every check is worth doing after any of the three appears.
+
 **Every guard ships with a negative control that proves it fires.** A guard that cannot
 fire is indistinguishable from a working one, and a green check is not evidence about it.
 Introduce the violation deliberately and watch it fail. This is not hypothetical: the
