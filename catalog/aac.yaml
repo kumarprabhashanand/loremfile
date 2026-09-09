@@ -1,0 +1,18 @@
+# Raw AAC audio (docs/05 §3.4). Launch-set rows only; the rest are P1b.
+format: aac
+family: audio
+mime: audio/aac
+description: >-
+  AAC in a bare ADTS stream with no container around it — the shape broadcast and HLS
+  audio arrives in, and a good test of whether a decoder needs a container.
+seo_title: "Sample AAC audio files for testing — free, CC0, hotlinkable"
+related: [m4a, mp3, ts]
+fixtures:
+  - name: adts-30s.aac
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: aac, duration: 30, bitrate: 128k, container: adts }
+    description: "A 440 Hz sine wave, thirty seconds, 48 kHz stereo AAC at 128 kbps as a raw ADTS stream."
+    tags: [audio, codec-aac]
+    expect: { acodec: aac, sample_rate: 48000, channels: 2 }
+    size_class: free

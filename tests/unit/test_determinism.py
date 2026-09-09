@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from loremfile.build import load_generators
+from loremfile.build import fixtures_dir, load_generators
 from loremfile.catalog import Catalog
 from loremfile.config import SOURCE_DATE_EPOCH
 from loremfile.generators.base import REGISTRY, GeneratorContext
@@ -167,6 +167,8 @@ PROVING_FIXTURES = [
     "docx/1page.docx",
     "xlsx/1sheet-10rows.xlsx",
     "pptx/1slide.pptx",
+    "mp3/with-id3v2-tags-3s.mp3",
+    "mp4/360p-5s.mp4",
 ]
 
 DETERMINISM_TABLE_HEADER = "| Library | Claim | Proving fixture | Verified |"
@@ -185,8 +187,16 @@ def test_proving_fixture_reproduces_byte_for_byte(path: str) -> None:
     entry = catalog.by_path[path]
     workdir = Path(tempfile.mkdtemp())
 
+    def resolve(dependency: str) -> bytes:
+        """Published bytes for a fixture this one is built from, as the build supplies."""
+        source = fixtures_dir() / dependency
+        if not source.is_file():
+            pytest.skip(f"run `loremfile build --only {dependency}` first")
+        return source.read_bytes()
+
     def once() -> bytes:
         context = GeneratorContext(path=path, workdir=workdir)
+        context._dependency = resolve
         with deterministic(context.seed):
             out = REGISTRY.get(entry.generator)(context, **entry.params)
         return out if isinstance(out, bytes) else out.read_bytes()

@@ -11,7 +11,7 @@ Assumed answers to open questions (see `18`): domain `loremfile.dev`; repo `gith
 | M0.1 | Create/verify Cloudflare account with hardware-key 2FA and a payment method | `08` §2 steps 1–2 verified |
 | M0.2 | Buy `loremfile.dev` via Cloudflare Registrar; enable DNSSEC | Zone exists; `dig +dnssec` shows RRSIG within a day |
 | M0.3 | Create the GitHub repository `<OWNER>/loremfile` (public, empty) and give the engineer/agent admin | Agent can push |
-| M0.4 | Enable R2; run `08` §2 steps 6–10b (bucket, apex custom domain, CORS, **bucket lock rules from `infra/r2-locks.json`** — note whether the API accepts ≈ 65 rules, list the token permission groups, delete T3, create T1/T2/T4) and paste secrets/variables into the GitHub `production` environment | `curl -sI https://loremfile.dev/` returns a Cloudflare 404; secrets present; lock rules listed in the bucket settings |
+| M0.4 | Enable R2; run `08` §2 steps 6–10b (bucket, apex custom domain, CORS, list the token permission groups, delete T3, create T1/T2/T4) and paste secrets/variables into the GitHub `production` environment. **Bucket lock rules moved to M2** — see `08` §2's note: before first publication a mistake must still be correctable, and that argument expires at the first deploy | **Partially complete (M3.6).** Done: `curl -sI https://loremfile.dev/` returns a Cloudflare 404, secrets present, apex and CORS applied. **Not done here:** lock rules — including the ≈ 65-rule **[VERIFY]** for RISK-20 — now belong to M2.3 and are gated by M4.4 |
 | M0.5 | Email Routing (`hello@`, `security@`, `dmarc@`) and notifications | Test mail received |
 | M0.6 | ✅ **Done 2026-09-08.** The DPA forms part of the Self-Serve Subscription Agreement accepted at account creation, so it is in force; `13` §3a cites the governing version (v6.4, effective 2026-04-03) and records that Cloudflare exposes no separate acceptance artefact. **No acceptance date is published** — neither Art. 28 nor Art. 30(1) requires one, and the account creation date is personal metadata with no compliance benefit in a public repository | `13` §3a names the governing version and the basis; no placeholder left |
 
@@ -44,6 +44,14 @@ If the owner prefers, M0.4 can be executed by the agent in a session where the o
 
 Scope for launch is the explicit list in `05` §9 (228 fixtures across every format family); the remaining 188 phase-1 rows (P1b) follow in M7 after launch. Implement in this order; each group is a PR with tests and catalog entries; the author runs `loremfile build --format <formats…> && loremfile validate --format <formats…> && loremfile manifest update` in the container and commits the manifest additions. M3.1's PR adds the `build-and-validate` job to `ci.yml`; it is added to the branch ruleset's **required** checks only once that job exists on `main`. Adding it earlier blocks every open pull request whose branch predates the job, because the check can never report on them — which is exactly what happened during M3.1 and had to be undone. Every generator family ships with its validator, its negative test and its determinism test in the same PR — the estimates below include that.
 
+**Order changed after M3.6 — M2, then M4.3 and M4.4, come before the remaining format groups.** Finish the group in flight, then switch. Three reasons, heaviest first:
+
+1. **The retention cliff makes per-merge deployment a correctness requirement, not an optimisation.** Fixtures marked `expected_drift` cannot be rebuilt byte for byte on other hardware (`06` §4), so between the pull request and the deploy their bytes exist only in the `carry-forward-fixtures` artifact — **90 days**. At the M3 cadence the remaining groups would take longer than that, and when the artifact expires those manifest entries become unfulfillable: nothing to publish, and regeneration drifts. The fixtures would have to be re-catalogued at new paths.
+2. **`upload.py` has to be designed around not regenerating those paths anyway** (`06` §5). Doing it now, with the failure fresh and five known paths to test against, beats retrofitting it in six weeks.
+3. Every later M3 merge then deploys within hours on the same fleet, which is the steady state wanted regardless.
+
+Fixtures going live before the website exists is fine: they carry `noindex`, nothing links to them, and nothing indexes them.
+
 | ID | Group | Estimate |
 |---|---|---|
 | M3.1 | `datasets.py` (people/orders/products), `binary.py` (`bin/`), `text.py` (`txt/`, `md/`, `log/`, `ini/`) | 5 h |
@@ -58,14 +66,14 @@ Scope for launch is the explicit list in `05` §9 (228 fixtures across every for
 
 Fallback if M3.9 exceeds the CI budget: matrix `--group`; if still over, defer the deferrable fixtures listed in `05` §5 to P1b.
 
-## M4 — Website and discovery (A, 8 h; needs M3.9)
+## M4 — Website and discovery (A, 8 h; M4.1/M4.2 need M3.9 — **M4.3 and M4.4 are pulled ahead of the remaining M3 groups**, see M3)
 
 | ID | Task | DoD |
 |---|---|---|
 | M4.1 | Templates, CSS (light/dark tokens), minimal JS (copy, filter); `site/build.py`, `site/serve.py`; discovery files; JSON-LD | `tests/site/*` green; Lighthouse (host command in `06` §9) a11y ≥ 95, informational |
 | M4.2 | Content per `07` §5–§6: `site/content/formats/*.md` (agent-drafted, 120–250 words each for every format with a P1 fixture), `site/content/pages/*.md`, legal texts from `13` | Every page renders; facts checked against the catalog |
-| M4.3 | `upload.py` (fixtures, removals, site, restore), `purge`, `verify_live.py` modes incl. `--inject-failure`, `usage.py`, `ops_log.py`, `tokens-due`, `gh_issue.py`, `release.py` (archive + redact); unit tests with fakes (`tests/unit/test_upload_plan.py` belongs here) | Green |
-| M4.4 | `deploy.yml`, `health.yml` (health, cost, rotation, heartbeat steps), `audit.yml`, `release.yml` complete; `infra.yml` gains `restore` and `redact` modes | Workflows lint (`actionlint`, host) |
+| M4.3 | `upload.py` (fixtures, removals, site, restore), `purge`, `verify_live.py` modes incl. `--inject-failure`, `usage.py`, `ops_log.py`, `tokens-due`, `gh_issue.py`, `release.py` (archive + redact); unit tests with fakes (`tests/unit/test_upload_plan.py` belongs here) | Green **Must not regenerate `expected_drift` paths** (`06` §4 and §5): they do not reproduce byte for byte between runs, so the deploy has to publish the bytes the manifest describes rather than rebuild them. |
+| M4.4 | `deploy.yml`, `health.yml` (health, cost, rotation, heartbeat steps), `audit.yml`, `release.yml` complete; `infra.yml` gains `restore` and `redact` modes. **`deploy.yml` refuses to upload to any prefix without a lock rule** (`08` §2, `09` §3.2) | Workflows lint (`actionlint`, host); **bucket lock rules applied and verified against `infra/r2-locks.json`, and the ≈ 65-rule limit recorded (RISK-20)** — the deferral from M0.4 ends here, before the first deploy |
 
 ## M5 — First deploy and hardening (A, 6 h; needs M2, M4)
 

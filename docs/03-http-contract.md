@@ -117,8 +117,8 @@ Consequences: `fetch()` from any origin works; `<video>`, `<audio>`, `<img cross
 
 ## 7. Immutability policy (stable)
 
-1. A path, once present in `manifest.json` on `main`, is permanent.
-2. Its bytes, `sha256`, `bytes`, `mime` are frozen. CI enforces this (lock check).
+1. A path, **once published to R2**, is permanent. Entry into `manifest.json` on `main` is not the boundary — the promise ADR-005 makes is to embedded URLs and to hashed fixtures in other people's tests, and both require the bytes to have been *served*. An entry that never reached the bucket has no consumer and breaks no promise, so it may be removed outright rather than tombstoned; a tombstone means "was published, now removed" and would be a lie on the format page. **This is not a relaxation**: R2 bucket locks already implement exactly this boundary at the storage layer (ADR-023), and the wording above claimed something stricter than the system has ever enforced. Amended in M3.6, when five entries described bytes that had never been published and could not be regenerated.
+2. Its bytes, `sha256`, `bytes`, `mime` are frozen from publication onward. CI enforces the manifest half (lock check); R2 bucket locks enforce the storage half.
 3. To fix a defective fixture, add a new fixture (e.g. `a4-3pages-v2.pdf`), set `supersededBy` on the old entry, mark it `deprecated: true`, keep serving it.
 4. Only a legal takedown may remove an object; the manifest entry then becomes `{"status": "removed", "reason": "…", "removed_at": …}` and the site marks it.
 5. The `manifest.json` document itself, `sha256sums.txt`, the site and `index.json` files are mutable.

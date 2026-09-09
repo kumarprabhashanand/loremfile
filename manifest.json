@@ -2,16 +2,19 @@
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
   "catalog_version": "1.0.0",
-  "generated_at": "2026-09-08T21:21:54Z",
+  "generated_at": "2026-09-09T10:15:56Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/<OWNER>/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:3ba29bb905b96fcb019b82f3f0e05f9b6472749af252fbff3f879460e0ef327c",
-  "count": 130,
-  "total_bytes": 362522332,
+  "count": 161,
+  "total_bytes": 414208239,
   "formats": [
+    "aac",
+    "aiff",
     "arrow",
+    "avi",
     "avif",
     "avro",
     "bin",
@@ -19,9 +22,11 @@
     "csv",
     "docx",
     "epub",
+    "flac",
     "geojson",
     "gif",
     "gpx",
+    "hls",
     "ico",
     "ini",
     "jpg",
@@ -29,8 +34,15 @@
     "kml",
     "kmz",
     "log",
+    "m4a",
     "md",
+    "mkv",
+    "mov",
+    "mp3",
+    "mp4",
     "ndjson",
+    "ogg",
+    "ogv",
     "parquet",
     "pdf",
     "png",
@@ -41,14 +53,90 @@
     "svg",
     "tiff",
     "toml",
+    "ts",
     "tsv",
     "txt",
+    "wav",
     "webp",
     "xlsx",
     "xml",
     "yaml"
   ],
   "fixtures": [
+    {
+      "path": "aac/adts-30s.aac",
+      "url": "https://loremfile.dev/aac/adts-30s.aac",
+      "format": "aac",
+      "ext": "aac",
+      "mime": "audio/aac",
+      "bytes": 490385,
+      "sha256": "025d763833640583eb310b7c016b4e1beefc884c57c3faafd92111f2d3d8da23",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A 440 Hz sine wave, thirty seconds, 48 kHz stereo AAC at 128 kbps as a raw ADTS stream.",
+      "tags": [
+        "audio",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 30042,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 2
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "aac",
+        "duration": 30,
+        "bitrate": "128k",
+        "container": "adts"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "aiff/3s.aiff",
+      "url": "https://loremfile.dev/aiff/3s.aiff",
+      "format": "aiff",
+      "ext": "aiff",
+      "mime": "audio/aiff",
+      "bytes": 529254,
+      "sha256": "adb6ccfcc326d079189b74ac88b7da5ea1dca42b556db47d29e300c45829e610",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A 440 Hz sine wave: three seconds of 44.1 kHz, 16-bit, stereo big-endian PCM.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 3000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "pcm_s16be",
+        "sample_rate": 44100,
+        "channels": 2
+      },
+      "generator": "media_audio.pcm",
+      "generator_params": {
+        "duration": 3,
+        "sample_rate": 44100,
+        "bits": 16,
+        "channels": 2,
+        "container": "aiff"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
     {
       "path": "arrow/people-1000.arrow",
       "url": "https://loremfile.dev/arrow/people-1000.arrow",
@@ -89,6 +177,46 @@
       "generator": "columnar.arrow_people",
       "generator_params": {
         "rows": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "avi/640x480-5s.avi",
+      "url": "https://loremfile.dev/avi/640x480-5s.avi",
+      "format": "avi",
+      "ext": "avi",
+      "mime": "video/x-msvideo",
+      "bytes": 1734596,
+      "sha256": "30db7d163cc591c4253792e38af294566a1ab3d589c94944d914d9f8a40c1521",
+      "size_class": "free",
+      "phase": 1,
+      "description": "640x480 at 30 fps, five seconds, MPEG-4 Part 2 video with MP3 audio.",
+      "tags": [
+        "video",
+        "codec-mp3"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5040,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 640,
+        "height": 480,
+        "vcodec": "mpeg4",
+        "fps": 30.0,
+        "acodec": "mp3",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "media_video.avi",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "duration": 5
       },
       "added_in": "1.0.0",
       "status": "active",
@@ -1365,6 +1493,40 @@
       "supersededBy": null
     },
     {
+      "path": "flac/sine-440hz-30s.flac",
+      "url": "https://loremfile.dev/flac/sine-440hz-30s.flac",
+      "format": "flac",
+      "ext": "flac",
+      "mime": "audio/flac",
+      "bytes": 411820,
+      "sha256": "9af664bced907c264292baf3e61e0d6e64d3c63ecf16d2ac26be80a9ece5a842",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A 440 Hz sine wave, thirty seconds, 48 kHz stereo, losslessly compressed.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 30000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "flac",
+        "sample_rate": 48000,
+        "channels": 2
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "flac",
+        "duration": 30
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "geojson/points-100.geojson",
       "url": "https://loremfile.dev/geojson/points-100.geojson",
       "format": "geojson",
@@ -1509,6 +1671,250 @@
       "generator": "geo.gpx_track",
       "generator_params": {
         "points": 100
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "hls/720p-10s/index.m3u8",
+      "url": "https://loremfile.dev/hls/720p-10s/index.m3u8",
+      "format": "hls",
+      "ext": "m3u8",
+      "mime": "application/vnd.apple.mpegurl",
+      "bytes": 258,
+      "sha256": "d1667dd4d163891d663378b1af8f2d636161f6bf1a35c00549ecdaf2d7ac7fb8",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The media playlist: VOD type, five segments of about two seconds, relative URIs and a closing #EXT-X-ENDLIST.",
+      "tags": [
+        "video",
+        "web"
+      ],
+      "edge_case": false,
+      "props": {
+        "segments": 5,
+        "target_duration_s": 2,
+        "playlist_type": "VOD"
+      },
+      "generator": "hls.member",
+      "generator_params": {
+        "member": "index.m3u8",
+        "width": 1280,
+        "height": 720,
+        "duration": 10,
+        "segment_seconds": 2
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "hls/720p-10s/seg-000.ts",
+      "url": "https://loremfile.dev/hls/720p-10s/seg-000.ts",
+      "format": "hls",
+      "ext": "ts",
+      "mime": "video/mp2t",
+      "bytes": 819680,
+      "sha256": "a77e30353149d9d695c8ae477c05ea74b685f3d79ccbd531c4a6195fe4aec293",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Segment 0 of the 720p HLS stream: H.264 plus AAC in an MPEG-2 transport stream.",
+      "tags": [
+        "video",
+        "codec-h264"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 2021,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "hls.member",
+      "generator_params": {
+        "member": "seg-000.ts",
+        "width": 1280,
+        "height": 720,
+        "duration": 10,
+        "segment_seconds": 2
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "hls/720p-10s/seg-001.ts",
+      "url": "https://loremfile.dev/hls/720p-10s/seg-001.ts",
+      "format": "hls",
+      "ext": "ts",
+      "mime": "video/mp2t",
+      "bytes": 841676,
+      "sha256": "f70b73344e68d3ef1fd379f031b592cef1ffe252dcd90b12e37e6b4541e87777",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Segment 1 of the 720p HLS stream: H.264 plus AAC in an MPEG-2 transport stream.",
+      "tags": [
+        "video",
+        "codec-h264"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 2059,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "hls.member",
+      "generator_params": {
+        "member": "seg-001.ts",
+        "width": 1280,
+        "height": 720,
+        "duration": 10,
+        "segment_seconds": 2
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "hls/720p-10s/seg-002.ts",
+      "url": "https://loremfile.dev/hls/720p-10s/seg-002.ts",
+      "format": "hls",
+      "ext": "ts",
+      "mime": "video/mp2t",
+      "bytes": 814792,
+      "sha256": "16dd1980a173c71fe0dcc8fc62e6e10186ae18248dd793cc0f8aa54513996a5b",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Segment 2 of the 720p HLS stream: H.264 plus AAC in an MPEG-2 transport stream.",
+      "tags": [
+        "video",
+        "codec-h264"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 2053,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "hls.member",
+      "generator_params": {
+        "member": "seg-002.ts",
+        "width": 1280,
+        "height": 720,
+        "duration": 10,
+        "segment_seconds": 2
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "hls/720p-10s/seg-003.ts",
+      "url": "https://loremfile.dev/hls/720p-10s/seg-003.ts",
+      "format": "hls",
+      "ext": "ts",
+      "mime": "video/mp2t",
+      "bytes": 834720,
+      "sha256": "07b7ffb47e2e529bd9b56face44cf698c753e6dbf60ec1cf7ada168c893bc358",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Segment 3 of the 720p HLS stream: H.264 plus AAC in an MPEG-2 transport stream.",
+      "tags": [
+        "video",
+        "codec-h264"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 2048,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "hls.member",
+      "generator_params": {
+        "member": "seg-003.ts",
+        "width": 1280,
+        "height": 720,
+        "duration": 10,
+        "segment_seconds": 2
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "hls/720p-10s/seg-004.ts",
+      "url": "https://loremfile.dev/hls/720p-10s/seg-004.ts",
+      "format": "hls",
+      "ext": "ts",
+      "mime": "video/mp2t",
+      "bytes": 811220,
+      "sha256": "c2a29ee8a67ed11aa73fcdfc9b5675558c3d3cd0ab752c5d03ebc09231aeb61f",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Segment 4 of the 720p HLS stream: H.264 plus AAC in an MPEG-2 transport stream.",
+      "tags": [
+        "video",
+        "codec-h264"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 2069,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "hls.member",
+      "generator_params": {
+        "member": "seg-004.ts",
+        "width": 1280,
+        "height": 720,
+        "duration": 10,
+        "segment_seconds": 2
       },
       "added_in": "1.0.0",
       "status": "active",
@@ -2260,6 +2666,43 @@
       "supersededBy": null
     },
     {
+      "path": "m4a/aac-30s.m4a",
+      "url": "https://loremfile.dev/m4a/aac-30s.m4a",
+      "format": "m4a",
+      "ext": "m4a",
+      "mime": "audio/mp4",
+      "bytes": 486931,
+      "sha256": "913845e49d5ea939c5deaa05bc6752c5f031c05abb2edd40978cadb279e2f4ec",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A 440 Hz sine wave, thirty seconds, 48 kHz stereo AAC at 128 kbps in an MP4 container.",
+      "tags": [
+        "audio",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 30000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 2
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "aac",
+        "duration": 30,
+        "bitrate": "128k",
+        "container": "ipod"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "md/readme-style.md",
       "url": "https://loremfile.dev/md/readme-style.md",
       "format": "md",
@@ -2285,6 +2728,589 @@
       "generator": "text.lorem_sized",
       "generator_params": {
         "size": 4096
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mkv/720p-5s.mkv",
+      "url": "https://loremfile.dev/mkv/720p-5s.mkv",
+      "format": "mkv",
+      "ext": "mkv",
+      "mime": "video/x-matroska",
+      "bytes": 1971254,
+      "sha256": "d97d49b7549a830a722c235fff583532e846f397a39d5cae5856fbb9b41f82e4",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1280x720 at 30 fps, five seconds, H.264 plus AAC in Matroska.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5021,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 1280,
+        "height": 720,
+        "duration": 5,
+        "container": "matroska"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mov/720p-5s.mov",
+      "url": "https://loremfile.dev/mov/720p-5s.mov",
+      "format": "mov",
+      "ext": "mov",
+      "mime": "video/quicktime",
+      "bytes": 1974629,
+      "sha256": "1832e6b344fb62c99916b22d291cd48b2e209135a6db1cdfd6d27e57fbf0acc6",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1280x720 at 30 fps, five seconds, H.264 plus AAC in a QuickTime container.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 1280,
+        "height": 720,
+        "duration": 5,
+        "container": "mov"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp3/10mb.mp3",
+      "url": "https://loremfile.dev/mp3/10mb.mp3",
+      "format": "mp3",
+      "ext": "mp3",
+      "mime": "audio/mpeg",
+      "bytes": 9950996,
+      "sha256": "c9efb7476277383553596af6167a763eebe266f04ab67d7ec42a608df3f02bb2",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 10MB of 440 Hz sine at a constant 128 kbps — roughly ten minutes of audio.",
+      "tags": [
+        "audio",
+        "sized",
+        "codec-mp3",
+        "large"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 621912,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2
+      },
+      "generator": "media_audio.mp3_sized",
+      "generator_params": {
+        "size": 10000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp3/1mb.mp3",
+      "url": "https://loremfile.dev/mp3/1mb.mp3",
+      "format": "mp3",
+      "ext": "mp3",
+      "mime": "audio/mpeg",
+      "bytes": 996116,
+      "sha256": "01098f9e99ac08a0b1d4a630ebd1b263e46a399349928b86dc0a3f4d3eea9a20",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 1MB of 440 Hz sine at a constant 128 kbps, so the duration follows from the size rather than the other way round.",
+      "tags": [
+        "audio",
+        "sized",
+        "codec-mp3"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 62232,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2
+      },
+      "generator": "media_audio.mp3_sized",
+      "generator_params": {
+        "size": 1000000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp3/silence-5s.mp3",
+      "url": "https://loremfile.dev/mp3/silence-5s.mp3",
+      "format": "mp3",
+      "ext": "mp3",
+      "mime": "audio/mpeg",
+      "bytes": 81044,
+      "sha256": "e347b8227f47b104b400ec74568a50f567604ce81312351f62478a97b863a254",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Five seconds of digital silence — a valid MP3 with nothing in it, for code that treats silence as failure.",
+      "tags": [
+        "audio",
+        "codec-mp3"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5040,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "mp3",
+        "duration": 5,
+        "source": "silence",
+        "bitrate": "128k"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp3/sine-440hz-30s.mp3",
+      "url": "https://loremfile.dev/mp3/sine-440hz-30s.mp3",
+      "format": "mp3",
+      "ext": "mp3",
+      "mime": "audio/mpeg",
+      "bytes": 480788,
+      "sha256": "3820efa1481d02e6db8bfd1782ddee1a2d1c27cfab1d470ff0757b2f93770c1e",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A 440 Hz sine wave, thirty seconds, 128 kbps stereo — long enough to test seeking and scrubbing.",
+      "tags": [
+        "audio",
+        "codec-mp3"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 30024,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "mp3",
+        "duration": 30,
+        "bitrate": "128k"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp3/sine-440hz-3s.mp3",
+      "url": "https://loremfile.dev/mp3/sine-440hz-3s.mp3",
+      "format": "mp3",
+      "ext": "mp3",
+      "mime": "audio/mpeg",
+      "bytes": 48788,
+      "sha256": "a24d882d024a457a0b12cb1ff331bee29f76959bb9b438aa72780c4269e077c5",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A 440 Hz sine wave, three seconds, 128 kbps stereo. The smallest useful audio sample. Measured duration is 3024 ms: an MP3 frame holds 1152 samples, so the encoder rounds up to a whole frame.",
+      "tags": [
+        "audio",
+        "codec-mp3"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 3024,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "mp3",
+        "duration": 3,
+        "bitrate": "128k"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp3/stereo-lr-5s.mp3",
+      "url": "https://loremfile.dev/mp3/stereo-lr-5s.mp3",
+      "format": "mp3",
+      "ext": "mp3",
+      "mime": "audio/mpeg",
+      "bytes": 81044,
+      "sha256": "586c87ba825c1c4c8d6917554094f72236dad2f3444b780fedc4f2539dcb1726",
+      "size_class": "free",
+      "phase": 1,
+      "description": "440 Hz in the left channel, 880 Hz in the right. If your pipeline swaps or downmixes channels, this is the file that shows it.",
+      "tags": [
+        "audio",
+        "codec-mp3"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5040,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "mp3",
+        "duration": 5,
+        "source": "stereo-lr",
+        "bitrate": "128k"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp3/with-id3v2-tags-3s.mp3",
+      "url": "https://loremfile.dev/mp3/with-id3v2-tags-3s.mp3",
+      "format": "mp3",
+      "ext": "mp3",
+      "mime": "audio/mpeg",
+      "bytes": 51480,
+      "sha256": "a71e94a5ca504c24604fb692102ec88317a7bd380b3a3a6eab1aafc6ae9e6154",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three seconds of 440 Hz carrying ID3v2.3 tags — title, artist, album, year and a PNG cover image taken from the published 100x100 fixture.",
+      "tags": [
+        "audio",
+        "codec-mp3"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 3024,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 100,
+        "height": 100,
+        "vcodec": "png",
+        "fps": 0,
+        "acodec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2
+      },
+      "generator": "media_audio.mp3_tagged",
+      "generator_params": {
+        "duration": 3,
+        "cover": "png/100x100.png"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp4/1mb.mp4",
+      "url": "https://loremfile.dev/mp4/1mb.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 979114,
+      "sha256": "7d646fa0effe0607ae260bbe332bc5023a9425fbbdeb2c1285b08ca7ea1b3a55",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 1MB: 1280x720 at 30 fps for ten seconds, two-pass at a flat bitrate so the size is met by the encoder rather than by padding.",
+      "tags": [
+        "video",
+        "sized",
+        "codec-h264"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 10000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "media_video.mp4_sized",
+      "generator_params": {
+        "size": 1000000,
+        "duration": 10
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp4/360p-5s.mp4",
+      "url": "https://loremfile.dev/mp4/360p-5s.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 577525,
+      "sha256": "ed72f1443f157a985f45a01bda6ff4d98a838fae1607b2338b4a3f266978b7ed",
+      "size_class": "free",
+      "phase": 1,
+      "description": "640x360 at 30 fps, five seconds, H.264 plus AAC. The small one, for quick tests.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 640,
+        "height": 360,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 640,
+        "height": 360,
+        "duration": 5
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp4/720p-5s.mp4",
+      "url": "https://loremfile.dev/mp4/720p-5s.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 1974574,
+      "sha256": "62f538e309e954d684da11d56aca69d68317bf2f023d2674c61486f0acd61c17",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1280x720 at 30 fps, five seconds, H.264 plus AAC. The default sample if you need just one.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 1280,
+        "height": 720,
+        "duration": 5
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp4/h264-baseline-720p-5s.mp4",
+      "url": "https://loremfile.dev/mp4/h264-baseline-720p-5s.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 2085508,
+      "sha256": "701b1a23e75387af7adf3dc10880732f1d1d9caea7377f5bf6f89cd02ecd642c",
+      "size_class": "free",
+      "phase": 1,
+      "description": "H.264 Baseline profile at level 3.0 — the constrained profile old devices and some hardware decoders need.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 1280,
+        "height": 720,
+        "duration": 5,
+        "profile": "baseline",
+        "level": "3.0"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp4/no-audio-720p-5s.mp4",
+      "url": "https://loremfile.dev/mp4/no-audio-720p-5s.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 1890893,
+      "sha256": "941f98f457cb89272b7d99e60ce801ce3a68b47a86711effe00bb98c5d591691",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1280x720 with no audio track at all — for code paths that assume every video has one.",
+      "tags": [
+        "video",
+        "codec-h264"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 1,
+        "audio_streams": 0,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 1280,
+        "height": 720,
+        "duration": 5,
+        "audio": false
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp4/vertical-1080x1920-5s.mp4",
+      "url": "https://loremfile.dev/mp4/vertical-1080x1920-5s.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 4286625,
+      "sha256": "38d6edf4f7fe7c3d1ad6e3542a6e23bba4364dceb5a63c82538e1e910754b5f2",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Portrait 1080x1920, the shape phones record and social apps expect. Five seconds.",
+      "tags": [
+        "video",
+        "codec-h264"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1080,
+        "height": 1920,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 1080,
+        "height": 1920,
+        "duration": 5
       },
       "added_in": "1.0.0",
       "status": "active",
@@ -2320,6 +3346,80 @@
       "generator": "data.ndjson_people",
       "generator_params": {
         "rows": 1000
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "ogg/vorbis-30s.ogg",
+      "url": "https://loremfile.dev/ogg/vorbis-30s.ogg",
+      "format": "ogg",
+      "ext": "ogg",
+      "mime": "audio/ogg",
+      "bytes": 95083,
+      "sha256": "33ed0fc093e68fe0878661accb78ec36621dc954134d9c8b41b39c7f07c331a2",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A 440 Hz sine wave, thirty seconds, 48 kHz stereo Vorbis at quality 4.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 30000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "vorbis",
+        "sample_rate": 48000,
+        "channels": 2
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "vorbis",
+        "duration": 30,
+        "quality": "4"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "ogv/720p-5s.ogv",
+      "url": "https://loremfile.dev/ogv/720p-5s.ogv",
+      "format": "ogv",
+      "ext": "ogv",
+      "mime": "video/ogg",
+      "bytes": 3801030,
+      "sha256": "6a1eb108c735d70a0c187961156a84356fcd9c28652dc743ff1f2e9ae8f40a5f",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1280x720 at 30 fps, five seconds, Theora video with Vorbis audio.",
+      "tags": [
+        "video"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "theora",
+        "fps": 30.0,
+        "acodec": "vorbis",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "media_video.ogv",
+      "generator_params": {
+        "width": 1280,
+        "height": 720,
+        "duration": 5
       },
       "added_in": "1.0.0",
       "status": "active",
@@ -3524,6 +4624,48 @@
       "supersededBy": null
     },
     {
+      "path": "ts/720p-5s.ts",
+      "url": "https://loremfile.dev/ts/720p-5s.ts",
+      "format": "ts",
+      "ext": "ts",
+      "mime": "video/mp2t",
+      "bytes": 2054840,
+      "sha256": "6c67c70e6774a111d13601b73c07ec854601acdabb6ddde0a2c114e61643ba1c",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1280x720 at 30 fps, five seconds, H.264 plus AAC in an MPEG-2 transport stream.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5021,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 1280,
+        "height": 720,
+        "duration": 5,
+        "container": "mpegts"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "tsv/people-1000.tsv",
       "url": "https://loremfile.dev/tsv/people-1000.tsv",
       "format": "tsv",
@@ -4075,6 +5217,80 @@
       "generator": "text.encoded",
       "generator_params": {
         "encoding": "windows-1252"
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "wav/10mb.wav",
+      "url": "https://loremfile.dev/wav/10mb.wav",
+      "format": "wav",
+      "ext": "wav",
+      "mime": "audio/wav",
+      "bytes": 10000000,
+      "sha256": "d92572b5e46746358943922a462cf33f8a001cb488173a35b5ec8c3057eab4a2",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 10,000,000 bytes: a 44-byte header plus 2,499,989 frames of 44.1 kHz 16-bit stereo sine. Not approximately — exactly.",
+      "tags": [
+        "audio",
+        "sized",
+        "large"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 56689,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "pcm_s16le",
+        "sample_rate": 44100,
+        "channels": 2
+      },
+      "generator": "media_audio.wav_sized",
+      "generator_params": {
+        "size": 10000000,
+        "sample_rate": 44100,
+        "bits": 16,
+        "channels": 2
+      },
+      "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "wav/sine-440hz-3s-44k-16bit-stereo.wav",
+      "url": "https://loremfile.dev/wav/sine-440hz-3s-44k-16bit-stereo.wav",
+      "format": "wav",
+      "ext": "wav",
+      "mime": "audio/wav",
+      "bytes": 529244,
+      "sha256": "4e9e029040d3cf648ec3878c847189bf48a4dde12c8305f7aa37657f8fb14c64",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A 440 Hz sine wave: three seconds of 44.1 kHz, 16-bit, stereo PCM — CD format, and what most software assumes a WAV is.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 3000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "pcm_s16le",
+        "sample_rate": 44100,
+        "channels": 2
+      },
+      "generator": "media_audio.pcm",
+      "generator_params": {
+        "duration": 3,
+        "sample_rate": 44100,
+        "bits": 16,
+        "channels": 2
       },
       "added_in": "1.0.0",
       "status": "active",

@@ -1,0 +1,110 @@
+# MP4 video (docs/05 §3.3). Launch-set rows only; the rest are P1b.
+format: mp4
+family: video
+mime: video/mp4
+description: >-
+  H.264 video with AAC audio in MP4, the format every player and upload form accepts.
+  Synthetic test patterns and a 440 Hz tone — no third-party footage. Every file is
+  faststart, so the moov atom is ahead of the media and progressive playback works.
+seo_title: "Sample MP4 video files for testing — free, CC0, hotlinkable"
+related: [webm, mkv, mov, mp3]
+fixtures:
+  - name: 360p-5s.mp4
+    phase: 1
+    generator: media_video.mp4
+    params: { width: 640, height: 360, duration: 5 }
+    description: "640x360 at 30 fps, five seconds, H.264 plus AAC. The small one, for quick tests."
+    tags: [video, codec-h264, codec-aac]
+    expect: { width: 640, height: 360, vcodec: h264, acodec: aac, video_streams: 1, audio_streams: 1 }
+    size_class: free
+  - name: 720p-5s.mp4
+    phase: 1
+    generator: media_video.mp4
+    params: { width: 1280, height: 720, duration: 5 }
+    description: "1280x720 at 30 fps, five seconds, H.264 plus AAC. The default sample if you need just one."
+    tags: [video, codec-h264, codec-aac]
+    expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, fps: 30.0 }
+    size_class: free
+  - name: 1080p-10s.mp4
+    awaiting_publication: >-
+      Catalogued but not yet in the manifest: its bytes cannot be rebuilt on other h
+      ardware, so the entry may only be written in a run that also publishes the
+      m to R2 (docs/06 section 4, docs/03 section 7.1). Re-catalogued in M4.3.
+    expected_drift: >-
+      Not byte-reproducible off the CI reference fleet: libvpx/libopus/libx264 choos
+      e SIMD kernels from the CPU features they find and no ffmpeg flag reache
+      s that choice (docs/06 section 4, RISK-21).
+    phase: 1
+    generator: media_video.mp4
+    params: { width: 1920, height: 1080, duration: 10 }
+    description: "1920x1080 at 30 fps, ten seconds, H.264 plus AAC."
+    tags: [video, codec-h264, codec-aac]
+    expect: { width: 1920, height: 1080, vcodec: h264, acodec: aac }
+    size_class: free
+  - name: vertical-1080x1920-5s.mp4
+    phase: 1
+    generator: media_video.mp4
+    params: { width: 1080, height: 1920, duration: 5 }
+    description: "Portrait 1080x1920, the shape phones record and social apps expect. Five seconds."
+    tags: [video, codec-h264]
+    expect: { width: 1080, height: 1920, vcodec: h264 }
+    size_class: free
+  - name: no-audio-720p-5s.mp4
+    phase: 1
+    generator: media_video.mp4
+    params: { width: 1280, height: 720, duration: 5, audio: false }
+    description: "1280x720 with no audio track at all — for code paths that assume every video has one."
+    tags: [video, codec-h264]
+    expect: { width: 1280, height: 720, audio_streams: 0, video_streams: 1 }
+    size_class: free
+  - name: h264-baseline-720p-5s.mp4
+    phase: 1
+    generator: media_video.mp4
+    params: { width: 1280, height: 720, duration: 5, profile: baseline, level: "3.0" }
+    description: "H.264 Baseline profile at level 3.0 — the constrained profile old devices and some hardware decoders need."
+    tags: [video, codec-h264, codec-aac]
+    expect: { width: 1280, height: 720, vcodec: h264 }
+    size_class: free
+  - name: 1mb.mp4
+    phase: 1
+    generator: media_video.mp4_sized
+    params: { size: 1000000, duration: 10 }
+    description: "About 1MB: 1280x720 at 30 fps for ten seconds, two-pass at a flat bitrate so the size is met by the encoder rather than by padding."
+    tags: [video, sized, codec-h264]
+    expect: { width: 1280, height: 720, vcodec: h264 }
+    size_class: approx
+    nominal_bytes: 1000000
+  - name: 10mb.mp4
+    awaiting_publication: >-
+      Catalogued but not yet in the manifest: its bytes cannot be rebuilt on other h
+      ardware, so the entry may only be written in a run that also publishes the
+      m to R2 (docs/06 section 4, docs/03 section 7.1). Re-catalogued in M4.3.
+    expected_drift: >-
+      Not byte-reproducible off the CI reference fleet: libvpx/libopus/libx264 choos
+      e SIMD kernels from the CPU features they find and no ffmpeg flag reache
+      s that choice (docs/06 section 4, RISK-21).
+    phase: 1
+    generator: media_video.mp4_sized
+    params: { size: 10000000, duration: 60 }
+    description: "About 10MB: 1280x720 at 30 fps for sixty seconds, two-pass at a flat bitrate."
+    tags: [video, sized, codec-h264, large]
+    expect: { width: 1280, height: 720, vcodec: h264 }
+    size_class: approx
+    nominal_bytes: 10000000
+  - name: 50mb.mp4
+    awaiting_publication: >-
+      Catalogued but not yet in the manifest: its bytes cannot be rebuilt on other h
+      ardware, so the entry may only be written in a run that also publishes the
+      m to R2 (docs/06 section 4, docs/03 section 7.1). Re-catalogued in M4.3.
+    expected_drift: >-
+      Not byte-reproducible off the CI reference fleet: libvpx/libopus/libx264 choos
+      e SIMD kernels from the CPU features they find and no ffmpeg flag reache
+      s that choice (docs/06 section 4, RISK-21).
+    phase: 1
+    generator: media_video.mp4_sized
+    params: { size: 50000000, duration: 120 }
+    description: "About 50MB: 1280x720 at 30 fps for two minutes, two-pass at a flat bitrate. The largest video in the launch set."
+    tags: [video, sized, codec-h264, large]
+    expect: { width: 1280, height: 720, vcodec: h264 }
+    size_class: approx
+    nominal_bytes: 50000000

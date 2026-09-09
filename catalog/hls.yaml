@@ -1,0 +1,64 @@
+# HLS (docs/05 §3.3). The catalog's only nested paths: a playlist and its segments.
+format: hls
+family: video
+mime: application/vnd.apple.mpegurl
+description: >-
+  An HLS VOD stream: one media playlist and five two-second MPEG-TS segments, each a
+  URL of its own because that is how a player fetches them. Segment URIs are relative
+  names beside the playlist, so the whole thing works from any host.
+seo_title: "Sample HLS stream for testing — free, CC0, hotlinkable"
+related: [ts, mp4]
+fixtures:
+  - name: 720p-10s/index.m3u8
+    phase: 1
+    generator: hls.member
+    params: { member: index.m3u8, width: 1280, height: 720, duration: 10, segment_seconds: 2 }
+    description: "The media playlist: VOD type, five segments of about two seconds, relative URIs and a closing #EXT-X-ENDLIST."
+    tags: [video, web]
+    expect: { segments: 5, playlist_type: VOD }
+    size_class: free
+  - name: 720p-10s/seg-000.ts
+    phase: 1
+    generator: hls.member
+    params: { member: seg-000.ts, width: 1280, height: 720, duration: 10, segment_seconds: 2 }
+    description: "Segment 0 of the 720p HLS stream: H.264 plus AAC in an MPEG-2 transport stream."
+    tags: [video, codec-h264]
+    expect: { video_streams: 1 }
+    size_class: free
+    mime: video/mp2t
+  - name: 720p-10s/seg-001.ts
+    phase: 1
+    generator: hls.member
+    params: { member: seg-001.ts, width: 1280, height: 720, duration: 10, segment_seconds: 2 }
+    description: "Segment 1 of the 720p HLS stream: H.264 plus AAC in an MPEG-2 transport stream."
+    tags: [video, codec-h264]
+    expect: { video_streams: 1 }
+    size_class: free
+    mime: video/mp2t
+  - name: 720p-10s/seg-002.ts
+    phase: 1
+    generator: hls.member
+    params: { member: seg-002.ts, width: 1280, height: 720, duration: 10, segment_seconds: 2 }
+    description: "Segment 2 of the 720p HLS stream: H.264 plus AAC in an MPEG-2 transport stream."
+    tags: [video, codec-h264]
+    expect: { video_streams: 1 }
+    size_class: free
+    mime: video/mp2t
+  - name: 720p-10s/seg-003.ts
+    phase: 1
+    generator: hls.member
+    params: { member: seg-003.ts, width: 1280, height: 720, duration: 10, segment_seconds: 2 }
+    description: "Segment 3 of the 720p HLS stream: H.264 plus AAC in an MPEG-2 transport stream."
+    tags: [video, codec-h264]
+    expect: { video_streams: 1 }
+    size_class: free
+    mime: video/mp2t
+  - name: 720p-10s/seg-004.ts
+    phase: 1
+    generator: hls.member
+    params: { member: seg-004.ts, width: 1280, height: 720, duration: 10, segment_seconds: 2 }
+    description: "Segment 4 of the 720p HLS stream: H.264 plus AAC in an MPEG-2 transport stream."
+    tags: [video, codec-h264]
+    expect: { video_streams: 1 }
+    size_class: free
+    mime: video/mp2t

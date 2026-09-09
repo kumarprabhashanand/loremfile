@@ -1,0 +1,18 @@
+# FLAC audio (docs/05 §3.4). Launch-set rows only; the rest are P1b.
+format: flac
+family: audio
+mime: audio/flac
+description: >-
+  Lossless compressed audio. Useful when you need something that is both compressed and
+  bit-identical to its source.
+seo_title: "Sample FLAC audio files for testing — free, CC0, hotlinkable"
+related: [wav, mp3, ogg]
+fixtures:
+  - name: sine-440hz-30s.flac
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: flac, duration: 30 }
+    description: "A 440 Hz sine wave, thirty seconds, 48 kHz stereo, losslessly compressed."
+    tags: [audio]
+    expect: { acodec: flac, sample_rate: 48000, channels: 2 }
+    size_class: free

@@ -1,0 +1,28 @@
+# WAV audio (docs/05 §3.4). Launch-set rows only; the rest are P1b.
+format: wav
+family: audio
+mime: audio/wav
+description: >-
+  Uncompressed PCM in a canonical 44-byte-header WAV. The sized file is exact to the
+  byte, because uncompressed audio is the one format where a byte count is arithmetic
+  rather than an estimate.
+seo_title: "Sample WAV audio files for testing — free, CC0, hotlinkable"
+related: [mp3, flac, aiff]
+fixtures:
+  - name: sine-440hz-3s-44k-16bit-stereo.wav
+    phase: 1
+    generator: media_audio.pcm
+    params: { duration: 3, sample_rate: 44100, bits: 16, channels: 2 }
+    description: "A 440 Hz sine wave: three seconds of 44.1 kHz, 16-bit, stereo PCM — CD format, and what most software assumes a WAV is."
+    tags: [audio]
+    expect: { sample_rate: 44100, channels: 2, duration_ms: 3000 }
+    size_class: free
+  - name: 10mb.wav
+    phase: 1
+    generator: media_audio.wav_sized
+    params: { size: 10000000, sample_rate: 44100, bits: 16, channels: 2 }
+    description: "Exactly 10,000,000 bytes: a 44-byte header plus 2,499,989 frames of 44.1 kHz 16-bit stereo sine. Not approximately — exactly."
+    tags: [audio, sized, large]
+    expect: { sample_rate: 44100, channels: 2 }
+    size_class: exact
+    nominal_bytes: 10000000

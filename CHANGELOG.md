@@ -44,6 +44,129 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Changed — immutability attaches on publication, not on entry into the manifest
+
+- `docs/03` §7.1 and ADR-005 amended. What ADR-005 protects is embedded URLs and hashed
+  fixtures in other people's tests, and **both require the bytes to have been served**.
+  An entry that never reached R2 has no consumer and breaks no promise, so it is removed
+  outright rather than tombstoned — a tombstone asserts a publication that never
+  happened and would render as one on the format page. **Not a relaxation**: R2 bucket
+  locks already implement exactly this boundary; the wording claimed more than the
+  system enforced.
+- **Five manifest entries withdrawn** — `mp4/1080p-10s.mp4`, `mp4/10mb.mp4`,
+  `mp4/50mb.mp4`, `opus/30s.opus`, `webm/720p-5s-vp9.webm`. Verified against the CI
+  artifact: three described bytes that existed nowhere in the world; two were captured
+  in time by the new carry-forward artifact. All five are withheld together, and their
+  catalog rows stay, marked `awaiting_publication` with the reason.
+- `manifest update` performs the withdrawal, refusing any path present in the base
+  branch manifest — withdrawing a *published* path stays forbidden.
+- **New CI guard**: a path marked `expected_drift` that is new on this branch may not
+  enter the manifest unless the bytes this run built match it. That is the check that
+  would have caught this at M3.6 rather than after the fact.
+- `docs/09` §3.1's listing still showed `new-fixtures: build/fixtures` five months after
+  M3.1 replaced it. The stale line is corrected, and the episode is recorded there: the
+  wrong fix was proposed *because the doc was trusted*.
+
+### Fixed — the carry-forward bytes were not being retained at all (M3.6)
+
+- `docs/09` §3.1's `new-fixtures` artifact (the bytes) was replaced in M3.1 by a 4 KB
+  `fixture-inventory` of hashes, for quota reasons. That was fine until `expected_drift`
+  existed: for those five paths the manifest describes bytes that could not be rebuilt
+  **and were not stored anywhere**. New `carry-forward-fixtures` artifact holds exactly
+  those paths — about 69 MB — with **90-day retention**. Retention is a correctness
+  setting here, not a convenience; `fixture-inventory` goes to 90 days too, so the
+  CPU-to-bytes correlation outlives the question.
+- `ci.yml` logs each runner's CPU model and SIMD flags, so "hardware or encoder?" is
+  answered from artifacts rather than argued.
+- **RISK-21 reworded to the reading the evidence actually supports**: CPU-dependence on
+  a heterogeneous pool, *not* nondeterminism. Two GitHub-hosted runs are two VMs, and
+  the second attempt reproduced a hash generated days earlier — luck under
+  nondeterminism, expected under CPU-dependence. The distinction decides whether
+  reproducibility is recoverable at all: homogeneous hardware would recover it.
+- `expected_drift` matching is now **exact paths, never prefixes**. The set is five and
+  enumerable; a prefix match was broader than the evidence and invited marking `opus/`
+  wholesale later.
+- ffmpeg's `-cpuflags 0` recorded in `docs/06` §4 as a **negative** finding with the
+  reason, so it is not retried in a year.
+- `docs/15`: **M2, then M4.3 and M4.4, now precede the remaining M3 format groups.**
+
+### Added — the determinism audit, and an accepted RISK-21 (M3.6)
+
+- `loremfile build --audit` (`docs/06` §8) reports drift against the manifest in **two
+  sections**. A fixture whose catalog entry sets the new `expected_drift` field is known
+  not to reproduce off the CI reference fleet and is listed separately without failing
+  the run; anything else is real drift and does. Without the split, four media fixtures
+  would appear in every audit, and an issue that reports expected behaviour every month
+  is one nobody reads.
+- `expected_drift` on five paths: `mp4/1080p-10s.mp4`, `mp4/10mb.mp4`, `mp4/50mb.mp4`,
+  `opus/30s.opus`, `webm/720p-5s-vp9.webm`. `manifest check` reports a mismatch on
+  these and does not fail — measured: two attempts of the **same commit on the same
+  runner label** produced different bytes for the Opus and VP9 fixtures, so this is
+  run-to-run variation, not a stable per-fleet reference. Every other path stays fatal. A typed field rather than a marker inside `notes`, because the
+  audit classifies on it and prose that has to be parsed goes wrong the first time
+  someone rewords it.
+- Workflows pin `runs-on: ubuntu-24.04`. It does not fix the CPU dispatch, but it removes
+  one axis of drift for free — `ubuntu-latest` moving underneath would be a silent change
+  of reference.
+- `docs/06` §4 now states that **the reference is the toolchain digest *and* the runner
+  label**; `tools/TOOLCHAIN_DIGEST` alone reads as though it were the whole reference.
+- `docs/06` §11 and `docs/11` §7.9 document the media authoring loop: **two round trips,
+  by design** — push, read the entries CI printed, `manifest adopt`, push. A failing local
+  `manifest check` on a media path is expected, not a broken checkout.
+- RISK-21 accepted, with the recovery path made explicit: **red deploy → supersede at a
+  new path, never regenerate and overwrite.** Immutability is held by the manifest lock
+  and the R2 bucket locks, neither of which regenerates anything; reproducibility is a
+  convenience for audits and the *fallback* restore path, so the exposure is a compound
+  failure of fleet drift and lost archives, for media only.
+- Checked and rejected: ffmpeg's global `-cpuflags 0` is byte-identical on both the Opus
+  and the VP9 paths, so it constrains libav* internal SIMD without reaching an external
+  encoder's own dispatch.
+
+### Added — `manifest check` verifies the regenerated bytes; `manifest adopt` (M3.6)
+
+- `loremfile manifest check` now performs the regenerated-byte comparison `docs/06` §7
+  always specified and deferred to M3, and prints the exact entries to commit when the
+  bytes disagree — what `docs/11` §5 promised. `ci.yml` runs it **before** the
+  integration tests and copies the output into the job summary.
+- `loremfile manifest adopt --from <file>` takes those entries without hand-editing
+  `manifest.json`. It **refuses any path already published on the base branch**, so
+  "take CI's answer" can never rewrite frozen bytes.
+
+### Fixed — the pinned image is not sufficient on its own for media
+
+- `libx264`, `libvpx` and `libopus` each choose SIMD kernels from the CPU features they
+  find at runtime, and no ffmpeg option reaches that choice — `-cpuflags 0` and
+  `-cpuflags sse2` produce byte-identical output, so this is the encoders' own dispatch.
+  Four of 36 media fixtures hash differently on GitHub's runners than on the author's
+  machine. **CI is the authority**, because CI builds the bytes the deploy uploads.
+  Recorded in `docs/06` §4, `docs/11` §5, `AGENTS.md` and as **RISK-21**.
+
+### Added — video, audio and HLS (M3.6)
+
+- `mp4/` (9), `webm/`, `mkv/`, `mov/`, `avi/`, `ogv/`, `ts/` (1 each), `hls/` (6),
+  `mp3/` (7), `wav/` (2), `flac/`, `ogg/`, `opus/`, `m4a/`, `aac/`, `aiff/` (1 each) —
+  36 launch fixtures. All synthetic: ffmpeg's `testsrc2` pattern and a 440 Hz tone, so
+  no third-party footage or recording is redistributed.
+- `generators/media_video.py`, `generators/media_audio.py`, `generators/hls.py`,
+  `validators/media.py` (ffprobe, plus the structural checks ffprobe cannot make).
+- `wav/10mb.wav` is **exactly** 10,000,000 bytes — an `exact` size class, not `approx`.
+- `docs/06` §4 gains an ffmpeg row and marks mutagen verified.
+
+### Fixed — three recipes that were wrong before they were run
+
+- **docs/06 §4's mutagen row named a proving fixture with no tags on it**
+  (`mp3/sine-440hz-3s.mp3`). The tagged fixture is `mp3/with-id3v2-tags-3s.mp3`. The
+  cross-check test could not have caught this: it verifies that a proving fixture is
+  parametrised, not that it exercises the claim.
+- **docs/05 §6's MP4 bitrate formula** discounted the analytic bitrate by 0.97 for muxer
+  overhead. Measured, the overhead is far smaller: the discount put `1mb.mp4` 4.85 %
+  under target — inside the 5 % tolerance, but one encoder change from failing the
+  build. Undiscounted, the three sized MP4s land at −2.09 %, +0.63 % and +0.17 %.
+- **HLS segments came out 8 seconds long, not 2.** The segmenter can only cut on a
+  keyframe and libx264's default GOP is 250 frames, so a 10-second source produced two
+  segments where the catalog declares five. Keyframes are now forced at every segment
+  boundary with scene-cut detection off.
+
 ### Added — office documents and e-books (M3.5)
 
 - `docx/` (5), `xlsx/` (6), `pptx/` (3), `rtf/` (1), `epub/` (1) — 16 launch fixtures.

@@ -25,7 +25,7 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
 ## ADR-005 Immutability: never change bytes at a published path
 - **Context**: tests hash fixtures; tutorials embed URLs for years; the incumbents' unreliability is the reason this project exists.
 - **Decision**: published paths are frozen; fixes are new paths with `supersededBy`; only legal takedowns remove objects, leaving a manifest tombstone; CI enforces via the manifest lock and the storage layer enforces via R2 bucket locks (ADR-023).
-- **Consequences**: some mistakes live forever (documented, deprecated); naming discipline matters; storage grows monotonically (bounded by budget checks).
+- **Consequences**: some mistakes live forever (documented, deprecated); naming discipline matters; storage grows monotonically (bounded by budget checks). **Immutability attaches on publication to R2, not on entry into `manifest.json` (amended M3.6, `03` §7.1).** What this ADR protects is embedded URLs and hashed fixtures in other people's tests; both require the bytes to have been served. A manifest entry whose bytes never reached the bucket has no consumer, and is removed rather than tombstoned — a tombstone asserts prior publication.
 
 ## ADR-006 Format landing pages stored twice (`pdf` and `pdf/index.html`)
 - **Context**: R2 serves keys literally; `/pdf` and `/pdf/` must both work without a Worker; Free plan rules cannot use regex.

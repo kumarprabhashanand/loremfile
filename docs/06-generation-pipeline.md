@@ -134,10 +134,54 @@ def basic(ctx: GeneratorContext, *, pages: int, page_size: str = "A4",
 | **pyzipper** | AES salt/IV come from the patched `os.urandom` | `zip/aes256-password-loremfile.zip` | **unverified — spike in M3.7** |
 | **py7zr** | Timestamps come from the patched clock | `7z/3-text-files.7z` | **unverified — spike in M3.7** |
 | **cryptography** | X.509 serial fixed to `0x4c6f72656d66696c65`, subject/issuer `CN=fixture.example, O=loremfile fixtures`, SAN `fixture.example` (never the production hostname), validity 2020-01-01 to 2120-01-01, Ed25519 key from `sha256(b"loremfile:cert:ed25519")` and never written to disk | `pem/self-signed-ed25519-cert.pem` | **unverified — spike in M3.7** |
-| **mutagen** | ID3 tags written with fixed values and no timestamps | `mp3/sine-440hz-3s.mp3` | **unverified — spike in M3.6** |
+| mutagen | ID3v2.3 frames written with fixed values and no timestamps of any kind — `TDRC` is the catalog's literal year, not the build date, and no `TDEN`/`TDTG` is emitted. Cover art is a published PNG read through `ctx.dependency` | `mp3/with-id3v2-tags-3s.mp3` | 2026-09-09 (proving fixture corrected: the row named `sine-440hz-3s.mp3`, which carries no tags at all) |
+| ffmpeg | `-fflags +bitexact -flags:v +bitexact -flags:a +bitexact -map_metadata -1` and an emptied encoder tag stop the version and build stamps reaching the container; `-threads 1` (and `-x264-params threads=1`, `-row-mt 0`) because multi-threaded x264 and VP9 both make timing-dependent slice decisions. Verified across all 14 encoder recipes M3.6 uses, in separate processes **and** in invocations minutes apart | `mp4/360p-5s.mp4` | 2026-09-09 |
 | python-docx | Builds its package in memory, so every entry takes the patched clock. Core properties set explicitly, and the epoch value built at call time — inside the guard `datetime.datetime` is a stand-in class and python-docx type-checks its argument against whichever class is installed | `docx/1page.docx` | 2026-09-08 |
 | openpyxl | **Not reproducible on its own.** It spools each worksheet to a temporary file and adds it with `ZipFile.write`, so that entry is stamped from the filesystem — beyond the reach of any clock patch. Raw output changed on six of eight consecutive runs while every other entry sat at the epoch. `util.zipnorm` is what makes it stable, so it is mandatory here, not cosmetic | `xlsx/1sheet-10rows.xlsx` | 2026-09-08 (claim corrected) |
 | python-pptx | Builds its package in memory, like python-docx; core properties set explicitly. Slide size is set explicitly too — the bundled template is 4:3, which would otherwise be a silent default | `pptx/1slide.pptx` | 2026-09-08 |
+
+  **The pinned image is necessary but not sufficient for media.** `libx264`, `libvpx`
+  and `libopus` each choose SIMD kernels from the CPU features they find at runtime, and
+  no ffmpeg option reaches that choice — `-cpuflags 0` and `-cpuflags sse2` produce
+  byte-identical output, so this is the encoders' own dispatch, not ffmpeg's. In M3.6,
+  four of 36 media fixtures hashed differently on GitHub's runners than on the author's
+  machine: `mp4/1080p-10s.mp4`, `mp4/50mb.mp4`, `opus/30s.opus` and
+  `webm/720p-5s-vp9.webm`. The other 32, and every fixture from M3.1–M3.5, matched.
+
+  **The reference is the toolchain digest *and* the runner label.** `tools/TOOLCHAIN_DIGEST`
+  reads as though it were the whole reference; for media it is not. Workflows therefore pin
+  `runs-on: ubuntu-24.04` rather than `ubuntu-latest` — that does not fix the CPU dispatch,
+  but it removes one independent axis of drift for free, and `ubuntu-latest` moving under
+  the project would be a silent change of reference. Fixtures that are known not to
+  reproduce elsewhere carry `expected_drift` in the catalog, and `build --audit` reports
+  those separately from real drift (§8).
+
+  **Tried and rejected: ffmpeg's global `-cpuflags 0`.** It produces byte-identical
+  output on both the Opus and the VP9 paths, so it constrains libav*'s own SIMD without
+  reaching an external encoder's dispatch. `-cpuflags sse2` likewise. x264 exposes
+  `asm=` through `-x264-params`, but libvpx and libopus offer no equivalent, and
+  disabling SIMD outright would put the 50 MB two-pass encode far outside the CI budget.
+  Recorded so the next person does not spend the afternoon on it again.
+
+  **What the evidence says, and what it does not.** M3.6 saw two attempts of one commit
+  on one runner label disagree, then agree. Two GitHub-hosted runs are two VMs, not one
+  machine twice, and the second attempt reproduced a hash generated days earlier — which
+  is luck if the encoders are nondeterministic and expected if they are CPU-dependent on
+  a heterogeneous pool. The second reading explains both observations, so it is the one
+  recorded here: **CPU-dependence, not nondeterminism.** `ci.yml` logs each runner's CPU
+  model and SIMD flags so the correlation can be made from the artifacts rather than
+  argued. If it ever becomes worth paying for, homogeneous hardware — a larger-runner
+  label or a self-hosted runner — recovers reproducibility; nothing recovers it if the
+  encoders are truly nondeterministic, which is why the distinction is worth keeping
+  straight.
+
+  **CI is the authority**, because CI builds the bytes the deploy uploads. When an
+  author's machine disagrees, `manifest check` prints the entries to commit and
+  `manifest adopt --from` takes them — it refuses any path already published on the base
+  branch, so "take CI's answer" can never rewrite frozen bytes. Two CI runs an hour
+  apart on different runners produced identical bytes for all four, which is the evidence
+  that made freezing them acceptable; a future change to GitHub's runner fleet could
+  still break that, and `docs/17` carries the risk.
 
   **Import these three libraries at module scope, never inside the guard.** They do
   `from datetime import datetime` at import time; imported inside `deterministic()` they
@@ -170,7 +214,7 @@ def basic(ctx: GeneratorContext, *, pages: int, page_size: str = "A4",
 | Invocation | Selection |
 |---|---|
 | `loremfile build --new` (CI on a pull request) | Catalog fixtures whose `path` is **absent from the merge-base manifest** (`git show origin/main:manifest.json`), plus their not-yet-published dependencies. The PR is expected to already contain the matching manifest entries (the author ran `manifest update` locally); `manifest check` then verifies them against the regenerated bytes. |
-| `loremfile build --missing-in-bucket` (deploy on `main`) | Active manifest entries whose key is **absent from the bucket** (one `ListObjectsV2` pass, compared by key and by the `sha256` object metadata). Regenerated bytes must equal the committed manifest hashes or the deploy fails. The manifest is never rewritten during deploy. |
+| `loremfile build --missing-in-bucket` (deploy on `main`) | Active manifest entries whose key is **absent from the bucket** (one `ListObjectsV2` pass, compared by key and by the `sha256` object metadata). Regenerated bytes must equal the committed manifest hashes or the deploy fails. The manifest is never rewritten during deploy. **M4.3 must handle `expected_drift` paths differently**: they do not reproduce byte for byte on different hardware (§4), so regenerating them at deploy time cannot be relied on to match the manifest. The bytes that are published must be the ones the manifest describes, carried from the pull request that catalogued them. `ci.yml` uploads exactly those paths as the **`carry-forward-fixtures` artifact, retained 90 days** — about 69 MB, not the whole build directory. Until the deploy publishes them that artifact is the *only* copy of those bytes: the entries stay adoptable (`manifest adopt`) precisely so the manifest can be made to describe the artifact, and after first publish both are frozen. **A deploy that cannot find the artifact must fail rather than substitute a rebuild.** |
 | `loremfile build --all [--audit]` (monthly audit, restore) | Every active fixture; `--audit` reports drift instead of failing. |
 | `--only <path…>` / `--format <fmt…>` / `--group <media\|data\|other>` / `--phase N` | Filters applied on top of the selection above (or, if none of the three modes is given, on the whole catalog). Groups: `media` = mp4 webm mkv mov avi ogv ts hls mp3 wav flac ogg opus m4a aac aiff; `data` = csv tsv json ndjson xml yaml toml ini parquet avro arrow sqlite sql geojson gpx kml kmz; `other` = everything else. |
 
@@ -214,6 +258,8 @@ Validation failures are hard errors in CI and print a table of path → failed c
 ## 8. Determinism audit
 
 `loremfile build --all --audit` regenerates **every** fixture including published ones (dependencies still come from published bytes, §4) and compares hashes with the manifest. Output: a Markdown report listing drifted paths with generator names. Run monthly by `audit.yml`; drift is a warning that opens a `determinism` issue, never a deploy blocker (published bytes are canonical; the generator gets fixed or the drift is documented in `notes`).
+
+The report has **two sections**. A fixture whose catalog entry sets `expected_drift` is known not to reproduce off the reference fleet (§4) and is listed separately; it does not fail the run. Everything else is real drift — a generator or dependency change — and does. Without the split, four media fixtures would appear in every audit that runs on a differently-provisioned runner, and an issue that reports expected behaviour every month is one nobody reads.
 
 ## 9. Toolchain container (`tools/Dockerfile`)
 
@@ -283,17 +329,38 @@ loremfile site build && loremfile site serve   # http://localhost:8080 with prod
 
 Without Docker, most text/data/image/office generators run on a plain Python 3.12 with the lock file; media generators need ffmpeg on `PATH` and the results will differ from the pinned image (the lock check will tell you). Only Docker output is authoritative.
 
+### Adding a media fixture takes two round trips, by design
+
+For **media only**, `loremfile manifest check` can fail on your machine while CI is green, and that is the expected path rather than a broken checkout. The encoders dispatch on CPU features (§4), so the reference is the CI fleet, not the container alone:
+
+```bash
+loremfile build --format mp4 && loremfile validate --format mp4 && loremfile manifest update
+git push                              # CI rebuilds on the reference fleet
+#   -> if it disagrees, the job summary and `manifest check` print the entries to commit
+#      (they are the same JSON: `manifest check` builds them with build_entry)
+curl -o ci-entries.json <the JSON from the job summary>   # or paste it into a file
+loremfile manifest adopt --from ci-entries.json
+git push                              # green
+```
+
+`manifest adopt` refuses any path already published on the base branch, so this loop can only ever set the bytes of a fixture the branch is *adding*. Everything that is not media matched on every machine through M3.1–M3.6, and needs one round trip as before.
+
+**If `manifest check` fails locally on a media path that is already committed, check `expected_drift` in its catalog entry before assuming a regression** — four paths carry it today, and `build --audit` reports them separately for exactly this reason.
+
 ## 12. Performance budget
 
 | Step | Budget (GitHub-hosted ubuntu runner, 4 vCPU) |
 |---|---|
 | Full phase-1 generation (≈ 416 files, ≈ 0.96 GB; the 228-file launch set is ≈ 515 MB of it) | ≤ 25 min (video ≈ 12 min, audio ≈ 3 min, data ≈ 4 min, rest ≈ 3 min) |
+| **Measured, M3.6:** the launch media set — 36 fixtures, the expensive fraction — **253 s sequentially** on a CI runner (AMD EPYC 9V74), with no `-j` | Budget above assumes `-j 4`; sequential is comfortably inside it for the launch set |
 | Validation | ≤ 5 min |
 | Incremental PR build (typical: < 10 new fixtures) | ≤ 5 min |
 | Site build | ≤ 30 s |
 | Upload (≈ 515 MB launch set, first time) | ≤ 10 min (multipart, 16 MiB parts, 8 threads) |
 
 If the full build exceeds budget, split video generation into a matrix job (see `09` §3.1) before trimming scope.
+
+**`-j` is still not implemented, and M3.6 measured why that is affordable for now.** The determinism guard patches process-global state, so parallelism has to be process-based (§5); it was deferred from M3.1 to M3.6 and then again, because the measurement removes the urgency: the launch media set builds in **253 s sequentially**, so M3.9's `build --all --audit` over the 228-file launch set lands near six minutes against a 45-minute job ceiling. It becomes a live concern in **M7**, where P1b roughly triples the media set — at which point the matrix split above is the cheaper fix than process pools, because it needs no change to the guard at all.
 
 ## 13. Coding standards
 

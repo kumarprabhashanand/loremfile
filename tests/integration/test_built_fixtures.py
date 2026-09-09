@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import warnings
 from pathlib import Path
 
 import pytest
@@ -122,30 +123,67 @@ def test_every_built_fixture_validates(catalog: Catalog) -> None:
 
 
 @needs_built_bytes
-def test_committed_manifest_matches_the_built_bytes() -> None:
+def test_committed_manifest_matches_the_built_bytes(catalog: Catalog) -> None:
     """Every built fixture that is already in the manifest must hash the same.
 
     This is the lock rule seen from the other side: the manifest in git is a claim
     about bytes, and this proves the claim.
+
+    A path marked `expected_drift` is exempt, and only that path: M3.6 measured two
+    attempts of the same commit on the same runner label producing different bytes for
+    `opus/30s.opus` and `webm/720p-5s-vp9.webm`, because libopus and libvpx dispatch on
+    CPU features (docs/06 §4). Keeping them fatal here would mean a suite that cannot
+    pass twice in a row, which is how a real regression eventually gets waved through.
     """
     manifest = Manifest.load()
     if not manifest.entries:
         pytest.skip("no manifest.json yet")
     committed = manifest.by_path
-    mismatches = []
+    by_path = catalog.by_path
+    mismatches: list[str] = []
+    expected: list[str] = []
     for path in built_paths():
         relative = str(path.relative_to(FIXTURES))
         entry = committed.get(relative)
         if entry is None:
             continue
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        problems = []
         if digest != entry["sha256"]:
-            mismatches.append(
-                f"{relative}: manifest {entry['sha256'][:12]}… vs built {digest[:12]}…"
-            )
+            problems.append(f"manifest {entry['sha256'][:12]} vs built {digest[:12]}")
         if path.stat().st_size != entry["bytes"]:
-            mismatches.append(f"{relative}: byte count differs from the manifest")
+            problems.append("byte count differs from the manifest")
+        if not problems:
+            continue
+        target = expected if by_path[relative].expected_drift else mismatches
+        target.append(f"{relative}: {'; '.join(problems)}")
+    if expected:
+        # A warning rather than a print: it reaches the CI log through pytest's own
+        # reporting, and a silent exemption is the thing this whole mechanism guards
+        # against.
+        warnings.warn(
+            "expected drift (docs/06 §4), not a failure:\n  " + "\n  ".join(expected),
+            stacklevel=1,
+        )
     assert not mismatches, "\n  ".join(["manifest disagrees with the built bytes:", *mismatches])
+
+
+@needs_built_bytes
+def test_nothing_unmarked_is_quietly_exempt(catalog: Catalog) -> None:
+    """The exemption above is only as safe as the set it applies to.
+
+    Marking a path removes it from the strongest check the project has, so the set is
+    asserted here as well as in the unit tests — this is the one that runs against real
+    bytes on the machine that built them.
+    """
+    marked = {f.path for f in catalog.fixtures() if f.expected_drift}
+    assert marked == {
+        "mp4/1080p-10s.mp4",
+        "mp4/10mb.mp4",
+        "mp4/50mb.mp4",
+        "opus/30s.opus",
+        "webm/720p-5s-vp9.webm",
+    }, f"expected_drift set changed: {sorted(marked)}"
 
 
 def test_sha256sums_matches_the_manifest() -> None:
@@ -186,6 +224,21 @@ def test_catalog_active_fixtures_all_have_manifest_entries(catalog: Catalog) -> 
     missing = sorted(
         f.path
         for f in catalog.fixtures()
-        if f.status is Status.ACTIVE and f.path in built and f.path not in committed
+        if f.status is Status.ACTIVE
+        and f.path in built
+        and f.path not in committed
+        # Deliberately absent until a run publishes its bytes (docs/03 §7.1): the entry
+        # would otherwise describe bytes that cannot be rebuilt and were never stored.
+        and not f.awaiting_publication
     )
     assert not missing, f"built and active but absent from manifest.json: {missing}"
+
+
+@needs_built_bytes
+def test_nothing_awaiting_publication_is_in_the_manifest(catalog: Catalog) -> None:
+    """The other direction: withholding has to actually withhold."""
+    committed = set(Manifest.load().by_path)
+    leaked = sorted(
+        f.path for f in catalog.fixtures() if f.awaiting_publication and f.path in committed
+    )
+    assert not leaked, f"awaiting_publication but present in manifest.json: {leaked}"

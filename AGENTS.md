@@ -12,10 +12,15 @@ work through it, do not improvise a different plan.
    an object fails the job.
 2. **NEVER HAND-EDIT `manifest.json`** (or `sha256sums.txt`). Run
    `loremfile manifest update` **inside the toolchain container** and commit exactly what
-   it writes.
+   it writes. When CI reports different bytes for a media fixture, that is rule 3's
+   exception, not a licence to edit: save the entries CI printed and run
+   `loremfile manifest adopt --from <file>`.
 3. **ALWAYS GENERATE INSIDE THE PINNED TOOLCHAIN IMAGE** (`tools/TOOLCHAIN_DIGEST`).
-   Host output differs for media and images and will fail the lock check. Only the
-   image's output is authoritative.
+   Host output differs for media and images and will fail the lock check.
+   **For media the image is necessary but not sufficient**: `libx264`, `libvpx` and
+   `libopus` pick SIMD kernels from the CPU features they find, which no ffmpeg flag
+   controls, so your machine and CI can legitimately disagree on a handful of fixtures
+   (`docs/06` §4). **CI is the authority** — it builds the bytes the deploy uploads.
 4. **NO CREDENTIALS ON ANY LOCAL MACHINE.** Every privileged operation runs through
    `deploy.yml` or `infra.yml` (modes `audit`, `apply`, `probe`, `restore`, `redact`).
    If a task seems to need a token locally, you have misread the task — check
