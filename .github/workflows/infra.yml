@@ -29,13 +29,28 @@ permissions:
   contents: read
 
 jobs:
+  # tools/TOOLCHAIN_DIGEST is the only place the digest lives (docs/09 §2). Jobs read it
+  # here and refer to the output, so a digest bump touches one file and no workflow —
+  # which is also why `propose-digest-bump` needs no `workflows: write`.
+  # Verified before adopting: `container.image` does accept `needs.*.outputs.*` on
+  # GitHub-hosted runners (spike run 34354550593 pulled and created the container).
+  setup:
+    runs-on: ubuntu-24.04
+    outputs:
+      digest: ${{ steps.read.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: read
+        run: echo "digest=$(cat tools/TOOLCHAIN_DIGEST)" >> "$GITHUB_OUTPUT"
+
   verify-tokens:
+    needs: setup
     if: inputs.mode == 'verify-tokens'
     runs-on: ubuntu-24.04
     # Only this environment holds the secrets, and it is restricted to main.
     environment: production
     container:
-      image: ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:3ba29bb905b96fcb019b82f3f0e05f9b6472749af252fbff3f879460e0ef327c
+      image: ${{ needs.setup.outputs.digest }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -81,11 +96,12 @@ jobs:
           PY
 
   apply:
+    needs: setup
     if: inputs.mode == 'apply-dry-run' || inputs.mode == 'apply'
     runs-on: ubuntu-24.04
     environment: production
     container:
-      image: ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:3ba29bb905b96fcb019b82f3f0e05f9b6472749af252fbff3f879460e0ef327c
+      image: ${{ needs.setup.outputs.digest }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

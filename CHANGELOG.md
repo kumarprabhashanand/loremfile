@@ -44,6 +44,23 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Fixed — the toolchain digest now lives in exactly one place
+
+- `propose-digest-bump` had never been able to run: the digest bump rewrote
+  `.github/workflows/*.yml` with `sed`, and `GITHUB_TOKEN` may not update workflow files
+  (`refusing to allow a GitHub App to create or update workflow .github/workflows/ci.yml
+  without workflows permission`). The duplication was invisible until the automation that
+  depended on it actually ran.
+- `tools/TOOLCHAIN_DIGEST` is now read by a `setup` job in each workflow and consumed as
+  `container.image: ${{ needs.setup.outputs.digest }}`. No `workflows: write`, and the
+  `sed` is gone. **Verified before adopting**: a throwaway workflow confirmed
+  `container.image` accepts `needs.*.outputs.*` on GitHub-hosted runners and that the
+  runner pulls and creates the container from it.
+- Guard: `tests/unit/test_workflows_pinned.py` fails if any workflow names a toolchain
+  image literally — on a `container.image` line or anywhere else — and if a job uses the
+  `setup` output without depending on `setup`, since that expression resolves to an empty
+  string and GitHub then runs the job on the bare runner instead of failing.
+
 ### Added — infrastructure as desired state, M2.1 and M2.2
 
 - `infra/zone-settings.json`, `bot-management.json`, `rulesets/*.json` (6 phases),
