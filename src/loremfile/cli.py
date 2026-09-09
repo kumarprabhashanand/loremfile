@@ -28,7 +28,9 @@ from loremfile.catalog import Catalog, CatalogError
 from loremfile.infra import apply as apply_infra
 from loremfile.infra import locks
 from loremfile.infra import probe as probe_module
+from loremfile.infra import purge as purge_module
 from loremfile.infra import usage as usage_module
+from loremfile.infra import verify_live as verify_live_module
 from loremfile.infra.cloudflare_api import Client, CloudflareError, ZoneScopeError
 from loremfile.manifest import (
     LOCKED_FIELDS,
@@ -396,6 +398,98 @@ def infra_apply(dry_run: bool, as_json: bool) -> None:
             ok=not errors,
             summary=summary,
             items=items,
+            errors=errors,
+            as_json=as_json,
+        )
+    )
+
+
+@main.command("purge")
+@click.option("--site", "site", is_flag=True, help="Purge the site keys and format pages.")
+@click.option("--url", "url", help="Purge one URL (takedown only, docs/11 §7.8).")
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def purge_command(site: bool, url: str | None, as_json: bool) -> None:
+    """Purge cached site content (docs/09 §6).
+
+    Fixtures are never purged by `--site`: their bytes never change, so a purge could
+    only discard a still-correct entry and cost an R2 read to refetch identical bytes.
+    `--url` is the takedown path and names the URL explicitly.
+    """
+    errors: list[str] = []
+    summary: dict[str, Any] = {}
+    try:
+        client = Client.from_env()
+        client.verify_zone()
+        if url:
+            report = purge_module.purge_removed_url(client, url)
+        elif site:
+            formats = sorted({f.format for f in Catalog.load().fixtures()})
+            prefixes, files = purge_module.site_targets(formats)
+            report = purge_module.purge(client, prefixes, files)
+        else:
+            raise ValueError("choose --site or --url")
+        click.echo(report.render(), err=True)
+        summary = {"batches": report.batches, "prefixes": report.prefixes, "files": report.files}
+        errors = report.errors
+    except ZoneScopeError as exc:
+        errors.append(f"ZONE SCOPE REFUSED — nothing was purged: {exc}")
+    except (CloudflareError, CatalogError, ValueError) as exc:
+        errors.append(str(exc))
+    sys.exit(
+        _emit("purge", ok=not errors, summary=summary, items=[], errors=errors, as_json=as_json)
+    )
+
+
+@main.command("verify-live")
+@click.option(
+    "--mode",
+    type=click.Choice(["smoke", "daily", "full"]),
+    default="smoke",
+    help="How much of the catalog to check (docs/12 §4).",
+)
+@click.option(
+    "--inject-failure",
+    metavar="PATH",
+    help="Report PATH as failing without it being so, to exercise the issue automation.",
+)
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def verify_live_command(mode: str, inject_failure: str | None, as_json: bool) -> None:
+    """Check production against the manifest (docs/12 §4). Needs no credentials."""
+    errors: list[str] = []
+    report = verify_live_module.LiveReport()
+    try:
+        manifest = Manifest.load()
+        entries = list(manifest.active)
+        chosen = verify_live_module.smallest_per_format(entries) if mode == "smoke" else entries
+        for entry in chosen:
+            response = verify_live_module.fetch(f"/{entry['path']}")
+            report.findings += verify_live_module.check_fixture_headers(entry, response)
+            small = entry["bytes"] < verify_live_module.DAILY_HASH_LIMIT_BYTES
+            hash_it = mode == "full" or (mode == "daily" and small)
+            if hash_it:
+                body = verify_live_module.fetch(f"/{entry['path']}", method="GET")
+                report.findings.append(verify_live_module.check_fixture_bytes(entry, body))
+        if inject_failure:
+            # REQ-27: the issue automation is a control, and a control nobody has seen
+            # fire is one nobody can trust. This makes it fire on demand.
+            report.add(
+                inject_failure,
+                verify_live_module.Status.HASH_MISMATCH,
+                "injected by --inject-failure; not a real mismatch",
+            )
+        click.echo(report.render(), err=True)
+        errors = [f"{f.path}: {f.status.value} {f.detail}".strip() for f in report.failures()]
+    except (ManifestError, OSError, ValueError) as exc:
+        errors.append(str(exc))
+    sys.exit(
+        _emit(
+            "verify-live",
+            ok=not errors,
+            summary={"mode": mode, "checked": len(report.findings), "failing": len(errors)},
+            items=[
+                {"path": f.path, "status": f.status.value, "detail": f.detail}
+                for f in report.findings
+            ],
             errors=errors,
             as_json=as_json,
         )
