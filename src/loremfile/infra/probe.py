@@ -19,6 +19,7 @@ import os
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -39,14 +40,35 @@ PROBE_OBJECTS: dict[str, tuple[str, bytes]] = {
     f"{PROBE_PREFIX}dir/index.html": ("text/html", b"<!doctype html><title>dir index</title>"),
 }
 
+#: How long a rule may take to reach every edge after `infra.yml apply` (docs/11 §7.2b).
+#: Bounded and stated on purpose: a generous deadline would turn the settle into the
+#: vacuous pass it exists to catch, so it is short enough that a genuinely broken zone
+#: still fails the run.
+SETTLE_DEADLINE_SECONDS = 180
+SETTLE_INTERVAL_SECONDS = 5
+
+#: `cf-cache-status` values that mean the edge is willing to cache this response.
+#: `DYNAMIC` means it is not — every unique request would be an origin read.
+CACHEABLE_STATUSES = frozenset({"HIT", "MISS", "EXPIRED", "REVALIDATED", "UPDATING", "STALE"})
+UNCACHEABLE_STATUSES = frozenset({"DYNAMIC", "BYPASS", "NONE", "UNKNOWN"})
+
 #: The rate-limit rule: 300 requests / 10 s per IP per colo, mitigation timeout 10 s.
-RATE_LIMIT_BURST = 400
+RATE_LIMIT_BURST = 600
 RATE_LIMIT_RECOVERY_SECONDS = 12
+RATE_LIMIT_PERIOD_SECONDS = 10
+RATE_LIMIT_REQUESTS = 300
+#: Enough concurrency to clear 30 requests/second. A sequential burst manages 12-20/s
+#: and cannot provoke the rule at all, which is what made the first version unfalsifiable.
+RATE_LIMIT_WORKERS = 24
 
 HTTP_OK = 200
 HTTP_MOVED_PERMANENTLY = 301
 HTTP_NOT_FOUND = 404
 HTTP_TOO_MANY_REQUESTS = 429
+
+#: What a CORS preflight may answer. Anything else — including a redirect, which the
+#: browser would not follow for a preflight — means the policy was not observed.
+PREFLIGHT_STATUSES = frozenset({200, 204})
 
 
 class CheckFailed(Exception):
@@ -78,6 +100,21 @@ def check(condition: bool, why: str) -> None:
         raise CheckFailed(why)
 
 
+class _NoRedirects(urllib.request.HTTPRedirectHandler):
+    """Return the redirect itself instead of following it.
+
+    `urlopen` follows redirects by default, which made the www check assert against the
+    *apex root* — a correct 404 while no site is uploaded — and report that www was
+    broken. A probe that examines redirects must see them.
+    """
+
+    def redirect_request(self, *_args: object, **_kwargs: object) -> None:
+        return None
+
+
+_OPENER = urllib.request.build_opener(_NoRedirects)
+
+
 @dataclass
 class Fetched:
     status: int
@@ -107,7 +144,7 @@ def fetch(
         f"https://{host}{path}", method=method, headers=extra_headers or {}
     )
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310
+        with _OPENER.open(request, timeout=timeout) as response:
             return Fetched(
                 status=response.status,
                 headers={k.lower(): v for k, v in response.headers.items()},
@@ -119,6 +156,44 @@ def fetch(
             headers={k.lower(): v for k, v in (exc.headers or {}).items()},
             body=exc.read() if exc.fp else b"",
         )
+
+
+def settle(
+    description: str,
+    once: Callable[[], Fetched],
+    appeared: Callable[[Fetched], bool],
+    *,
+    deadline: int = SETTLE_DEADLINE_SECONDS,
+) -> Fetched:
+    """Poll until the expected thing appears, or fail saying it never did.
+
+    `infra.yml apply` returns before its rules have reached every edge, so a probe run
+    immediately afterwards sees the old configuration and reports a zone-wide outage.
+    This is the bounded wait for that, and it keeps the two findings apart:
+
+    * **never appeared within N** — propagation, or a rule that was never applied. Raised
+      as a precondition failure, naming the deadline.
+    * **appeared and was wrong** — a real misconfiguration, raised by whatever the caller
+      asserts afterwards.
+
+    The predicate must be *weaker* than the assertion that follows it, or this would wait
+    for the answer it wants and mask a wrong one. Deliberately not used by the rate-limit
+    check, which must observe a 429 on a single unretried request.
+    """
+    started = time.monotonic()
+    last = once()
+    while not appeared(last):
+        waited = time.monotonic() - started
+        if waited >= deadline:
+            raise PreconditionUnmet(
+                f"{description} never appeared within {deadline}s "
+                f"(last response: status {last.status}). Either the rule has not "
+                "propagated or it was never applied — this is not a wrong value, which "
+                "would have been reported as a failed assertion instead."
+            )
+        time.sleep(SETTLE_INTERVAL_SECONDS)
+        last = once()
+    return last
 
 
 @dataclass
@@ -175,7 +250,11 @@ def check_markup_sandbox_csp() -> str:
     `%2E` before the rules run (docs/08 §5.3). A 404 here means neither was tested.
     """
     encoded = f"/{PROBE_PREFIX}basic%2Ehtml"
-    response = fetch(encoded)
+    response = settle(
+        f"a Content-Security-Policy on {encoded}",
+        lambda: fetch(encoded),
+        lambda r: r.status == HTTP_OK and bool(r.header("content-security-policy")),
+    )
     require(
         response.status == HTTP_OK,
         f"GET {encoded} returned {response.status}; with nothing served there, an absent "
@@ -183,7 +262,6 @@ def check_markup_sandbox_csp() -> str:
         "`probe --up` first.",
     )
     csp = response.header("content-security-policy")
-    require(bool(csp), f"no Content-Security-Policy on {encoded}")
     check("sandbox" in csp, f"CSP on {encoded} is not the sandbox policy: {csp!r}")
     check("script-src" not in csp, f"the sandbox CSP must not name script-src: {csp!r}")
     return "sandbox CSP present on the %2E-encoded path"
@@ -207,6 +285,15 @@ def check_url_normalization_is_on() -> str:
         f"GET /{PROBE_PREFIX}basic%2Ehtml returned {encoded.status}. If normalization is "
         "off the encoded path is a different key and 404s — which is itself the finding.",
     )
+    # Requiring the header to exist before comparing is the whole difference between a
+    # real check and a tautology: with no header rule at all both sides are "" and the
+    # comparison passes while proving nothing. Same shape as 404-caching passing on
+    # DYNAMIC — a check that compares two things without requiring either to be there.
+    require(
+        bool(plain.header("content-security-policy")),
+        f"no Content-Security-Policy on /{PROBE_PREFIX}basic.html at all, so comparing it "
+        "with the encoded path would compare two absent headers and pass",
+    )
     check(
         encoded.header("content-security-policy") == plain.header("content-security-policy"),
         "the encoded and decoded paths got different CSPs, so the rules saw different "
@@ -217,8 +304,11 @@ def check_url_normalization_is_on() -> str:
 
 def check_file_headers() -> str:
     path = f"/{PROBE_PREFIX}file.bin"
-    response = fetch(path)
-    require(response.status == HTTP_OK, f"GET {path} returned {response.status}")
+    response = settle(
+        f"the file header rule on {path}",
+        lambda: fetch(path),
+        lambda r: r.status == HTTP_OK and bool(r.header("x-content-type-options")),
+    )
     for header, expected in (
         ("x-content-type-options", "nosniff"),
         ("cross-origin-resource-policy", "cross-origin"),
@@ -231,15 +321,27 @@ def check_file_headers() -> str:
 
 
 def check_cors_is_open_and_survives_the_cache() -> str:
-    """A cached response must still answer cross-origin, which is the product's point."""
+    """A **cached** response must still answer cross-origin. Both halves are asserted.
+
+    The first version of this check named the cache in its title, printed
+    `cf-cache-status` in its detail, and never asserted it — so it would have passed on a
+    `DYNAMIC` response that was never cached at all, proving only half of what it claimed.
+    """
     path = f"/{PROBE_PREFIX}file.bin"
-    cold = fetch(path)
-    require(cold.status == HTTP_OK, f"GET {path} returned {cold.status}")
-    warm = fetch(path, extra_headers={"Origin": "https://example.org"})
-    require(warm.status == HTTP_OK, f"GET {path} with Origin returned {warm.status}")
+    warm = settle(
+        f"a cached response for {path}",
+        lambda: fetch(path, extra_headers={"Origin": "https://example.org"}),
+        lambda r: r.status == HTTP_OK and r.header("cf-cache-status").upper() == "HIT",
+    )
     allow = warm.header("access-control-allow-origin")
     check(allow == "*", f"access-control-allow-origin is {allow!r} on a warm cache hit")
-    return f"allow-origin * (cf-cache-status {warm.header('cf-cache-status') or 'unset'})"
+    status = warm.header("cf-cache-status").upper()
+    check(
+        status not in UNCACHEABLE_STATUSES,
+        f"cf-cache-status is {status}, so the response was never cached and this check "
+        "proves nothing about CORS surviving the cache",
+    )
+    return f"allow-origin * on a {status}"
 
 
 def check_cors_preflight() -> str:
@@ -253,9 +355,9 @@ def check_cors_preflight() -> str:
         },
     )
     require(
-        response.status < HTTP_NOT_FOUND,
-        f"OPTIONS {path} returned {response.status}; a preflight that errors tells us "
-        "nothing about the CORS policy",
+        response.status in PREFLIGHT_STATUSES,
+        f"OPTIONS {path} returned {response.status}; a preflight that is redirected or "
+        "errors tells us nothing about the CORS policy",
     )
     allow = response.header("access-control-allow-origin")
     check(allow == "*", f"preflight allow-origin is {allow!r}")
@@ -263,7 +365,11 @@ def check_cors_preflight() -> str:
 
 
 def check_www_redirects_to_apex() -> str:
-    response = fetch("/pdf/a4-3pages.pdf", host=f"www.{SITE_HOST}")
+    response = settle(
+        "a 301 from the www host",
+        lambda: fetch("/pdf/a4-3pages.pdf", host=f"www.{SITE_HOST}"),
+        lambda r: r.status == HTTP_MOVED_PERMANENTLY,
+    )
     check(
         response.status == HTTP_MOVED_PERMANENTLY,
         f"www returned {response.status}, expected {HTTP_MOVED_PERMANENTLY}",
@@ -277,6 +383,14 @@ def check_www_redirects_to_apex() -> str:
 def check_query_strings_share_one_cache_entry() -> str:
     """docs/08 §5.4: without this every `?x=…` is a separate object and a separate read."""
     path = f"/{PROBE_PREFIX}file.bin"
+    # Settle on caching working *without* a query string first. That separates "the cache
+    # rule has not propagated" from "the cache rule is live but the query string is part
+    # of the key", which are different findings and would otherwise look identical.
+    settle(
+        f"the cache rule on {path}",
+        lambda: fetch(path),
+        lambda r: r.status == HTTP_OK and r.header("cf-cache-status").upper() == "HIT",
+    )
     first = fetch(f"{path}?x=1")
     require(first.status == HTTP_OK, f"GET {path}?x=1 returned {first.status}")
     second = fetch(f"{path}?x=2")
@@ -308,25 +422,101 @@ def check_key_named_dir_coexists_with_its_index() -> str:
     return "both keys served, and they differ"
 
 
-def check_rate_limit_blocks_a_burst() -> str:
-    """Assert the 429. **This must never retry** (see :func:`fetch`).
+def deployed_rate_limit_rule() -> dict[str, Any] | None:
+    """The zone's own rate-limit rule, read zone-scoped (T1 can do this).
 
-    `verify-live` treats a 429 from our own limit as retry-after-10s. Here its *absence*
-    is the failure, so the two behaviours are kept in separate code paths on purpose.
+    Read back before the burst so that "no 429" can be attributed. Without it the check
+    cannot tell a rule that is missing from a rule that is present and simply was not
+    provoked, and it previously concluded the former from the latter.
     """
+    from loremfile.infra.cloudflare_api import Client, CloudflareError  # noqa: PLC0415
+
+    try:
+        client = Client.from_env()
+        response = client.get(f"/zones/{client.zone_id}/rulesets/phases/http_ratelimit/entrypoint")
+    except CloudflareError:
+        return None
+    if not response.ok:
+        return None
+    for rule in (response.result or {}).get("rules") or []:
+        if rule.get("ratelimit"):
+            return dict(rule)
+    return None
+
+
+def check_rate_limit_rule_is_deployed() -> str:
+    """The rule exists, with the characteristics docs/08 §5.5 specifies.
+
+    Separated from the burst deliberately: this half is a fact about configuration and
+    can be asserted whatever load the runner can generate. A missing rule here is a real
+    finding rather than an inference from silence.
+    """
+    rule = deployed_rate_limit_rule()
+    require(
+        rule is not None,
+        "could not read the http_ratelimit entrypoint (no credentials, or the API "
+        "refused). Without it, an absent 429 cannot be attributed to anything.",
+    )
+    limit = (rule or {}).get("ratelimit") or {}
+    characteristics = set(limit.get("characteristics") or [])
+    check(
+        characteristics == {"cf.colo.id", "ip.src"},
+        f"rate-limit characteristics are {sorted(characteristics)}; docs/08 §5.5 requires "
+        "exactly cf.colo.id and ip.src, and Cloudflare documents cf.colo.id as mandatory",
+    )
+    check(
+        limit.get("period") == RATE_LIMIT_PERIOD_SECONDS,
+        f"period is {limit.get('period')}s, expected {RATE_LIMIT_PERIOD_SECONDS}s",
+    )
+    check(
+        limit.get("requests_per_period") == RATE_LIMIT_REQUESTS,
+        f"threshold is {limit.get('requests_per_period')}, expected {RATE_LIMIT_REQUESTS}",
+    )
+    return f"{limit.get('requests_per_period')} requests / {limit.get('period')}s, per IP per colo"
+
+
+def check_rate_limit_blocks_a_burst() -> str:
+    """Assert the 429. **Never retries** (see :func:`fetch`), and never concludes from
+    load it failed to generate.
+
+    The threshold is 300 requests per 10 seconds, so a sequential burst is far too slow
+    to provoke it: 400 requests at 12-20 rps stays under the limit and returns no 429 at
+    all. The first version of this check read that silence as "the rule is not in effect",
+    which it had no way to know. Now the load is concurrent, the achieved rate is
+    measured, and falling short is a **precondition failure** — could not generate the
+    required load — rather than a conclusion about the rule.
+    """
+    from concurrent.futures import ThreadPoolExecutor  # noqa: PLC0415
+
     path = f"/{PROBE_PREFIX}file.bin"
-    statuses = [fetch(f"{path}?burst={n}").status for n in range(RATE_LIMIT_BURST)]
+    started = time.monotonic()
+    with ThreadPoolExecutor(max_workers=RATE_LIMIT_WORKERS) as pool:
+        statuses = list(
+            pool.map(lambda n: fetch(f"{path}?burst={n}").status, range(RATE_LIMIT_BURST))
+        )
+    elapsed = max(time.monotonic() - started, 0.001)
+    achieved = len(statuses) / elapsed
+
     require(
         any(s == HTTP_OK for s in statuses),
-        "not one request in the burst succeeded, so the 429 (if any) may be unrelated to "
+        "not one request in the burst succeeded, so a 429 (if any) may be unrelated to "
         "the rate limit",
+    )
+    required = RATE_LIMIT_REQUESTS / RATE_LIMIT_PERIOD_SECONDS
+    require(
+        achieved > required,
+        f"generated only {achieved:.1f} requests/second over {elapsed:.1f}s; the rule "
+        f"triggers above {required:.0f}/s, so this run could not provoke it. **This is "
+        "not evidence about the rule** — `rate-limit-rule` asserts the configuration "
+        "separately.",
     )
     check(
         HTTP_TOO_MANY_REQUESTS in statuses,
-        f"{RATE_LIMIT_BURST} requests produced no 429. The rate-limit rule is not in "
-        f"effect: {sorted(set(statuses))}",
+        f"{len(statuses)} requests at {achieved:.1f}/s produced no 429, above the "
+        f"{required:.0f}/s threshold. The rule is deployed (see `rate-limit-rule`) but is "
+        f"not enforcing: {sorted(set(statuses))}",
     )
-    blocked_at = statuses.index(HTTP_TOO_MANY_REQUESTS)
+    blocked = statuses.index(HTTP_TOO_MANY_REQUESTS)
     time.sleep(RATE_LIMIT_RECOVERY_SECONDS)
     after = fetch(f"{path}?recovered=1")
     check(
@@ -334,17 +524,47 @@ def check_rate_limit_blocks_a_burst() -> str:
         f"still {after.status} after {RATE_LIMIT_RECOVERY_SECONDS}s; the mitigation "
         "timeout is longer than docs/08 §5.5 claims",
     )
-    return f"429 from request {blocked_at}, recovered after {RATE_LIMIT_RECOVERY_SECONDS}s"
+    return (
+        f"429 at request {blocked} ({achieved:.0f} req/s), "
+        f"recovered in {RATE_LIMIT_RECOVERY_SECONDS}s"
+    )
 
 
 def check_404_is_cached() -> str:
+    """A 404 must be cacheable, and `DYNAMIC` is a failure rather than a reading.
+
+    The first version returned the status as a detail and passed on whatever it found —
+    including `DYNAMIC`, which means the edge will not cache 404s at all and every unique
+    miss becomes an R2 Class B read. That contradicts the cost model in docs/19 §3 and is
+    exactly the kind of result worth failing loudly for; it is also how a check ends up
+    reporting a problem in text that nobody reads.
+    """
     missing = f"/{PROBE_PREFIX}definitely-not-here-{int(time.time())}"
     first = fetch(missing)
     check(first.status == HTTP_NOT_FOUND, f"expected 404, got {first.status}")
-    second = fetch(missing)
-    status = second.header("cf-cache-status")
-    require(bool(status), "no cf-cache-status on a 404, so caching cannot be observed")
-    return f"404 cache status {status}"
+    require(
+        bool(first.header("cf-cache-status")),
+        "no cf-cache-status on a 404, so caching cannot be observed at all",
+    )
+    second = settle(
+        "a cache status for a repeated 404",
+        lambda: fetch(missing),
+        lambda r: r.header("cf-cache-status").upper() in CACHEABLE_STATUSES,
+        deadline=30,
+    )
+    status = second.header("cf-cache-status").upper()
+    check(
+        status not in UNCACHEABLE_STATUSES,
+        f"a repeated 404 reported cf-cache-status {status}. The edge is not caching 404s, "
+        "so every unique missing path is an R2 read — docs/19 §3's cost model assumes "
+        "they are cached (docs/08 §5.4).",
+    )
+    check(
+        status == "HIT",
+        f"a repeated 404 reported {status}, not HIT: it was cacheable but was not served "
+        "from cache",
+    )
+    return f"repeated 404 served from cache ({status})"
 
 
 #: Every check the probe runs against the live site.
@@ -358,6 +578,7 @@ SITE_CHECKS: dict[str, Check] = {
     "query-string-cache-key": check_query_strings_share_one_cache_entry,
     "dir-key-coexistence": check_key_named_dir_coexists_with_its_index,
     "404-caching": check_404_is_cached,
+    "rate-limit-rule": check_rate_limit_rule_is_deployed,
     "rate-limit": check_rate_limit_blocks_a_burst,
 }
 

@@ -23,6 +23,20 @@ import pytest
 from loremfile.infra import probe
 from loremfile.infra.probe import CheckFailed, Fetched, PreconditionUnmet
 
+
+@pytest.fixture(autouse=True)
+def _instant_settle(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make `settle` poll without wall-clock cost.
+
+    Not a convenience: without it every check that settles waits out the real 180-second
+    deadline in the unit tests, which is how this file first hung. The deadline itself is
+    asserted separately in `test_settle_is_bounded_and_names_the_deadline`.
+    """
+    monkeypatch.setattr(probe.time, "sleep", lambda _s: None)
+    ticks = iter(range(0, 10_000, 30))
+    monkeypatch.setattr(probe.time, "monotonic", lambda: float(next(ticks)))
+
+
 OK_HEADERS = {
     "content-security-policy": "sandbox; default-src 'none'",
     "cf-cache-status": "HIT",
@@ -93,13 +107,16 @@ def test_the_csp_check_distinguishes_absent_from_unserved(
     the same result.
     """
     responder(monkeypatch, Fetched(status=200, headers={}, body=b"x"))
-    with pytest.raises(CheckFailed) as unserved:
+    with pytest.raises(PreconditionUnmet) as served_no_header:
         probe.check_markup_sandbox_csp()
-    assert "no Content-Security-Policy" in str(unserved.value)
+    assert "status 200" in str(served_no_header.value), (
+        "served-but-no-header must be visibly different from nothing-served"
+    )
 
     responder(monkeypatch, everything_404)
-    with pytest.raises(PreconditionUnmet):
+    with pytest.raises(PreconditionUnmet) as unserved:
         probe.check_markup_sandbox_csp()
+    assert "status 404" in str(unserved.value)
 
 
 def test_the_sandbox_csp_must_not_permit_script(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -146,7 +163,9 @@ def test_normalization_check_fails_when_the_two_paths_get_different_headers(
 def test_the_rate_limit_check_asserts_the_429(monkeypatch: pytest.MonkeyPatch) -> None:
     """Its absence is the failure. The probe must not treat a 429 as retry-and-continue."""
     responder(monkeypatch, everything_ok)
-    monkeypatch.setattr(probe.time, "sleep", lambda _s: None)
+    # A clock fast enough that the load precondition is satisfied, so the check reaches
+    # the assertion under test rather than stopping short of it.
+    monkeypatch.setattr(probe.time, "monotonic", iter([0.0, 1.0]).__next__)
     with pytest.raises(CheckFailed, match="no 429"):
         probe.check_rate_limit_blocks_a_burst()
 
@@ -159,12 +178,12 @@ def test_the_rate_limit_check_passes_when_the_limit_fires(
     def answer(path: str, **_: Any) -> Fetched:
         if "recovered" in path:
             return Fetched(status=200, headers={}, body=b"")
-        status = 429 if len(seen) > 300 else 200
+        status = 429 if len(seen) > probe.RATE_LIMIT_REQUESTS else 200
         return Fetched(status=status, headers={}, body=b"")
 
     responder(monkeypatch, answer, record=seen)
-    monkeypatch.setattr(probe.time, "sleep", lambda _s: None)
-    assert "429 from request" in probe.check_rate_limit_blocks_a_burst()
+    monkeypatch.setattr(probe.time, "monotonic", iter([0.0, 1.0]).__next__)
+    assert "429 at request" in probe.check_rate_limit_blocks_a_burst()
 
 
 def test_a_burst_that_never_succeeds_is_a_precondition_failure(
@@ -218,17 +237,24 @@ def test_the_retry_guard_would_notice_a_loop() -> None:
 # --- query string and cache -------------------------------------------------
 
 
-def test_query_string_check_fails_without_a_cache_status(
+def test_query_string_check_separates_an_unpropagated_rule_from_a_wrong_cache_key(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """No cf-cache-status means cache behaviour was not observed at all."""
-    responder(monkeypatch, Fetched(status=200, headers={}, body=b"x"))
-    with pytest.raises(PreconditionUnmet, match="cf-cache-status"):
+    """The two findings look identical without the settle, and need different responses.
+
+    A MISS on the plain path means the cache rule is not live yet. A HIT on the plain
+    path and a MISS with a query string means the rule *is* live and the query string is
+    part of the key — which is the ADR-013 failure worth reporting.
+    """
+    responder(monkeypatch, Fetched(status=200, headers={"cf-cache-status": "MISS"}, body=b"x"))
+    with pytest.raises(PreconditionUnmet, match="never appeared"):
         probe.check_query_strings_share_one_cache_entry()
 
+    def by_query(path: str, **_: Any) -> Fetched:
+        status = "MISS" if "?" in path else "HIT"
+        return Fetched(status=200, headers={"cf-cache-status": status}, body=b"x")
 
-def test_query_string_check_fails_on_a_miss(monkeypatch: pytest.MonkeyPatch) -> None:
-    responder(monkeypatch, Fetched(status=200, headers={"cf-cache-status": "MISS"}, body=b"x"))
+    responder(monkeypatch, by_query)
     with pytest.raises(CheckFailed, match="not ignoring the query string"):
         probe.check_query_strings_share_one_cache_entry()
 
@@ -263,3 +289,165 @@ def test_probe_only_ever_writes_outside_fixture_prefixes() -> None:
     for key in probe.PROBE_OBJECTS:
         assert key.startswith(probe.PROBE_PREFIX)
     assert probe.LOCKTEST_KEY.startswith("_locktest/")
+
+
+# --- settling ---------------------------------------------------------------
+
+
+def test_settle_returns_as_soon_as_the_thing_appears() -> None:
+    attempts = []
+
+    def once() -> Fetched:
+        attempts.append(1)
+        return Fetched(status=200 if len(attempts) > 2 else 404, headers={}, body=b"")
+
+    result = probe.settle("a 200", once, lambda r: r.status == 200)
+    assert result.status == 200
+    assert len(attempts) == 3, "settle must stop polling once the predicate holds"
+
+
+def test_settle_is_bounded_and_names_the_deadline() -> None:
+    """An unbounded wait would be the vacuous pass this whole module exists to prevent."""
+    with pytest.raises(PreconditionUnmet, match="never appeared within 180s"):
+        probe.settle("a 200", lambda: Fetched(status=404, headers={}, body=b""), lambda _r: False)
+
+
+def test_never_appeared_and_appeared_but_wrong_are_different_findings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The distinction the settle exists to preserve.
+
+    Propagation and misconfiguration need different responses, so they must not produce
+    the same message.
+    """
+    responder(monkeypatch, everything_404)
+    never = probe.run_checks({"csp": probe.check_markup_sandbox_csp}).results[0]
+    assert "never appeared" in never.detail
+
+    headers = {"content-security-policy": "default-src 'self'"}  # present, but not sandbox
+    responder(monkeypatch, Fetched(status=200, headers=headers, body=b"x"))
+    wrong = probe.run_checks({"csp": probe.check_markup_sandbox_csp}).results[0]
+    assert wrong.state == "fail"
+    assert "never appeared" not in wrong.detail
+    assert "not the sandbox policy" in wrong.detail
+
+
+def test_the_rate_limit_check_does_not_settle() -> None:
+    """It must observe a 429 on one unretried request; settling would hide it."""
+    source = textwrap.dedent(inspect.getsource(probe.check_rate_limit_blocks_a_burst))
+    calls = [
+        node.func.id
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    ]
+    assert "settle" not in calls, "the rate-limit check must not wait for a 429 to appear"
+
+
+# --- no check may merely report ---------------------------------------------
+
+
+def test_no_check_passes_on_an_uncacheable_response(monkeypatch: pytest.MonkeyPatch) -> None:
+    """DYNAMIC means nothing was cached. Every cache-related check must fail on it.
+
+    A sweep rather than one test each: `404-caching` reported `DYNAMIC` and passed, and
+    `cors-warm-cache` named the cache in its title without asserting it. Both were the
+    same shape, so the guard is written to catch the shape.
+    """
+    dynamic = {**OK_HEADERS, "cf-cache-status": "DYNAMIC"}
+
+    def answer(path: str, **_: Any) -> Fetched:
+        status = 404 if "definitely-not-here" in path else 200
+        return Fetched(status=status, headers=dict(dynamic), body=path.encode())
+
+    responder(monkeypatch, answer)
+    for name in ("404-caching", "cors-warm-cache", "query-string-cache-key"):
+        report = probe.run_checks({name: probe.SITE_CHECKS[name]})
+        assert report.results[0].state == "fail", f"{name} passed on cf-cache-status DYNAMIC"
+
+
+def test_the_404_check_fails_when_it_is_cacheable_but_not_cached(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """MISS twice means the 404 is eligible but is not actually being served from cache."""
+    monkeypatch.setattr(probe.time, "sleep", lambda _s: None)
+    responder(monkeypatch, Fetched(status=404, headers={"cf-cache-status": "MISS"}, body=b""))
+    with pytest.raises(CheckFailed, match="not HIT"):
+        probe.check_404_is_cached()
+
+
+def test_the_404_check_passes_only_on_a_hit(monkeypatch: pytest.MonkeyPatch) -> None:
+    responder(monkeypatch, Fetched(status=404, headers={"cf-cache-status": "HIT"}, body=b""))
+    assert "served from cache" in probe.check_404_is_cached()
+
+
+def test_every_check_asserts_something() -> None:
+    """A check whose body never calls `check` can only report, never fail.
+
+    This is the shape 404-caching had: it observed, formatted a detail string, and
+    returned. Nothing in the framework would have noticed.
+    """
+    for name, function in {**probe.SITE_CHECKS, **probe.BUCKET_CHECKS}.items():
+        source = textwrap.dedent(inspect.getsource(function))
+        calls = {
+            node.func.id
+            for node in ast.walk(ast.parse(source))
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+        }
+        assert "check" in calls, (
+            f"{name} never calls check(): it can report a problem but not fail on one"
+        )
+
+
+def test_url_normalization_check_is_not_a_tautology(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Two absent CSPs compare equal. Found by auditing all twelve checks, not by a run.
+
+    With no header rule at all, both paths return "" and an equality check passes while
+    proving nothing — the same shape as 404-caching passing on DYNAMIC. The header must
+    be required to exist before the two are compared.
+    """
+    responder(monkeypatch, Fetched(status=200, headers={}, body=b"x"))
+    with pytest.raises(PreconditionUnmet, match="compare two absent headers"):
+        probe.check_url_normalization_is_on()
+
+
+def test_preflight_rejects_a_redirect(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A browser does not follow a redirected preflight, so neither may this check."""
+    responder(monkeypatch, Fetched(status=301, headers={"location": "/"}, body=b""))
+    with pytest.raises(PreconditionUnmet, match="redirected"):
+        probe.check_cors_preflight()
+
+
+def test_fetch_does_not_follow_redirects() -> None:
+    """The www check asserts a 301; following it landed on the apex root's honest 404.
+
+    `urlopen` follows by default, which made a working redirect look like a broken one.
+    """
+    assert any(isinstance(handler, probe._NoRedirects) for handler in probe._OPENER.handlers), (
+        "probe.fetch must see redirects, not follow them"
+    )
+
+
+def test_the_rate_limit_burst_is_concurrent() -> None:
+    """Sequential requests reach 12-20/s and cannot cross a 30/s threshold at all.
+
+    The first version drew a conclusion about the rule from load it never generated.
+    """
+    source = textwrap.dedent(inspect.getsource(probe.check_rate_limit_blocks_a_burst))
+    assert "ThreadPoolExecutor" in source
+    assert probe.RATE_LIMIT_WORKERS > 1
+
+
+def test_insufficient_load_is_a_precondition_not_a_verdict(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The exact failure from the first live run, now unable to masquerade as a finding."""
+    responder(monkeypatch, everything_ok)
+    monkeypatch.setattr(probe, "RATE_LIMIT_BURST", 4)
+    monkeypatch.setattr(probe.time, "monotonic", iter([0.0, 100.0]).__next__)
+
+    report = probe.run_checks({"rate-limit": probe.check_rate_limit_blocks_a_burst})
+    assert report.results[0].state == "fail"
+    detail = report.results[0].detail
+    assert "precondition unmet" in detail
+    assert "could not provoke" in detail
+    assert "not in effect" not in detail, "it must not conclude anything about the rule"
