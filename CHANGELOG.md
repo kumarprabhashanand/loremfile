@@ -44,6 +44,28 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Fixed — M2.4 probe results, and two things I recorded as verified that were not
+
+- **Rate limit: verified working** (run 4). The rule is deployed, valid and enforcing,
+  and it **counts cache hits** — 429 at request 547 of a 600-request burst against a
+  single cached object. `cf.colo.id` survives as written and does **not** join the
+  falsified list. Recorded in `docs/08` §5.5 with the read-back as evidence.
+- **Enforcement is not instantaneous.** Run 3 completed 600 requests at 156 req/s with no
+  429; run 4 was blocked ~5 s in. The rule bounds **sustained** abuse, not short bursts —
+  now stated in `docs/08` §5.5 and `docs/19` §3.
+- **404 caching: confirmed absent.** `edge_ttl.mode: respect_origin` with no
+  `Cache-Control` from R2 on a 404 leaves nothing to respect. `docs/03` §3's 3-minute
+  claim was wrong.
+- **`query-string-cache-key` was recorded as verified twice and was not.** The assertion
+  was right; the *instrument* was unreliable — it passed on run 3 and failed on run 4
+  unchanged, because edge nodes within a colo do not share a local cache, so a MISS says
+  only that this node had not seen it. It now measures `Age`, where a non-zero value on
+  `?x=2` is positive evidence. **ADR-013 is marked configured-but-unproven** until that
+  reports, and it should not be called verified again before then.
+- **RISK-22 updated, not closed**: one control works, the other never existed.
+  `docs/19` §3's headline numbers are unchanged — scenario 1 already assumed every request
+  is a read — but the rate limit is now the *only* bound.
+
 ### Added — the uploader's plan and its two gates (M4.3, first part)
 
 - `infra/upload.py`: `plan_fixtures`, `plan_removals`, `plan_site` as **pure functions**,

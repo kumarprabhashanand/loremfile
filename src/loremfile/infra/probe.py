@@ -52,6 +52,11 @@ SETTLE_INTERVAL_SECONDS = 5
 CACHEABLE_STATUSES = frozenset({"HIT", "MISS", "EXPIRED", "REVALIDATED", "UPDATING", "STALE"})
 UNCACHEABLE_STATUSES = frozenset({"DYNAMIC", "BYPASS", "NONE", "UNKNOWN"})
 
+#: `Age` only becomes non-zero once a whole second has passed at the edge.
+AGE_SETTLE_SECONDS = 3
+#: Each attempt may land on a cold edge node; one non-zero Age is proof, so try a few.
+QUERY_STRING_ATTEMPTS = 6
+
 #: The rate-limit rule: 300 requests / 10 s per IP per colo, mitigation timeout 10 s.
 RATE_LIMIT_BURST = 600
 RATE_LIMIT_RECOVERY_SECONDS = 12
@@ -381,31 +386,49 @@ def check_www_redirects_to_apex() -> str:
 
 
 def check_query_strings_share_one_cache_entry() -> str:
-    """docs/08 §5.4: without this every `?x=…` is a separate object and a separate read."""
+    """docs/08 §5.4 / ADR-013: `?anything` must hit the entry the bare path populated.
+
+    **Measured with `Age`, not `cf-cache-status`.** The status is unreliable for this:
+    the check passed on run 3 and failed on run 4 unchanged, because edge nodes within a
+    colo do not share a local cache, so a MISS says only "this node had not seen it". A
+    non-zero `Age` on `?x=2` is positive evidence — it can only have come from an entry
+    populated by an earlier request, and since the earlier request used a different query
+    string, the query string is not part of the cache key.
+
+    One non-zero `Age` proves it. Several attempts are made because each may land on a
+    cold node, and a cold node is not a finding; exhausting them without a single hit is.
+    """
     path = f"/{PROBE_PREFIX}file.bin"
-    # Settle on caching working *without* a query string first. That separates "the cache
-    # rule has not propagated" from "the cache rule is live but the query string is part
-    # of the key", which are different findings and would otherwise look identical.
-    settle(
-        f"the cache rule on {path}",
-        lambda: fetch(path),
-        lambda r: r.status == HTTP_OK and r.header("cf-cache-status").upper() == "HIT",
-    )
-    first = fetch(f"{path}?x=1")
-    require(first.status == HTTP_OK, f"GET {path}?x=1 returned {first.status}")
-    second = fetch(f"{path}?x=2")
-    require(second.status == HTTP_OK, f"GET {path}?x=2 returned {second.status}")
-    status = second.header("cf-cache-status")
+    populate = fetch(f"{path}?x=1")
+    require(populate.status == HTTP_OK, f"GET {path}?x=1 returned {populate.status}")
     require(
-        bool(status),
-        "no cf-cache-status header, so cache behaviour cannot be observed at all",
+        bool(populate.header("cf-cache-status")),
+        "no cf-cache-status at all, so cache behaviour cannot be observed",
     )
+    # Long enough that a served-from-cache response reports a whole second of Age.
+    time.sleep(AGE_SETTLE_SECONDS)
+
+    observations = []
+    for attempt in range(QUERY_STRING_ATTEMPTS):
+        response = fetch(f"{path}?x={attempt + 2}")
+        require(response.status == HTTP_OK, f"GET {path}?x= returned {response.status}")
+        age = response.header("age")
+        observations.append(f"{response.header('cf-cache-status') or 'none'}/age={age or '-'}")
+        if age.isdigit() and int(age) > 0:
+            return (
+                f"?x={attempt + 2} served with Age {age}s from the entry ?x=1 populated: "
+                "the query string is not part of the cache key"
+            )
+        time.sleep(1)
+
     check(
-        status.upper() == "HIT",
-        f"?x=2 reported cf-cache-status {status!r} after ?x=1; the cache key is not "
-        "ignoring the query string (docs/08 §5.4)",
+        False,
+        f"no query-string request reported a non-zero Age in {QUERY_STRING_ATTEMPTS} "
+        f"attempts ({', '.join(observations)}). Either the cache key includes the query "
+        "string (docs/08 §5.4 would then be wrong, and every `?x=` is a separate R2 read) "
+        "or every attempt landed on a cold edge node.",
     )
-    return "?x=1 then ?x=2 -> HIT"
+    raise AssertionError("unreachable")  # pragma: no cover
 
 
 def check_key_named_dir_coexists_with_its_index() -> str:
