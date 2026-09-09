@@ -13,6 +13,7 @@ object: ``{"command", "ok", "summary", "items", "errors"}``.
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import sys
 from collections.abc import Callable
@@ -27,6 +28,7 @@ from loremfile.catalog import Catalog, CatalogError
 from loremfile.infra import apply as apply_infra
 from loremfile.infra import locks
 from loremfile.infra import probe as probe_module
+from loremfile.infra import usage as usage_module
 from loremfile.infra.cloudflare_api import Client, CloudflareError, ZoneScopeError
 from loremfile.manifest import (
     LOCKED_FIELDS,
@@ -397,6 +399,41 @@ def infra_apply(dry_run: bool, as_json: bool) -> None:
             errors=errors,
             as_json=as_json,
         )
+    )
+
+
+@main.command("usage")
+@click.option("--days", type=int, default=0, help="Look back N days instead of month-to-date.")
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def usage_command(days: int, as_json: bool) -> None:
+    """R2 operations from the Analytics API (docs/19 §3). Read-only, T4."""
+    errors: list[str] = []
+    summary: dict[str, Any] = {}
+    items: list[Item] = []
+    try:
+        if days:
+            now = dt.datetime.now(tz=dt.UTC)
+            counts = usage_module.operations(now - dt.timedelta(days=days), now)
+        else:
+            counts = usage_module.month_to_date()
+        click.echo(counts.render(), err=True)
+        summary = {
+            "class_a": counts.class_a,
+            "class_b": counts.class_b,
+            "missing_key_reads": counts.missing_key_reads,
+        }
+        items = [
+            {
+                "path": f"{row['dimensions']['actionType']}/{row['dimensions']['actionStatus']}",
+                "status": "counted",
+                "detail": str(row["sum"]["requests"]),
+            }
+            for row in counts.rows
+        ]
+    except usage_module.UsageError as exc:
+        errors.append(str(exc))
+    sys.exit(
+        _emit("usage", ok=not errors, summary=summary, items=items, errors=errors, as_json=as_json)
     )
 
 
