@@ -475,69 +475,109 @@ def check_rate_limit_rule_is_deployed() -> str:
     return f"{limit.get('requests_per_period')} requests / {limit.get('period')}s, per IP per colo"
 
 
-def check_rate_limit_blocks_a_burst() -> str:
-    """Assert the 429. **Never retries** (see :func:`fetch`), and never concludes from
-    load it failed to generate.
-
-    The threshold is 300 requests per 10 seconds, so a sequential burst is far too slow
-    to provoke it: 400 requests at 12-20 rps stays under the limit and returns no 429 at
-    all. The first version of this check read that silence as "the rule is not in effect",
-    which it had no way to know. Now the load is concurrent, the achieved rate is
-    measured, and falling short is a **precondition failure** — could not generate the
-    required load — rather than a conclusion about the rule.
-    """
+def _burst(paths: list[str]) -> tuple[list[int], dict[str, int], float]:
+    """Fire `paths` concurrently. Returns statuses, cache-status counts, achieved rate."""
     from concurrent.futures import ThreadPoolExecutor  # noqa: PLC0415
 
-    path = f"/{PROBE_PREFIX}file.bin"
     started = time.monotonic()
     with ThreadPoolExecutor(max_workers=RATE_LIMIT_WORKERS) as pool:
-        statuses = list(
-            pool.map(lambda n: fetch(f"{path}?burst={n}").status, range(RATE_LIMIT_BURST))
-        )
+        responses = list(pool.map(fetch, paths))
     elapsed = max(time.monotonic() - started, 0.001)
-    achieved = len(statuses) / elapsed
 
+    cache_statuses: dict[str, int] = {}
+    for response in responses:
+        label = response.header("cf-cache-status").upper() or "none"
+        cache_statuses[label] = cache_statuses.get(label, 0) + 1
+    return [r.status for r in responses], cache_statuses, len(paths) / elapsed
+
+
+def check_rate_limit_blocks_a_burst() -> str:
+    """Assert the 429, on traffic that can actually reach the counter.
+
+    **Never retries** (see :func:`fetch`), and never concludes from load it failed to
+    generate. Two bursts, because the first one alone cannot distinguish two very
+    different worlds:
+
+    * **cacheable burst** — `?burst=N` against one object. The cache key ignores query
+      strings (docs/08 §5.4), so all of these are *one* cache entry and are answered at
+      the edge. If edge-served requests do not reach the rate-limit counter, this burst
+      can never produce a 429 however fast it runs.
+    * **uncacheable burst** — a distinct path per request, so each is its own cache key.
+
+    A 429 from either means the rule enforces. A 429 from only the second is a finding
+    about *what the rule counts*, not about whether it works — and it is the finding that
+    matters for RISK-03, because the requests that cost money are exactly the ones that
+    miss cache.
+    """
+    path = f"/{PROBE_PREFIX}file.bin"
+    cached_statuses, cached_cache, cached_rate = _burst(
+        [f"{path}?burst={n}" for n in range(RATE_LIMIT_BURST)]
+    )
     require(
-        any(s == HTTP_OK for s in statuses),
+        any(s == HTTP_OK for s in cached_statuses),
         "not one request in the burst succeeded, so a 429 (if any) may be unrelated to "
         "the rate limit",
     )
     required = RATE_LIMIT_REQUESTS / RATE_LIMIT_PERIOD_SECONDS
     require(
-        achieved > required,
-        f"generated only {achieved:.1f} requests/second over {elapsed:.1f}s; the rule "
-        f"triggers above {required:.0f}/s, so this run could not provoke it. **This is "
-        "not evidence about the rule** — `rate-limit-rule` asserts the configuration "
-        "separately.",
+        cached_rate > required,
+        f"generated only {cached_rate:.1f} requests/second; the rule triggers above "
+        f"{required:.0f}/s, so this run could not provoke it. **This is not evidence "
+        "about the rule.**",
+    )
+    if HTTP_TOO_MANY_REQUESTS in cached_statuses:
+        blocked = cached_statuses.index(HTTP_TOO_MANY_REQUESTS)
+        _recover()
+        return (
+            f"429 at request {blocked} of the cacheable burst "
+            f"({cached_rate:.0f} req/s, cache {cached_cache})"
+        )
+
+    # No 429 from cache-served traffic. Before concluding anything about the rule, find
+    # out whether these requests reached the origin at all.
+    unique_statuses, unique_cache, unique_rate = _burst(
+        [f"/{PROBE_PREFIX}absent-{n}-{int(time.time())}" for n in range(RATE_LIMIT_BURST)]
+    )
+    evidence = (
+        f"cacheable burst {cached_rate:.0f}/s cache={cached_cache} statuses="
+        f"{sorted(set(cached_statuses))}; unique-path burst {unique_rate:.0f}/s "
+        f"cache={unique_cache} statuses={sorted(set(unique_statuses))}"
     )
     check(
-        HTTP_TOO_MANY_REQUESTS in statuses,
-        f"{len(statuses)} requests at {achieved:.1f}/s produced no 429, above the "
-        f"{required:.0f}/s threshold. The rule is deployed (see `rate-limit-rule`) but is "
-        f"not enforcing: {sorted(set(statuses))}",
+        HTTP_TOO_MANY_REQUESTS in unique_statuses,
+        f"no 429 from either burst, both above {required:.0f}/s. If `rate-limit-rule` "
+        f"passed, the rule is deployed and is not enforcing; if it did not, this run "
+        f"cannot attribute the absence to anything. Evidence: {evidence}",
     )
-    blocked = statuses.index(HTTP_TOO_MANY_REQUESTS)
+    _recover()
+    return (
+        "429 only from the uncacheable burst: edge-served requests do not reach the "
+        f"rate-limit counter. {evidence}"
+    )
+
+
+def _recover() -> None:
+    """Wait out the mitigation timeout so later checks are not blocked by our own burst."""
     time.sleep(RATE_LIMIT_RECOVERY_SECONDS)
-    after = fetch(f"{path}?recovered=1")
+    after = fetch(f"/{PROBE_PREFIX}file.bin?recovered=1")
     check(
         after.status == HTTP_OK,
         f"still {after.status} after {RATE_LIMIT_RECOVERY_SECONDS}s; the mitigation "
         "timeout is longer than docs/08 §5.5 claims",
     )
-    return (
-        f"429 at request {blocked} ({achieved:.0f} req/s), "
-        f"recovered in {RATE_LIMIT_RECOVERY_SECONDS}s"
-    )
 
 
 def check_404_is_cached() -> str:
-    """A 404 must be cacheable, and `DYNAMIC` is a failure rather than a reading.
+    """A repeated 404 must be served from cache, and the failure must be diagnostic.
 
-    The first version returned the status as a detail and passed on whatever it found —
-    including `DYNAMIC`, which means the edge will not cache 404s at all and every unique
-    miss becomes an R2 Class B read. That contradicts the cost model in docs/19 §3 and is
-    exactly the kind of result worth failing loudly for; it is also how a check ends up
-    reporting a problem in text that nobody reads.
+    Reported HIT on one run and MISS on the next. The hypothesis worth recording in the
+    failure: the cache rule sets `edge_ttl.mode: respect_origin` (docs/08 §5.4), and R2
+    sends no `Cache-Control` on a 404 — so there may be nothing for Cloudflare to
+    respect, and 404s may not be cached at all. docs/03 §3 asserts a 3-minute default
+    TTL; that assertion is in doubt until this check passes twice.
+
+    It matters beyond tidiness: docs/19 §3's cost model assumes 404s are cached, and if
+    they are not, every unique missing path is an R2 Class B read (RISK-03, RISK-22).
     """
     missing = f"/{PROBE_PREFIX}definitely-not-here-{int(time.time())}"
     first = fetch(missing)
@@ -546,25 +586,25 @@ def check_404_is_cached() -> str:
         bool(first.header("cf-cache-status")),
         "no cf-cache-status on a 404, so caching cannot be observed at all",
     )
-    second = settle(
-        "a cache status for a repeated 404",
-        lambda: fetch(missing),
-        lambda r: r.header("cf-cache-status").upper() in CACHEABLE_STATUSES,
-        deadline=30,
-    )
+    second = fetch(missing)
     status = second.header("cf-cache-status").upper()
+    evidence = (
+        f"first={first.header('cf-cache-status') or 'none'} second={status or 'none'} "
+        f"origin-cache-control={first.header('cache-control') or 'none'!r} "
+        f"age={second.header('age') or 'none'}"
+    )
     check(
         status not in UNCACHEABLE_STATUSES,
-        f"a repeated 404 reported cf-cache-status {status}. The edge is not caching 404s, "
-        "so every unique missing path is an R2 read — docs/19 §3's cost model assumes "
-        "they are cached (docs/08 §5.4).",
+        f"a repeated 404 reported {status}. The edge is not caching 404s, so every unique "
+        f"missing path is an R2 read — docs/19 §3's cost model assumes otherwise. {evidence}",
     )
     check(
         status == "HIT",
-        f"a repeated 404 reported {status}, not HIT: it was cacheable but was not served "
-        "from cache",
+        f"a repeated 404 reported {status}, not HIT. With edge_ttl.mode respect_origin "
+        "and no Cache-Control from R2 on a 404, there may be nothing for Cloudflare to "
+        f"respect — which would mean 404s are not cached at all. {evidence}",
     )
-    return f"repeated 404 served from cache ({status})"
+    return f"repeated 404 served from cache ({evidence})"
 
 
 #: Every check the probe runs against the live site.
