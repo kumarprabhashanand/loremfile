@@ -44,6 +44,32 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Fixed — four probe checks that could not fail for the reason they named
+
+Found by running the probe against production and then auditing all twelve checks
+against two questions: *if the thing it names were broken, would this fail?* and *could
+this fail for a reason other than the thing it names?*
+
+- **`404-caching` reported `cf-cache-status` and passed on `DYNAMIC`** — which means the
+  edge caches no 404s at all and every unique missing path is an R2 read, contradicting
+  `docs/19` §3's cost model. Now asserts a cacheable status *and* a HIT.
+- **`cors-warm-cache` named the cache in its title and never asserted it**, so it would
+  have passed on a response that was never cached, proving half of what it claimed.
+- **`www-redirect` followed the redirect** — `urlopen` does by default — and asserted
+  against the apex root, which correctly 404s while no site is uploaded. A working
+  redirect looked broken. `fetch` now returns redirects instead of following them.
+- **`url-normalization` compared two CSPs without requiring either to exist.** With no
+  header rule at all both sides are `""` and the comparison passes. Found by the audit,
+  not by a run.
+- **`rate-limit` concluded "the rule is not in effect" from load it never generated.** A
+  sequential burst reaches 12–20 req/s and cannot cross a 30 req/s threshold. The burst is
+  now concurrent, the achieved rate is measured, and falling short is a **precondition
+  failure** — never a verdict. The rule is also read back from the zone separately, so a
+  missing rule is a finding rather than an inference from silence.
+- `settle()`: a **bounded** poll (180 s) that keeps "never appeared within N" and
+  "appeared and was wrong" as different findings. `docs/11` §7.2b records that apply must
+  be followed by a settle window.
+
 ### Added — `loremfile probe`, M2.4
 
 - Ten edge checks and two bucket checks, plus `--up` / `--down`, and an `infra.yml`

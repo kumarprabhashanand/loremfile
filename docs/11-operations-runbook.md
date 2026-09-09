@@ -80,6 +80,24 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 
 `loremfile infra audit` output lists each differing setting. If the change was intentional (made in the dashboard during an incident), port it into `infra/` via PR. Otherwise run `infra.yml` in `apply` mode and investigate who changed it (Cloudflare → Manage Account → Audit Log).
 
+### 7.2b Applying infrastructure, then probing it
+
+**`infra.yml apply` returns before its rules have reached every edge. Running `probe`
+straight afterwards produces a failure set that looks exactly like a broken zone.** It
+happened on the first real run: apply completed at 13:49:30 with `failed=0` and all five
+rulesets updated, the probe evaluated at 13:50:07, and it reported the header rules, the
+redirect and the cache rule all missing. None of them was.
+
+The order is: **apply → wait → probe.** The probe now settles for up to
+`SETTLE_DEADLINE_SECONDS` (180 s) per check, so a short gap is absorbed; a longer outage
+still fails, because an unbounded wait would be the vacuous pass the probe exists to
+catch. A settle that expires says **"never appeared within 180 s"**, which is a different
+finding from an assertion that fails — propagation versus misconfiguration, and they need
+different responses.
+
+If a check reports "never appeared" immediately after an apply, wait and re-run once
+before treating it as a fault.
+
 ### 7.3 Rotate a token
 
 1. Cloudflare → create the new token with exactly the permissions in `08` §2 (T1, T4) or R2 → Manage API tokens (T2). Set the expiry 180 days out (365 for T4) and record the new expiry date in `infra/token-expiry.json` (dates only, no secrets; `health.yml` reads it to open the `rotation-due` reminder 30 days ahead) in a small PR.
