@@ -119,5 +119,8 @@ def test_manifest_check_downgrades_a_marked_path_but_not_its_neighbours() -> Non
     marked = {f.path for f in Catalog.load().fixtures() if f.expected_drift}
     assert _names_a_path("opus/30s.opus: sha256 would change from 'a' to 'b'", marked)
     assert not _names_a_path("pdf/a4-3pages.pdf: sha256 would change from 'a' to 'b'", marked)
-    # A path that merely *contains* a marked path's name must not be swallowed.
+    # Exact paths, never prefixes: neither a path that contains a marked one nor a
+    # marked one that is a prefix of something else may be swallowed.
     assert not _names_a_path("edge/opus/30s.opus: sha256 would change", marked)
+    assert not _names_a_path("opus/30s.opus.bak: sha256 would change", marked)
+    assert not _names_a_path("opus/30s.opus", marked), "a message with no diagnostic"

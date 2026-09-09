@@ -44,6 +44,14 @@ If the owner prefers, M0.4 can be executed by the agent in a session where the o
 
 Scope for launch is the explicit list in `05` §9 (228 fixtures across every format family); the remaining 188 phase-1 rows (P1b) follow in M7 after launch. Implement in this order; each group is a PR with tests and catalog entries; the author runs `loremfile build --format <formats…> && loremfile validate --format <formats…> && loremfile manifest update` in the container and commits the manifest additions. M3.1's PR adds the `build-and-validate` job to `ci.yml`; it is added to the branch ruleset's **required** checks only once that job exists on `main`. Adding it earlier blocks every open pull request whose branch predates the job, because the check can never report on them — which is exactly what happened during M3.1 and had to be undone. Every generator family ships with its validator, its negative test and its determinism test in the same PR — the estimates below include that.
 
+**Order changed after M3.6 — M2, then M4.3 and M4.4, come before the remaining format groups.** Finish the group in flight, then switch. Three reasons, heaviest first:
+
+1. **The retention cliff makes per-merge deployment a correctness requirement, not an optimisation.** Fixtures marked `expected_drift` cannot be rebuilt byte for byte on other hardware (`06` §4), so between the pull request and the deploy their bytes exist only in the `carry-forward-fixtures` artifact — **90 days**. At the M3 cadence the remaining groups would take longer than that, and when the artifact expires those manifest entries become unfulfillable: nothing to publish, and regeneration drifts. The fixtures would have to be re-catalogued at new paths.
+2. **`upload.py` has to be designed around not regenerating those paths anyway** (`06` §5). Doing it now, with the failure fresh and five known paths to test against, beats retrofitting it in six weeks.
+3. Every later M3 merge then deploys within hours on the same fleet, which is the steady state wanted regardless.
+
+Fixtures going live before the website exists is fine: they carry `noindex`, nothing links to them, and nothing indexes them.
+
 | ID | Group | Estimate |
 |---|---|---|
 | M3.1 | `datasets.py` (people/orders/products), `binary.py` (`bin/`), `text.py` (`txt/`, `md/`, `log/`, `ini/`) | 5 h |
@@ -58,7 +66,7 @@ Scope for launch is the explicit list in `05` §9 (228 fixtures across every for
 
 Fallback if M3.9 exceeds the CI budget: matrix `--group`; if still over, defer the deferrable fixtures listed in `05` §5 to P1b.
 
-## M4 — Website and discovery (A, 8 h; needs M3.9)
+## M4 — Website and discovery (A, 8 h; M4.1/M4.2 need M3.9 — **M4.3 and M4.4 are pulled ahead of the remaining M3 groups**, see M3)
 
 | ID | Task | DoD |
 |---|---|---|

@@ -44,6 +44,29 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Fixed — the carry-forward bytes were not being retained at all (M3.6)
+
+- `docs/09` §3.1's `new-fixtures` artifact (the bytes) was replaced in M3.1 by a 4 KB
+  `fixture-inventory` of hashes, for quota reasons. That was fine until `expected_drift`
+  existed: for those five paths the manifest describes bytes that could not be rebuilt
+  **and were not stored anywhere**. New `carry-forward-fixtures` artifact holds exactly
+  those paths — about 69 MB — with **90-day retention**. Retention is a correctness
+  setting here, not a convenience; `fixture-inventory` goes to 90 days too, so the
+  CPU-to-bytes correlation outlives the question.
+- `ci.yml` logs each runner's CPU model and SIMD flags, so "hardware or encoder?" is
+  answered from artifacts rather than argued.
+- **RISK-21 reworded to the reading the evidence actually supports**: CPU-dependence on
+  a heterogeneous pool, *not* nondeterminism. Two GitHub-hosted runs are two VMs, and
+  the second attempt reproduced a hash generated days earlier — luck under
+  nondeterminism, expected under CPU-dependence. The distinction decides whether
+  reproducibility is recoverable at all: homogeneous hardware would recover it.
+- `expected_drift` matching is now **exact paths, never prefixes**. The set is five and
+  enumerable; a prefix match was broader than the evidence and invited marking `opus/`
+  wholesale later.
+- ffmpeg's `-cpuflags 0` recorded in `docs/06` §4 as a **negative** finding with the
+  reason, so it is not retried in a year.
+- `docs/15`: **M2, then M4.3 and M4.4, now precede the remaining M3 format groups.**
+
 ### Added — the determinism audit, and an accepted RISK-21 (M3.6)
 
 - `loremfile build --audit` (`docs/06` §8) reports drift against the manifest in **two

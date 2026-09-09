@@ -345,8 +345,15 @@ def manifest() -> None:
 
 
 def _names_a_path(message: str, paths: set[str]) -> bool:
-    """Does this diagnostic concern one of `paths`? Lock diffs lead with the path."""
-    return any(message.startswith(f"{path}:") for path in paths)
+    """Does this diagnostic concern one of `paths`? Lock diffs lead with `<path>: `.
+
+    Matched exactly, never by prefix. The set is five enumerable paths, so a prefix
+    match would be broader than the evidence supports and would invite marking `opus/`
+    wholesale later — which would silently exempt every future Opus fixture from the
+    strongest check the project has.
+    """
+    head, separator, _ = message.partition(": ")
+    return bool(separator) and head in paths
 
 
 def _check_manifest_against_catalog() -> tuple[Manifest, list[str]]:
@@ -453,6 +460,10 @@ def manifest_check(as_json: bool) -> None:
                         "detail": ",".join(differing),
                     }
                 )
+                # Still printed, though it does not fail: until the deploy publishes
+                # them these entries are adoptable, and the manifest has to describe the
+                # same bytes as the carry-forward artifact from this very run.
+                corrections.append(entry)
                 continue
             corrections.append(entry)
             items.append(

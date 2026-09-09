@@ -98,13 +98,17 @@ jobs:
         with: { name: site-preview, path: build/site, retention-days: 7 }
       - uses: actions/upload-artifact@<SHA-v4>
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository   # not for fork PRs (storage abuse)
-        with: { name: new-fixtures, path: build/fixtures, retention-days: 7 }
+        with: { name: new-fixtures, path: build/fixtures, retention-days: 7 }   # superseded: see below
       - name: Manifest diff for the author
         if: failure()
         run: loremfile manifest check --json | python -m loremfile.ci_summary --explain >> "$GITHUB_STEP_SUMMARY"   # prints the exact entries to commit when a committed entry does not match
 ```
 
-**Fixture artifact, changed in M3.1.** The listing above uploads `build/fixtures` as a `new-fixtures` artifact on non-fork pull requests. That directory is already **243 MB** at M3.1 and would be roughly **515 MB** at launch, uploaded on every pull request against a free-tier storage quota. `build-and-validate` therefore uploads a 4 KB `fixture-inventory` — every path with its size and sha256 — which is what a reviewer actually reads. If the owner would rather have the bytes and pay for the storage, it is a three-line change; see `19` for the cost picture.
+**Fixture artifact, changed in M3.1 and again in M3.6.** The listing above uploads `build/fixtures` as a `new-fixtures` artifact on non-fork pull requests. That directory is already **243 MB** at M3.1 and would be roughly **515 MB** at launch, uploaded on every pull request against a free-tier storage quota. `build-and-validate` therefore uploads a 4 KB `fixture-inventory` — every path with its size and sha256 — which is what a reviewer actually reads.
+
+**M3.6 added a second, targeted artifact, and it is not an optimisation.** Fixtures marked `expected_drift` cannot be rebuilt byte for byte on different hardware (`06` §4), so for those paths the manifest describes bytes that exist **nowhere else** between the pull request and the deploy. `carry-forward-fixtures` holds exactly those files — five paths, about **69 MB** — with **90-day retention**, alongside the inventory that records which CPU produced them. Dropping it, or letting it expire before the deploy runs, makes those manifest entries unfulfillable: regeneration drifts and there is nothing to fall back to, and the fixtures would have to be re-catalogued at new paths before they could ever be published. Retention is therefore a **correctness** setting here, not a convenience.
+
+If the owner would rather have all the bytes and pay for the storage, it is a three-line change; see `19` for the cost picture.
 
 **How this file is built up (M1.5 onwards).** The listing above is the finished workflow. Each step is added by the milestone that creates the thing it checks, so the job never calls a command that does not exist yet: **M1.5** landed `lint-and-test` with checkout, `pip install -e .`, ruff, `mypy src/` and `pytest tests/unit`; **M1.6** added `tools/check_lock.sh` and `loremfile catalog validate` to the same job; **M3.1** adds the whole `build-and-validate` job and puts it in the branch ruleset. `lint-and-test` is added to the ruleset in M1.5, in the same pull request that introduces the job — a required check that never reports would block every pull request.
 
