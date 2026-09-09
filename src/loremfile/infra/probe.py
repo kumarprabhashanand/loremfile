@@ -576,21 +576,30 @@ def check_rate_limit_blocks_a_burst() -> str:
     fixed count, and the `ip`/`colo` the edge sees is sampled, because the counter is per
     `(ip.src, cf.colo.id)` and a split identity means no counter saw the whole burst.
 
-    **How to read the result — the matrix fixed before run 4, with one row added:**
+    **How to read the result. Agreed before the run, so that neither reading is chosen
+    after seeing the outcome** — the same discipline as the matrix fixed before run 4:
 
-    ==========================================  ===========================================
-    Observation                                 Conclusion
-    ==========================================  ===========================================
-    Unique paths 429, cacheable does not        The rule counts only cache misses. About
-                                                what it counts, not a defect.
-    More than one ip or colo observed           **Precondition unmet.** The load was split
-                                                across counters; says nothing about the
-                                                rule.
-    Neither 429s, one identity, read-back OK    The rule does not enforce reliably. Run 4
-                                                proves it *can*, so this is consistency,
-                                                not deployment.
-    Read-back fails                             No attribution is possible.
-    ==========================================  ===========================================
+    (a) **Identity splits across IPs or colos.** Explains both runs. The rule works; the
+        probe could not test it. Fix the probe to hold one identity, or account for the
+        split, and retest. **Not a finding about Cloudflare.**
+
+    (b) **Identity is consistent and still no 429.** The branch that matters: the limit is
+        *approximate* at these rates rather than a hard bound. Cloudflare's rate-limiting
+        counters are distributed, and approximate enforcement is a documented property of
+        that design rather than a defect. If this is the answer, RISK-22 changes
+        materially — **neither** cost control is a hard bound, and docs/19 §3's scenarios
+        rest only on the manual escalations in the runbook §7.4 (ASN blocks, Under Attack,
+        disabling the custom domain). That must be explicit before M5.1, and M4.4's deploy
+        gate should reference it.
+
+    (c) **Identity is consistent and a 429 fires.** One pass does not establish
+        consistency after two failures. **Three consecutive runs** before recording it as
+        consistent.
+
+    A fourth case is mechanical rather than interpretive: if the rule read-back fails, no
+    attribution is possible at all and nothing may be drawn from the load.
+
+    Whichever branch lands, it is brought to the owner before the rule or the docs change.
     """
     identity = observed_identity()
     require(
