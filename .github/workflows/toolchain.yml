@@ -131,9 +131,11 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branch"
           echo "$REF" > tools/TOOLCHAIN_DIGEST
-          # Every workflow that runs jobs inside the image refers to it by digest.
-          sed -i "s|image: ghcr.io/.*/loremfile-toolchain@sha256:[0-9a-f]\{64\}|image: $REF|g" \
-            .github/workflows/*.yml
+          # Nothing else to rewrite: every workflow reads this file through a `setup`
+          # job and refers to its output, so the digest lives in exactly one place.
+          # Rewriting .github/workflows/*.yml here is what required `workflows: write`,
+          # which GITHUB_TOKEN does not have — the push was rejected with "refusing to
+          # allow a GitHub App to create or update workflow .github/workflows/ci.yml".
           # manifest.json records the image that generated the fixtures. The command
           # arrives in M1.6, so only run it once both exist.
           if [ -f manifest.json ] && command -v loremfile >/dev/null 2>&1; then

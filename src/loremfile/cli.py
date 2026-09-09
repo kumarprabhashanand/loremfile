@@ -26,6 +26,7 @@ from loremfile import build as build_module
 from loremfile.catalog import Catalog, CatalogError
 from loremfile.infra import apply as apply_infra
 from loremfile.infra import locks
+from loremfile.infra import probe as probe_module
 from loremfile.infra.cloudflare_api import Client, CloudflareError, ZoneScopeError
 from loremfile.manifest import (
     LOCKED_FIELDS,
@@ -424,6 +425,52 @@ def infra_locks(write: bool, as_json: bool) -> None:
         _emit(
             "infra locks", ok=not errors, summary=summary, items=[], errors=errors, as_json=as_json
         )
+    )
+
+
+@main.command("probe")
+@click.option("--up", "up", is_flag=True, help="Upload the objects the checks read.")
+@click.option("--down", "down", is_flag=True, help="Delete everything under _probe/.")
+@click.option("--skip-rate-limit", is_flag=True, help="Everything except the 400-request burst.")
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def probe_command(up: bool, down: bool, skip_rate_limit: bool, as_json: bool) -> None:
+    """Behavioural checks against production (docs/15 M2.4).
+
+    Writes only under `_probe/` and `_locktest/`, neither of which is a fixture path
+    (docs/03 §7.1). A check whose precondition is unmet **fails**: "the header is absent"
+    and "there was nothing to put a header on" are different results, and only one of
+    them is information.
+    """
+    errors: list[str] = []
+    items: list[Item] = []
+    summary: dict[str, Any] = {}
+    try:
+        if up:
+            written = probe_module.upload_probe_objects()
+            summary = {"uploaded": len(written)}
+            items = [{"path": key, "status": "uploaded", "detail": ""} for key in written]
+        elif down:
+            removed = probe_module.delete_probe_objects()
+            summary = {"deleted": len(removed)}
+            items = [{"path": key, "status": "deleted", "detail": ""} for key in removed]
+        else:
+            checks = {**probe_module.SITE_CHECKS, **probe_module.BUCKET_CHECKS}
+            if skip_rate_limit:
+                checks.pop("rate-limit", None)
+            report = probe_module.run_checks(checks)
+            click.echo(report.render(), err=True)
+            items = [
+                {"path": r.name, "status": r.state, "detail": r.detail} for r in report.results
+            ]
+            errors = [f"{r.name}: {r.detail}" for r in report.results if r.state == "fail"]
+            summary = {
+                "checks": len(report.results),
+                "failed": sum(1 for r in report.results if r.state == "fail"),
+            }
+    except (probe_module.CheckFailed, OSError, ValueError, KeyError) as exc:
+        errors.append(str(exc))
+    sys.exit(
+        _emit("probe", ok=not errors, summary=summary, items=items, errors=errors, as_json=as_json)
     )
 
 

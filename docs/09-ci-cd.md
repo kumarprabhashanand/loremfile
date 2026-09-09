@@ -54,6 +54,12 @@ All actions are pinned to full commit SHAs (Dependabot keeps them current), reso
 
 Chicken-and-egg note: `ci.yml` references the toolchain image by digest, so `toolchain.yml` must run once (M1.3) **before** `ci.yml` is enabled (M1.5).
 
+**The toolchain digest lives in exactly one place (changed in M2).** `tools/TOOLCHAIN_DIGEST` is read by a small `setup` job in each workflow, which publishes it as an output; every containerised job then declares `needs: setup` and uses `container.image: ${{ needs.setup.outputs.digest }}`.
+
+Before this, `ci.yml` and `infra.yml` each carried a literal copy and `toolchain.yml` kept them in step with a `sed` over `.github/workflows/*.yml`. That rewrite is why `propose-digest-bump` needed `workflows: write`, which `GITHUB_TOKEN` does not have — so **every digest bump was rejected**: `refusing to allow a GitHub App to create or update workflow .github/workflows/ci.yml`. The duplication was invisible until the automation that depended on it actually ran.
+
+The pattern was verified before the workflows were rewritten around it: a throwaway workflow confirmed that `container.image` accepts `needs.*.outputs.*` on GitHub-hosted runners and that the runner pulls and creates the container from it. `tests/unit/test_workflows_pinned.py` now fails if any workflow names a toolchain image literally — on a `container.image` line or anywhere else — and if a job uses the output without depending on `setup`, because that expression resolves to an empty string and GitHub then runs the job on the bare runner instead of failing.
+
 ### 3.1 `ci.yml` — every pull request (not on push to `main`: `deploy.yml` re-runs the same generate/validate/check steps on the merged commit, so a second CI run would only duplicate compute)
 
 ```yaml
