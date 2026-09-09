@@ -15,7 +15,9 @@ by `probe --down` and `_locktest/probe` is written once and then deliberately re
 
 from __future__ import annotations
 
+import itertools
 import os
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -65,6 +67,15 @@ RATE_LIMIT_REQUESTS = 300
 #: Enough concurrency to clear 30 requests/second. A sequential burst manages 12-20/s
 #: and cannot provoke the rule at all, which is what made the first version unfalsifiable.
 RATE_LIMIT_WORKERS = 24
+
+#: Load is sustained for a duration, not a request count: a fixed count conflates rate
+#: with coverage of the counting window, and run 5 showed that conflation matters.
+RATE_LIMIT_SUSTAIN_SECONDS = 25
+
+#: Cloudflare's trace endpoint on this zone. Reports the `ip` and `colo` the edge sees —
+#: exactly the two characteristics the rule counts on.
+TRACE_PATH = "/cdn-cgi/trace"
+TRACE_SAMPLES = 12
 
 HTTP_OK = 200
 HTTP_MOVED_PERMANENTLY = 301
@@ -498,100 +509,134 @@ def check_rate_limit_rule_is_deployed() -> str:
     return f"{limit.get('requests_per_period')} requests / {limit.get('period')}s, per IP per colo"
 
 
-def _burst(paths: list[str]) -> tuple[list[int], dict[str, int], float]:
-    """Fire `paths` concurrently. Returns statuses, cache-status counts, achieved rate."""
+def observed_identity() -> dict[str, set[str]]:
+    """The `ip` and `colo` the edge attributes our requests to, sampled concurrently.
+
+    The rule counts per `(ip.src, cf.colo.id)`. If a runner's concurrent connections
+    egress from more than one address, or land in more than one data centre, no single
+    counter ever sees the whole burst — and an absent 429 says nothing about the rule.
+    Sampling this makes that explanation observable rather than speculative.
+    """
     from concurrent.futures import ThreadPoolExecutor  # noqa: PLC0415
+
+    with ThreadPoolExecutor(max_workers=TRACE_SAMPLES) as pool:
+        pages = list(pool.map(lambda _n: fetch(TRACE_PATH), range(TRACE_SAMPLES)))
+
+    seen: dict[str, set[str]] = {"ip": set(), "colo": set()}
+    for page in pages:
+        for line in page.body.decode("utf-8", "replace").splitlines():
+            field, _, value = line.partition("=")
+            if field in seen and value:
+                seen[field].add(value)
+    return seen
+
+
+def _sustained(make_path: Callable[[int], str]) -> tuple[list[int], dict[str, int], float]:
+    """Keep requesting for RATE_LIMIT_SUSTAIN_SECONDS. Returns statuses, cache mix, rate.
+
+    Sustained by **duration**, not request count: a fixed count conflates rate with
+    coverage of the counting window, and run 5 showed that conflation matters.
+    """
+    from concurrent.futures import ThreadPoolExecutor  # noqa: PLC0415
+
+    deadline = time.monotonic() + RATE_LIMIT_SUSTAIN_SECONDS
+    counter = itertools.count()
+    statuses: list[int] = []
+    cache: dict[str, int] = {}
+    lock = threading.Lock()
+
+    def worker(_n: int) -> None:
+        while time.monotonic() < deadline:
+            response = fetch(make_path(next(counter)))
+            label = response.header("cf-cache-status").upper() or "none"
+            with lock:
+                statuses.append(response.status)
+                cache[label] = cache.get(label, 0) + 1
+            if response.status == HTTP_TOO_MANY_REQUESTS:
+                return
 
     started = time.monotonic()
     with ThreadPoolExecutor(max_workers=RATE_LIMIT_WORKERS) as pool:
-        responses = list(pool.map(fetch, paths))
+        list(pool.map(worker, range(RATE_LIMIT_WORKERS)))
     elapsed = max(time.monotonic() - started, 0.001)
-
-    cache_statuses: dict[str, int] = {}
-    for response in responses:
-        label = response.header("cf-cache-status").upper() or "none"
-        cache_statuses[label] = cache_statuses.get(label, 0) + 1
-    return [r.status for r in responses], cache_statuses, len(paths) / elapsed
+    return statuses, cache, len(statuses) / elapsed
 
 
 def check_rate_limit_blocks_a_burst() -> str:
-    """Assert the 429, on traffic that can actually reach the counter.
+    """Assert the 429 under load sustained past the counting window.
 
     **Never retries** (see :func:`fetch`), and never concludes from load it failed to
-    generate. Two bursts, because the first one alone cannot distinguish two very
-    different worlds:
+    generate — which now includes load the edge attributed to more than one identity.
 
-    * **cacheable burst** — `?burst=N` against one object. The cache key ignores query
-      strings (docs/08 §5.4), so all of these are *one* cache entry and are answered at
-      the edge. If edge-served requests do not reach the rate-limit counter, this burst
-      can never produce a 429 however fast it runs.
-    * **uncacheable burst** — a distinct path per request, so each is its own cache key.
+    Run 4 blocked at request 547 of 600 at 156 req/s. Run 5 sent 600 at 69 req/s and 600
+    unique-path requests at 45 req/s, both above the 30 req/s threshold, and neither was
+    blocked — and the slower run had *more* headroom after crossing the threshold (4.3 s
+    against 1.9 s), so window coverage does not explain the difference. Two variables were
+    unmeasured and both now are: load is sustained for a fixed **duration** rather than a
+    fixed count, and the `ip`/`colo` the edge sees is sampled, because the counter is per
+    `(ip.src, cf.colo.id)` and a split identity means no counter saw the whole burst.
 
-    A 429 from either means the rule enforces. A 429 from only the second is a finding
-    about *what the rule counts*, not about whether it works — and it is the one that
-    matters for RISK-03, because the requests that cost money are exactly the ones that
-    miss cache.
+    **How to read the result — the matrix fixed before run 4, with one row added:**
 
-    **How to read the result — fixed before the run, so neither reading is chosen after
-    seeing the outcome:**
-
-    ===========================================  ==========================================
-    Observation                                  Conclusion
-    ===========================================  ==========================================
-    Unique paths 429, cacheable does not         The rule works and counts only cache
-                                                 misses. A finding about what it counts,
-                                                 **not a defect** — and per RISK-03 the
-                                                 good case.
-    Neither 429s, read-back confirms deployment  The rule is inert, and docs/08 §5.5's
-                                                 `cf.colo.id` claim is the fifth
-                                                 falsified vendor fact.
-    Read-back fails                              No attribution is possible. Fix that
-                                                 before drawing anything from the bursts.
-    ===========================================  ==========================================
+    ==========================================  ===========================================
+    Observation                                 Conclusion
+    ==========================================  ===========================================
+    Unique paths 429, cacheable does not        The rule counts only cache misses. About
+                                                what it counts, not a defect.
+    More than one ip or colo observed           **Precondition unmet.** The load was split
+                                                across counters; says nothing about the
+                                                rule.
+    Neither 429s, one identity, read-back OK    The rule does not enforce reliably. Run 4
+                                                proves it *can*, so this is consistency,
+                                                not deployment.
+    Read-back fails                             No attribution is possible.
+    ==========================================  ===========================================
     """
-    path = f"/{PROBE_PREFIX}file.bin"
-    cached_statuses, cached_cache, cached_rate = _burst(
-        [f"{path}?burst={n}" for n in range(RATE_LIMIT_BURST)]
-    )
+    identity = observed_identity()
     require(
-        any(s == HTTP_OK for s in cached_statuses),
-        "not one request in the burst succeeded, so a 429 (if any) may be unrelated to "
-        "the rate limit",
+        len(identity["ip"]) == 1 and len(identity["colo"]) == 1,
+        f"the edge attributed this run to ip={sorted(identity['ip'])} "
+        f"colo={sorted(identity['colo'])}. The rule counts per (ip.src, cf.colo.id), so a "
+        "split identity means no single counter saw the whole load. **This is not "
+        "evidence about the rule.**",
     )
+    where = f"ip={next(iter(identity['ip']))} colo={next(iter(identity['colo']))}"
+
+    path = f"/{PROBE_PREFIX}file.bin"
+    cached_statuses, cached_cache, cached_rate = _sustained(lambda n: f"{path}?burst={n}")
     required = RATE_LIMIT_REQUESTS / RATE_LIMIT_PERIOD_SECONDS
     require(
         cached_rate > required,
-        f"generated only {cached_rate:.1f} requests/second; the rule triggers above "
-        f"{required:.0f}/s, so this run could not provoke it. **This is not evidence "
-        "about the rule.**",
+        f"sustained only {cached_rate:.1f} requests/second; the rule triggers above "
+        f"{required:.0f}/s. **This is not evidence about the rule.**",
     )
     if HTTP_TOO_MANY_REQUESTS in cached_statuses:
         blocked = cached_statuses.index(HTTP_TOO_MANY_REQUESTS)
         _recover()
         return (
-            f"429 at request {blocked} of the cacheable burst "
-            f"({cached_rate:.0f} req/s, cache {cached_cache})"
+            f"429 after {blocked} cached requests at {cached_rate:.0f}/s over "
+            f"{RATE_LIMIT_SUSTAIN_SECONDS}s ({where}, cache {cached_cache})"
         )
 
-    # No 429 from cache-served traffic. Before concluding anything about the rule, find
-    # out whether these requests reached the origin at all.
-    unique_statuses, unique_cache, unique_rate = _burst(
-        [f"/{PROBE_PREFIX}absent-{n}-{int(time.time())}" for n in range(RATE_LIMIT_BURST)]
+    stamp = int(time.time())
+    unique_statuses, unique_cache, unique_rate = _sustained(
+        lambda n: f"/{PROBE_PREFIX}absent-{stamp}-{n}"
     )
     evidence = (
-        f"cacheable burst {cached_rate:.0f}/s cache={cached_cache} statuses="
-        f"{sorted(set(cached_statuses))}; unique-path burst {unique_rate:.0f}/s "
-        f"cache={unique_cache} statuses={sorted(set(unique_statuses))}"
+        f"{where}; cached {len(cached_statuses)} req at {cached_rate:.0f}/s "
+        f"cache={cached_cache}; unique {len(unique_statuses)} req at {unique_rate:.0f}/s "
+        f"cache={unique_cache}"
     )
     check(
         HTTP_TOO_MANY_REQUESTS in unique_statuses,
-        f"no 429 from either burst, both above {required:.0f}/s. If `rate-limit-rule` "
-        f"passed, the rule is deployed and is not enforcing; if it did not, this run "
-        f"cannot attribute the absence to anything. Evidence: {evidence}",
+        f"no 429 from {RATE_LIMIT_SUSTAIN_SECONDS}s of sustained load in either shape, "
+        f"both above {required:.0f}/s, from a single identity. Run 4 blocked at request "
+        "547, so the rule *can* enforce — this is about consistency, not deployment. "
+        f"Evidence: {evidence}",
     )
     _recover()
     return (
-        "429 only from the uncacheable burst: edge-served requests do not reach the "
+        "429 only from the uncacheable load: edge-served requests do not reach the "
         f"rate-limit counter. {evidence}"
     )
 

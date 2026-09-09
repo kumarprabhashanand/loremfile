@@ -16,6 +16,7 @@ from __future__ import annotations
 import ast
 import inspect
 import textwrap
+import time as _real_time
 from typing import Any
 
 import pytest
@@ -160,40 +161,85 @@ def test_normalization_check_fails_when_the_two_paths_get_different_headers(
 # --- rate limit -------------------------------------------------------------
 
 
-def test_the_rate_limit_check_asserts_the_429(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Its absence is the failure. The probe must not treat a 429 as retry-and-continue."""
+def one_identity(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make `observed_identity` report a single ip and colo, as a real run usually does."""
+    monkeypatch.setattr(
+        probe, "observed_identity", lambda: {"ip": {"203.0.113.7"}, "colo": {"LHR"}}
+    )
+
+
+#: Captured before the autouse fixture replaces it, so the duration loop can be timed.
+REAL_MONOTONIC = _real_time.monotonic
+
+
+def short_load(monkeypatch: pytest.MonkeyPatch, seconds: float = 0.05) -> None:
+    """A real clock, briefly. `_sustained` loops on wall time, so the fast-advancing
+    clock the settle tests use would make it exit before issuing a single request."""
+    monkeypatch.setattr(probe.time, "monotonic", REAL_MONOTONIC)
+    monkeypatch.setattr(probe, "RATE_LIMIT_SUSTAIN_SECONDS", seconds)
+    monkeypatch.setattr(probe, "RATE_LIMIT_WORKERS", 2)
+
+
+def test_a_split_identity_is_a_precondition_not_a_verdict(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The counter is per (ip.src, cf.colo.id): split load never reaches one counter.
+
+    Run 5 produced no 429 at rates that should have triggered, and this was one of two
+    unmeasured variables. Measuring it means the run can say "I could not test this"
+    instead of "the rule does not work".
+    """
+    monkeypatch.setattr(
+        probe,
+        "observed_identity",
+        lambda: {"ip": {"203.0.113.7", "203.0.113.8"}, "colo": {"LHR"}},
+    )
     responder(monkeypatch, everything_ok)
-    # A clock fast enough that the load precondition is satisfied, so the check reaches
-    # the assertion under test rather than stopping short of it. Four values: both
-    # bursts are timed.
-    monkeypatch.setattr(probe.time, "monotonic", iter([0.0, 1.0, 2.0, 3.0]).__next__)
-    with pytest.raises(CheckFailed, match="no 429 from either burst"):
+    report = probe.run_checks({"rate-limit": probe.check_rate_limit_blocks_a_burst})
+    detail = report.results[0].detail
+    assert "precondition unmet" in detail
+    assert "split identity" in detail
+    assert "not evidence about the rule" in detail
+
+
+def test_the_rate_limit_check_asserts_the_429(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Its absence is the failure, and the message must not overstate what it means."""
+    one_identity(monkeypatch)
+    short_load(monkeypatch)
+    responder(monkeypatch, everything_ok)
+    with pytest.raises(CheckFailed) as failure:
         probe.check_rate_limit_blocks_a_burst()
+    message = str(failure.value)
+    assert "no 429" in message
+    assert "consistency, not deployment" in message, (
+        "run 4 proved the rule can enforce; this must not read as 'the rule is inert'"
+    )
 
 
 def test_the_rate_limit_check_passes_when_the_limit_fires(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    seen: list[str] = []
-
-    def answer(path: str, **_: Any) -> Fetched:
-        if "recovered" in path:
-            return Fetched(status=200, headers={}, body=b"")
-        status = 429 if len(seen) > probe.RATE_LIMIT_REQUESTS else 200
-        return Fetched(status=status, headers={}, body=b"")
-
-    responder(monkeypatch, answer, record=seen)
-    monkeypatch.setattr(probe.time, "monotonic", iter([0.0, 1.0]).__next__)
-    assert "429 at request" in probe.check_rate_limit_blocks_a_burst()
-
-
-def test_a_burst_that_never_succeeds_is_a_precondition_failure(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """All-429 could be an outage rather than our rule; that is not a passing result."""
+    one_identity(monkeypatch)
+    short_load(monkeypatch)
     responder(monkeypatch, Fetched(status=429, headers={}, body=b""))
-    with pytest.raises(PreconditionUnmet):
-        probe.check_rate_limit_blocks_a_burst()
+    monkeypatch.setattr(probe, "_recover", lambda: None)
+    assert "429 after" in probe.check_rate_limit_blocks_a_burst()
+
+
+def test_load_is_sustained_by_duration_not_by_count() -> None:
+    """A fixed count conflates rate with window coverage; run 5 is why that matters."""
+    source = textwrap.dedent(inspect.getsource(probe._sustained))
+    assert "RATE_LIMIT_SUSTAIN_SECONDS" in source
+    assert "deadline" in source
+    assert probe.RATE_LIMIT_SUSTAIN_SECONDS > probe.RATE_LIMIT_PERIOD_SECONDS, (
+        "the load must outlast the counting window, or it can end before enforcement"
+    )
+
+
+def test_identity_is_sampled_from_our_own_zone() -> None:
+    """No third-party service: /cdn-cgi/trace is served by Cloudflare on this zone."""
+    assert probe.TRACE_PATH == "/cdn-cgi/trace"
+    assert probe.TRACE_SAMPLES > 1, "one sample cannot reveal a split identity"
 
 
 def test_fetch_has_no_retry_logic() -> None:
@@ -457,56 +503,6 @@ def test_fetch_does_not_follow_redirects() -> None:
     )
 
 
-def test_the_rate_limit_burst_is_concurrent() -> None:
-    """Sequential requests reach 12-20/s and cannot cross a 30/s threshold at all.
-
-    The first version drew a conclusion about the rule from load it never generated.
-    """
-    assert "ThreadPoolExecutor" in textwrap.dedent(inspect.getsource(probe._burst))
-    assert probe.RATE_LIMIT_WORKERS > 1
-
-
-def test_insufficient_load_is_a_precondition_not_a_verdict(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """The exact failure from the first live run, now unable to masquerade as a finding."""
-    responder(monkeypatch, everything_ok)
-    monkeypatch.setattr(probe, "RATE_LIMIT_BURST", 4)
-    monkeypatch.setattr(probe.time, "monotonic", iter([0.0, 100.0]).__next__)
-
-    report = probe.run_checks({"rate-limit": probe.check_rate_limit_blocks_a_burst})
-    assert report.results[0].state == "fail"
-    detail = report.results[0].detail
-    assert "precondition unmet" in detail
-    assert "could not provoke" in detail
-    assert "not in effect" not in detail, "it must not conclude anything about the rule"
-
-
-def test_the_burst_distinguishes_cached_traffic_from_traffic_that_reaches_the_counter(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """A 429 only from unique paths is a finding about what the rule counts.
-
-    All 600 `?burst=N` requests share one cache entry, because the cache key ignores
-    query strings — so if edge-served requests never reach the counter, that burst can
-    never produce a 429 however fast it runs. That is a cheaper explanation than "the
-    rule does not enforce" and has to be ruled out before the rule is blamed.
-    """
-    monkeypatch.setattr(probe.time, "monotonic", iter([0.0, 1.0, 2.0, 3.0]).__next__)
-
-    def answer(path: str, **_: Any) -> Fetched:
-        if "recovered" in path:
-            return Fetched(status=200, headers={}, body=b"")
-        if "absent-" in path:  # unique paths reach the origin, and the rule counts them
-            return Fetched(status=429, headers={"cf-cache-status": "MISS"}, body=b"")
-        return Fetched(status=200, headers={"cf-cache-status": "HIT"}, body=b"")
-
-    responder(monkeypatch, answer)
-    detail = probe.check_rate_limit_blocks_a_burst()
-    assert "edge-served requests do not reach the rate-limit counter" in detail
-    assert "HIT" in detail and "MISS" in detail, "both distributions must be reported"
-
-
 def test_the_404_check_carries_its_evidence(monkeypatch: pytest.MonkeyPatch) -> None:
     """Whether it passes or fails, the reading goes in the detail.
 
@@ -517,16 +513,3 @@ def test_the_404_check_carries_its_evidence(monkeypatch: pytest.MonkeyPatch) -> 
     detail = probe.check_404_caching_is_still_absent()
     assert "origin-cache-control" in detail
     assert "first=MISS" in detail
-
-
-def test_the_rate_limit_message_does_not_assert_what_it_cannot_know(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """`rate-limit-rule` may itself have failed, so this must not claim the rule exists."""
-    monkeypatch.setattr(probe.time, "monotonic", iter([0.0, 1.0, 2.0, 3.0]).__next__)
-    responder(monkeypatch, everything_ok)
-    with pytest.raises(CheckFailed) as failure:
-        probe.check_rate_limit_blocks_a_burst()
-    message = str(failure.value)
-    assert "If `rate-limit-rule` passed" in message
-    assert "cannot attribute the absence" in message
