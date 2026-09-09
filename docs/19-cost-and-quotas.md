@@ -64,6 +64,13 @@ Procedure: read the counter twice **10 minutes apart** and require the two to ag
 
 **One distinction this cannot collapse.** The metric records what R2 counts as an **operation**. Whether Cloudflare **bills** a recorded `userError` GetObject is its pricing policy applied to that record, and no API reports it. The recorded operation is the best available proxy, and this section says so rather than eliding it.
 
+**So the proxy is corroborated from the billing side, in the same window.** R2 → Overview shows the free-tier consumption counter for Class B operations month-to-date, which sits closer to the billing record than the analytics API does. **The owner reads it immediately before and immediately after the run** — the dashboard is not reachable from an API token, so this reading is part of the procedure rather than an optional cross-check.
+
+- Both move by roughly 1,000 → the analytics dimension is corroborated by Cloudflare's own consumption accounting. **Two independent views of the same event**, which is materially stronger than one.
+- They disagree → **a finding in its own right, and more interesting than either number**: one of the two is not counting what it appears to count, and the cost model is built on whichever is wrong.
+
+If they agree, RISK-22's residual is recorded as **accepted-on-evidence** — and "evidence" means **two agreeing consumption records, not an observed invoice**. That distinction is written down because it will outlive everyone who remembers the difference.
+
 | Scenario | Reads / cost | Stop condition |
 |---|---|---|
 | One IP requesting unique 404 paths at the rate-limit ceiling (30 rps) for 30 days | 77.8 M reads → 67.8 M billable ≈ USD 24 | `cost` issue on day 1–2; ASN/IP block in the weekly session → ≈ USD 5–6 |

@@ -44,6 +44,32 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Added — `loremfile purge` and `loremfile verify-live` (M4.3)
+
+- `infra/purge.py` and `loremfile purge --site|--url`: site prefixes and format pages in
+  batches of 100 (the Free-plan maximum). **Fixtures are never purged by `--site`** —
+  their bytes never change, so a purge could only discard a still-correct entry and cost
+  an R2 read to refetch identical bytes. `--url` is the takedown path and names the URL
+  explicitly, so no routine deploy can purge a fixture by accident.
+- `infra/verify_live.py` and `loremfile verify-live --mode smoke|daily|full`: the header,
+  length, type and hash contract against production, needing no credentials.
+- **The 429 retry lives here and must never reach the probe.** `verify-live` retries our
+  own rate limit after 10 s (docs/12 §4); `probe` treats the *absence* of a 429 as its
+  failure. Separate modules with separate fetchers — a shared one with a flag would be
+  one wrong argument from a probe that cannot see what it exists to see. A test asserts
+  both halves at once.
+- The CSP check is asymmetric on purpose: markup **must** carry the sandbox policy and a
+  PDF or video **must not**, because an unexpected CSP breaks viewers and passes every
+  other check.
+- `--inject-failure` reports a path as failing without it being so (REQ-27): the issue
+  automation is a control, and a control nobody has seen fire is one nobody can trust.
+- `docs/19` §3 and #22: the Class B measurement is **corroborated from the billing side**
+  — the owner reads R2 → Overview's Class B month-to-date counter immediately before and
+  after the run, because it is not reachable from an API token. Two agreeing consumption
+  records, or a disagreement that is a finding in its own right. If they agree, RISK-22's
+  residual is **accepted-on-evidence**, where *evidence* means two agreeing consumption
+  records and **not an observed invoice**.
+
 ### Added — `loremfile usage`, and the Class B measurement pre-registered (M4.3)
 
 - `infra/usage.py` and `loremfile usage [--days N]`: R2 operations from the GraphQL
