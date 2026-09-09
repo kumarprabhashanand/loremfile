@@ -607,24 +607,27 @@ def _recover() -> None:
     )
 
 
-def check_404_is_cached() -> str:
-    """A repeated 404 must be served from cache, and the failure must be diagnostic.
+def check_404_caching_is_still_absent() -> str:
+    """404s are **not** cached, and this asserts that rather than complaining about it.
 
-    Reported HIT on one run and MISS on the next. The hypothesis worth recording in the
-    failure: the cache rule sets `edge_ttl.mode: respect_origin` (docs/08 §5.4), and R2
-    sends no `Cache-Control` on a 404 — so there may be nothing for Cloudflare to
-    respect, and 404s may not be cached at all. docs/03 §3 asserts a 3-minute default
-    TTL; that assertion is in doubt until this check passes twice.
+    Measured in M2.4 run 4: `first=MISS second=MISS origin-cache-control='none'`. The
+    cache rule sets `edge_ttl.mode: respect_origin` (docs/08 §5.4) and R2 sends no
+    `Cache-Control` on a 404, so there is nothing to respect. Caching them deliberately
+    by status code was considered and rejected (ADR-026).
 
-    It matters beyond tidiness: docs/19 §3's cost model assumes 404s are cached, and if
-    they are not, every unique missing path is an R2 Class B read (RISK-03, RISK-22).
+    The check was inverted once that became a settled property. A check that fails
+    forever on a known, accepted behaviour is noise, and noise is how a real finding gets
+    scrolled past; a check that fires when the behaviour *changes* is a finding — either
+    Cloudflare's defaults moved or someone added a status-code TTL without reopening
+    ADR-026, and both are worth knowing. `docs/19` §3's cost model assumes exactly this
+    (every request to a missing path reaches R2), so a change would revise the model.
     """
     missing = f"/{PROBE_PREFIX}definitely-not-here-{int(time.time())}"
     first = fetch(missing)
     check(first.status == HTTP_NOT_FOUND, f"expected 404, got {first.status}")
     require(
         bool(first.header("cf-cache-status")),
-        "no cf-cache-status on a 404, so caching cannot be observed at all",
+        "no cf-cache-status on a 404, so cache behaviour cannot be observed at all",
     )
     second = fetch(missing)
     status = second.header("cf-cache-status").upper()
@@ -634,17 +637,13 @@ def check_404_is_cached() -> str:
         f"age={second.header('age') or 'none'}"
     )
     check(
-        status not in UNCACHEABLE_STATUSES,
-        f"a repeated 404 reported {status}. The edge is not caching 404s, so every unique "
-        f"missing path is an R2 read — docs/19 §3's cost model assumes otherwise. {evidence}",
+        status != "HIT",
+        f"a repeated 404 was served from cache ({evidence}). This is a **change** from "
+        "the behaviour ADR-026 and docs/19 §3 are written against, not a failure: 404s "
+        "were measured as uncached in M2.4. Either Cloudflare's defaults moved or a "
+        "status-code TTL was added without reopening ADR-026. Revisit the cost model.",
     )
-    check(
-        status == "HIT",
-        f"a repeated 404 reported {status}, not HIT. With edge_ttl.mode respect_origin "
-        "and no Cache-Control from R2 on a 404, there may be nothing for Cloudflare to "
-        f"respect — which would mean 404s are not cached at all. {evidence}",
-    )
-    return f"repeated 404 served from cache ({evidence})"
+    return f"404s still uncached, as ADR-026 assumes ({evidence})"
 
 
 #: Every check the probe runs against the live site.
@@ -657,7 +656,7 @@ SITE_CHECKS: dict[str, Check] = {
     "www-redirect": check_www_redirects_to_apex,
     "query-string-cache-key": check_query_strings_share_one_cache_entry,
     "dir-key-coexistence": check_key_named_dir_coexists_with_its_index,
-    "404-caching": check_404_is_cached,
+    "404-caching-absent": check_404_caching_is_still_absent,
     "rate-limit-rule": check_rate_limit_rule_is_deployed,
     "rate-limit": check_rate_limit_blocks_a_burst,
 }

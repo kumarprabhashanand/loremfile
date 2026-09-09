@@ -368,11 +368,10 @@ def test_the_rate_limit_check_does_not_settle() -> None:
 
 
 def test_no_check_passes_on_an_uncacheable_response(monkeypatch: pytest.MonkeyPatch) -> None:
-    """DYNAMIC means nothing was cached. Every cache-related check must fail on it.
+    """DYNAMIC means nothing was cached, and a check that names the cache must fail on it.
 
-    A sweep rather than one test each: `404-caching` reported `DYNAMIC` and passed, and
-    `cors-warm-cache` named the cache in its title without asserting it. Both were the
-    same shape, so the guard is written to catch the shape.
+    `404-caching` was in this sweep until ADR-026 made uncached 404s the accepted state;
+    it now asserts the opposite and is covered by its own pair of tests above.
     """
     dynamic = {**OK_HEADERS, "cf-cache-status": "DYNAMIC"}
 
@@ -381,24 +380,34 @@ def test_no_check_passes_on_an_uncacheable_response(monkeypatch: pytest.MonkeyPa
         return Fetched(status=status, headers=dict(dynamic), body=path.encode())
 
     responder(monkeypatch, answer)
-    for name in ("404-caching", "cors-warm-cache", "query-string-cache-key"):
+    for name in ("cors-warm-cache",):
         report = probe.run_checks({name: probe.SITE_CHECKS[name]})
         assert report.results[0].state == "fail", f"{name} passed on cf-cache-status DYNAMIC"
 
 
-def test_the_404_check_fails_when_it_is_cacheable_but_not_cached(
+def test_the_404_check_passes_on_the_measured_behaviour(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """MISS twice means the 404 is eligible but is not actually being served from cache."""
-    monkeypatch.setattr(probe.time, "sleep", lambda _s: None)
+    """MISS is the accepted state (ADR-026), so it must not be reported as a failure."""
     responder(monkeypatch, Fetched(status=404, headers={"cf-cache-status": "MISS"}, body=b""))
-    with pytest.raises(CheckFailed, match="not HIT"):
-        probe.check_404_is_cached()
+    assert "still uncached" in probe.check_404_caching_is_still_absent()
 
 
-def test_the_404_check_passes_only_on_a_hit(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_the_404_check_fires_when_the_behaviour_changes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A HIT is now the finding: either the defaults moved or ADR-026 was bypassed.
+
+    Inverted deliberately. A check that fails forever on a known, accepted property is
+    noise, and noise is how a real finding gets scrolled past.
+    """
     responder(monkeypatch, Fetched(status=404, headers={"cf-cache-status": "HIT"}, body=b""))
-    assert "served from cache" in probe.check_404_is_cached()
+    with pytest.raises(CheckFailed) as failure:
+        probe.check_404_caching_is_still_absent()
+    message = str(failure.value)
+    assert "change" in message
+    assert "ADR-026" in message
+    assert "cost model" in message
 
 
 def test_every_check_asserts_something() -> None:
@@ -498,16 +507,16 @@ def test_the_burst_distinguishes_cached_traffic_from_traffic_that_reaches_the_co
     assert "HIT" in detail and "MISS" in detail, "both distributions must be reported"
 
 
-def test_the_404_failure_names_the_respect_origin_hypothesis(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """A failure that does not carry its evidence costs another round trip to diagnose."""
+def test_the_404_check_carries_its_evidence(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Whether it passes or fails, the reading goes in the detail.
+
+    The hypothesis it once carried is now a settled result (ADR-026), but the evidence
+    still travels: a future change should arrive with the numbers that show it.
+    """
     responder(monkeypatch, Fetched(status=404, headers={"cf-cache-status": "MISS"}, body=b""))
-    with pytest.raises(CheckFailed) as failure:
-        probe.check_404_is_cached()
-    message = str(failure.value)
-    assert "respect_origin" in message
-    assert "origin-cache-control" in message
+    detail = probe.check_404_caching_is_still_absent()
+    assert "origin-cache-control" in detail
+    assert "first=MISS" in detail
 
 
 def test_the_rate_limit_message_does_not_assert_what_it_cannot_know(

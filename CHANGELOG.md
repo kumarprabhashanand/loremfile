@@ -44,6 +44,25 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Changed — status-code TTL for 404s rejected (ADR-026); the check inverted
+
+- **ADR-026**: a status-code edge TTL was considered and **rejected**. What was verified
+  first: `edge_ttl.status_code_ttl` is in the rulesets `PUT` schema and is not
+  plan-gated, but **Free's minimum edge TTL is 2 hours**. Declined because it helps
+  neither scenario in `docs/19` §3 (both use unique paths), the repeat-404 case it does
+  help is not in the threat model and is already capped by the rate limit, and it would
+  make **G3 depend on a purge call** where today it depends on nothing. Reopens only on a
+  `cost` issue showing real repeat-404 abuse.
+- `docs/03` §3 now **states** that 404s are not cached, with the measurement, instead of
+  calling the 3-minute claim "in doubt". RISK-22's residual risk is **accepted, not
+  mitigated**.
+- The probe's `404-caching` check is **inverted**: it asserts 404s stay uncached and
+  fires if that changes. A check that fails forever on a known, accepted property is
+  noise, and noise is how a real finding gets scrolled past.
+- `AGENTS.md` gains a fourth shape — **promoting a detail string** — with instances from
+  both the operator and the author reading the same output in the same week. It has no
+  automated defence; the only guard is a check that cannot report what it did not assert.
+
 ### Fixed — M2.4 probe results, and two things I recorded as verified that were not
 
 - **Rate limit: verified working** (run 4). The rule is deployed, valid and enforcing,

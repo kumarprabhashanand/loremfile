@@ -50,7 +50,7 @@ Descriptors are ordered tokens separated by `-`:
 | 206 | Valid `Range` satisfied |
 | 304 | Conditional request matched |
 | 301 | `www.` host → apex; (Phase 3 only) `/random/*` |
-| 404 | Unknown key. Body is a short plain/XML message from R2 and is **not** part of the contract. R2 sends no `Cache-Control` on 404. **The claim that Cloudflare therefore caches it for its default 3 minutes is in doubt (RISK-22).** M2.4 probe run 2 observed `HIT`, run 3 asserted and got `MISS`. The cache rule sets `edge_ttl.mode: respect_origin` (`08` §5.4), and with no `Cache-Control` from the origin there may be nothing to respect — in which case 404s are not cached at all and every unique missing path is an R2 read. The probe now records both cache statuses and the origin header so the next run settles it; whether R2 bills a 404 as a Class B read is separately unmeasured and needs `loremfile usage` (M4.3). |
+| 404 | Unknown key. Body is a short plain/XML message from R2 and is **not** part of the contract. R2 sends no `Cache-Control` on 404, and **404s are not cached** — measured in M2.4 probe run 4: `first=MISS second=MISS origin-cache-control='none' age=none`. The cache rule sets `edge_ttl.mode: respect_origin` (`08` §5.4), so with no header from the origin there is nothing to respect. An earlier draft of this row claimed a 3-minute default TTL; that was wrong. Caching them deliberately by status code was considered and rejected (**ADR-026**), so every request to a missing path reaches R2. Whether R2 bills a 404 as a Class B read is separately unmeasured and needs `loremfile usage` (M4.3). |
 | 416 | Unsatisfiable range |
 | 429 | Rate limited (300 requests / 10 s per IP). Retry after 10 s. |
 | 403 | WAF managed rule matched (only for exploit-shaped requests) |
