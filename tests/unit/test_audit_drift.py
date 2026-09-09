@@ -21,12 +21,13 @@ from click.testing import CliRunner
 from loremfile import cli
 from loremfile.build import Built
 from loremfile.catalog import Catalog
-from loremfile.cli import _report_audit
+from loremfile.cli import _names_a_path, _report_audit
 from loremfile.manifest import Manifest
 
 #: The paths M3.6 found; docs/06 §4 records why.
 KNOWN_SENSITIVE = {
     "mp4/1080p-10s.mp4",
+    "mp4/10mb.mp4",
     "mp4/50mb.mp4",
     "opus/30s.opus",
     "webm/720p-5s-vp9.webm",
@@ -105,3 +106,18 @@ def test_audit_is_reachable_from_the_command_line() -> None:
     """The flag has to exist on `build`, or none of the above is ever run."""
     result = CliRunner().invoke(cli.main, ["build", "--help"])
     assert "--audit" in result.output
+
+
+def test_manifest_check_downgrades_a_marked_path_but_not_its_neighbours() -> None:
+    """`manifest check` reports expected drift and keeps failing on everything else.
+
+    Measured in M3.6: two attempts of the same commit on the same runner label produced
+    different bytes for `opus/30s.opus` and `webm/720p-5s-vp9.webm`. A check that cannot
+    pass twice in a row is a check that someone eventually deletes — but downgrading it
+    must not reach any other path, which is what the second half asserts.
+    """
+    marked = {f.path for f in Catalog.load().fixtures() if f.expected_drift}
+    assert _names_a_path("opus/30s.opus: sha256 would change from 'a' to 'b'", marked)
+    assert not _names_a_path("pdf/a4-3pages.pdf: sha256 would change from 'a' to 'b'", marked)
+    # A path that merely *contains* a marked path's name must not be swallowed.
+    assert not _names_a_path("edge/opus/30s.opus: sha256 would change", marked)

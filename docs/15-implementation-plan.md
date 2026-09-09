@@ -64,7 +64,7 @@ Fallback if M3.9 exceeds the CI budget: matrix `--group`; if still over, defer t
 |---|---|---|
 | M4.1 | Templates, CSS (light/dark tokens), minimal JS (copy, filter); `site/build.py`, `site/serve.py`; discovery files; JSON-LD | `tests/site/*` green; Lighthouse (host command in `06` §9) a11y ≥ 95, informational |
 | M4.2 | Content per `07` §5–§6: `site/content/formats/*.md` (agent-drafted, 120–250 words each for every format with a P1 fixture), `site/content/pages/*.md`, legal texts from `13` | Every page renders; facts checked against the catalog |
-| M4.3 | `upload.py` (fixtures, removals, site, restore), `purge`, `verify_live.py` modes incl. `--inject-failure`, `usage.py`, `ops_log.py`, `tokens-due`, `gh_issue.py`, `release.py` (archive + redact); unit tests with fakes (`tests/unit/test_upload_plan.py` belongs here) | Green |
+| M4.3 | `upload.py` (fixtures, removals, site, restore), `purge`, `verify_live.py` modes incl. `--inject-failure`, `usage.py`, `ops_log.py`, `tokens-due`, `gh_issue.py`, `release.py` (archive + redact); unit tests with fakes (`tests/unit/test_upload_plan.py` belongs here) | Green **Must not regenerate `expected_drift` paths** (`06` §4 and §5): they do not reproduce byte for byte between runs, so the deploy has to publish the bytes the manifest describes rather than rebuild them. |
 | M4.4 | `deploy.yml`, `health.yml` (health, cost, rotation, heartbeat steps), `audit.yml`, `release.yml` complete; `infra.yml` gains `restore` and `redact` modes | Workflows lint (`actionlint`, host) |
 
 ## M5 — First deploy and hardening (A, 6 h; needs M2, M4)

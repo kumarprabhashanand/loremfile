@@ -71,6 +71,10 @@ fixtures:
     size_class: approx
     nominal_bytes: 1000000
   - name: 10mb.mp4
+    expected_drift: >-
+      Not byte-reproducible off the CI reference fleet: libvpx/libopus/libx264 choos
+      e SIMD kernels from the CPU features they find and no ffmpeg flag reache
+      s that choice (docs/06 section 4, RISK-21).
     phase: 1
     generator: media_video.mp4_sized
     params: { size: 10000000, duration: 60 }

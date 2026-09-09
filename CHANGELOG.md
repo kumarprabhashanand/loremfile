@@ -52,8 +52,11 @@ All notable changes to this project are documented here. The format follows
   the run; anything else is real drift and does. Without the split, four media fixtures
   would appear in every audit, and an issue that reports expected behaviour every month
   is one nobody reads.
-- `expected_drift` on four paths: `mp4/1080p-10s.mp4`, `mp4/50mb.mp4`, `opus/30s.opus`,
-  `webm/720p-5s-vp9.webm`. A typed field rather than a marker inside `notes`, because the
+- `expected_drift` on five paths: `mp4/1080p-10s.mp4`, `mp4/10mb.mp4`, `mp4/50mb.mp4`,
+  `opus/30s.opus`, `webm/720p-5s-vp9.webm`. `manifest check` reports a mismatch on
+  these and does not fail — measured: two attempts of the **same commit on the same
+  runner label** produced different bytes for the Opus and VP9 fixtures, so this is
+  run-to-run variation, not a stable per-fleet reference. Every other path stays fatal. A typed field rather than a marker inside `notes`, because the
   audit classifies on it and prose that has to be parsed goes wrong the first time
   someone rewords it.
 - Workflows pin `runs-on: ubuntu-24.04`. It does not fix the CPU dispatch, but it removes
