@@ -179,27 +179,67 @@ def test_a_real_error_fails_the_run() -> None:
     assert not report.ok
 
 
-def test_every_owned_phase_is_written_in_full() -> None:
-    """A full PUT per phase — which is exactly why the scoping guard matters.
-
-    The managed-firewall phase is the exception and is asserted separately: it is skipped
-    unless the Free Managed Ruleset id can be resolved by name, because writing that
-    phase with an unresolved id would replace whatever Cloudflare put there.
-    """
+def test_every_written_phase_is_written_in_full() -> None:
+    """A full PUT per phase — which is exactly why the scoping guard matters."""
     client = FakeClient()
     client.verify_zone()
     report = apply_module.Report()
     apply_module.apply_rulesets(client, report)
     written = {path for _, path, _ in client.writes}
-    for phase in apply_module.PHASES:
-        target = f"/zones/{OUR_ZONE}/rulesets/phases/{phase}/entrypoint"
-        if phase == "http_request_firewall_managed":
-            assert target not in written
-            continue
-        assert target in written
+    for phase in apply_module.WRITTEN_PHASES:
+        assert f"/zones/{OUR_ZONE}/rulesets/phases/{phase}/entrypoint" in written
 
-    skipped = [o for o in report.outcomes if o.resource == "http_request_firewall_managed"]
-    assert skipped and skipped[0].state == "skipped", "must say why, not fail silently"
+
+def test_the_managed_phase_is_verified_and_never_written() -> None:
+    """Cloudflare owns that phase. Resolved 2026-09-09 against the live zone.
+
+    The zone has no entry point there — `GET .../entrypoint` answers 10003 — and the
+    managed ruleset appears in the zone's own ruleset list instead. Writing an entry
+    point to add our `execute` rule would be writing a phase Cloudflare deploys into.
+    """
+    client = FakeClient(
+        {
+            f"GET /zones/{OUR_ZONE}/rulesets": ok(
+                [
+                    {
+                        "id": "77454fe2d30c4220b5701f6fdfb893ba",
+                        "name": apply_module.FREE_MANAGED_RULESET_NAME,
+                        "kind": "managed",
+                        "phase": apply_module.MANAGED_PHASE,
+                    }
+                ]
+            )
+        }
+    )
+    client.verify_zone()
+    report = apply_module.Report()
+    apply_module.apply_rulesets(client, report)
+
+    assert not any(apply_module.MANAGED_PHASE in path for _, path, _ in client.writes)
+    outcome = next(o for o in report.outcomes if o.resource == apply_module.MANAGED_PHASE)
+    assert outcome.state == "skipped"
+    assert "77454fe2d30c4220b5701f6fdfb893ba" in outcome.detail
+
+
+def test_a_zone_without_the_managed_ruleset_is_a_finding() -> None:
+    """If Free zones stop receiving it, that is a security assumption gone stale."""
+    client = FakeClient({f"GET /zones/{OUR_ZONE}/rulesets": ok([])})
+    client.verify_zone()
+    report = apply_module.Report()
+    apply_module.verify_managed_ruleset(client, report)
+    assert report.outcomes[0].state == "failed"
+    assert not report.ok
+
+
+def test_the_managed_ruleset_is_never_looked_up_at_account_scope() -> None:
+    """T1 is a zone token; listing account rulesets would mean widening it."""
+    client = FakeClient()
+    client.verify_zone()
+    report = apply_module.Report()
+    apply_module.apply_rulesets(client, report)
+    assert not any(path.startswith("/accounts/") for _, path in client.calls), (
+        "the managed-ruleset check must stay zone-scoped"
+    )
 
 
 def test_dns_never_deletes_and_only_adds_what_is_missing() -> None:
@@ -215,40 +255,3 @@ def test_dns_never_deletes_and_only_adds_what_is_missing() -> None:
     assert all(method != "DELETE" for method, _, _ in client.writes)
     created = [payload for method, path, payload in client.writes if method == "POST"]
     assert [c["type"] for c in created] == ["CNAME"], "only the missing www record"
-
-
-def test_the_managed_ruleset_id_is_resolved_not_trusted() -> None:
-    """docs/08 §5.6: look the id up by name rather than trusting the constant."""
-    client = FakeClient(
-        {
-            f"GET /accounts/{OUR_ACCOUNT}/rulesets": ok(
-                [{"id": "resolved-id", "name": apply_module.FREE_MANAGED_RULESET_NAME}]
-            )
-        }
-    )
-    client.verify_zone()
-    report = apply_module.Report()
-    apply_module.apply_rulesets(client, report)
-    payloads = [
-        p
-        for _, path, p in client.writes
-        if path.endswith("http_request_firewall_managed/entrypoint")
-    ]
-    assert payloads and payloads[0]["rules"][0]["action_parameters"]["id"] == "resolved-id"
-
-
-def test_the_managed_ruleset_is_left_alone_when_already_executed() -> None:
-    client = FakeClient(
-        {
-            f"GET /accounts/{OUR_ACCOUNT}/rulesets": ok(
-                [{"id": "resolved-id", "name": apply_module.FREE_MANAGED_RULESET_NAME}]
-            ),
-            f"GET /zones/{OUR_ZONE}/rulesets/phases/http_request_firewall_managed/entrypoint": ok(
-                {"rules": [{"action": "execute", "action_parameters": {"id": "resolved-id"}}]}
-            ),
-        }
-    )
-    client.verify_zone()
-    report = apply_module.Report()
-    apply_module.apply_rulesets(client, report)
-    assert not [p for _, path, p in client.writes if "firewall_managed" in path]
