@@ -31,6 +31,19 @@ Alerts: the Free plan has **no** usage-based billing notification (that is a Pro
 
 ## 3. Worst-case cost scenarios
 
+> **Measured in M2.4 (probe run 4), and it changes which control is doing the work.**
+> The two controls this section assumes are **404s cached for 3 minutes** and **the rate
+> limit bounding volume**. The first does not exist: `edge_ttl.mode: respect_origin` with
+> no `Cache-Control` from R2 on a 404 leaves nothing to respect, so 404s are not cached
+> at all (`03` §3, RISK-22). The second works, and counts cache hits — but it is a bound
+> on **sustained** volume, not on short bursts: 600 requests at 156 req/s completed with
+> no 429 on one run, while another was blocked ~5 s in at request 547.
+>
+> **The headline numbers below are unchanged**, because scenario 1 already assumes every
+> request is an R2 read. What changed is that the rate limit is now the *only* bound, so
+> its enforcement latency is the thing that matters rather than a caching mitigation that
+> was never real.
+
 Conventions: R2 Class B reads at USD 0.36 per million after the 10 M free tier; the free tier is subtracted in every row; detection latency is the daily health/cost check (≤ 1 day) plus the weekly session to act (≤ 7 days). Query strings are excluded from the cache key, so `?random` busting costs nothing; the remaining read-amplification vectors are unique non-existent paths (each a 404 read cached 3 minutes), distinct `Origin` values (each a cache entry) and many IPs below DDoS thresholds. **Assumption [VERIFY in M2.4]:** a GET for a missing key is billed as a Class B operation. R2's pricing FAQ exempts only unauthorized (401) requests and says nothing about 404s, so the model conservatively counts them; M2.4 measures it (`loremfile usage` before and after 1,000 probe 404s). If 404s turn out to be free, the first two rows below shrink to almost nothing.
 
 | Scenario | Reads / cost | Stop condition |

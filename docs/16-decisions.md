@@ -66,6 +66,7 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
 - **Context**: an earlier draft believed the Free plan could not exclude the query string from the cache key; Cloudflare's Cache Rules availability table shows "Ignore query string" on all plans (only per-parameter lists, headers and cookies are Enterprise-only).
 - **Decision**: the cache rule sets `cache_key.custom_key.query_string.exclude = "*"`; the origin ignores query strings; no behaviour is ever keyed on them (a `?download` variant, if built, is a path — `/dl/…`).
 - **Consequences**: `?v=123` cache-busting is harmless and free; the remaining read-amplification vectors are unique 404 paths and per-origin cache entries (`19` §3).
+- **Status: configured, not yet proven at the edge (M2.4).** The rule carries `exclude: "*"` and the API accepted it, but the probe has not confirmed the behaviour: `cf-cache-status` turned out to be an unreliable instrument for this, passing on run 3 and failing on run 4 unchanged, because edge nodes within a colo do not share a local cache — a MISS says only that *this* node had not seen it. The check now measures `Age` instead, where a non-zero value on `?x=2` is positive evidence that it was served from the entry `?x=1` populated. Until that reports, this ADR is a decision that has been applied rather than a behaviour that has been observed.
 
 ## ADR-014 No hostile fixtures on the main domain
 - **Context**: EICAR/zip bombs/JS PDFs are useful but trip Safe Browsing/AV and mail filters, which would break every user.

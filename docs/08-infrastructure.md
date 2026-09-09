@@ -227,6 +227,10 @@ Also enable **Tiered Cache → Smart Tiered Cache** (Caching → Tiered Cache) �
 ] }
 ```
 
+**Verified 2026-09-09 (M2.4 probe run 4).** The rule is deployed, valid and enforcing, and it **does** count cache hits — a 429 arrived at request 547 of a 600-request burst against a single cached object. `cf.colo.id` survives as written: the read-back returns `["cf.colo.id", "ip.src"]` and the rule enforces with it, so the claim below stands rather than joining the falsified list.
+
+**Enforcement is not instantaneous, and the rule bounds sustained abuse rather than short bursts.** Run 3 completed 600 requests at 156 req/s with no 429 at all; run 4 was blocked ~5 s in, at request 547. A burst that finishes inside a few seconds can outrun the counter. This matters for what the rule is relied on for: it is a bound on sustained volume, not a guarantee that any given short burst is refused (`19` §3).
+
 Free-plan constraints (verified): 1 rule, period 10 s, mitigation timeout 10 s, IP characteristic, expression fields limited to path and verified-bot. In the API the dashboard's "IP" characteristic is `ip.src` **plus `cf.colo.id`, which Cloudflare documents as mandatory in every rule's `characteristics` list on every plan** (counting is therefore per IP per data centre; never use `cf.colo.id` in the expression itself). 300/10 s = 30 rps per IP per data centre, comfortably above real usage and below abuse.
 
 ### 5.6 `http_request_firewall_managed.json`

@@ -238,25 +238,45 @@ def test_the_retry_guard_would_notice_a_loop() -> None:
 # --- query string and cache -------------------------------------------------
 
 
-def test_query_string_check_separates_an_unpropagated_rule_from_a_wrong_cache_key(
+def test_query_string_check_proves_the_shared_entry_with_age(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The two findings look identical without the settle, and need different responses.
+    """One non-zero Age is proof; it cannot arise except from an entry already populated."""
 
-    A MISS on the plain path means the cache rule is not live yet. A HIT on the plain
-    path and a MISS with a query string means the rule *is* live and the query string is
-    part of the key — which is the ADR-013 failure worth reporting.
+    def answer(path: str, **_: Any) -> Fetched:
+        age = "7" if "x=2" in path else "0"
+        return Fetched(status=200, headers={"cf-cache-status": "HIT", "age": age}, body=b"x")
+
+    responder(monkeypatch, answer)
+    detail = probe.check_query_strings_share_one_cache_entry()
+    assert "Age 7s" in detail
+
+
+def test_query_string_check_reports_every_observation_when_it_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A failure has to say what it saw, or the next run repeats the same ambiguity.
+
+    A cold edge node and a query-string-keyed cache both produce no Age; the check cannot
+    separate them from one sample, so it reports all of them and says so.
     """
     responder(monkeypatch, Fetched(status=200, headers={"cf-cache-status": "MISS"}, body=b"x"))
-    with pytest.raises(PreconditionUnmet, match="never appeared"):
+    with pytest.raises(CheckFailed) as failure:
         probe.check_query_strings_share_one_cache_entry()
+    message = str(failure.value)
+    assert f"in {probe.QUERY_STRING_ATTEMPTS} attempts" in message
+    assert "cold edge node" in message, "the benign explanation must stay on the record"
 
-    def by_query(path: str, **_: Any) -> Fetched:
-        status = "MISS" if "?" in path else "HIT"
-        return Fetched(status=200, headers={"cf-cache-status": status}, body=b"x")
 
-    responder(monkeypatch, by_query)
-    with pytest.raises(CheckFailed, match="not ignoring the query string"):
+def test_the_query_string_check_does_not_rely_on_cache_status(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """cf-cache-status passed run 3 and failed run 4 unchanged; Age is the instrument now.
+
+    A HIT with no Age must not be enough to pass, or the flaky measurement is back.
+    """
+    responder(monkeypatch, Fetched(status=200, headers={"cf-cache-status": "HIT"}, body=b"x"))
+    with pytest.raises(CheckFailed):
         probe.check_query_strings_share_one_cache_entry()
 
 
