@@ -15,6 +15,7 @@ check that catches a generator changing its output.
 from __future__ import annotations
 
 import json
+from unittest import mock
 
 from click.testing import CliRunner
 
@@ -39,11 +40,29 @@ def rebuilt(path: str, sha256: str) -> Built:
     return Built(Catalog.load().by_path[path], b"", sha256)
 
 
-def audit(builts: list[Built]) -> tuple[int, dict]:
+def audit(builts: list[Built], *, manifest: Manifest | None = None) -> tuple[int, dict]:
     runner = CliRunner()
-    with runner.isolation() as output:
+    loaded = manifest if manifest is not None else Manifest.load()
+    with (
+        mock.patch.object(cli.Manifest, "load", staticmethod(lambda: loaded)),
+        runner.isolation() as output,
+    ):
         code = _report_audit(Catalog.load(), builts, as_json=True)
     return code, json.loads(output[0].getvalue().decode())
+
+
+def manifest_including(path: str) -> Manifest:
+    """The committed manifest plus an entry for a path currently withheld from it.
+
+    The five `expected_drift` paths are held out of the manifest until a run can publish
+    them (docs/03 §7.1), so the classification below has no live example to work from.
+    Rather than drop the coverage, the situation is constructed: this is what the audit
+    will meet once M4.3 puts those entries back.
+    """
+    loaded = Manifest.load()
+    template = dict(loaded.by_path["pdf/a4-3pages.pdf"])
+    loaded.entries = [*loaded.entries, {**template, "path": path, "sha256": "a" * 64}]
+    return loaded
 
 
 def test_the_marked_paths_are_exactly_the_ones_m36_found() -> None:
@@ -64,7 +83,9 @@ def test_every_marker_explains_itself() -> None:
 
 
 def test_expected_drift_is_reported_but_does_not_fail_the_audit() -> None:
-    code, payload = audit([rebuilt("opus/30s.opus", "f" * 64)])
+    code, payload = audit(
+        [rebuilt("opus/30s.opus", "f" * 64)], manifest=manifest_including("opus/30s.opus")
+    )
     assert code == 0, payload
     assert payload["summary"]["expected_drift"] == 1
     assert payload["summary"]["drifted"] == 0
@@ -88,7 +109,8 @@ def test_the_marker_cannot_hide_real_drift() -> None:
 
 def test_both_kinds_are_reported_together_and_the_real_one_decides() -> None:
     code, payload = audit(
-        [rebuilt("opus/30s.opus", "f" * 64), rebuilt("pdf/a4-3pages.pdf", "e" * 64)]
+        [rebuilt("opus/30s.opus", "f" * 64), rebuilt("pdf/a4-3pages.pdf", "e" * 64)],
+        manifest=manifest_including("opus/30s.opus"),
     )
     assert code != 0, "one real drift must fail the run even beside expected drift"
     assert payload["summary"] == {"regenerated": 2, "drifted": 1, "expected_drift": 1}
@@ -124,3 +146,19 @@ def test_manifest_check_downgrades_a_marked_path_but_not_its_neighbours() -> Non
     assert not _names_a_path("edge/opus/30s.opus: sha256 would change", marked)
     assert not _names_a_path("opus/30s.opus.bak: sha256 would change", marked)
     assert not _names_a_path("opus/30s.opus", marked), "a message with no diagnostic"
+
+
+def test_the_withheld_paths_are_absent_from_the_manifest() -> None:
+    """M3.6's remedy, asserted: five entries described bytes that existed nowhere.
+
+    They are withheld rather than tombstoned, because a tombstone asserts a publication
+    that never happened (docs/03 §7.1, amended in the same milestone).
+    """
+    committed = set(Manifest.load().by_path)
+    catalog = Catalog.load()
+    withheld = {f.path for f in catalog.fixtures() if f.awaiting_publication}
+    assert withheld == KNOWN_SENSITIVE
+    assert not (withheld & committed), "a withheld path is in the manifest"
+    assert not any(e.get("status") == "removed" for e in Manifest.load().entries), (
+        "withdrawn entries must be removals, not tombstones"
+    )

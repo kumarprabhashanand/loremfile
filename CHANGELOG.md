@@ -44,6 +44,29 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Changed — immutability attaches on publication, not on entry into the manifest
+
+- `docs/03` §7.1 and ADR-005 amended. What ADR-005 protects is embedded URLs and hashed
+  fixtures in other people's tests, and **both require the bytes to have been served**.
+  An entry that never reached R2 has no consumer and breaks no promise, so it is removed
+  outright rather than tombstoned — a tombstone asserts a publication that never
+  happened and would render as one on the format page. **Not a relaxation**: R2 bucket
+  locks already implement exactly this boundary; the wording claimed more than the
+  system enforced.
+- **Five manifest entries withdrawn** — `mp4/1080p-10s.mp4`, `mp4/10mb.mp4`,
+  `mp4/50mb.mp4`, `opus/30s.opus`, `webm/720p-5s-vp9.webm`. Verified against the CI
+  artifact: three described bytes that existed nowhere in the world; two were captured
+  in time by the new carry-forward artifact. All five are withheld together, and their
+  catalog rows stay, marked `awaiting_publication` with the reason.
+- `manifest update` performs the withdrawal, refusing any path present in the base
+  branch manifest — withdrawing a *published* path stays forbidden.
+- **New CI guard**: a path marked `expected_drift` that is new on this branch may not
+  enter the manifest unless the bytes this run built match it. That is the check that
+  would have caught this at M3.6 rather than after the fact.
+- `docs/09` §3.1's listing still showed `new-fixtures: build/fixtures` five months after
+  M3.1 replaced it. The stale line is corrected, and the episode is recorded there: the
+  wrong fix was proposed *because the doc was trusted*.
+
 ### Fixed — the carry-forward bytes were not being retained at all (M3.6)
 
 - `docs/09` §3.1's `new-fixtures` artifact (the bytes) was replaced in M3.1 by a 4 KB

@@ -390,7 +390,7 @@ def _entries_from_build(
 
     for fixture in catalog_obj.fixtures():
         target = directory / fixture.path
-        if not target.is_file():
+        if not target.is_file() or fixture.awaiting_publication:
             continue
         data = target.read_bytes()
         mime = catalog_obj.mime_for(fixture)
@@ -443,6 +443,9 @@ def manifest_check(as_json: bool) -> None:
         # opus/30s.opus and webm/720p-5s-vp9.webm, and a check that cannot pass twice in
         # a row is a check that gets disabled. Everything else stays fatal.
         drift_expected = {f.path for f in catalog_for_check.fixtures() if f.expected_drift}
+        # Published on the base branch already, so its bytes are in the bucket and a
+        # rebuild that drifts says nothing. New here, and they exist only in this run.
+        published_before = set(build_module.merge_base_manifest().by_path)
         errors += [e for e in lock_errors if not _names_a_path(e, drift_expected)]
         committed = loaded.by_path
         for entry in regenerated:
@@ -453,6 +456,24 @@ def manifest_check(as_json: bool) -> None:
             if not differing:
                 continue
             if entry["path"] in drift_expected:
+                if entry["path"] not in published_before:
+                    # The guard this milestone was missing. A path whose bytes cannot be
+                    # rebuilt may only enter the manifest in a run that produced those
+                    # exact bytes — that run's carry-forward artifact is then the only
+                    # copy, and it matches. Entering on a run that drifted is how five
+                    # entries came to describe bytes that existed nowhere.
+                    errors.append(
+                        f"{entry['path']}: new in this branch, marked expected_drift, and "
+                        "the bytes this run built do not match the committed entry. Its "
+                        "bytes cannot be rebuilt later, so commit the entry this run "
+                        "produced (`manifest adopt`) or withhold it with "
+                        "awaiting_publication (docs/03 §7.1)."
+                    )
+                    items.append(
+                        {"path": entry["path"], "status": "unfulfillable", "detail": "no bytes"}
+                    )
+                    corrections.append(entry)
+                    continue
                 items.append(
                     {
                         "path": entry["path"],
@@ -626,10 +647,38 @@ def manifest_update(as_json: bool) -> None:
                 )
             )
         by_path = loaded.by_path
+        # docs/03 §7.1, amended in M3.6: immutability attaches on publication to R2, not
+        # on entry into the manifest. A fixture marked `awaiting_publication` therefore
+        # leaves the manifest outright rather than becoming a tombstone, which would
+        # assert a publication that never happened. The guard is that it may never have
+        # been published: anything present on the base branch stays, and says so.
+        published = build_module.merge_base_manifest().by_path
+        withdrawn: list[str] = []
+        for fixture in catalog_obj.fixtures():
+            if not fixture.awaiting_publication or fixture.path not in by_path:
+                continue
+            if fixture.path in published:
+                sys.exit(
+                    _emit(
+                        "manifest update",
+                        ok=False,
+                        summary={},
+                        items=[],
+                        errors=[
+                            f"{fixture.path}: awaiting_publication, but it is already in "
+                            "the base branch manifest. Withdrawing a published path is "
+                            "forbidden (docs/03 §7.1); use a tombstone or supersede it."
+                        ],
+                        as_json=as_json,
+                    )
+                )
+            del by_path[fixture.path]
+            withdrawn.append(fixture.path)
+
         # docs/06 §7 step 5: generated_at moves only when something actually changed,
         # so an unchanged rebuild produces no diff at all. Comparing the assembled
         # entries — not merely "did we build anything" — is what makes that true.
-        changed = any(by_path.get(entry["path"]) != entry for entry in added)
+        changed = bool(withdrawn) or any(by_path.get(entry["path"]) != entry for entry in added)
         for entry in added:
             by_path[entry["path"]] = entry
         loaded.entries = sorted(by_path.values(), key=lambda e: e["path"])
@@ -658,7 +707,11 @@ def manifest_update(as_json: bool) -> None:
         _emit(
             "manifest update",
             ok=True,
-            summary={"entries": len(loaded.entries), "active": len(loaded.active)},
+            summary={
+                "entries": len(loaded.entries),
+                "active": len(loaded.active),
+                "withdrawn": len(withdrawn),
+            },
             items=[],
             errors=[],
             as_json=as_json,

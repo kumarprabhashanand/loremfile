@@ -9,6 +9,10 @@ seo_title: "Sample Opus audio files for testing — free, CC0, hotlinkable"
 related: [ogg, mp3, m4a]
 fixtures:
   - name: 30s.opus
+    awaiting_publication: >-
+      Catalogued but not yet in the manifest: its bytes cannot be rebuilt on other h
+      ardware, so the entry may only be written in a run that also publishes the
+      m to R2 (docs/06 section 4, docs/03 section 7.1). Re-catalogued in M4.3.
     expected_drift: >-
       Not byte-reproducible off the CI reference fleet: libvpx/libopus/libx264 choos
       e SIMD kernels from the CPU features they find and no ffmpeg flag reache

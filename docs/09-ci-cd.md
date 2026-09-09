@@ -98,13 +98,15 @@ jobs:
         with: { name: site-preview, path: build/site, retention-days: 7 }
       - uses: actions/upload-artifact@<SHA-v4>
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository   # not for fork PRs (storage abuse)
-        with: { name: new-fixtures, path: build/fixtures, retention-days: 7 }   # superseded: see below
+        with: { name: fixture-inventory, path: inventory.txt, retention-days: 90 }   # M3.1: hashes, not bytes
       - name: Manifest diff for the author
         if: failure()
         run: loremfile manifest check --json | python -m loremfile.ci_summary --explain >> "$GITHUB_STEP_SUMMARY"   # prints the exact entries to commit when a committed entry does not match
 ```
 
 **Fixture artifact, changed in M3.1 and again in M3.6.** The listing above uploads `build/fixtures` as a `new-fixtures` artifact on non-fork pull requests. That directory is already **243 MB** at M3.1 and would be roughly **515 MB** at launch, uploaded on every pull request against a free-tier storage quota. `build-and-validate` therefore uploads a 4 KB `fixture-inventory` — every path with its size and sha256 — which is what a reviewer actually reads.
+
+**The listing above was wrong for five months, and it cost something.** M3.1 replaced `new-fixtures` with `fixture-inventory` and did not update this listing in the same pull request. When M3.6 needed to know whether the bytes were being retained, the doc said they were — for 7 days — so the proposed fix was to raise that retention. There was nothing to raise: the bytes had never been stored at all, and five manifest entries were already describing bytes that existed nowhere. The listing now matches the workflow, and the CI guard in `manifest check` exists because a doc cannot be relied on to notice this for us.
 
 **M3.6 added a second, targeted artifact, and it is not an optimisation.** Fixtures marked `expected_drift` cannot be rebuilt byte for byte on different hardware (`06` §4), so for those paths the manifest describes bytes that exist **nowhere else** between the pull request and the deploy. `carry-forward-fixtures` holds exactly those files — five paths, about **69 MB** — with **90-day retention**, alongside the inventory that records which CPU produced them. Dropping it, or letting it expire before the deploy runs, makes those manifest entries unfulfillable: regeneration drifts and there is nothing to fall back to, and the fixtures would have to be re-catalogued at new paths before they could ever be published. Retention is therefore a **correctness** setting here, not a convenience.
 

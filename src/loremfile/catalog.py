@@ -156,6 +156,12 @@ class Fixture(BaseModel):
     #: rather than a marker inside `notes`: the audit has to classify on it, and prose
     #: that has to be parsed goes wrong the first time someone rewords it.
     expected_drift: str | None = Field(default=None, min_length=1)
+    #: Catalogued, deliberately **not** in the manifest yet, and why. An
+    #: `expected_drift` fixture may only enter the manifest in a run that also publishes
+    #: its bytes, because those bytes cannot be rebuilt afterwards (docs/06 §4). Until
+    #: the uploader exists the row stays here and the manifest stays silent — an entry
+    #: describing bytes that exist nowhere is worse than no entry at all.
+    awaiting_publication: str | None = Field(default=None, min_length=1)
     policy_exceptions: list[str] = Field(default_factory=list)
     edge: Edge | None = None
 

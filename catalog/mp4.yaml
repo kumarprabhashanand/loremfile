@@ -26,6 +26,10 @@ fixtures:
     expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, fps: 30.0 }
     size_class: free
   - name: 1080p-10s.mp4
+    awaiting_publication: >-
+      Catalogued but not yet in the manifest: its bytes cannot be rebuilt on other h
+      ardware, so the entry may only be written in a run that also publishes the
+      m to R2 (docs/06 section 4, docs/03 section 7.1). Re-catalogued in M4.3.
     expected_drift: >-
       Not byte-reproducible off the CI reference fleet: libvpx/libopus/libx264 choos
       e SIMD kernels from the CPU features they find and no ffmpeg flag reache
@@ -71,6 +75,10 @@ fixtures:
     size_class: approx
     nominal_bytes: 1000000
   - name: 10mb.mp4
+    awaiting_publication: >-
+      Catalogued but not yet in the manifest: its bytes cannot be rebuilt on other h
+      ardware, so the entry may only be written in a run that also publishes the
+      m to R2 (docs/06 section 4, docs/03 section 7.1). Re-catalogued in M4.3.
     expected_drift: >-
       Not byte-reproducible off the CI reference fleet: libvpx/libopus/libx264 choos
       e SIMD kernels from the CPU features they find and no ffmpeg flag reache
@@ -84,6 +92,10 @@ fixtures:
     size_class: approx
     nominal_bytes: 10000000
   - name: 50mb.mp4
+    awaiting_publication: >-
+      Catalogued but not yet in the manifest: its bytes cannot be rebuilt on other h
+      ardware, so the entry may only be written in a run that also publishes the
+      m to R2 (docs/06 section 4, docs/03 section 7.1). Re-catalogued in M4.3.
     expected_drift: >-
       Not byte-reproducible off the CI reference fleet: libvpx/libopus/libx264 choos
       e SIMD kernels from the CPU features they find and no ffmpeg flag reache

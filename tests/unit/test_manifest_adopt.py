@@ -35,7 +35,7 @@ def run(args: list[str]) -> tuple[int, dict]:
 def entry() -> dict:
     """A real committed entry, altered as a different machine's build would alter it."""
     committed = Manifest.load()
-    original = dict(committed.by_path["mp4/1080p-10s.mp4"])
+    original = dict(committed.by_path["pdf/a4-3pages.pdf"])
     original["sha256"] = "0" * 64
     original["bytes"] = original["bytes"] + 17
     return original
@@ -57,7 +57,7 @@ def test_adopting_over_a_published_fixture_is_refused(
     code, payload = run(["manifest", "adopt", "--from", str(write(tmp_path, [entry]))])
     assert code != 0
     assert any("frozen forever" in e for e in payload["errors"])
-    assert Manifest.load().by_path["mp4/1080p-10s.mp4"]["sha256"] != "0" * 64, (
+    assert Manifest.load().by_path["pdf/a4-3pages.pdf"]["sha256"] != "0" * 64, (
         "the manifest was written despite the refusal"
     )
 
@@ -85,7 +85,7 @@ def test_adopting_a_fixture_this_branch_adds_is_allowed(
 
     written = json.loads((tmp_path / "manifest.json").read_text())
     by_path = {e["path"]: e for e in written["fixtures"]}
-    assert by_path["mp4/1080p-10s.mp4"]["sha256"] == "0" * 64
+    assert by_path["pdf/a4-3pages.pdf"]["sha256"] == "0" * 64
     assert (tmp_path / "sha256sums.txt").is_file(), "sha256sums.txt must be rewritten too"
     assert (tmp_path / "formats.json").is_file(), "formats.json must be rewritten too"
 
@@ -107,6 +107,11 @@ def test_an_incomplete_entry_is_refused(tmp_path: Path, entry: dict) -> None:
 
 
 def test_the_catalog_and_manifest_still_agree_after_adopting() -> None:
-    """Adopting changes bytes, never the fixture list."""
-    catalog = {f.path for f in Catalog.load().fixtures()}
-    assert {e["path"] for e in Manifest.load().active} == catalog
+    """Adopting changes bytes, never the fixture list.
+
+    The manifest holds every active fixture *except* those withheld until a run can
+    publish them (docs/03 §7.1) — five of them at M3.6.
+    """
+    loaded = Catalog.load()
+    expected = {f.path for f in loaded.fixtures() if not f.awaiting_publication}
+    assert {e["path"] for e in Manifest.load().active} == expected

@@ -224,6 +224,21 @@ def test_catalog_active_fixtures_all_have_manifest_entries(catalog: Catalog) -> 
     missing = sorted(
         f.path
         for f in catalog.fixtures()
-        if f.status is Status.ACTIVE and f.path in built and f.path not in committed
+        if f.status is Status.ACTIVE
+        and f.path in built
+        and f.path not in committed
+        # Deliberately absent until a run publishes its bytes (docs/03 §7.1): the entry
+        # would otherwise describe bytes that cannot be rebuilt and were never stored.
+        and not f.awaiting_publication
     )
     assert not missing, f"built and active but absent from manifest.json: {missing}"
+
+
+@needs_built_bytes
+def test_nothing_awaiting_publication_is_in_the_manifest(catalog: Catalog) -> None:
+    """The other direction: withholding has to actually withhold."""
+    committed = set(Manifest.load().by_path)
+    leaked = sorted(
+        f.path for f in catalog.fixtures() if f.awaiting_publication and f.path in committed
+    )
+    assert not leaked, f"awaiting_publication but present in manifest.json: {leaked}"
