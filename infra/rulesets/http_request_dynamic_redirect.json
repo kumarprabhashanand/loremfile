@@ -1,0 +1,20 @@
+{
+  "rules": [
+    {
+      "ref": "www_to_apex",
+      "description": "www → apex, keep path and query",
+      "enabled": true,
+      "expression": "(http.host eq \"www.loremfile.dev\")",
+      "action": "redirect",
+      "action_parameters": {
+        "from_value": {
+          "status_code": 301,
+          "target_url": {
+            "expression": "concat(\"https://loremfile.dev\", http.request.uri.path)"
+          },
+          "preserve_query_string": true
+        }
+      }
+    }
+  ]
+}

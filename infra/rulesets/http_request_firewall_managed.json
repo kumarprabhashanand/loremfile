@@ -1,0 +1,14 @@
+{
+  "rules": [
+    {
+      "ref": "free_managed_ruleset",
+      "description": "Cloudflare Free Managed Ruleset",
+      "enabled": true,
+      "expression": "true",
+      "action": "execute",
+      "action_parameters": {
+        "id": "77454fe2d30c4220b5701f6fdfb893ba"
+      }
+    }
+  ]
+}
