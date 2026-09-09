@@ -24,6 +24,7 @@ from loremfile import __version__, config, validators
 from loremfile import build as build_module
 from loremfile.catalog import Catalog, CatalogError
 from loremfile.manifest import (
+    LOCKED_FIELDS,
     Manifest,
     ManifestError,
     build_entry,
@@ -344,25 +345,62 @@ def _entries_from_build(
 @manifest.command("check")
 @click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
 def manifest_check(as_json: bool) -> None:
-    """Verify the committed manifest without writing anything.
+    """Verify the committed manifest, including against whatever the build produced.
 
-    Regenerated-byte comparison is added in M3, when generators and validators exist;
-    the lock and removal rules that need only the committed file run today.
+    docs/06 §7: for every fixture generated in this run, the committed `sha256`, `bytes`
+    and `mime` must equal the regenerated values. That half was deferred to M3 and is
+    implemented here, in M3.6 — the first milestone where an author's machine and CI
+    actually disagreed, because libx264, libvpx and libopus each dispatch on the CPU
+    features they find and no ffmpeg flag reaches that choice.
+
+    When they disagree, docs/11 §5 promises the exact entries to commit rather than a
+    pair of truncated hashes, so the author can take CI's answer without guessing.
     """
     loaded, errors = _check_manifest_against_catalog()
+    items: list[Item] = []
+    corrections: list[dict[str, Any]] = []
+    regenerated: list[dict[str, Any]] = []
+    if not errors:
+        try:
+            regenerated, lock_errors = _entries_from_build(Catalog.load(), loaded)
+        except (build_module.BuildError, CatalogError, ValueError, KeyError) as exc:
+            lock_errors = [str(exc)]
+        errors += lock_errors
+        committed = loaded.by_path
+        for entry in regenerated:
+            old = committed.get(entry["path"])
+            if old is None:
+                continue
+            differing = [f for f in LOCKED_FIELDS if old.get(f) != entry.get(f)]
+            if differing:
+                corrections.append(entry)
+                items.append(
+                    {"path": entry["path"], "status": "differs", "detail": ",".join(differing)}
+                )
+        errors += loaded.props_warnings({e["path"]: e for e in regenerated})
+
     active = loaded.active
     summary = {
         "entries": len(loaded.entries),
         "active": len(active),
         "tombstones": len(loaded.entries) - len(active),
         "total_bytes": sum(e["bytes"] for e in active),
+        "regenerated": len(regenerated),
     }
+    if corrections and not as_json:
+        click.echo(
+            "\nThe bytes this machine produced differ from the committed manifest. "
+            "Encoder libraries dispatch on CPU features, so an author's machine and CI "
+            "can disagree; CI is the authority (docs/06 §4). Commit these entries:\n",
+            err=True,
+        )
+        click.echo(json.dumps(corrections, indent=2, ensure_ascii=False, sort_keys=True))
     sys.exit(
         _emit(
             "manifest check",
             ok=not errors,
             summary=summary,
-            items=[],
+            items=items,
             errors=errors,
             as_json=as_json,
         )
