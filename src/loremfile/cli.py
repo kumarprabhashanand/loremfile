@@ -140,7 +140,62 @@ def _selection_options(func: Callable[..., None]) -> Callable[..., None]:
     return func
 
 
+def _report_audit(catalog_obj: Catalog, results: list[build_module.Built], *, as_json: bool) -> int:
+    """Compare regenerated hashes with the manifest and split expected drift from real.
+
+    docs/06 §8: drift is a warning that opens a `determinism` issue, never a deploy
+    blocker — published bytes are canonical. The split matters because four media
+    fixtures are known not to reproduce off the CI reference fleet (docs/06 §4), and an
+    audit that reports them every month alongside genuine regressions trains everyone to
+    close the issue unread. Expected drift is reported and does not fail the run; real
+    drift does.
+    """
+    committed = Manifest.load().by_path
+    by_path = catalog_obj.by_path
+    expected: list[Item] = []
+    real: list[Item] = []
+    for built in results:
+        entry = committed.get(built.path)
+        if entry is None or entry["sha256"] == built.sha256:
+            continue
+        detail = f"manifest {entry['sha256'][:12]} vs rebuilt {built.sha256[:12]}"
+        fixture = by_path[built.path]
+        if fixture.expected_drift:
+            expected.append({"path": built.path, "status": "expected", "detail": detail})
+        else:
+            real.append({"path": built.path, "status": "drifted", "detail": detail})
+
+    summary = {
+        "regenerated": len(results),
+        "drifted": len(real),
+        "expected_drift": len(expected),
+    }
+    errors = [f"{item['path']}: {item['detail']}" for item in real]
+    if expected and not as_json:
+        click.echo(
+            "\nExpected drift (docs/06 §4 — not reproducible off the reference fleet, "
+            "not a regression):",
+            err=True,
+        )
+        for item in expected:
+            click.echo(f"  {item['path']}: {item['detail']}", err=True)
+    return _emit(
+        "build --audit",
+        ok=not real,
+        summary=summary,
+        items=[*real, *expected],
+        errors=errors,
+        as_json=as_json,
+    )
+
+
 @main.command("build")
+@click.option(
+    "--audit",
+    "audit",
+    is_flag=True,
+    help="Report drift against the manifest instead of writing fixtures (docs/06 §8).",
+)
 @click.option(
     "--new",
     "selection",
@@ -156,6 +211,7 @@ def _selection_options(func: Callable[..., None]) -> Callable[..., None]:
 @click.option("--all", "selection", flag_value="all", default=True, help="Every active fixture.")
 @_selection_options
 def build_command(
+    audit: bool,
     selection: str,
     only: tuple[str, ...],
     formats: tuple[str, ...],
@@ -178,6 +234,8 @@ def build_command(
             phase=phase,
         )
         results = build_module.build(chosen)
+        if audit:
+            sys.exit(_report_audit(catalog_obj, results, as_json=as_json))
         build_module.write_receipt(
             chosen,
             selection=selection,

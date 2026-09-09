@@ -98,7 +98,13 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 
 ### 7.5 Determinism drift
 
-The monthly audit found that regenerating fixture X with the current toolchain yields different bytes. Published bytes are canonical and unaffected. Actions: (a) read the diff summary; (b) if caused by a dependency update, note it in the fixture's `notes` field in the catalog (informational) and keep going; (c) if caused by a generator bug, fix the generator only if it does not change any *new* fixture's expected output; never regenerate published fixtures. Close the issue with the explanation.
+The monthly audit found that regenerating fixture X with the current toolchain yields different bytes. Published bytes are canonical and unaffected.
+
+**First, read which section of the report it is in.** `build --audit` splits *expected* drift from real drift (`06` §8): a fixture whose catalog entry sets `expected_drift` is known not to reproduce off the CI reference fleet, because its encoder dispatches on CPU features (`06` §4, RISK-21). Expected drift needs no action at all — it is reported so that the absence of an entry means something.
+
+For real drift: (a) read the diff summary; (b) if caused by a dependency update, note it in the fixture's `notes` field in the catalog (informational) and keep going; (c) if caused by a generator bug, fix the generator only if it does not change any *new* fixture's expected output; never regenerate published fixtures. Close the issue with the explanation.
+
+**If a fixture drifts on the reference fleet for the first time and nothing in the repository changed**, that is RISK-21 arriving: the runner fleet's CPU features moved. Do not regenerate and overwrite — the published bytes stay as they are. Add `expected_drift` to that path and, if it must be corrected, supersede it at a **new** path.
 
 ### 7.6 Restore drill / disaster recovery
 
@@ -128,7 +134,7 @@ Read the failing step. `manifest check` hash diff → a generator drifted for a 
 ### 7.9 Add a fixture (normal change)
 
 1. Add the entry to `catalog/{format}.yaml` and to `docs/05-fixture-catalog.md`.
-2. **Inside the pinned toolchain image** (a host ffmpeg or Pillow will produce different bytes for media and images): `loremfile build --only <path> && loremfile validate --only <path> && loremfile manifest update` → commit `manifest.json` and `sha256sums.txt` changes (only additions). CI regenerates the fixture from the catalog and checks your committed entry against it; if it differs, the CI summary prints the exact entries to commit. **For media, the image alone is not enough**: the encoders dispatch on CPU features, so your machine and CI can legitimately disagree (`06` §4). CI is the authority — save the printed entries to a file and run `loremfile manifest adopt --from <file>`, which refuses anything already published on the base branch.
+2. **Inside the pinned toolchain image** (a host ffmpeg or Pillow will produce different bytes for media and images): `loremfile build --only <path> && loremfile validate --only <path> && loremfile manifest update` → commit `manifest.json` and `sha256sums.txt` changes (only additions). CI regenerates the fixture from the catalog and checks your committed entry against it; if it differs, the CI summary prints the exact entries to commit. **For media, the image alone is not enough**: the encoders dispatch on CPU features, so your machine and CI can legitimately disagree (`06` §4). CI is the authority — save the printed entries to a file and run `loremfile manifest adopt --from <file>`, which refuses anything already published on the base branch. **Expect two round trips for a media fixture** (push, read CI's entries, adopt, push); `06` §11 has the exact loop. This is normal, not a broken checkout.
 2b. A **new format** also needs a bucket-lock rule: `loremfile infra locks --write` updates `infra/r2-locks.json`, and the owner applies it once with `wrangler r2 bucket lock set` (T3) before the deploy — add the owner step to the PR description.
 3. Update `CHANGELOG.md`. Open a PR; CI must be green; merge; deploy runs; tag a release when convenient.
 

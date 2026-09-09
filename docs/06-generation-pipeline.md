@@ -148,6 +148,14 @@ def basic(ctx: GeneratorContext, *, pages: int, page_size: str = "A4",
   machine: `mp4/1080p-10s.mp4`, `mp4/50mb.mp4`, `opus/30s.opus` and
   `webm/720p-5s-vp9.webm`. The other 32, and every fixture from M3.1–M3.5, matched.
 
+  **The reference is the toolchain digest *and* the runner label.** `tools/TOOLCHAIN_DIGEST`
+  reads as though it were the whole reference; for media it is not. Workflows therefore pin
+  `runs-on: ubuntu-24.04` rather than `ubuntu-latest` — that does not fix the CPU dispatch,
+  but it removes one independent axis of drift for free, and `ubuntu-latest` moving under
+  the project would be a silent change of reference. Fixtures that are known not to
+  reproduce elsewhere carry `expected_drift` in the catalog, and `build --audit` reports
+  those separately from real drift (§8).
+
   **CI is the authority**, because CI builds the bytes the deploy uploads. When an
   author's machine disagrees, `manifest check` prints the entries to commit and
   `manifest adopt --from` takes them — it refuses any path already published on the base
@@ -232,6 +240,8 @@ Validation failures are hard errors in CI and print a table of path → failed c
 
 `loremfile build --all --audit` regenerates **every** fixture including published ones (dependencies still come from published bytes, §4) and compares hashes with the manifest. Output: a Markdown report listing drifted paths with generator names. Run monthly by `audit.yml`; drift is a warning that opens a `determinism` issue, never a deploy blocker (published bytes are canonical; the generator gets fixed or the drift is documented in `notes`).
 
+The report has **two sections**. A fixture whose catalog entry sets `expected_drift` is known not to reproduce off the reference fleet (§4) and is listed separately; it does not fail the run. Everything else is real drift — a generator or dependency change — and does. Without the split, four media fixtures would appear in every audit that runs on a differently-provisioned runner, and an issue that reports expected behaviour every month is one nobody reads.
+
 ## 9. Toolchain container (`tools/Dockerfile`)
 
 ```dockerfile
@@ -299,6 +309,24 @@ loremfile site build && loremfile site serve   # http://localhost:8080 with prod
 ```
 
 Without Docker, most text/data/image/office generators run on a plain Python 3.12 with the lock file; media generators need ffmpeg on `PATH` and the results will differ from the pinned image (the lock check will tell you). Only Docker output is authoritative.
+
+### Adding a media fixture takes two round trips, by design
+
+For **media only**, `loremfile manifest check` can fail on your machine while CI is green, and that is the expected path rather than a broken checkout. The encoders dispatch on CPU features (§4), so the reference is the CI fleet, not the container alone:
+
+```bash
+loremfile build --format mp4 && loremfile validate --format mp4 && loremfile manifest update
+git push                              # CI rebuilds on the reference fleet
+#   -> if it disagrees, the job summary and `manifest check` print the entries to commit
+#      (they are the same JSON: `manifest check` builds them with build_entry)
+curl -o ci-entries.json <the JSON from the job summary>   # or paste it into a file
+loremfile manifest adopt --from ci-entries.json
+git push                              # green
+```
+
+`manifest adopt` refuses any path already published on the base branch, so this loop can only ever set the bytes of a fixture the branch is *adding*. Everything that is not media matched on every machine through M3.1–M3.6, and needs one round trip as before.
+
+**If `manifest check` fails locally on a media path that is already committed, check `expected_drift` in its catalog entry before assuming a regression** — four paths carry it today, and `build --audit` reports them separately for exactly this reason.
 
 ## 12. Performance budget
 

@@ -26,6 +26,10 @@ fixtures:
     expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, fps: 30.0 }
     size_class: free
   - name: 1080p-10s.mp4
+    expected_drift: >-
+      Not byte-reproducible off the CI reference fleet: libvpx/libopus/libx264 choos
+      e SIMD kernels from the CPU features they find and no ffmpeg flag reache
+      s that choice (docs/06 section 4, RISK-21).
     phase: 1
     generator: media_video.mp4
     params: { width: 1920, height: 1080, duration: 10 }
@@ -76,6 +80,10 @@ fixtures:
     size_class: approx
     nominal_bytes: 10000000
   - name: 50mb.mp4
+    expected_drift: >-
+      Not byte-reproducible off the CI reference fleet: libvpx/libopus/libx264 choos
+      e SIMD kernels from the CPU features they find and no ffmpeg flag reache
+      s that choice (docs/06 section 4, RISK-21).
     phase: 1
     generator: media_video.mp4_sized
     params: { size: 50000000, duration: 120 }

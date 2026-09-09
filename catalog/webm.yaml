@@ -10,6 +10,10 @@ seo_title: "Sample WebM video files for testing — free, CC0, hotlinkable"
 related: [mp4, mkv, ogv]
 fixtures:
   - name: 720p-5s-vp9.webm
+    expected_drift: >-
+      Not byte-reproducible off the CI reference fleet: libvpx/libopus/libx264 choos
+      e SIMD kernels from the CPU features they find and no ffmpeg flag reache
+      s that choice (docs/06 section 4, RISK-21).
     phase: 1
     generator: media_video.webm
     params: { width: 1280, height: 720, duration: 5 }

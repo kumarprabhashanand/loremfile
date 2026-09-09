@@ -9,6 +9,10 @@ seo_title: "Sample Opus audio files for testing — free, CC0, hotlinkable"
 related: [ogg, mp3, m4a]
 fixtures:
   - name: 30s.opus
+    expected_drift: >-
+      Not byte-reproducible off the CI reference fleet: libvpx/libopus/libx264 choos
+      e SIMD kernels from the CPU features they find and no ffmpeg flag reache
+      s that choice (docs/06 section 4, RISK-21).
     phase: 1
     generator: media_audio.encoded
     params: { codec: opus, duration: 30, bitrate: 96k }
