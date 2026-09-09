@@ -505,9 +505,26 @@ def check_rate_limit_blocks_a_burst() -> str:
     * **uncacheable burst** — a distinct path per request, so each is its own cache key.
 
     A 429 from either means the rule enforces. A 429 from only the second is a finding
-    about *what the rule counts*, not about whether it works — and it is the finding that
+    about *what the rule counts*, not about whether it works — and it is the one that
     matters for RISK-03, because the requests that cost money are exactly the ones that
     miss cache.
+
+    **How to read the result — fixed before the run, so neither reading is chosen after
+    seeing the outcome:**
+
+    ===========================================  ==========================================
+    Observation                                  Conclusion
+    ===========================================  ==========================================
+    Unique paths 429, cacheable does not         The rule works and counts only cache
+                                                 misses. A finding about what it counts,
+                                                 **not a defect** — and per RISK-03 the
+                                                 good case.
+    Neither 429s, read-back confirms deployment  The rule is inert, and docs/08 §5.5's
+                                                 `cf.colo.id` claim is the fifth
+                                                 falsified vendor fact.
+    Read-back fails                              No attribution is possible. Fix that
+                                                 before drawing anything from the bursts.
+    ===========================================  ==========================================
     """
     path = f"/{PROBE_PREFIX}file.bin"
     cached_statuses, cached_cache, cached_rate = _burst(
