@@ -63,7 +63,7 @@ All notable changes to this project are documented here. The format follows
 - **New CI guard**: a path marked `expected_drift` that is new on this branch may not
   enter the manifest unless the bytes this run built match it. That is the check that
   would have caught this at M3.6 rather than after the fact.
-- `docs/09` §3.1's listing still showed `new-fixtures: build/fixtures` five months after
+- `docs/09` §3.1's listing still showed `new-fixtures: build/fixtures` two days after
   M3.1 replaced it. The stale line is corrected, and the episode is recorded there: the
   wrong fix was proposed *because the doc was trusted*.
 
