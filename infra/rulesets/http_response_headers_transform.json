@@ -1,0 +1,77 @@
+{
+  "rules": [
+    {
+      "ref": "files_headers",
+      "description": "all objects with an extension (fixtures, discovery files, assets)",
+      "enabled": true,
+      "expression": "(http.request.uri.path contains \".\" and not ends_with(http.request.uri.path, \"/index.html\"))",
+      "action": "rewrite",
+      "action_parameters": {
+        "headers": {
+          "X-Content-Type-Options": {
+            "operation": "set",
+            "value": "nosniff"
+          },
+          "Cross-Origin-Resource-Policy": {
+            "operation": "set",
+            "value": "cross-origin"
+          },
+          "Timing-Allow-Origin": {
+            "operation": "set",
+            "value": "*"
+          },
+          "X-Robots-Tag": {
+            "operation": "set",
+            "value": "noindex"
+          }
+        }
+      }
+    },
+    {
+      "ref": "active_content_sandbox",
+      "description": "inert CSP for markup fixtures",
+      "enabled": true,
+      "expression": "((ends_with(http.request.uri.path, \".html\") and not ends_with(http.request.uri.path, \"/index.html\")) or ends_with(http.request.uri.path, \".htm\") or ends_with(http.request.uri.path, \".xhtml\") or ends_with(http.request.uri.path, \".svg\") or ends_with(http.request.uri.path, \".xml\"))",
+      "action": "rewrite",
+      "action_parameters": {
+        "headers": {
+          "Content-Security-Policy": {
+            "operation": "set",
+            "value": "sandbox; default-src 'none'; img-src https://loremfile.dev data:; media-src https://loremfile.dev; style-src 'unsafe-inline'; font-src https://loremfile.dev"
+          }
+        }
+      }
+    },
+    {
+      "ref": "site_pages_headers",
+      "description": "site pages (extensionless keys and index.html)",
+      "enabled": true,
+      "expression": "((not http.request.uri.path contains \".\") or ends_with(http.request.uri.path, \"/index.html\"))",
+      "action": "rewrite",
+      "action_parameters": {
+        "headers": {
+          "Content-Security-Policy": {
+            "operation": "set",
+            "value": "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+          },
+          "X-Frame-Options": {
+            "operation": "set",
+            "value": "DENY"
+          },
+          "Referrer-Policy": {
+            "operation": "set",
+            "value": "strict-origin-when-cross-origin"
+          },
+          "X-Content-Type-Options": {
+            "operation": "set",
+            "value": "nosniff"
+          },
+          "Permissions-Policy": {
+            "operation": "set",
+            "value": "camera=(), microphone=(), geolocation=()"
+          }
+        }
+      }
+    }
+  ]
+}

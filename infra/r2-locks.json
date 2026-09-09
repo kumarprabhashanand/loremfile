@@ -1,0 +1,428 @@
+{
+  "rules": [
+    {
+      "id": "lock-aac",
+      "enabled": true,
+      "prefix": "aac/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-aiff",
+      "enabled": true,
+      "prefix": "aiff/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-arrow",
+      "enabled": true,
+      "prefix": "arrow/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-avi",
+      "enabled": true,
+      "prefix": "avi/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-avif",
+      "enabled": true,
+      "prefix": "avif/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-avro",
+      "enabled": true,
+      "prefix": "avro/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-bin",
+      "enabled": true,
+      "prefix": "bin/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-bmp",
+      "enabled": true,
+      "prefix": "bmp/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-csv",
+      "enabled": true,
+      "prefix": "csv/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-docx",
+      "enabled": true,
+      "prefix": "docx/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-epub",
+      "enabled": true,
+      "prefix": "epub/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-flac",
+      "enabled": true,
+      "prefix": "flac/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-geojson",
+      "enabled": true,
+      "prefix": "geojson/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-gif",
+      "enabled": true,
+      "prefix": "gif/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-gpx",
+      "enabled": true,
+      "prefix": "gpx/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-hls",
+      "enabled": true,
+      "prefix": "hls/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-ico",
+      "enabled": true,
+      "prefix": "ico/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-ini",
+      "enabled": true,
+      "prefix": "ini/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-jpg",
+      "enabled": true,
+      "prefix": "jpg/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-json",
+      "enabled": true,
+      "prefix": "json/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-kml",
+      "enabled": true,
+      "prefix": "kml/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-kmz",
+      "enabled": true,
+      "prefix": "kmz/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-log",
+      "enabled": true,
+      "prefix": "log/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-m4a",
+      "enabled": true,
+      "prefix": "m4a/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-md",
+      "enabled": true,
+      "prefix": "md/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-mkv",
+      "enabled": true,
+      "prefix": "mkv/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-mov",
+      "enabled": true,
+      "prefix": "mov/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-mp3",
+      "enabled": true,
+      "prefix": "mp3/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-mp4",
+      "enabled": true,
+      "prefix": "mp4/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-ndjson",
+      "enabled": true,
+      "prefix": "ndjson/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-ogg",
+      "enabled": true,
+      "prefix": "ogg/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-ogv",
+      "enabled": true,
+      "prefix": "ogv/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-opus",
+      "enabled": true,
+      "prefix": "opus/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-parquet",
+      "enabled": true,
+      "prefix": "parquet/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-pdf",
+      "enabled": true,
+      "prefix": "pdf/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-png",
+      "enabled": true,
+      "prefix": "png/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-pptx",
+      "enabled": true,
+      "prefix": "pptx/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-rtf",
+      "enabled": true,
+      "prefix": "rtf/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-sql",
+      "enabled": true,
+      "prefix": "sql/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-sqlite",
+      "enabled": true,
+      "prefix": "sqlite/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-svg",
+      "enabled": true,
+      "prefix": "svg/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-tiff",
+      "enabled": true,
+      "prefix": "tiff/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-toml",
+      "enabled": true,
+      "prefix": "toml/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-ts",
+      "enabled": true,
+      "prefix": "ts/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-tsv",
+      "enabled": true,
+      "prefix": "tsv/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-txt",
+      "enabled": true,
+      "prefix": "txt/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-wav",
+      "enabled": true,
+      "prefix": "wav/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-webm",
+      "enabled": true,
+      "prefix": "webm/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-webp",
+      "enabled": true,
+      "prefix": "webp/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-xlsx",
+      "enabled": true,
+      "prefix": "xlsx/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-xml",
+      "enabled": true,
+      "prefix": "xml/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-yaml",
+      "enabled": true,
+      "prefix": "yaml/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-locktest",
+      "enabled": true,
+      "prefix": "_locktest/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    }
+  ]
+}

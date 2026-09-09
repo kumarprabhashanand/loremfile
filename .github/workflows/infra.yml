@@ -2,10 +2,14 @@
 # (docs/09 §3.2b, ADR-022). The tokens live in the `production` environment and are only
 # ever read by a job running here.
 #
-# This is the first slice of M2.3. Only the `verify-tokens` mode is implemented; the
-# audit, apply, probe, restore and redact modes arrive with M2.2's apply.py and audit.py.
-# A mode that does not exist yet is not offered, so the workflow can never look like it
-# checked something it did not.
+# M2.2 adds `apply-dry-run` and `apply`. The probe, restore and redact modes arrive with
+# M2.4 and M4.4; a mode that does not exist yet is not offered, so the workflow can never
+# look like it checked something it did not.
+#
+# `apply-dry-run` exists as its own mode rather than a flag on `apply` because the point
+# of it is to be run first and read: it resolves and prints the target zone id and
+# hostname before anything could write. Ruleset entry points are written with a full PUT
+# and this account holds unrelated production zones (docs/10 §3).
 name: infra
 
 on:
@@ -18,6 +22,8 @@ on:
         type: choice
         options:
           - verify-tokens
+          - apply-dry-run
+          - apply
 
 permissions:
   contents: read
@@ -73,3 +79,34 @@ jobs:
               flag = "  <-- rotate soon" if days <= 30 else ""
               print(f"  {row['name']:24s} expires {row['expires']}  ({days} days){flag}")
           PY
+
+  apply:
+    if: inputs.mode == 'apply-dry-run' || inputs.mode == 'apply'
+    runs-on: ubuntu-24.04
+    environment: production
+    container:
+      image: ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:3ba29bb905b96fcb019b82f3f0e05f9b6472749af252fbff3f879460e0ef327c
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      # Reads the zone and refuses unless its name is loremfile.dev, before any write is
+      # possible. Run as its own step so the target is visible in the log even when the
+      # apply below fails for an unrelated reason.
+      - name: Confirm which zone this will write to
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: loremfile infra apply --dry-run
+
+      - name: Apply
+        if: inputs.mode == 'apply'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: loremfile infra apply

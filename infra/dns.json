@@ -1,0 +1,20 @@
+{
+  "records": [
+    {
+      "type": "CNAME",
+      "name": "www",
+      "content": "loremfile.dev",
+      "proxied": true
+    },
+    {
+      "type": "TXT",
+      "name": "_dmarc",
+      "content": "v=DMARC1; p=reject; rua=mailto:dmarc@loremfile.dev; adkim=s; aspf=s"
+    }
+  ],
+  "expected_managed": [
+    "apex R2 record",
+    "MX ×3 (Email Routing)",
+    "TXT SPF (Email Routing)"
+  ]
+}

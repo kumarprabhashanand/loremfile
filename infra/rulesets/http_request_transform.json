@@ -1,0 +1,32 @@
+{
+  "rules": [
+    {
+      "ref": "root_index",
+      "description": "/ → /index.html",
+      "enabled": true,
+      "expression": "(http.request.uri.path eq \"/\")",
+      "action": "rewrite",
+      "action_parameters": {
+        "uri": {
+          "path": {
+            "value": "/index.html"
+          }
+        }
+      }
+    },
+    {
+      "ref": "dir_index",
+      "description": "trailing slash → index.html",
+      "enabled": true,
+      "expression": "(ends_with(http.request.uri.path, \"/\") and http.request.uri.path ne \"/\")",
+      "action": "rewrite",
+      "action_parameters": {
+        "uri": {
+          "path": {
+            "expression": "concat(http.request.uri.path, \"index.html\")"
+          }
+        }
+      }
+    }
+  ]
+}

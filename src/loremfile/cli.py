@@ -24,6 +24,9 @@ import click
 from loremfile import __version__, config, validators
 from loremfile import build as build_module
 from loremfile.catalog import Catalog, CatalogError
+from loremfile.infra import apply as apply_infra
+from loremfile.infra import locks
+from loremfile.infra.cloudflare_api import Client, CloudflareError, ZoneScopeError
 from loremfile.manifest import (
     LOCKED_FIELDS,
     Manifest,
@@ -332,6 +335,94 @@ def validate_command(
     sys.exit(
         _emit(
             "validate", ok=not errors, summary=summary, items=items, errors=errors, as_json=as_json
+        )
+    )
+
+
+# --- infra -----------------------------------------------------------------
+
+
+@main.group()
+def infra() -> None:
+    """Desired-state files for Cloudflare and R2 (docs/08)."""
+
+
+@infra.command("apply")
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Resolve and print the plan, including the target zone, without writing.",
+)
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def infra_apply(dry_run: bool, as_json: bool) -> None:
+    """Apply infra/ to Cloudflare (docs/08 §6). Runs from infra.yml, never locally.
+
+    The zone is verified against its hostname before anything writes, and the plan names
+    the zone it resolved: ruleset entry points are written with a full PUT, and this
+    account holds unrelated production zones.
+    """
+    errors: list[str] = []
+    items: list[Item] = []
+    summary: dict[str, Any] = {}
+    try:
+        client = Client.from_env(dry_run=dry_run)
+        report = apply_infra.run(client)
+        click.echo(report.render(), err=True)
+        items = [
+            {"path": o.resource, "status": o.state, "detail": o.detail} for o in report.outcomes
+        ]
+        summary = {
+            "zone": report.hostname,
+            "zone_id": report.zone_id,
+            "dry_run": dry_run,
+            **{
+                state: sum(1 for o in report.outcomes if o.state == state)
+                for state in ("unchanged", "updated", "skipped", "manual", "failed")
+            },
+        }
+        errors = [f"{o.resource}: {o.detail}" for o in report.outcomes if o.state == "failed"]
+    except ZoneScopeError as exc:
+        # Never folded into the generic handler: this is the guard that protects the
+        # other zones on the account, and it must read as its own kind of failure.
+        errors.append(f"ZONE SCOPE REFUSED — nothing was written: {exc}")
+    except CloudflareError as exc:
+        errors.append(str(exc))
+    sys.exit(
+        _emit(
+            "infra apply",
+            ok=not errors,
+            summary=summary,
+            items=items,
+            errors=errors,
+            as_json=as_json,
+        )
+    )
+
+
+@infra.command("locks")
+@click.option("--write", is_flag=True, help="Rewrite infra/r2-locks.json.")
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def infra_locks(write: bool, as_json: bool) -> None:
+    """Generate or check the R2 bucket lock rules (docs/08 §7b).
+
+    One rule per format prefix. A format added without its rule is a prefix a leaked T2
+    could overwrite, so this is generated from the catalog rather than maintained by hand.
+    """
+    errors: list[str] = []
+    summary: dict[str, Any] = {}
+    try:
+        catalog_obj = Catalog.load()
+        rules = locks.desired_rules(catalog_obj)
+        if write:
+            locks.locks_path().write_text(locks.render(catalog_obj), encoding="utf-8")
+        else:
+            errors = locks.diff(catalog_obj)
+        summary = {"rules": len(rules), "written": write}
+    except (CatalogError, OSError, ValueError, KeyError) as exc:
+        errors.append(str(exc))
+    sys.exit(
+        _emit(
+            "infra locks", ok=not errors, summary=summary, items=[], errors=errors, as_json=as_json
         )
     )
 
