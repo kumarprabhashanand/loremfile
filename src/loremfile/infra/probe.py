@@ -724,8 +724,31 @@ def check_404_caching_is_still_absent() -> str:
     `MISS/MISS` readings, which are not evidence: a MISS means only that *this* edge node
     had not seen it. Run 6 then reported `first=MISS second=HIT age=0`, equally
     uninformative in the other direction, since `Age 0` does not establish an earlier
-    entry either. Three consecutive runs with this instrument decide, and `docs/03` §3,
-    ADR-026's premise and RISK-22 are revised together on that evidence.
+    entry either.
+
+    **Pre-registered before any of it was run**, so that a distributed edge cannot be
+    rounded to whichever answer suits. **Three runs of `CACHE_SAMPLES` samples each — 18
+    observations.** A run is *positive* if any sample reports a non-zero `Age`, and `K` is
+    the sample number at which that first happened (1..6).
+
+    (a) **404s are cached.** 3/3 runs positive, and `K <= 2` in at least two of them.
+        `docs/03` §3's **original** three-minute claim was closer to right than the
+        correction that replaced it; ADR-026's premise flips; RISK-22 **improves**,
+        because both cost controls then exist. To be stated plainly, not softened.
+
+    (b) **404s are not cached.** 0/3 runs positive — no non-zero `Age` in any of the 18
+        samples. The current statement stands, now on evidence rather than on a
+        `MISS/MISS` reading.
+
+    (c) **Cached per edge node, with no promotion.** Anything else: 1/3 or 2/3 runs
+        positive, or 3/3 positive but needing `K >= 3` in two or more of them. The most
+        likely outcome on a distributed edge, and the one that invites rounding. Decided
+        in advance to mean: **caching exists but is weak** — it bounds repeat requests
+        only on nodes that have already seen the path, so it is not a control the cost
+        model may lean on, and `docs/19` §3's scenarios are unchanged.
+
+    In every branch, `docs/03` §3, ADR-026's premise, RISK-22 and the changelog's
+    verified list are revised **together, in one pull request**, on the evidence.
     """
     missing = f"/{PROBE_PREFIX}definitely-not-here-{int(time.time())}"
     first = fetch(missing)

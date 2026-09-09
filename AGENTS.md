@@ -82,6 +82,14 @@ twice under the guard and compare bytes. A nondeterministic fixture that reaches
 manifest is frozen there permanently — `sha256`, `bytes` and `mime` can never change at a
 published path, so there is no later opportunity to fix it.
 
+**Read the diff before committing, not the intention.** Every shape below is about
+reasoning; this one is about whether the edit carried that reasoning into the repo, and it
+is the layer where nothing else is watching. Two string-slice bugs in one session —
+`s[s.index(a):s.index(b)]` where `a` occurs *after* `b`, yielding an empty slice and an
+insertion at position 0 — were both plainly visible in the diff before they became test
+failures, and one of them was followed by a restore that silently reverted good work
+alongside the bad. `ruff` caught both because they happened to be syntactically invalid.
+
 **Three shapes of assertion that is not assertable.** One family — a check that cannot
 report the thing it names — but they present differently enough that a single rule misses
 two of them. Each has its own detection question, and each was found the hard way:
