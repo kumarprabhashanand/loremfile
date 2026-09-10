@@ -1,0 +1,130 @@
+# Daily health, cost and rotation checks (docs/09 §3.3).
+#
+# Every step here reports through `gh_issue`, which de-duplicates by **label plus title**
+# and closes with a comment on the first green run. A week of failure is one issue with
+# seven comments, not seven issues — and an issue that never closes itself is one nobody
+# reads by the second month.
+#
+# NOT HERE YET: `loremfile site build` and the site-key half of `verify-live`. The site
+# arrives with M4.1 (`09` §3.3 lists both); a step that hashed an empty `build/site/`
+# would report a clean defacement check for a site that does not exist, which is the
+# worst possible shape for that particular check.
+name: health
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+    inputs:
+      inject_failure:
+        description: >-
+          REQ-27 control: report this manifest path as failing without it being so, to
+          watch the issue automation fire. A control nobody has seen fire is one nobody
+          can trust.
+        type: string
+        default: ""
+
+permissions:
+  # `contents: write` only for the Monday ops-log commit, and only to the `ops-log`
+  # branch, which carries no ruleset. `main` keeps its pull-request requirement and no
+  # workflow is granted a bypass — rulesets bypass by actor, not by path.
+  contents: write
+  issues: write
+
+jobs:
+  setup:
+    runs-on: ubuntu-24.04
+    outputs:
+      digest: ${{ steps.read.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: read
+        run: echo "digest=$(cat tools/TOOLCHAIN_DIGEST)" >> "$GITHUB_OUTPUT"
+
+  check:
+    needs: setup
+    runs-on: ubuntu-24.04
+    environment: production
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 30
+    env:
+      CLOUDFLARE_ANALYTICS_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      # Needs no credentials: it reads production over HTTPS like any visitor.
+      - id: verify
+        run: |
+          loremfile verify-live --mode daily --json \
+            ${{ inputs.inject_failure != '' && format('--inject-failure {0}', inputs.inject_failure) || '' }} \
+            > health.json || echo "failed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open, update or close the health issue
+        run: |
+          python -m loremfile.gh_issue \
+            --label health \
+            --title "Health check failing" \
+            --report health.json \
+            --state ${{ steps.verify.outputs.failed == 'true' && 'failing' || 'ok' }}
+
+      # The cost control. The Free plan has no usage-based billing notification, so this
+      # read *is* the alert (docs/19 §2, ADR-025). The threshold is applied here rather
+      # than inside `usage`, because the threshold belongs to the check and the command
+      # should stay a plain reader.
+      - name: R2 usage and the cost threshold
+        run: |
+          loremfile usage --json > usage.json || true
+          state=$(python - <<'PY'
+          import json
+          report = json.load(open("usage.json"))
+          reads = report.get("summary", {}).get("r2_class_b_mtd")
+          print("failing" if isinstance(reads, int) and reads > 5_000_000 else "ok")
+          PY
+          )
+          python -m loremfile.gh_issue \
+            --label cost \
+            --title "R2 operations above threshold" \
+            --report usage.json \
+            --state "$state"
+
+      - name: Token rotation reminder
+        run: |
+          loremfile tokens-due --json > tokens.json || true
+          state=$(python - <<'PY'
+          import json
+          report = json.load(open("tokens.json"))
+          print("failing" if report.get("summary", {}).get("due", 0) else "ok")
+          PY
+          )
+          python -m loremfile.gh_issue \
+            --label rotation-due \
+            --title "Token rotation due" \
+            --report tokens.json \
+            --state "$state"
+
+      # Mondays only. One commit a week, one row a day: the commit backfills every day in
+      # the report, so the series is daily even though the commits are weekly (docs/19
+      # §3.2 — the pre-launch missing-key rate cannot be reconstructed after Cloudflare's
+      # 90-day retention). It doubles as the keep-alive that stops GitHub disabling
+      # scheduled workflows after 60 quiet days.
+      - name: Weekly ops-log commit
+        if: github.event_name == 'schedule'
+        run: |
+          [ "$(date -u +%u)" = "1" ] || { echo "not Monday; no ops-log commit"; exit 0; }
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name loremfile-bot
+          git config user.email bot@loremfile.dev
+          git fetch origin ops-log && git checkout ops-log \
+            || { git checkout --orphan ops-log && git rm -rfq . ; }
+          python -m loremfile.ops_log --from usage.json --append ops-log.md
+          git add ops-log.md
+          git diff --cached --quiet && { echo "no new rows"; exit 0; }
+          git commit -m "ops-log: weekly numbers"
+          git push origin ops-log

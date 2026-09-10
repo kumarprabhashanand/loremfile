@@ -56,6 +56,68 @@ An audit that inherited this would open an `infra-drift` issue every run, and a 
 fires every run stops meaning anything — the failure already avoided for `fonts`/
 `speed_brain` and for `expected_drift`.
 
+### Added — `infra audit`, `audit.yml` and `health.yml` (M4.4, second half begins)
+
+**`loremfile infra audit` compares content, not writes.** `apply` PUTs every ruleset phase
+unconditionally, so it reports `updated` for all five phases plus `tiered-cache` on every
+run whether or not anything differs. An audit that inherited that would open an
+`infra-drift` issue weekly, and a label that fires every run stops meaning anything — the
+third place this failure would have appeared, after `fonts`/`speed_brain` and
+`expected_drift`.
+
+- Each phase is **read** and compared rule by rule: server-assigned fields (`id`,
+  `version`, `ref`, `last_updated`) dropped, only the fields the committed rule declares
+  compared, **in order**, because order is part of a ruleset's meaning. The consequence is
+  written down rather than hidden — a field Cloudflare filled in on its own is invisible
+  here. We own what we declare.
+- `tiered-cache` is **read** too, instead of PATCHed and reported as changed.
+- **Unreadable is a warning, not a failure.** A permission that cannot read a setting says
+  nothing about whether the setting is right, and failing on it would make the audit
+  useless on the days it matters.
+
+**"The audit never writes" is now enforced rather than trusted.** `audit.yml` holds T1,
+which *can* write — Cloudflare tokens cannot be split read/write per call — so:
+
+- `Client` gains `read_only=True`, which raises `ReadOnlyError` on any write method
+  **before the call is even recorded**. Distinct from `dry_run`, which no-ops a write and
+  reports what it would have done: a dry run is a rehearsal of writing, a read-only client
+  asserts that writing is not part of the job.
+- A unit test walks `audit.py`'s AST for `put`/`patch`/`post`/`delete` and names the
+  offender, so it fails at review time as well as at run time.
+- A third test asserts `audit.CHECKS` covers exactly the resources `apply.STEPS` writes.
+  An audit that silently skipped one would report a clean zone for a zone it never looked
+  at — worse than reporting drift, because it looks like good news.
+
+**`audit.yml`**: weekly infra audit, plus the determinism audit on the first Monday of the
+month or on demand. `build --audit` exits non-zero on *real* drift only, so the four
+`expected_drift` fixtures cannot train anyone to close the issue unread.
+
+**`health.yml`**: daily `verify-live --mode daily`, the R2 cost threshold, the token
+rotation reminder, and the Monday ops-log commit that doubles as the 60-day keep-alive.
+Thresholds live in the workflow, not in the commands: a threshold belongs to the check, and
+`usage`/`tokens-due` stay plain readers. The site steps are **not** there — `site build`
+arrives with M4.1, and hashing an empty `build/site/` would report a clean **defacement**
+check for a site that does not exist.
+
+### Added — a workflow cannot invoke a command that does not exist
+
+Written from two incidents rather than from theory. `tokens-due` was named by `docs/09`
+§4's `health.yml` block and had never been implemented; `infra audit` was named by §3.2 and
+§3.4 and had never been written. Both were caught by reading, which works right up until
+the week nobody reads — and a workflow that invokes a missing command fails at 04:17 on a
+Sunday, with the first symptom being a scheduled job that has been red for a month.
+
+`tests/unit/test_workflow_commands.py` parses every `run:` block in every workflow, walks
+the click tree for each `loremfile …` invocation, and checks the long options against the
+command's declared parameters. It ships with the negative control its own shape demands:
+every assertion is "everything found is valid", which an extractor that found nothing would
+satisfy, so a first test pins that it really is reading the workflows. Verified by
+temporarily adding `--nonsense` to `audit.yml`, which failed with the option list.
+
+Two false positives found and fixed while writing it: shell comments mentioning "the
+loremfile package", and a `\s+` that swallowed the next line's `fi` and `git` as though they
+were subcommands.
+
 ### Verified — the first real objects are published, and multipart changes nothing
 
 Two staged dispatches of `deploy.yml`, reviewed between them. Eleven objects are now

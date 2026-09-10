@@ -26,6 +26,7 @@ from loremfile import __version__, config, validators
 from loremfile import build as build_module
 from loremfile.catalog import Catalog, CatalogError
 from loremfile.infra import apply as apply_infra
+from loremfile.infra import audit as audit_infra
 from loremfile.infra import locks
 from loremfile.infra import probe as probe_module
 from loremfile.infra import purge as purge_module
@@ -829,6 +830,52 @@ def usage_command(days: int, daily_days: int, as_json: bool) -> None:
             errors=errors,
             as_json=as_json,
             extra={"daily": series},
+        )
+    )
+
+
+@infra.command("audit")
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def infra_audit(as_json: bool) -> None:
+    """Report how the zone differs from infra/ (docs/09 §3.4). Reads; never writes.
+
+    Not `apply --dry-run`. A dry run rehearses the write and reports what it *would*
+    do — and because ruleset phases are written with an unconditional PUT, that is
+    `updated` on every run whether or not anything differs. This reads the deployed
+    state and compares content, so `drift` means drift.
+    """
+    errors: list[str] = []
+    summary: dict[str, Any] = {}
+    items: list[Item] = []
+    try:
+        # Read-only at the transport: a check that grew a write raises rather than
+        # quietly converging the drift it was sent to report.
+        client = Client.from_env(read_only=True)
+        report = audit_infra.run(client)
+        click.echo(report.render(), err=True)
+        summary = {
+            "zone": report.hostname,
+            "zone_id": report.zone_id,
+            "checked": len(report.findings),
+            "drift": len(report.drifted),
+            "unreadable": len(report.unreadable),
+        }
+        items = [
+            {"path": f.resource, "status": f.state, "detail": f.detail} for f in report.findings
+        ]
+        errors = [f"{f.resource}: {f.detail}" for f in report.drifted]
+    except ZoneScopeError as exc:
+        errors.append(f"ZONE SCOPE REFUSED: {exc}")
+    except (CloudflareError, OSError, ValueError, KeyError) as exc:
+        errors.append(str(exc))
+    sys.exit(
+        _emit(
+            "infra audit",
+            ok=not errors,
+            summary=summary,
+            items=items,
+            errors=errors,
+            as_json=as_json,
         )
     )
 

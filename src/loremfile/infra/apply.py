@@ -112,7 +112,7 @@ def infra_dir() -> Path:
     return config.repo_root() / "infra"
 
 
-def _load(name: str) -> Any:  # noqa: ANN401 - each file has its own shape
+def load_desired(name: str) -> Any:  # noqa: ANN401 - each file has its own shape
     return json.loads((infra_dir() / name).read_text(encoding="utf-8"))
 
 
@@ -121,7 +121,7 @@ def _is_forbidden(response: Response) -> bool:
 
 
 def apply_zone_settings(client: Client, report: Report) -> None:
-    desired = _load("zone-settings.json")
+    desired = load_desired("zone-settings.json")
     current = client.get(f"/zones/{client.zone_id}/settings")
     if not current.ok:
         report.add("zone-settings", "failed", current.errors)
@@ -149,7 +149,7 @@ def apply_zone_settings(client: Client, report: Report) -> None:
 
 
 def apply_bot_management(client: Client, report: Report) -> None:
-    desired = _load("bot-management.json")
+    desired = load_desired("bot-management.json")
     current = client.get(f"/zones/{client.zone_id}/bot_management")
     if _is_forbidden(current):
         report.add("bot-management", "manual", FALLBACKS["bot-management"])
@@ -185,7 +185,7 @@ def apply_dnssec(client: Client, report: Report) -> None:
 
 def apply_dns(client: Client, report: Report) -> None:
     """Ensure the records we own. Never deletes: Email Routing owns MX and SPF."""
-    desired = _load("dns.json")["records"]
+    desired = load_desired("dns.json")["records"]
     listing = client.get(f"/zones/{client.zone_id}/dns_records?per_page=100")
     if not listing.ok:
         report.add("dns", "failed", listing.errors)
@@ -229,7 +229,7 @@ def managed_ruleset_deployed(client: Client) -> dict[str, Any] | None:
 def apply_rulesets(client: Client, report: Report) -> None:
     for phase in WRITTEN_PHASES:
         path = f"/zones/{client.zone_id}/rulesets/phases/{phase}/entrypoint"
-        rules = _load(f"rulesets/{phase}.json")["rules"]
+        rules = load_desired(f"rulesets/{phase}.json")["rules"]
         response = client.put(path, {"rules": rules})
         if response.ok:
             report.add(phase, "updated", f"{len(rules)} rule(s)")
