@@ -178,6 +178,19 @@ jobs:
 
 Ordering rationale: fixtures first (immutable, safe to be early), removals next (rare), then site (references fixtures), then purge, then infra, then verification. A failure at any step stops the job; nothing after "upload --fixtures" can undo a fixture upload, and nothing needs to (immutability).
 
+**As implemented in M4.4, and what it does not yet carry.** The workflow above is the target. What landed differs in five places, each recorded here rather than left for a reader to discover from a red cross:
+
+| Deferred | Why | Returns with |
+|---|---|---|
+| `loremfile site build`, `upload --site`, `purge --site` | `site build` does not exist. Uploading an empty `build/site/` would report success for a site that is not there | M4.1 |
+| `loremfile infra audit` | Only `apply.py` landed in M2.2; `audit.py` was never written | `audit.yml`, M4.4 second half |
+| `-j 4` on the build | `-j` is not implemented and the measurement in `06` §11 says it need not be yet | M7 |
+| `push: branches: [main]` | **A judgement, not a missing command** — see below | the first green dry run |
+
+**Why the trigger is deferred and the dry run exists.** Per-merge deployment is the steady state (`15` M3) and this workflow is built for it. But its first run is also the first time `loremfile upload` has ever addressed a bucket, and its writes land under **indefinite lock rules**: published, locked, permanent. A first exercise that is also an irreversible one is the wrong order — the same caveat `release.py` carries, that a green unit suite is not evidence about a path which has never seen a real object. So the workflow ships dispatch-only with a `mode` input defaulting to `dry-run`, which performs the real listing, the real HEADs, the real gate evaluation and the real source hashing, and writes nothing. When that run is green the trigger becomes `push: branches: [main]`, a three-line change.
+
+**Where the bytes come from.** `--carry-forward <dir>` is the second gate's other half. The deploy resolves the pull request that produced the merge commit, finds that pull request's successful `ci.yml` run, and downloads its `carry-forward-fixtures` artifact. **That lookup does not have to be trusted**: `upload --fixtures` hashes every byte it is about to publish against the manifest and refuses anything that does not match, so an artifact from the wrong run cannot pass and provenance is established by content rather than by a run id. A missing artifact is likewise not an error in that step — most merges carry no `expected_drift` fixture, and the gate, which knows which paths need one, is what decides whether the absence matters.
+
 ### 3.2b `infra.yml` — on demand (maintainer operations without local credentials)
 
 ```yaml

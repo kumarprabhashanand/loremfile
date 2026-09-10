@@ -1,0 +1,197 @@
+# Publish fixtures to R2 (docs/09 §3.2).
+#
+# Per-merge deployment is a correctness requirement here, not an optimisation. Fixtures
+# marked `expected_drift` cannot be rebuilt byte for byte on other hardware (docs/06 §4),
+# so between the pull request and the deploy their bytes exist only in the
+# `carry-forward-fixtures` artifact — which expires after 90 days (docs/15 M3).
+#
+# TWO BLOCKING GATES, both enforced in `loremfile upload` rather than here, so they hold
+# for a local dry run too:
+#   1. No upload to a prefix without a bucket lock rule. The M3 deferral of locks ends at
+#      the first deploy: publishing onto an unlocked prefix leaves those objects mutable
+#      by a leaked T2, which is the threat ADR-023 exists to close.
+#   2. No regeneration of an `expected_drift` path. Those bytes come from the artifact or
+#      the deploy fails; it never substitutes a rebuild.
+#
+# NOT HERE YET, and deliberately not stubbed. `docs/09` §3.2 lists four steps this
+# workflow does not carry, each because its command does not exist:
+#   * `loremfile site build`, `upload --site`, `purge --site` — the site is M4.1. A step
+#     uploading an empty `build/site/` would report success for a site that does not exist.
+#   * `loremfile infra audit` — only `apply.py` landed in M2.2; the audit arrives with
+#     `audit.yml` in the second half of M4.4.
+# Each is added by the milestone that implements it, rather than standing here as a
+# guaranteed red cross.
+#
+# NOT ON `push` YET, and this is the one deferral that is a judgement rather than a
+# missing command. `docs/09` §3.2 specifies `push: branches: [main]`, and that is the
+# steady state (`docs/15` M3): every merge deploys within hours, on the same fleet.
+# But the first run of this workflow is also the first time `loremfile upload` has ever
+# touched a bucket, and its writes land under **indefinite lock rules** — published,
+# locked, permanent. A first exercise that is also an irreversible one is the wrong
+# order, and the same shape as the `release.py` caveat: a green unit suite is not
+# evidence that a path which has never seen a real object works.
+#
+# So: dispatch `mode: dry-run` first. It does everything except write — real listing,
+# real HEADs, real gate evaluation, `--dry-run` on both upload steps and no infra apply.
+# When that run is green, the trigger below becomes
+#
+#     on:
+#       push:
+#         branches: [main]
+#       workflow_dispatch:
+#
+# which is a three-line change, and the deferral ends.
+name: deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: dry-run plans and writes nothing; deploy publishes
+        required: true
+        default: dry-run
+        type: choice
+        options:
+          - dry-run
+          - deploy
+      apply_infra:
+        description: Apply infra/ even when it has not changed
+        type: boolean
+        default: false
+
+# Never two deploys at once, and never cancel one midway: a cancelled upload leaves the
+# bucket in a state nothing described.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  # Reading the `carry-forward-fixtures` artifact from the pull request's CI run.
+  actions: read
+
+jobs:
+  # tools/TOOLCHAIN_DIGEST is the only place the digest lives (docs/09 §2).
+  setup:
+    runs-on: ubuntu-24.04
+    outputs:
+      digest: ${{ steps.read.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: read
+        run: echo "digest=$(cat tools/TOOLCHAIN_DIGEST)" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: setup
+    runs-on: ubuntu-24.04
+    environment: production
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 60
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET: ${{ vars.R2_BUCKET }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      # The bytes of `expected_drift` fixtures, from the CI run that built them and wrote
+      # the manifest entries describing them. Resolved through the pull request that
+      # produced this commit, because a squash merge gives the merge commit a SHA no CI
+      # run has ever seen.
+      #
+      # A failure to find it is NOT a failure here. Most merges carry no such fixture, and
+      # the gate in `upload --fixtures` is what decides whether the absence matters — it
+      # knows which paths need the artifact and this step does not. Nor does the run id
+      # need to be trusted: `upload` hashes every byte against the manifest before
+      # publishing it, so an artifact from the wrong run cannot pass.
+      - name: Fetch the fixtures that cannot be rebuilt
+        id: carry
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -u
+          mkdir -p carry-forward
+          head_sha="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" \
+            --jq '.[0].head.sha' 2>/dev/null || true)"
+          [ -n "${head_sha:-}" ] && [ "$head_sha" != "null" ] || head_sha="$GITHUB_SHA"
+          echo "looking for the ci run of $head_sha"
+          run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --limit 100 \
+            --json databaseId,headSha,conclusion \
+            --jq "[.[] | select(.headSha==\"$head_sha\" and .conclusion==\"success\")][0].databaseId" \
+            2>/dev/null || true)"
+          if [ -z "${run_id:-}" ] || [ "$run_id" = "null" ]; then
+            echo "no successful ci run found for $head_sha; carry-forward/ stays empty"
+            exit 0
+          fi
+          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" \
+            -n carry-forward-fixtures -D carry-forward \
+            || echo "run $run_id published no carry-forward-fixtures artifact"
+          find carry-forward -type f | sed 's/^/  /' || true
+
+      # Only manifest entries whose key is absent from the bucket, and never an
+      # `expected_drift` path: on this runner that would be a rebuild, and the manifest
+      # describes what a different runner produced.
+      - name: Generate what the bucket is missing
+        run: loremfile build --missing-in-bucket
+
+      - name: Validate the generated bytes
+        run: loremfile validate
+
+      # The manifest is never rewritten here. Regenerated bytes must equal what is
+      # committed, or the deploy stops.
+      - name: Check the regenerated bytes against the manifest
+        run: loremfile manifest check
+
+      # Both gates are evaluated in dry-run exactly as they are in a real deploy: the
+      # bucket is listed, every published object is HEADed, every source is hashed. The
+      # only difference is that nothing is written.
+      - name: Publish fixtures
+        run: |
+          loremfile upload --fixtures --carry-forward carry-forward \
+            ${{ inputs.mode == 'dry-run' && '--dry-run' || '' }}
+
+      - name: Apply removals
+        run: |
+          loremfile upload --apply-removals \
+            ${{ inputs.mode == 'dry-run' && '--dry-run' || '' }}
+
+      - id: infra_changed
+        run: |
+          base="$(git rev-parse HEAD~1 2>/dev/null || true)"
+          if [ -z "$base" ]; then
+            echo "no previous commit to compare against; treating infra/ as unchanged"
+          elif git diff --name-only "$base" "$GITHUB_SHA" -- infra/ | grep -q .; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Prints the target zone id and hostname before anything could write; the account
+      # holds unrelated production zones (docs/10 §3).
+      - name: Show what an infra apply would do
+        run: loremfile infra apply --dry-run
+
+      - name: Apply infra when infra/ changed or requested
+        if: >-
+          inputs.mode == 'deploy'
+          && (steps.infra_changed.outputs.changed == 'true' || inputs.apply_infra)
+        run: loremfile infra apply
+
+      # `loremfile infra audit` is listed here by docs/09 §3.2 and does not exist: only
+      # `apply.py` landed in M2.2. It arrives with `audit.yml`, in the second half of
+      # M4.4, and is added to this workflow by that milestone. A step that cannot run is
+      # a guaranteed red cross, and a red cross nobody can fix is one everybody learns to
+      # ignore.
+
+      # Not in dry-run: nothing has been published, so every fixture would 404 and the
+      # run would be red for a reason that has nothing to do with what it was testing.
+      - name: Smoke-test production
+        if: inputs.mode == 'deploy'
+        run: loremfile verify-live --mode smoke

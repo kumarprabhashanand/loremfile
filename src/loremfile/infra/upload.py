@@ -23,12 +23,18 @@ which would be how a published byte changes.
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
 from loremfile.catalog import Catalog
+
+#: What `live` carries for an object that exists but has no `sha256` metadata to compare
+#: with. Kept as a named value rather than an empty string so the failure says which of
+#: the two things went wrong.
+UNVERIFIABLE = "<no sha256 metadata>"
 
 #: Multipart above this, per docs/09 §5.
 MULTIPART_THRESHOLD = 16 * 1024 * 1024
@@ -128,6 +134,84 @@ def carry_forward_gate(keys: list[str], catalog: Catalog, available: dict[str, P
     return blockers
 
 
+def sources(
+    keys: list[str],
+    *,
+    catalog: Catalog,
+    build_dir: Path,
+    carry_forward: Path | None = None,
+) -> dict[str, Path]:
+    """Where each key's bytes may be read from.
+
+    The split is the whole point. An `expected_drift` key is resolved **only** against the
+    carry-forward directory, never against `build/fixtures/`, even when a file is sitting
+    there: on the deploy runner that file is a *rebuild*, produced by whichever CPU drew
+    this job, and the manifest describes the bytes some other runner produced (`docs/06`
+    §4). Reading it would be the exact substitution `carry_forward_gate` exists to refuse,
+    except silent — the gate only fires on absence, so if this function offered the
+    rebuild the gate would never see a missing key at all.
+    """
+    by_path = catalog.by_path
+    found: dict[str, Path] = {}
+    for key in keys:
+        fixture = by_path.get(key)
+        if fixture is not None and fixture.expected_drift:
+            if carry_forward is None:
+                continue
+            candidate = carry_forward / key
+        else:
+            candidate = build_dir / key
+        if candidate.is_file():
+            found[key] = candidate
+    return found
+
+
+def sha256_of(path: Path) -> tuple[str, int]:
+    """The digest and length of a file, read in chunks so a 100 MB fixture is fine."""
+    digest = hashlib.sha256()
+    length = 0
+    with path.open("rb") as handle:
+        while chunk := handle.read(1024 * 1024):
+            digest.update(chunk)
+            length += len(chunk)
+    return digest.hexdigest(), length
+
+
+def verify_sources(plan: Plan, entries: list[dict[str, Any]]) -> list[str]:
+    """Hash every byte about to be uploaded and refuse anything the manifest disowns.
+
+    The plan says *which* file to read; it cannot say whether that file holds the right
+    bytes. For a freshly built fixture the two coincide, so this looks redundant — but
+    the carry-forward path reads an artifact **downloaded from a different workflow run**,
+    which is untrusted input by construction. Verifying here is what makes the download
+    safe to do loosely: an artifact from the wrong run cannot pass, so provenance is
+    established by content rather than by trusting the run id.
+
+    It also closes the smaller hole in the ordinary path. Without it the upload would
+    stamp the *manifest's* sha256 onto whatever bytes the file happened to hold, and the
+    metadata would then agree with the manifest for an object that does not.
+    """
+    by_path = {entry["path"]: entry for entry in entries}
+    blockers: list[str] = []
+    for step in plan.by_action(Action.UPLOAD):
+        entry = by_path.get(step.key)
+        if entry is None:  # pragma: no cover - the plan is built from these entries
+            blockers.append(f"{step.key}: no manifest entry")
+            continue
+        digest, length = sha256_of(Path(step.source))
+        if digest != entry["sha256"]:
+            blockers.append(
+                f"{step.key}: {step.source} hashes to {digest[:12]} but the manifest says "
+                f"{str(entry['sha256'])[:12]}. Refusing to publish bytes the manifest does "
+                "not describe."
+            )
+        elif length != int(entry["bytes"]):
+            blockers.append(
+                f"{step.key}: {step.source} is {length} bytes, manifest says {entry['bytes']}"
+            )
+    return blockers
+
+
 # --- the plan ---------------------------------------------------------------
 
 
@@ -153,6 +237,16 @@ def plan_fixtures(
         if stored is not None:
             if stored == entry["sha256"]:
                 plan.steps.append(Step(key, Action.SKIP, "already published, hash matches"))
+            elif stored == UNVERIFIABLE:
+                plan.steps.append(
+                    Step(
+                        key,
+                        Action.FAIL,
+                        "published but carrying no sha256 metadata, so it cannot be "
+                        "compared with the manifest. Refusing rather than assuming the "
+                        "bytes are the right ones.",
+                    )
+                )
             else:
                 plan.steps.append(
                     Step(

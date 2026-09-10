@@ -29,7 +29,9 @@ from loremfile.infra import apply as apply_infra
 from loremfile.infra import locks
 from loremfile.infra import probe as probe_module
 from loremfile.infra import purge as purge_module
+from loremfile.infra import r2 as r2_module
 from loremfile.infra import tokens as tokens_module
+from loremfile.infra import upload as upload_module
 from loremfile.infra import usage as usage_module
 from loremfile.infra import verify_live as verify_live_module
 from loremfile.infra.cloudflare_api import Client, CloudflareError, ZoneScopeError
@@ -43,6 +45,25 @@ from loremfile.manifest import (
 )
 
 Item = dict[str, str]
+
+
+def _zone_client() -> Client:
+    """A Cloudflare client that has confirmed which zone it is pointed at.
+
+    The account holds unrelated production zones (docs/10 §3), and a purge is a write.
+    """
+    client = Client.from_env()
+    client.verify_zone()
+    return client
+
+
+class UploadUnavailable(RuntimeError):
+    """A publish mode whose producer does not exist yet.
+
+    Raised rather than reported as a success over an empty directory: "uploaded 0 site
+    objects" and "there is no site" look identical in a log, and only one of them means
+    the deploy did its job.
+    """
 
 
 def _emit(
@@ -236,6 +257,11 @@ def build_command(
     summary: dict[str, Any] = {}
     try:
         catalog_obj = Catalog.load()
+
+        def in_bucket() -> set[str]:
+            """Called only when `--missing-in-bucket` is the selection."""
+            return r2_module.list_keys(r2_module.client(), r2_module.bucket_name())
+
         chosen = build_module.select(
             catalog_obj,
             selection=build_module.Selection(selection),
@@ -243,6 +269,7 @@ def build_command(
             formats=formats,
             group=group,
             phase=phase,
+            in_bucket=in_bucket,
         )
         results = build_module.build(chosen)
         if audit:
@@ -261,7 +288,13 @@ def build_command(
         items = [
             {"path": r.path, "status": "ok", "detail": f"{len(r.data)} bytes"} for r in results
         ]
-    except (build_module.BuildError, CatalogError, ValueError, KeyError) as exc:
+    except (
+        build_module.BuildError,
+        CatalogError,
+        r2_module.R2Error,
+        ValueError,
+        KeyError,
+    ) as exc:
         errors.append(str(exc))
     sys.exit(
         _emit("build", ok=not errors, summary=summary, items=items, errors=errors, as_json=as_json)
@@ -404,6 +437,152 @@ def infra_apply(dry_run: bool, as_json: bool) -> None:
             errors=errors,
             as_json=as_json,
         )
+    )
+
+
+@main.command("upload")
+@click.option("--fixtures", "fixtures", is_flag=True, help="Publish missing manifest entries.")
+@click.option(
+    "--apply-removals",
+    "removals",
+    is_flag=True,
+    help="Delete objects whose manifest entry is status: removed (takedown flow).",
+)
+@click.option("--site", "site", is_flag=True, help="Publish build/site/ (M4.1).")
+@click.option(
+    "--carry-forward",
+    "carry_forward",
+    type=click.Path(path_type=Path, file_okay=False),
+    help="Directory holding the bytes of expected_drift fixtures (the CI artifact).",
+)
+@click.option("--dry-run", "dry_run", is_flag=True, help="Print the plan; write nothing.")
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def upload_command(
+    fixtures: bool,
+    removals: bool,
+    site: bool,
+    carry_forward: Path | None,
+    dry_run: bool,
+    as_json: bool,
+) -> None:
+    """Publish to R2 (docs/09 §5). Needs T2; never overwrites a fixture."""
+    errors: list[str] = []
+    summary: dict[str, Any] = {}
+    items: list[Item] = []
+    chosen = [
+        name
+        for name, on in (("--fixtures", fixtures), ("--apply-removals", removals), ("--site", site))
+        if on
+    ]
+    if len(chosen) != 1:
+        sys.exit(
+            _emit(
+                "upload",
+                ok=False,
+                summary={},
+                items=[],
+                errors=["choose exactly one of --fixtures, --apply-removals, --site"],
+                as_json=as_json,
+            )
+        )
+    try:
+        if site:
+            raise UploadUnavailable(
+                "--site needs `loremfile site build`, which arrives with M4.1. Publishing "
+                "an empty build/site/ would report success for a site that does not "
+                "exist. `--force-site` arrives with it, for the same reason: an option "
+                "that changes nothing is worse than an absent one."
+            )
+        manifest = Manifest.load()
+        bucket = r2_module.bucket_name()
+        s3 = r2_module.client()
+        if fixtures:
+            entries = list(manifest.active)
+            live = r2_module.live_hashes(s3, bucket, [e["path"] for e in entries])
+            catalog_obj = Catalog.load()
+            available = upload_module.sources(
+                [e["path"] for e in entries],
+                catalog=catalog_obj,
+                build_dir=build_module.fixtures_dir(),
+                carry_forward=carry_forward,
+            )
+            plan = upload_module.plan_fixtures(
+                entries,
+                live,
+                available,
+                catalog=catalog_obj,
+                lock_rules=locks.committed_rules(),
+            )
+            # Hash what is about to be published. The carry-forward bytes come from a
+            # different workflow run, so they are untrusted input; this is what makes
+            # downloading that artifact loosely safe.
+            plan.blockers += upload_module.verify_sources(plan, entries)
+        else:
+            # Only the tombstones. HEADing every published fixture to find out which of
+            # them is being removed would be ~160 Class B reads to answer a question the
+            # manifest already answers.
+            tombstoned = [e["path"] for e in manifest.entries if e.get("status") == "removed"]
+            live = r2_module.live_hashes(s3, bucket, tombstoned)
+            plan = upload_module.plan_removals(manifest.entries, live)
+
+        click.echo(plan.render(), err=True)
+        by_path = manifest.by_path
+        done = 0
+        if plan.ok and not dry_run:
+            for step in plan.steps:
+                if step.action is upload_module.Action.UPLOAD:
+                    entry = by_path[step.key]
+                    r2_module.put_fixture(
+                        s3,
+                        bucket,
+                        step.key,
+                        Path(step.source),
+                        mime=str(entry["mime"]),
+                        sha256=str(entry["sha256"]),
+                    )
+                    done += 1
+                elif step.action is upload_module.Action.REMOVE:
+                    r2_module.delete(s3, bucket, step.key)
+                    # docs/09 §5: delete *and* purge. A removed object still cached at
+                    # the edge is still being served, which is the only thing a takedown
+                    # is measured on.
+                    purged = purge_module.purge_removed_url(
+                        _zone_client(), f"https://{config.SITE_HOST}/{step.key}"
+                    )
+                    errors += purged.errors
+                    done += 1
+        summary = {
+            "mode": chosen[0].lstrip("-"),
+            "uploaded": len(plan.by_action(upload_module.Action.UPLOAD)),
+            "skipped": len(plan.by_action(upload_module.Action.SKIP)),
+            "removed": len(plan.by_action(upload_module.Action.REMOVE)),
+            "failed": len(plan.by_action(upload_module.Action.FAIL)),
+            "bytes": sum(s.size for s in plan.by_action(upload_module.Action.UPLOAD)),
+            "written": done,
+            "dry_run": dry_run,
+        }
+        items = [
+            {"path": step.key, "status": step.action.value, "detail": step.reason}
+            for step in plan.steps
+            if step.action is not upload_module.Action.SKIP
+        ]
+        errors = [
+            *plan.blockers,
+            *(f"{s.key}: {s.reason}" for s in plan.by_action(upload_module.Action.FAIL)),
+        ]
+    except ZoneScopeError as exc:
+        errors.append(f"ZONE SCOPE REFUSED: {exc}")
+    except (
+        UploadUnavailable,
+        r2_module.R2Error,
+        CloudflareError,
+        ManifestError,
+        CatalogError,
+        OSError,
+    ) as exc:
+        errors.append(str(exc))
+    sys.exit(
+        _emit("upload", ok=not errors, summary=summary, items=items, errors=errors, as_json=as_json)
     )
 
 
