@@ -48,9 +48,9 @@ Alerts: the Free plan has **no** usage-based billing notification (that is a Pro
 > The scenarios below already assume every request is an R2 read, so neither result moves
 > them. What changed is that both controls are evidenced rather than assumed.
 
-Conventions: R2 Class B reads at USD 0.36 per million after the 10 M free tier; the free tier is subtracted in every row; detection latency is the daily health/cost check (≤ 1 day) plus the weekly session to act (≤ 7 days). Query strings are excluded from the cache key, so `?random` busting costs nothing; the remaining read-amplification vectors are unique non-existent paths (each a 404 read cached 3 minutes), distinct `Origin` values (each a cache entry) and many IPs below DDoS thresholds. **Assumption [VERIFY]:** a GET for a missing key is billed as a Class B operation. R2's pricing FAQ exempts only unauthorized (401) requests and says nothing about 404s, so the model conservatively counts them.
+Conventions: R2 Class B reads at USD 0.36 per million after the 10 M free tier; the free tier is subtracted in every row; detection latency is the daily health/cost check (≤ 1 day) plus the weekly session to act (≤ 7 days). Query strings are excluded from the cache key, so `?random` busting costs nothing; the remaining read-amplification vectors are unique non-existent paths (each a 404 read cached 3 minutes), distinct `Origin` values (each a cache entry) and many IPs below DDoS thresholds. **Measured 2026-09-10, branch (a):** a GET for a missing key **is recorded by R2 as a Class B operation**, and Cloudflare's own free-tier consumption counter moves with those records. R2's pricing FAQ exempts only unauthorized (401) requests and says nothing about 404s; the model counts them, now on evidence rather than on conservatism. The measurement and its two deviations are below.
 
-**The measurement, pre-registered before it is run.** The 404 result changed what it has to measure: with 404s confirmed cached (`03` §3), repeating one path would measure the *cache* rather than the billing. So it fires **1,000 unique paths**, each a guaranteed miss.
+**The measurement, pre-registered before it was run.** The 404 result changed what it has to measure: with 404s confirmed cached (`03` §3), repeating one path would measure the *cache* rather than the billing. So it fires **1,000 unique paths**, each a guaranteed miss.
 
 Attribution is by dimension rather than by a total. `r2OperationsAdaptiveGroups` reports `actionType: GetObject` with `actionStatus: userError` — a GET for a key that does not exist — so the delta in *that* counter is those requests and nothing else, rather than a total that other traffic also moves.
 
@@ -77,6 +77,57 @@ If they agree, RISK-22's residual is recorded as **accepted-on-evidence** — an
 | 1,000 IPs × 1 rps unique paths (below DDoS detection) for 7 days | 605 M reads ≈ USD 214 for the week; USD 930/month if never stopped | `cost` issue on day 1 (5 M crossed within 2 hours); custom rule blocking paths outside known prefixes or Under Attack mode; big red button within the week bounds it to ≈ USD 30–220 |
 | Legitimate viral usage: 10 M requests/day, 97 % hit ratio | 9 M reads/month ≈ USD 0 | None needed |
 | 500 distinct embedding origins × 400 P1 fixtures × ~30 data centres (worst-case fragmentation) | 6 M reads once, then cached ≈ USD 0 | None needed; Smart Tiered Cache keeps it lower |
+
+### 3.1 The result, 2026-09-10 — branch (a), on both instruments
+
+Attended run, handshaked with the owner: the dashboard readings are theirs, the analytics
+readings are the token's.
+
+| # | Reading | Time (UTC) | `GetObject`/`userError` MTD | Class B MTD | R2 → Overview |
+|---|---|---|---|---|---|
+| 1 | baseline | 09:04:40 | 1,865 | 2,028 | — |
+| 2 | baseline | 09:15:22 | 1,866 | 2,036 | — |
+| 3 | owner, before | ~09:16 | — | — | **1.89 k** |
+| — | *burst: 1,000 unique paths, 0 blocked, 14.2 req/s* | 09:17:29–09:18:40 | | | |
+| 4 | owner, after | ~12:20 | — | — | **3.3 k** |
+| 5 | post-burst | 12:16:18 | 3,169 | 3,345 | — |
+| 6 | post-burst | 12:26:44 | 3,169 | 3,351 | — |
+
+**Attribution is exact rather than inferred.** The same counter restricted to the burst
+window (09:15–09:25Z) reads **exactly 1,000**, and re-reads at 1,000 three hours later; the
+zone side agrees within adaptive sampling (998 estimated 404s from one address). Every
+request sent was recorded. Post-burst readings 5 and 6, ten minutes apart, agree on the
+load-bearing counter **exactly** (3,169 both times); the Class B *total* differs by 6, which
+is background `ListBuckets`/`HeadObject` traffic and not the dimension under test.
+
+**The billing side agrees.** The owner's Overview moved **1.89 k → 3.3 k**; the analytics
+Class B total moved **2,040 → 3,351** over the same span. Two independent consumption
+records, agreeing on level and on movement. RISK-22's residual is therefore
+**accepted-on-evidence**, in the sense defined immediately above: two agreeing consumption
+records, not an observed invoice.
+
+**Two deviations from the procedure, recorded rather than smoothed.**
+
+- The baseline pair did **not** agree strictly — +1 on the load-bearing counter over 10m42s,
+  about 0.1/min. That was reported before the burst was fired rather than after it. At that
+  rate the drift cannot reach either branch boundary within the run — it would need roughly
+  eight hours to move 50 — so it cannot change the verdict; but the criterion said *agree*
+  and it did not, and the run continued on the owner's judgement rather than on the rule.
+- The post-burst wait was **~3 hours**, not the 10 minutes specified, because the run was
+  attended and the owner's second reading came late. This strengthens the result rather
+  than weakening it: at that distance, "the dashboard has not caught up yet" is no longer
+  an available explanation for a moving *or* a flat reading.
+
+**An unsolicited replication, thirty minutes later.** At 09:48–09:49Z a single address
+(`34.19.163.21`, a cloud host) sprayed the zone with `.env`, `phpinfo.php`,
+`firebase-adminsdk.json` and similar credential paths — about 283 requests, 282 of them
+cache misses, 43 distinct paths in the sample. R2 recorded **273** further
+`GetObject`/`userError` operations in those two minutes. Nobody arranged it. The scenario
+table's own vector arrived unprompted, on a domain with no audience yet, and produced the
+same kind of record as the synthetic burst. It also sizes the floor: outside these two
+events the background rate was ≈0.1 missing-key reads per minute. The mitigation — a rule
+bounding requests to known prefixes — belongs to M4.4; this section records only that the
+vector is live rather than theoretical.
 
 ## 4. What spending a little money would buy — and whether it is worth it
 

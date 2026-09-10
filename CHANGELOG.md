@@ -44,6 +44,44 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Verified — R2 counts a 404 as a Class B read; the cost model's premise holds
+
+The measurement pre-registered in `docs/19` §3 was run attended, as a handshake with the
+owner, on 2026-09-10. **Branch (a), on both instruments.**
+
+- **1,000 unique missing paths produced exactly 1,000 `GetObject`/`userError` records.**
+  Fired 09:17:29–09:18:40Z at 14.2 req/s; all 1,000 returned 404 and **none** were stopped
+  by our own rate limit, so all 1,000 reached R2. The counter restricted to the burst
+  window reads 1,000 on two reads three hours apart — attribution by dimension, not a delta
+  against noise. Threshold was ≥ 900.
+- **The billing side agrees.** The owner's R2 → Overview moved **1.89 k → 3.3 k**; the
+  analytics Class B total moved **2,040 → 3,351** across the same span. Two independent
+  consumption records agreeing on level and movement. RISK-22's residual is now
+  **accepted-on-evidence** — and the section says in terms that "evidence" means two
+  agreeing consumption records, **not an observed invoice**.
+- **Two deviations, recorded rather than smoothed.** The baseline pair did not agree
+  strictly (+1 over 10m42s, ≈0.1/min) and that was reported before firing, not after. The
+  post-burst wait was ~3 hours rather than 10 minutes; that strengthens the result, because
+  at that distance a lagging dashboard is no longer an available explanation for either a
+  moving or a flat reading.
+- **An unsolicited replication.** Thirty minutes after the burst, a credential scanner
+  (single cloud host, `.env` / `phpinfo.php` / `firebase-adminsdk.json` paths, ~283
+  requests, 282 misses) drove **273** further missing-key reads in two minutes. Nobody
+  arranged it. `docs/19` §3's own vector arrived unprompted on a domain with no audience,
+  and produced the same kind of record as the synthetic burst. Background rate outside the
+  two events: ≈0.1 missing-key reads per minute. The bounding rule belongs to M4.4.
+- `docs/19` gains **§3.1** with all six readings; RISK-22 records the premise and the
+  residual. The scenario table is **unchanged** — it already assumed every request is a
+  read, which is precisely what was confirmed.
+
+**Verified list.** Now verified on evidence: ADR-013 (query-string cache key, `Age`-based),
+404 caching, rate-limit enforcement at a single identity, and **R2 recording a missing-key
+GET as a Class B operation, corroborated by the consumption counter**. Still **not**
+verified: the 404 cache **duration** (a positive `Age` is age at sampling, not a TTL),
+rate-limit behaviour across a split identity, and whether Cloudflare **bills** a recorded
+`userError` GetObject — no API reports that, and the distinction between a recorded
+operation and a billed one is kept rather than elided.
+
 ### Added — `gh_issue`, `ops_log`, `release` and `tokens-due` (M4.3 complete)
 
 - `gh_issue.py`: de-duplicates by **label plus title**, so a week of failure is one issue
