@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
-from loremfile.config import SITE_HOST
+from loremfile.config import FIXTURE_CACHE_CONTROL, SITE_HOST
 
 
 #: docs/06 §10 fixes this vocabulary; the issue automation keys off it.
@@ -35,6 +35,7 @@ class Status(StrEnum):
     CONTENT_TYPE_MISMATCH = "content_type_mismatch"
     HASH_MISMATCH = "hash_mismatch"
     HEADER_MISSING = "header_missing"
+    HEADER_VALUE = "header_value"
     STATUS = "status"
     TIMEOUT = "timeout"
 
@@ -44,16 +45,34 @@ HTTP_TOO_MANY_REQUESTS = 429
 RATE_LIMIT_BACKOFF_SECONDS = 10
 MAX_RATE_LIMIT_RETRIES = 3
 
-#: Headers REQ-03/04/05 require on every fixture.
+#: Headers REQ-03/04/05 require on every fixture. Presence only; the ones whose value
+#: is fixed are in `EXPECTED_FIXTURE_HEADERS` below, and `content-type`/`content-length`
+#: are compared against the manifest entry rather than a constant.
 REQUIRED_FIXTURE_HEADERS = (
     "content-type",
     "content-length",
-    "cache-control",
-    "accept-ranges",
-    "x-content-type-options",
-    "cross-origin-resource-policy",
-    "x-robots-tag",
+    "content-disposition",
 )
+
+#: docs/03 §4.1, exactly. **Presence is not the contract**: a header rule that fires with
+#: the wrong value passes a presence check and breaks the contract anyway, and the values
+#: here are frozen — the first three come from object metadata written at upload, under a
+#: bucket lock that makes them unchangeable afterwards. Checking them is the only way to
+#: find out before the lock closes.
+EXPECTED_FIXTURE_HEADERS: dict[str, str] = {
+    "cache-control": FIXTURE_CACHE_CONTROL,
+    "accept-ranges": "bytes",
+    "x-content-type-options": "nosniff",
+    "cross-origin-resource-policy": "cross-origin",
+    "timing-allow-origin": "*",
+    "x-robots-tag": "noindex",
+}
+
+
+def expected_disposition(path: str) -> str:
+    """docs/03 §4.1: `inline; filename="{last path segment}"`."""
+    return f'inline; filename="{path.rsplit("/", 1)[-1]}"'
+
 
 #: docs/12 §4: `daily` hashes everything below this and samples above it; `full` hashes
 #: everything. The line exists because hashing 0.6 GB daily is not a daily job.
@@ -148,9 +167,18 @@ def check_fixture_headers(entry: dict[str, Any], response: Response) -> list[Fin
     if response.status != 200:  # noqa: PLR2004
         return [Finding(path, Status.STATUS, str(response.status))]
 
-    missing = [h for h in REQUIRED_FIXTURE_HEADERS if not response.header(h)]
+    wanted = {**EXPECTED_FIXTURE_HEADERS, "content-disposition": expected_disposition(path)}
+    missing = [
+        h for h in (*REQUIRED_FIXTURE_HEADERS, *EXPECTED_FIXTURE_HEADERS) if not response.header(h)
+    ]
     if missing:
-        findings.append(Finding(path, Status.HEADER_MISSING, ", ".join(missing)))
+        findings.append(Finding(path, Status.HEADER_MISSING, ", ".join(sorted(set(missing)))))
+    for name, expected in sorted(wanted.items()):
+        served = response.header(name)
+        if served and served != expected:
+            findings.append(
+                Finding(path, Status.HEADER_VALUE, f"{name}: {served!r} != {expected!r}")
+            )
 
     length = response.header("content-length")
     if length and int(length) != int(entry["bytes"]):

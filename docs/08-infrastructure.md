@@ -99,7 +99,7 @@ Do these in order. Each step says how to verify it.
   "always_use_https": "on",
   "ssl": "strict",
   "min_tls_version": "1.2",
-  "tls_1_3": "on",
+  "tls_1_3": "zrt",
   "http3": "on",
   "0rtt": "on",
   "ipv6": "on",
@@ -337,6 +337,15 @@ Consequences: `upload --fixtures` can only ever add objects; a leaked T2 cannot 
 > does not offer would be reported as `skipped: not offered on this plan` on every run, which is
 > noise that trains people to ignore the summary. If they appear later as settings, add them then.
 > All 22 keys `zone-settings.json` does declare were confirmed present on the zone. (checked by audit.py where readable, otherwise in the monthly checklist)
+
+> **`tls_1_3` resolved 2026-09-10 (M4.4): the desired state was wrong, not the zone.** It was the
+> only setting of 23 that did not converge after M2.3 — the zone reports `zrt`, the file asked for
+> `on`, and `apply` reported `updated` every run. `zrt` **is** TLS 1.3 with 0-RTT, and the file also
+> declared `"0rtt": "on"`, so it asked for two things Cloudflare expresses as one value and wrote
+> one of them in a form that denies the other. `modified_on` is `null` for both keys while every
+> setting M2.3 actually changed carries a `2026-09-09T13:49Z` timestamp, which is the evidence that
+> the write never landed. The desired state now holds `"tls_1_3": "zrt"`; **no zone behaviour
+> changes.** ADR-027 records the rejected alternative (turning 0-RTT off) and what would reopen it.
 
 Read and enforced by `infra audit` via zone settings: Rocket Loader, Email Address Obfuscation, Automatic HTTPS Rewrites, Server-side Excludes, Hotlink Protection, Browser Integrity Check, Polish, Mirage, Early Hints, plus (via the bot-management endpoint, if readable) Bot Fight Mode, Block AI Bots, Managed robots.txt, and URL normalization (must stay **on**). Cloudflare Fonts and Speed Brain have zone-setting IDs (`fonts`, `speed_brain`) that M2.3 confirms **[VERIFY]** and then adds to `zone-settings.json` as `off`. Checked manually in the monthly checklist because they are separate products without a simple setting: Zaraz (never enabled), Web Analytics automatic injection (never add the site), Crawler Hints, Under Attack Mode (only during an incident).
 

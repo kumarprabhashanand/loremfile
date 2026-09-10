@@ -44,6 +44,92 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Fixed — `tls_1_3` never converged because the desired state contradicted itself
+
+The only one of 23 zone settings that still reported `updated` on every apply, which is
+drift `audit.yml` would have raised weekly forever.
+
+- The zone reports **`zrt`**; `infra/zone-settings.json` asked for `on`. **`zrt` *is* TLS
+  1.3 with 0-RTT**, and the same file also declared `"0rtt": "on"` — so it asked for two
+  things Cloudflare expresses as one value and wrote one of them in a form that denies the
+  other. The zone was never wrong; the desired state was internally inconsistent.
+- **Evidence the write never landed**: `modified_on` is `null` for both `tls_1_3` and
+  `0rtt`, while every setting M2.3 genuinely changed carries a `2026-09-09T13:49Z`
+  timestamp (`ssl`, `always_use_https`, `automatic_https_rewrites`). `apply` reported
+  `updated` for a write that moved nothing — the same "report the write, not the state"
+  failure `infra audit` has to avoid, showing up in a second place.
+- **Desired state now holds `"tls_1_3": "zrt"`. No zone behaviour changes**; the
+  configuration that was already declared and already in force is now written in the
+  vocabulary the API reports it in.
+- **ADR-027** records the rejected alternative — turning 0-RTT *off* so `tls_1_3` reads
+  `on` — which would also converge, and was rejected because it discards the deliberate
+  `0rtt: on` declaration to satisfy the other half of a contradiction, and because the
+  replay exposure 0-RTT carries is **inert here**: every response is a public immutable
+  GET, so a replayed request produces a byte-identical response. It reopens the moment a
+  non-idempotent endpoint exists; Phase 3's Worker routes are still side-effect-free GETs.
+
+### Fixed — ADR-026 contradicted its own corrected premise
+
+Its Consequences line still read "404s stay uncached" and "the rate limit is the only
+bound", both falsified by the premise correction at the top of the same ADR. Two sentences
+in one decision record disagreeing is worse than either being wrong alone. The decision
+itself is unchanged — and the corrected premise strengthens it, since repeat-404 volume is
+now bounded by the cache *and* the rate limit.
+
+### Added — the staged first publish, and header values checked rather than named
+
+The dry run was approved; this is what stands between it and the first real upload.
+
+- **`upload --only PATH…` and `verify-live --only PATH…`.** `--only` narrows the *plan*,
+  so a staged publish runs the same lock and carry-forward gates over exactly the keys it
+  is about to write — not a weaker pass. It **refuses** a path the manifest does not hold:
+  ignoring it would report success over an empty selection, and "verified 0 of the paths
+  you named" renders exactly like "verified them all" in a summary line. On `verify-live`
+  it overrides `--mode`, because `smoke` samples one fixture per format from the whole
+  manifest and most of the manifest is not published yet.
+- **`verify-live` now checks header *values*, not just presence.** `Cache-Control`,
+  `Content-Disposition`, `X-Content-Type-Options`, `Cross-Origin-Resource-Policy`,
+  `Timing-Allow-Origin`, `Accept-Ranges` and `X-Robots-Tag` are compared against `docs/03`
+  §4.1 exactly, and `Content-Disposition` against the fixture's own filename. This matters
+  because the first three come from **object metadata written at upload and frozen there
+  by the bucket lock**: presence-only would confirm the header exists while the contract
+  was broken permanently. It found its first bug in the test data — `good_headers` had
+  been asserting `Cache-Control` without `no-transform`, the clause that makes
+  `Content-Length` trustworthy.
+- The value table ships with a negative control that each header can fail on its own, so a
+  check that only ever looked at `cache-control` cannot pass by luck.
+- **`deploy.yml` gains `only`**, validated against the shape of a fixture path before it
+  reaches a shell rather than interpolated in.
+
+**Stage one, ten fixtures across ten prefixes** — `pdf/minimal.pdf`,
+`svg/simple-shapes.svg`, `png/1x1.png`, `csv/people-10-semicolon.csv`,
+`json/all-types.json`, `xml/with-namespaces.xml`, `txt/lorem-1kb.txt`, `bin/1-byte.bin`,
+`mp3/sine-440hz-3s.mp3`, `docx/with-table.docx` — chosen for the branches they cross: a
+PDF that must carry **no** CSP, two markup types that must carry the sandbox CSP, types
+whose charset is part of the MIME, types that are opaque bytes, and ten prefixes so the
+lock gate fires ten times. All under the 16 MiB multipart threshold **deliberately**:
+`upload_file` splits there and sets metadata at initiate rather than per part, so that is
+a separate untested path and gets **stage two on its own**, `csv/people-100k.csv`. Then
+the rest. `tests/unit/test_deploy_path.py` pins both lists.
+
+### Measured — the carry-forward artifact keeps 90 days, and that is not the constraint
+
+Read off the artifacts rather than off `retention-days:`, because a repository or
+organisation maximum clamps that value silently.
+
+- Created `2026-09-10T13:19:50Z`, expires `2026-12-09T13:15:20Z` — **90 days**, honoured.
+- **The 90 days do not run from M3.6.** Every `ci.yml` run rebuilds and re-uploads the
+  artifact, so the newest copy is always ~90 days from the most recent pull request.
+- **What actually binds is the pairing.** An artifact is only useful with manifest entries
+  built in the *same* run. Three artifact sizes have been observed across runs —
+  **68,840,997, 68,841,346 and 68,843,383 bytes** — which is RISK-21 visible in a
+  directory listing: each run's bytes differ, so each run's artifact satisfies only its own
+  entries. From the moment `manifest adopt` records entries from a run, only that run's
+  artifact can fulfil them.
+- So the deadline is shorter than "90 days from now" and much easier to meet: in practice
+  minutes, because the deploy follows the merge. The five withheld fixtures are not on an
+  expiring fuse; they are waiting for a pull request that adopts and deploys in one cycle.
+
 ### Added — `deploy.yml`, `loremfile upload`, and both gates (M4.4, first half)
 
 - **`loremfile upload --fixtures | --apply-removals`**, with `--carry-forward <dir>` and

@@ -47,6 +47,22 @@ from loremfile.manifest import (
 Item = dict[str, str]
 
 
+def _restrict(entries: list[dict[str, Any]], only: tuple[str, ...]) -> list[dict[str, Any]]:
+    """Narrow manifest entries to `--only`, refusing a path the manifest does not hold.
+
+    Silently ignoring an unknown path is how a staged publish reports success over an
+    empty selection: "verified 0 of the paths you named" and "verified them all" render
+    the same in a summary line.
+    """
+    if not only:
+        return entries
+    wanted = set(only)
+    unknown = wanted - {entry["path"] for entry in entries}
+    if unknown:
+        raise ValueError(f"--only names paths not in the manifest: {', '.join(sorted(unknown))}")
+    return [entry for entry in entries if entry["path"] in wanted]
+
+
 def _zone_client() -> Client:
     """A Cloudflare client that has confirmed which zone it is pointed at.
 
@@ -455,6 +471,13 @@ def infra_apply(dry_run: bool, as_json: bool) -> None:
     type=click.Path(path_type=Path, file_okay=False),
     help="Directory holding the bytes of expected_drift fixtures (the CI artifact).",
 )
+@click.option(
+    "--only",
+    "only",
+    multiple=True,
+    metavar="PATH",
+    help="Publish only these manifest paths (staged first publish).",
+)
 @click.option("--dry-run", "dry_run", is_flag=True, help="Print the plan; write nothing.")
 @click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
 def upload_command(
@@ -462,6 +485,7 @@ def upload_command(
     removals: bool,
     site: bool,
     carry_forward: Path | None,
+    only: tuple[str, ...],
     dry_run: bool,
     as_json: bool,
 ) -> None:
@@ -497,7 +521,10 @@ def upload_command(
         bucket = r2_module.bucket_name()
         s3 = r2_module.client()
         if fixtures:
-            entries = list(manifest.active)
+            # `--only` narrows the *plan*, so the gates still run over exactly the keys
+            # that are about to be written and no others: a staged publish gets the same
+            # lock and carry-forward checks as a full one, not a weaker pass.
+            entries = _restrict(list(manifest.active), only)
             live = r2_module.live_hashes(s3, bucket, [e["path"] for e in entries])
             catalog_obj = Catalog.load()
             available = upload_module.sources(
@@ -521,7 +548,9 @@ def upload_command(
             # Only the tombstones. HEADing every published fixture to find out which of
             # them is being removed would be ~160 Class B reads to answer a question the
             # manifest already answers.
-            tombstoned = [e["path"] for e in manifest.entries if e.get("status") == "removed"]
+            tombstoned = [
+                e["path"] for e in _restrict(manifest.entries, only) if e.get("status") == "removed"
+            ]
             live = r2_module.live_hashes(s3, bucket, tombstoned)
             plan = upload_module.plan_removals(manifest.entries, live)
 
@@ -560,6 +589,7 @@ def upload_command(
             "bytes": sum(s.size for s in plan.by_action(upload_module.Action.UPLOAD)),
             "written": done,
             "dry_run": dry_run,
+            "only": len(only),
         }
         items = [
             {"path": step.key, "status": step.action.value, "detail": step.reason}
@@ -579,6 +609,7 @@ def upload_command(
         ManifestError,
         CatalogError,
         OSError,
+        ValueError,
     ) as exc:
         errors.append(str(exc))
     sys.exit(
@@ -634,15 +665,29 @@ def purge_command(site: bool, url: str | None, as_json: bool) -> None:
     metavar="PATH",
     help="Report PATH as failing without it being so, to exercise the issue automation.",
 )
+@click.option(
+    "--only",
+    "only",
+    multiple=True,
+    metavar="PATH",
+    help="Check only these manifest paths, whatever --mode says.",
+)
 @click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
-def verify_live_command(mode: str, inject_failure: str | None, as_json: bool) -> None:
+def verify_live_command(
+    mode: str, inject_failure: str | None, only: tuple[str, ...], as_json: bool
+) -> None:
     """Check production against the manifest (docs/12 §4). Needs no credentials."""
     errors: list[str] = []
     report = verify_live_module.LiveReport()
     try:
         manifest = Manifest.load()
         entries = list(manifest.active)
-        chosen = verify_live_module.smallest_per_format(entries) if mode == "smoke" else entries
+        if only:
+            # An explicit list beats the mode's sampling: the point of naming paths is to
+            # check those paths, and `smoke` would otherwise silently drop most of them.
+            chosen = _restrict(entries, only)
+        else:
+            chosen = verify_live_module.smallest_per_format(entries) if mode == "smoke" else entries
         for entry in chosen:
             response = verify_live_module.fetch(f"/{entry['path']}")
             report.findings += verify_live_module.check_fixture_headers(entry, response)
@@ -667,7 +712,11 @@ def verify_live_command(mode: str, inject_failure: str | None, as_json: bool) ->
         _emit(
             "verify-live",
             ok=not errors,
-            summary={"mode": mode, "checked": len(report.findings), "failing": len(errors)},
+            summary={
+                "mode": "only" if only else mode,
+                "checked": len(report.findings),
+                "failing": len(errors),
+            },
             items=[
                 {"path": f.path, "status": f.status.value, "detail": f.detail}
                 for f in report.findings

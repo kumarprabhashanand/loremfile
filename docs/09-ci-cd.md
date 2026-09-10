@@ -116,6 +116,18 @@ jobs:
 
 **M3.6 added a second, targeted artifact, and it is not an optimisation.** Fixtures marked `expected_drift` cannot be rebuilt byte for byte on different hardware (`06` §4), so for those paths the manifest describes bytes that exist **nowhere else** between the pull request and the deploy. `carry-forward-fixtures` holds exactly those files — five paths, about **69 MB** — with **90-day retention**, alongside the inventory that records which CPU produced them. Dropping it, or letting it expire before the deploy runs, makes those manifest entries unfulfillable: regeneration drifts and there is nothing to fall back to, and the fixtures would have to be re-catalogued at new paths before they could ever be published. Retention is therefore a **correctness** setting here, not a convenience.
 
+**Retention measured, 2026-09-10, and it is not the constraint people assume.** Read off the artifacts themselves rather than off this workflow's `retention-days:`, because a repository or organisation maximum silently clamps that value:
+
+| | |
+|---|---|
+| Created | `2026-09-10T13:19:50Z` |
+| Expires | `2026-12-09T13:15:20Z` |
+| **Effective retention** | **90 days** — the requested value was honoured |
+
+But the 90 days do not run from M3.6. **Every `ci.yml` run rebuilds and re-uploads the artifact**, so the newest copy is always ~90 days from the most recent pull request, not from the run that first catalogued anything. What actually binds is the *pairing*: an artifact is only useful together with manifest entries built in the **same run**. Three distinct artifact sizes have been observed across runs — 68,840,997, 68,841,346 and 68,843,383 bytes — which is RISK-21 visible in the artifact listing: each run's bytes differ, so each run's artifact satisfies only its own entries.
+
+The consequence is a shorter deadline than "90 days from now", and an easier one: **from the moment `manifest adopt` records entries from a run, only that run's artifact can fulfil them, and its own 90 days apply.** In practice that window is minutes, because the deploy follows the merge. The five withheld fixtures are therefore not sitting on an expiring fuse; they are waiting for a pull request that adopts entries and deploys them in the same cycle.
+
 If the owner would rather have all the bytes and pay for the storage, it is a three-line change; see `19` for the cost picture.
 
 **How this file is built up (M1.5 onwards).** The listing above is the finished workflow. Each step is added by the milestone that creates the thing it checks, so the job never calls a command that does not exist yet: **M1.5** landed `lint-and-test` with checkout, `pip install -e .`, ruff, `mypy src/` and `pytest tests/unit`; **M1.6** added `tools/check_lock.sh` and `loremfile catalog validate` to the same job; **M3.1** adds the whole `build-and-validate` job and puts it in the branch ruleset. `lint-and-test` is added to the ruleset in M1.5, in the same pull request that introduces the job — a required check that never reports would block every pull request.
@@ -188,6 +200,14 @@ Ordering rationale: fixtures first (immutable, safe to be early), removals next 
 | `push: branches: [main]` | **A judgement, not a missing command** — see below | the first green dry run |
 
 **Why the trigger is deferred and the dry run exists.** Per-merge deployment is the steady state (`15` M3) and this workflow is built for it. But its first run is also the first time `loremfile upload` has ever addressed a bucket, and its writes land under **indefinite lock rules**: published, locked, permanent. A first exercise that is also an irreversible one is the wrong order — the same caveat `release.py` carries, that a green unit suite is not evidence about a path which has never seen a real object. So the workflow ships dispatch-only with a `mode` input defaulting to `dry-run`, which performs the real listing, the real HEADs, the real gate evaluation and the real source hashing, and writes nothing. When that run is green the trigger becomes `push: branches: [main]`, a three-line change.
+
+**The staged first publish.** `--only` narrows both the publish and the verification. The header contract in `03` §4.1 lives in object metadata written at upload — `Content-Type`, `Cache-Control`, `Content-Disposition` — and the bucket lock freezes it there, so it has exactly one chance to be right, and until the first real upload it had only ever been exercised against a fake S3 client. Stage one publishes ten small fixtures across ten prefixes and then verifies exactly those paths:
+
+`pdf/minimal.pdf`, `svg/simple-shapes.svg`, `png/1x1.png`, `csv/people-10-semicolon.csv`, `json/all-types.json`, `xml/with-namespaces.xml`, `txt/lorem-1kb.txt`, `bin/1-byte.bin`, `mp3/sine-440hz-3s.mp3`, `docx/with-table.docx`
+
+They are chosen for the branches they cross, not for coverage of the catalog: a PDF (which must carry **no** CSP) and two markup types (which must carry the sandbox CSP), types whose charset is part of the MIME and types that are opaque bytes, and ten distinct prefixes so the lock gate is exercised ten times. All are under the 16 MiB multipart threshold **on purpose** — `upload_file` splits there and sets metadata at initiate rather than per part, which is a different code path, so it gets **stage two on its own**: `csv/people-100k.csv`, the smallest object above the threshold. Only then the remaining fixtures. `tests/unit/test_deploy_path.py` pins the list, so a renamed path fails there rather than half-way through a dispatch.
+
+`--only` narrows the *plan*, not the checks: a staged publish runs the same lock and carry-forward gates over exactly the keys it is about to write. `verify-live --only` overrides `--mode`, because `smoke` samples one fixture per format from the whole manifest and most of the manifest is not published yet.
 
 **Where the bytes come from.** `--carry-forward <dir>` is the second gate's other half. The deploy resolves the pull request that produced the merge commit, finds that pull request's successful `ci.yml` run, and downloads its `carry-forward-fixtures` artifact. **That lookup does not have to be trusted**: `upload --fixtures` hashes every byte it is about to publish against the manifest and refuses anything that does not match, so an artifact from the wrong run cannot pass and provenance is established by content rather than by a run id. A missing artifact is likewise not an error in that step — most merges carry no `expected_drift` fixture, and the gate, which knows which paths need one, is what decides whether the absence matters.
 
