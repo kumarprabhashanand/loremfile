@@ -44,6 +44,61 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Added — `deploy.yml`, `loremfile upload`, and both gates (M4.4, first half)
+
+- **`loremfile upload --fixtures | --apply-removals`**, with `--carry-forward <dir>` and
+  `--dry-run`. `infra/r2.py` is the only place that addresses the bucket; the plan stays a
+  pure function. A listing comes first so that only keys the bucket actually holds are
+  HEADed — zero requests on a first deploy, one per published fixture thereafter, and a
+  HEAD is unavoidable because a listing returns ETags rather than the `sha256` the
+  manifest records.
+- **`build --missing-in-bucket` implemented**, and it **never selects an `expected_drift`
+  path**. On the deploy runner a rebuild of one of those is bytes the manifest does not
+  describe, so building it would fail `manifest check` on a fixture the deploy was never
+  going to upload. Without a listing the selection **refuses** rather than falling back to
+  `--all`, which would rebuild the whole catalog on the deploy runner.
+- **Every byte is hashed before it is published.** `verify_sources` refuses a source whose
+  digest or length disagrees with the manifest. This is what makes the carry-forward
+  download safe to do loosely: the artifact comes from a *different* workflow run and is
+  untrusted input, so an artifact from the wrong run cannot pass and provenance is
+  established by content rather than by a run id.
+- **A published object with no `sha256` metadata now fails rather than skipping.**
+  "Present" is not "correct"; without the metadata there is nothing to compare, and
+  reporting it as a mismatch against an empty string named the wrong problem.
+- **`deploy.yml`** carries both gates — no upload to a prefix without a lock rule, no
+  regeneration of an `expected_drift` path — enforced inside `upload` rather than in YAML,
+  so a local dry run gets them too.
+
+**Deliberately not in it.** `site build`, `upload --site` and `purge --site` (the site is
+M4.1); `loremfile infra audit` (never written — only `apply.py` landed in M2.2, and the
+audit arrives with `audit.yml`); `-j 4` (`-j` is not implemented). Each is listed in
+`docs/09` §3.2 with the milestone that adds it, rather than standing in the workflow as a
+guaranteed red cross. `--force-site` was dropped from the CLI for the same reason: an
+option that changes nothing is worse than an absent one.
+
+**And the trigger, which is a judgement rather than a missing command.** `docs/09` §3.2
+specifies `push: branches: [main]`, and that is the steady state. But the first run of this
+workflow is also the first time `loremfile upload` has ever addressed a bucket, and its
+writes land under **indefinite lock rules** — published, locked, permanent. A first
+exercise that is also an irreversible one is the wrong order, which is the `release.py`
+caveat again. So it ships dispatch-only with `mode` defaulting to **`dry-run`**: real
+listing, real HEADs, real gate evaluation, real source hashing, no writes. The `push`
+trigger is a three-line change once that run is green.
+
+**The launch set reconciles, and is now checked rather than remembered.**
+
+| Bucket | Count |
+|---|---|
+| Published in `manifest.json` | 161 |
+| Catalogued, awaiting publication (the five `expected_drift` rows) | 5 |
+| Still to catalogue: M3.7 + M3.8 | 62 |
+| **Launch set (ADR-024)** | **228** |
+
+`tests/unit/test_deploy_path.py` asserts it, with the 62 as a named constant an M3.7 or
+M3.8 pull request must decrement. It is the one figure that cannot be derived from the
+repository, so fixtures added without accounting for launch scope become a failing build
+instead of a slow drift away from 228.
+
 ### Added — the daily missing-key series, before the baseline expires
 
 The pre-launch period is the only one in which the missing-key rate is uncontaminated

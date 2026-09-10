@@ -7,6 +7,7 @@ that eventually overwrites a published byte.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -220,3 +221,111 @@ def test_the_plan_reports_what_it_would_do(tmp_path: Path) -> None:
     assert "upload=1" in rendered
     assert "fail=1" in rendered
     assert "png/1x1.png" in rendered
+
+
+# --- M4.4: where the bytes come from, and whether they are the right ones ----
+
+
+def plain_path() -> str:
+    return next(f.path for f in CATALOG.fixtures() if not f.expected_drift)
+
+
+def write(root: Path, key: str, data: bytes) -> Path:
+    target = root / key
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(data)
+    return target
+
+
+def test_an_expected_drift_path_is_never_read_from_the_build_directory(tmp_path: Path) -> None:
+    """The rebuild sitting in build/fixtures/ is the wrong bytes, not a fallback.
+
+    On the deploy runner that file was produced by whichever CPU drew the job, while the
+    manifest describes what a different runner produced (docs/06 §4). Offering it would
+    make `carry_forward_gate` unreachable: the gate only fires on a *missing* key.
+    """
+    build_dir = tmp_path / "build"
+    write(build_dir, drift_path(), b"a rebuild on this runner")
+
+    found = upload.sources([drift_path()], catalog=CATALOG, build_dir=build_dir)
+    assert found == {}, "the rebuild must not be offered as a source"
+
+
+def test_an_ordinary_path_is_read_from_the_build_directory(tmp_path: Path) -> None:
+    """Negative control for the test above: a resolver that found nothing would pass it."""
+    build_dir = tmp_path / "build"
+    target = write(build_dir, plain_path(), b"freshly built")
+
+    found = upload.sources([plain_path()], catalog=CATALOG, build_dir=build_dir)
+    assert found == {plain_path(): target}
+
+
+def test_an_expected_drift_path_comes_from_the_carry_forward_directory(tmp_path: Path) -> None:
+    build_dir = tmp_path / "build"
+    carry = tmp_path / "carry-forward"
+    write(build_dir, drift_path(), b"a rebuild on this runner")
+    carried = write(carry, drift_path(), b"the bytes the manifest describes")
+
+    found = upload.sources(
+        [drift_path()], catalog=CATALOG, build_dir=build_dir, carry_forward=carry
+    )
+    assert found == {drift_path(): carried}
+
+
+def test_bytes_that_do_not_hash_to_the_manifest_are_refused(tmp_path: Path) -> None:
+    """The carry-forward artifact is downloaded from another workflow run.
+
+    That makes it untrusted input, and this is what makes downloading it loosely safe:
+    an artifact from the wrong run cannot pass, so provenance is established by content.
+    """
+    body = b"the right bytes"
+    digest = hashlib.sha256(body).hexdigest()
+    wrong = write(tmp_path, "wrong.bin", b"not those bytes")
+    plan = upload.Plan(steps=[upload.Step("mp4/x.mp4", Action.UPLOAD, source=str(wrong))])
+
+    blockers = upload.verify_sources(plan, [entry("mp4/x.mp4", sha=digest, size=len(body))])
+    assert len(blockers) == 1
+    assert "Refusing to publish bytes the manifest does not describe" in blockers[0]
+
+
+def test_bytes_that_do_hash_to_the_manifest_pass(tmp_path: Path) -> None:
+    """Negative control: a verifier that refused everything would pass the test above."""
+    body = b"the right bytes"
+    right = write(tmp_path, "right.bin", body)
+    plan = upload.Plan(steps=[upload.Step("mp4/x.mp4", Action.UPLOAD, source=str(right))])
+
+    assert (
+        upload.verify_sources(
+            plan, [entry("mp4/x.mp4", sha=hashlib.sha256(body).hexdigest(), size=len(body))]
+        )
+        == []
+    )
+
+
+def test_a_right_hash_with_a_wrong_length_is_still_refused(tmp_path: Path) -> None:
+    body = b"the right bytes"
+    right = write(tmp_path, "right.bin", body)
+    plan = upload.Plan(steps=[upload.Step("mp4/x.mp4", Action.UPLOAD, source=str(right))])
+
+    blockers = upload.verify_sources(
+        plan, [entry("mp4/x.mp4", sha=hashlib.sha256(body).hexdigest(), size=len(body) + 1)]
+    )
+    assert len(blockers) == 1
+    assert "bytes, manifest says" in blockers[0]
+
+
+def test_a_published_object_with_no_sha256_metadata_fails_rather_than_skipping(
+    tmp_path: Path,
+) -> None:
+    """ "Present" is not "correct". Without the metadata there is nothing to compare."""
+    key = plain_path()
+    plan = upload.plan_fixtures(
+        [entry(key)],
+        {key: upload.UNVERIFIABLE},
+        sources(tmp_path, key),
+        catalog=CATALOG,
+        lock_rules=LOCKS,
+    )
+    assert [s.action for s in plan.steps] == [Action.FAIL]
+    assert "no sha256 metadata" in plan.steps[0].reason
+    assert not plan.ok

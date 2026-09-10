@@ -13,7 +13,7 @@ import json
 import os
 import shutil
 import subprocess
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -261,18 +261,33 @@ def select(
     group: str | None = None,
     phase: int | None = None,
     base_ref: str | None = None,
+    in_bucket: Callable[[], set[str]] | None = None,
 ) -> list[Fixture]:
-    """Work out which fixtures to generate, then add the dependencies they need."""
+    """Work out which fixtures to generate, then add the dependencies they need.
+
+    ``in_bucket`` is a callable rather than a set so that nothing reaches for R2 unless
+    the selection actually needs it; `build.py` stays free of the bucket, and the CLI
+    supplies the listing.
+    """
     chosen = [f for f in catalog.fixtures() if f.status is Status.ACTIVE]
 
     if selection is Selection.NEW:
         published = set(merge_base_manifest(base_ref).by_path)
         chosen = [f for f in chosen if f.path not in published]
     elif selection is Selection.MISSING_IN_BUCKET:
-        raise BuildError(
-            "--missing-in-bucket needs the bucket listing, which arrives with the "
-            "uploader in M4.3; use --all or --new until then"
-        )
+        if in_bucket is None:
+            raise BuildError(
+                "--missing-in-bucket needs a bucket listing and none was supplied; "
+                "the caller must pass `in_bucket`"
+            )
+        live = in_bucket()
+        # `expected_drift` paths are excluded on purpose, not by omission. Their bytes do
+        # not reproduce off the reference fleet (docs/06 §4), so a rebuild here would
+        # produce something the manifest does not describe; the deploy publishes them
+        # from the carry-forward artifact instead (docs/09 §3.2 gate 2). Building them
+        # would not merely be wasted work — `manifest check` would then fail on bytes the
+        # deploy was never going to upload.
+        chosen = [f for f in chosen if f.path not in live and not f.expected_drift]
 
     only = set(only)
     formats = set(formats)

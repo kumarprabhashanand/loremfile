@@ -343,6 +343,17 @@ Everything else marked phase 1 in §3 (188 files) is P1b. Chosen for search dema
 
 P1b stays **188**: `100mib.bin` moved out of phase 1 entirely, so it left both the phase-1 total (417 → 416) and the launch set (229 → 228), and 416 − 228 = 188. Deferring a launch row to phase 2 does not add it to P1b.
 
+**Where the 228 stands (M4.4).** The number is held fixed; what moves is which bucket a fixture is in.
+
+| Bucket | Count | |
+|---|---|---|
+| Published in `manifest.json` | 161 | live entries, uploaded by `deploy.yml` |
+| Catalogued, **awaiting publication** | 5 | `mp4/1080p-10s`, `mp4/10mb`, `mp4/50mb`, `opus/30s`, `webm/720p-5s-vp9` — `expected_drift` rows whose entries were withdrawn in M3.6 because the bytes existed nowhere reproducible (`03` §7.1). They return through the carry-forward path, not through a rebuild |
+| Still to catalogue: **M3.7 + M3.8** | 62 | archives, fonts, mail, calendar, cert, wasm, web, and the edge cases |
+| **Launch set (ADR-024)** | **228** | |
+
+`tests/unit/test_deploy_path.py` asserts this arithmetic, with the 62 as a named constant that an M3.7 or M3.8 pull request has to decrement. It is the one figure that cannot be derived from the repository, so it is checked rather than remembered: fixtures added without accounting for the launch scope become a failing build instead of a slow drift away from 228.
+
 | Family | Launch fixtures |
 |---|---|
 | pdf | `a4-1page`, `a4-3pages`, `a4-10pages`, `letter-1page`, `a4-landscape-1page`, `a4-with-images-2pages`, `a4-with-table-1page`, `a4-encrypted-1page`, `blank-1page`, `minimal`, `1mb`, `10mb` |

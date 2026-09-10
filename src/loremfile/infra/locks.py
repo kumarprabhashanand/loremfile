@@ -64,3 +64,21 @@ def diff(catalog: Catalog | None = None) -> list[str]:
             for prefix in sorted(committed - wanted)
         ),
     ]
+
+
+def committed_rules() -> list[dict[str, Any]]:
+    """The rules as committed to `infra/r2-locks.json`.
+
+    The deploy's lock gate reads these rather than the rules R2 actually holds: reading
+    the applied set needs an account-scoped R2 permission the deploy's token does not
+    have and must not be given (`docs/08` §6). `infra audit` compares committed against
+    applied; this file is the deploy's view, and the gate's message says so rather than
+    implying it verified the bucket.
+    """
+    target = locks_path()
+    if not target.is_file():
+        raise FileNotFoundError(
+            "infra/r2-locks.json does not exist; run `loremfile infra locks --write`"
+        )
+    rules = json.loads(target.read_text(encoding="utf-8"))["rules"]
+    return [dict(rule) for rule in rules]
