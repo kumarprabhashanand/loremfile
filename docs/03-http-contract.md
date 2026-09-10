@@ -66,7 +66,7 @@ Descriptors are ordered tokens separated by `-`:
 | `Cache-Control` | `public, max-age=31536000, immutable, no-transform` | Object metadata |
 | `Content-Disposition` | `inline; filename="{last path segment}"` | Object metadata |
 | `Accept-Ranges` | `bytes` | R2 |
-| `ETag` | Opaque. Do **not** assume it is an MD5; use `manifest.sha256`. | R2 |
+| `ETag` | Opaque. Do **not** assume it is an MD5; use `manifest.sha256`. Demonstrated rather than warned about since 2026-09-10: `csv/people-100k.csv` is uploaded multipart and serves `"0fb5712e2d6fa8cae82c86acc1e2dabf-2"`, while single-part objects serve a plain 32-hex digest. Two shapes, same header. | R2 |
 | `Last-Modified` | Upload time; informational | R2 |
 | `Access-Control-Allow-Origin` | `*` (only when request has `Origin`) | Bucket CORS policy |
 | `Access-Control-Expose-Headers` | `Content-Length, Content-Range, Content-Type, Content-Disposition, ETag, Accept-Ranges, Last-Modified` | Bucket CORS policy |

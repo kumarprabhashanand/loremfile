@@ -44,6 +44,74 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Documented — the six writes `infra audit` must not inherit
+
+`apply` writes ruleset entry points with an unconditional full `PUT`, so it reports the
+**write**, not a difference. After `tls_1_3` converged, six items still report `updated` on
+every run and none of them is drift: the five ruleset phases and `tiered-cache`. `docs/09`
+§3.2 now lists them, and states what `infra audit` has to do instead — GET each deployed
+ruleset and compare **rule content**, with `id`, `version`, `ref` and `last_updated`
+normalised out, and read the tiered-cache topology rather than reusing `apply`'s outcome.
+An audit that inherited this would open an `infra-drift` issue every run, and a label that
+fires every run stops meaning anything — the failure already avoided for `fonts`/
+`speed_brain` and for `expected_drift`.
+
+### Verified — the first real objects are published, and multipart changes nothing
+
+Two staged dispatches of `deploy.yml`, reviewed between them. Eleven objects are now
+permanent.
+
+- **Stage one**: 10 fixtures across 10 prefixes, 92,519 bytes, `written=10`,
+  `verify-live failing=0`. All seven header values match `docs/03` §4.1 —
+  **`Timing-Allow-Origin` included, so rule H1 reaches published objects and not only
+  404s**, which had never been observed before.
+- **Stage two**: `csv/people-100k.csv`, 25,395,296 bytes over the **multipart** path,
+  `written=1`, `failing=0`. **The seven headers are byte-identical to stage one's.**
+  Metadata set at multipart *initiate* rather than per part survives to the response,
+  which was the open question that earned this object its own stage.
+- The one difference is the `ETag`: `"0fb5712e2d6fa8cae82c86acc1e2dabf-2"` against a plain
+  32-hex digest on single-part objects. `docs/03` §4.1 has warned "do not assume it is an
+  MD5" since it was written; there is now a published object that demonstrates it, and the
+  row says so.
+
+**What a green result must not be read as covering.** `http_response_headers_transform`
+has three rules and eleven objects reach one and a half of them:
+
+| Rule | Status |
+|---|---|
+| H1 — headers on every object with an extension | positive half verified; the `/index.html` **exclusion** is not |
+| H2 — inert CSP for markup | only the `.svg` and `.xml` disjuncts. The `.html` conjunct — the half that carries the exclusion — waits for **M3.7** |
+| H3 — site CSP on extensionless keys and `index.html` | **entirely unverified**; waits for **M4.1** |
+
+Both rules carrying the `/index.html` exclusion have it untested, for the same reason: it
+only fires on an object M4.1 creates. `docs/15` now makes verifying each branch a DoD line
+on the milestone that first publishes an object able to reach it.
+
+### Fixed — the pairing argument assumed a steady state that does not exist yet
+
+"From the moment `manifest adopt` records entries, only that run's artifact can fulfil
+them — in practice minutes, because the deploy follows the merge." The second half is not
+true today. **`deploy.yml` is dispatch-only by our own decision**, so publication follows
+someone remembering to dispatch it, not a merge. Adopting entries would therefore open a
+90-day clock with nobody watching it — the exact shape that withdrew these five entries in
+the first place.
+
+- **`docs/11` §7.9b** is a new procedure: the pull request that adopts the entries and the
+  dispatch that publishes them happen **in the same working session**, with the CI run id
+  noted at adoption because only that run's artifact can fulfil what it built. It says
+  explicitly that steps 3–5 collapse into "merge and read the run" once the push trigger is
+  enabled, and that the warning can go then.
+- It also carries the recovery for an interrupted session, including how to read
+  `expires_at` off the artifact and what to do if it has lapsed.
+
+### Changed — RISK-21's plainest evidence is now in RISK-21
+
+The same five fixtures, built from the same commit by successive CI runs, produce artifacts
+of **68,840,997, 68,841,346 and 68,843,383 bytes**. Three sizes, one commit, visible in a
+directory listing without opening a file. It was buried in a parenthetical about retention;
+it is now the first thing the risk says, because it cost no instrumentation to produce and
+nothing else demonstrates the risk as cheaply.
+
 ### Fixed — `tls_1_3` never converged because the desired state contradicted itself
 
 The only one of 23 zone settings that still reported `updated` on every apply, which is

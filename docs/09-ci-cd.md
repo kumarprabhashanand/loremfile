@@ -126,7 +126,9 @@ jobs:
 
 But the 90 days do not run from M3.6. **Every `ci.yml` run rebuilds and re-uploads the artifact**, so the newest copy is always ~90 days from the most recent pull request, not from the run that first catalogued anything. What actually binds is the *pairing*: an artifact is only useful together with manifest entries built in the **same run**. Three distinct artifact sizes have been observed across runs — 68,840,997, 68,841,346 and 68,843,383 bytes — which is RISK-21 visible in the artifact listing: each run's bytes differ, so each run's artifact satisfies only its own entries.
 
-The consequence is a shorter deadline than "90 days from now", and an easier one: **from the moment `manifest adopt` records entries from a run, only that run's artifact can fulfil them, and its own 90 days apply.** In practice that window is minutes, because the deploy follows the merge. The five withheld fixtures are therefore not sitting on an expiring fuse; they are waiting for a pull request that adopts entries and deploys them in the same cycle.
+The consequence is a shorter deadline than "90 days from now": **from the moment `manifest adopt` records entries from a run, only that run's artifact can fulfil them, and its own 90 days apply.**
+
+**And the claim that this window is "minutes, because the deploy follows the merge" is not true yet.** It will be once `push: branches: [main]` is enabled. Today the deploy is dispatch-only by our own decision (above), so it follows *someone remembering to dispatch it* — which means adopting entries opens a 90-day clock that nothing is watching. That is the same shape as the failure this whole detour came from. Until the trigger is enabled, the window is closed procedurally instead: **`11` §7.9b requires the pull request that adopts the entries and the dispatch that publishes them to happen in the same working session.**
 
 If the owner would rather have all the bytes and pay for the storage, it is a three-line change; see `19` for the cost picture.
 
@@ -190,6 +192,19 @@ jobs:
 
 Ordering rationale: fixtures first (immutable, safe to be early), removals next (rare), then site (references fixtures), then purge, then infra, then verification. A failure at any step stops the job; nothing after "upload --fixtures" can undo a fixture upload, and nothing needs to (immutability).
 
+**What still reports `updated` on every apply, and why `infra audit` cannot inherit that.** `apply` writes ruleset entry points with a full unconditional `PUT` by design, so it reports the *write*, not a difference. After `tls_1_3` converged (ADR-027) the standing six are:
+
+| Reported `updated` every run | What it actually is |
+|---|---|
+| `http_request_dynamic_redirect` (1 rule) | unconditional `PUT` |
+| `http_request_transform` (2 rules) | unconditional `PUT` |
+| `http_response_headers_transform` (3 rules) | unconditional `PUT` |
+| `http_request_cache_settings` (1 rule) | unconditional `PUT` |
+| `http_ratelimit` (1 rule) | unconditional `PUT` |
+| `tiered-cache` (`smart topology on`) | unconditional `PATCH` |
+
+`audit` must **GET each deployed ruleset and compare rule content** — with the server-assigned fields (`id`, `version`, `ref`, `last_updated`) normalised out — and read the tiered-cache topology before reporting it, rather than reusing `apply`'s outcome. An audit that inherited this opens an `infra-drift` issue every single run, and a label that fires every run stops meaning anything: the same failure avoided for `fonts`/`speed_brain` (§8 of `08`) and for `expected_drift` (`06` §8).
+
 **As implemented in M4.4, and what it does not yet carry.** The workflow above is the target. What landed differs in five places, each recorded here rather than left for a reader to discover from a red cross:
 
 | Deferred | Why | Returns with |
@@ -208,6 +223,18 @@ Ordering rationale: fixtures first (immutable, safe to be early), removals next 
 They are chosen for the branches they cross, not for coverage of the catalog: a PDF (which must carry **no** CSP) and two markup types (which must carry the sandbox CSP), types whose charset is part of the MIME and types that are opaque bytes, and ten distinct prefixes so the lock gate is exercised ten times. All are under the 16 MiB multipart threshold **on purpose** — `upload_file` splits there and sets metadata at initiate rather than per part, which is a different code path, so it gets **stage two on its own**: `csv/people-100k.csv`, the smallest object above the threshold. Only then the remaining fixtures. `tests/unit/test_deploy_path.py` pins the list, so a renamed path fails there rather than half-way through a dispatch.
 
 `--only` narrows the *plan*, not the checks: a staged publish runs the same lock and carry-forward gates over exactly the keys it is about to write. `verify-live --only` overrides `--mode`, because `smoke` samples one fixture per format from the whole manifest and most of the manifest is not published yet.
+
+**Result, 2026-09-10.** Stage one: 10 objects, 92,519 bytes, `written=10`, `verify-live failing=0`; all seven header values matched `03` §4.1, `Timing-Allow-Origin` included, so rule H1 reaches published objects and not only 404s. Stage two: `csv/people-100k.csv`, 25,395,296 bytes over the multipart path, `written=1`, `failing=0` — **the seven headers are byte-identical to stage one's**, so metadata set at multipart initiate survives to the response. The one difference is the `ETag`: `"0fb5712e2d6fa8cae82c86acc1e2dabf-2"` against a plain 32-hex digest on a single-part object. That is `03` §4.1's "do not assume it is an MD5" stated by a published object rather than by a warning.
+
+**What the staged runs did *not* verify, which a green result must not be read as covering.** `http_response_headers_transform` holds three rules and the eleven published objects reach one and a half of them:
+
+| Rule | Expression | Status after staging |
+|---|---|---|
+| H1, headers on every object with an extension | `contains "." and not ends_with("/index.html")` | **positive half verified** on 11 objects; the `/index.html` **exclusion is not** — no such object exists |
+| H2, inert CSP for markup | `(.html and not ends_with("/index.html")) or .htm or .xhtml or .svg or .xml` | **only the `.svg` and `.xml` disjuncts verified.** The `.html` conjunct — the fiddly half, because it is the one carrying the exclusion — has nothing to test against until **M3.7** adds an `.html` fixture |
+| H3, site CSP on pages | `(not contains ".") or ends_with("/index.html")` | **entirely unverified**; the first extensionless key and the first `index.html` arrive with **M4.1** |
+
+Both rules that carry the `/index.html` exclusion have that exclusion untested, and for the same reason: it only fires on an object M4.1 creates. **Verify each branch against its first published object, and record the result here** — a green SVG does not make "the markup rules" verified.
 
 **Where the bytes come from.** `--carry-forward <dir>` is the second gate's other half. The deploy resolves the pull request that produced the merge commit, finds that pull request's successful `ci.yml` run, and downloads its `carry-forward-fixtures` artifact. **That lookup does not have to be trusted**: `upload --fixtures` hashes every byte it is about to publish against the manifest and refuses anything that does not match, so an artifact from the wrong run cannot pass and provenance is established by content rather than by a run id. A missing artifact is likewise not an error in that step — most merges carry no `expected_drift` fixture, and the gate, which knows which paths need one, is what decides whether the absence matters.
 
