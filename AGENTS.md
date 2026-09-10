@@ -90,16 +90,29 @@ insertion at position 0 — were both plainly visible in the diff before they be
 failures, and one of them was followed by a restore that silently reverted good work
 alongside the bad. `ruff` caught both because they happened to be syntactically invalid.
 
-**Three shapes of assertion that is not assertable.** One family — a check that cannot
+**Four shapes of assertion that is not assertable.** One family — a check that cannot
 report the thing it names — but they present differently enough that a single rule misses
-two of them. Each has its own detection question, and each was found the hard way:
+the rest. Each has its own detection question, and each was found the hard way. *(The
+count said "three" for a while after the fourth row was added, in the section about
+checks that do not check. Fixed 2026-09-10.)*
 
 | Shape | Ask | Found in |
 |---|---|---|
 | **Passes on absence** — it compares or reports without requiring the subject to exist | *Would this still pass if the thing it inspects were not there at all?* | `url-normalization` comparing two absent CSPs as `"" == ""`; `404-caching` reporting `cf-cache-status` and passing on `DYNAMIC` |
+| **Vacuously true over an empty set** — the same shape one level up, and the easiest to write by accident | *What builds the set? Can it come back empty, and would every assertion still hold?* | `test_workflow_commands.py`: every assertion in it is "for each `loremfile …` found in a workflow, the command exists" — all true of a search that finds nothing. A regex typo, a renamed directory or a parser change makes the suite pass while checking zero things |
 | **Promoting a detail string** — the human version of the same shape: a value is *read out of* a passing check and written down as a result | *Did the check assert this, or merely print it?* | Run 1: `url-normalization` passing was read as evidence that normalization was on, when that check could pass on two absent headers. Run 2: both `HIT`s were written into the record as confirmed, when the checks that produced them only observed. **Both of us did this, on the same output, in the same week** — one reading it as an operator, one as its author. The check's own honesty is the only defence; a detail string is not a finding |
 | **Cannot fire** — the check runs, matches nothing, and is indistinguishable from a passing one | *Have I watched it fail?* | the double-escaped `ghcr\\.io` pattern that matched no workflow; `python -O` stripping every `assert` in the probe |
 | **Asserts something else** — it fails or passes on a fact adjacent to the one it names | *Could this fail for a reason other than the thing it names? If the named thing broke, would this fail?* | `www-redirect` following the redirect and asserting the apex root's honest 404; `rate-limit` concluding "the rule is not in effect" from load it never generated |
+
+**The empty-set shape deserves its own habit, because it does not look like a bug.**
+Whenever a test's claims are *universally quantified over a set it discovered* — a glob, a
+regex sweep, a parse, a filter, a directory walk — the discovery is part of the assertion
+and has to be asserted too. The rule: **a suite that says "everything found is valid" ships
+with a control that something is found**, and that control names specifics rather than
+counting (`assert len(x) > 0` passes on one accidental match; naming five commands you know
+are there does not). Write that control first. It costs three lines, it fails immediately
+if the finder is broken, and it is the only assertion in such a suite that is not vacuous
+on an empty result.
 
 The first is caught by driving the check against nothing. The second by the negative
 control. The third only by reading each check and asking both questions — no sweep finds

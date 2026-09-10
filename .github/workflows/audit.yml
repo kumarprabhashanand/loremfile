@@ -52,25 +52,42 @@ jobs:
       - name: Install the package
         run: pip install -e . --no-deps
 
+      # Three outcomes, not two: 0 clean, 1 drift, 2 the audit could not run. They have
+      # different remedies (docs/11 §7.2), so they get different issue titles under the
+      # same label — `gh_issue` de-duplicates on label **plus** title, so the two open and
+      # close independently.
       - id: audit
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          loremfile infra audit --json > audit.json || echo "drift=true" >> "$GITHUB_OUTPUT"
+          loremfile infra audit --json > audit.json && code=0 || code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
 
-      # De-duplicated by label plus title, so a month of drift is one issue with four
-      # comments rather than four issues, and it closes itself on the first clean run.
+      # Only when the audit actually ran. An audit that could not run has learned nothing
+      # about drift, so the drift issue is left exactly as it was found — otherwise a bad
+      # token would close a genuine drift issue by reporting `ok`.
       - name: Open, update or close the infra-drift issue
+        if: steps.audit.outputs.code == '0' || steps.audit.outputs.code == '1'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           python -m loremfile.gh_issue \
             --label infra-drift \
-            --title "Infrastructure has drifted from infra/" \
+            --title "Infra drift detected" \
             --report audit.json \
-            --state ${{ steps.audit.outputs.drift == 'true' && 'failing' || 'ok' }}
+            --state ${{ steps.audit.outputs.code == '1' && 'failing' || 'ok' }}
+
+      - name: Open, update or close the audit-could-not-run issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m loremfile.gh_issue \
+            --label infra-drift \
+            --title "Infra audit could not run" \
+            --report audit.json \
+            --state ${{ steps.audit.outputs.code == '2' && 'failing' || 'ok' }}
 
   # First Monday of the month, or on demand. Separate job because it needs no
   # credentials at all and takes minutes rather than seconds.

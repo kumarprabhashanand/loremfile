@@ -20,7 +20,7 @@ import pytest
 from loremfile.infra import apply as apply_module
 from loremfile.infra import audit
 from loremfile.infra.audit import DRIFT, OK, UNREADABLE, AuditReport, compare_rules
-from loremfile.infra.cloudflare_api import Client, ReadOnlyError, Response
+from loremfile.infra.cloudflare_api import Client, CloudflareError, ReadOnlyError, Response
 
 
 def response(body: Any, status: int = 200) -> Response:
@@ -221,3 +221,60 @@ def test_the_audit_covers_every_resource_apply_writes() -> None:
     applied = {step.__name__.removeprefix("apply_") for step in apply_module.STEPS}
     audited = {check.__name__.removeprefix("audit_") for check in audit.CHECKS}
     assert applied == audited, f"not audited: {sorted(applied - audited)}"
+
+
+# --- three outcomes, not two ------------------------------------------------
+
+
+def audit_exit(monkeypatch: pytest.MonkeyPatch, outcome: object) -> int:
+    """Run `infra audit` against a stubbed `audit.run` and return its exit code."""
+    from click.testing import CliRunner  # noqa: PLC0415 - only this group of tests needs it
+
+    from loremfile import cli  # noqa: PLC0415
+
+    monkeypatch.setattr(
+        cli.Client,
+        "from_env",
+        classmethod(lambda _cls, **_k: object()),  # type: ignore[arg-type]
+    )
+
+    def run(_client: object) -> AuditReport:
+        if isinstance(outcome, Exception):
+            raise outcome
+        assert isinstance(outcome, AuditReport)
+        return outcome
+
+    monkeypatch.setattr(cli.audit_infra, "run", run)
+    return CliRunner().invoke(cli.main, ["infra", "audit", "--json"]).exit_code
+
+
+def test_a_clean_audit_exits_zero(monkeypatch: pytest.MonkeyPatch) -> None:
+    report = AuditReport(zone_id="z", hostname="loremfile.dev")
+    report.add("setting:ssl", OK)
+    assert audit_exit(monkeypatch, report) == 0
+
+
+def test_drift_exits_one(monkeypatch: pytest.MonkeyPatch) -> None:
+    report = AuditReport(zone_id="z", hostname="loremfile.dev")
+    report.add("setting:ssl", DRIFT, "is 'flexible'")
+    assert audit_exit(monkeypatch, report) == 1
+
+
+def test_an_audit_that_could_not_run_exits_two(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The distinction the workflow depends on. An audit that could not run has learned
+    **nothing** about drift, so `audit.yml` leaves the drift issue alone on a 2 — otherwise
+    a rotated token would close a genuine drift issue by reporting `ok`."""
+    from loremfile.infra.cloudflare_api import ZoneScopeError  # noqa: PLC0415
+
+    assert audit_exit(monkeypatch, ZoneScopeError("wrong zone")) == 2
+    assert audit_exit(monkeypatch, CloudflareError("token expired")) == 2
+
+
+def test_unreadable_resources_alone_do_not_make_it_exit_non_zero(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A 403 on one setting is a warning (docs/09 §3.4); it is not "could not run"."""
+    report = AuditReport(zone_id="z", hostname="loremfile.dev")
+    report.add("bot-management", UNREADABLE, "403")
+    report.add("setting:ssl", OK)
+    assert audit_exit(monkeypatch, report) == 0

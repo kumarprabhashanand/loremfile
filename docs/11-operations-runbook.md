@@ -76,9 +76,19 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 7. `security_txt_expiry` → trigger a deploy.
 8. Comment on the issue with what you did; the next green run closes it.
 
-### 7.2 Infra drift
+### 7.2 Infra drift — and the other issue with the same label
 
-`loremfile infra audit` output lists each differing setting. If the change was intentional (made in the dashboard during an incident), port it into `infra/` via PR. Otherwise run `infra.yml` in `apply` mode and investigate who changed it (Cloudflare → Manage Account → Audit Log).
+`audit.yml` opens **two** distinct issues under the `infra-drift` label, because they have different remedies and must open and close independently. `gh_issue` de-duplicates on label **plus** title, so they do.
+
+**"Infra drift detected"** (`infra audit` exit 1). The output lists each differing resource with both values. If the change was intentional — made in the dashboard during an incident — port it into `infra/` via a pull request, so the desired state is what is actually wanted. Otherwise run `infra.yml` in `apply` mode and investigate who changed it (Cloudflare → Manage Account → Audit Log).
+
+**"Infra audit could not run"** (exit 2). Nothing is known about drift; the audit did not complete. This is **not** a Cloudflare problem by default — read the error in the issue body first:
+
+1. **`ZONE SCOPE REFUSED`** — the zone id does not resolve to `loremfile.dev`. Do not "fix" it by changing the variable until you know why: this guard exists because the account holds unrelated production zones. Check `CLOUDFLARE_ZONE_ID` against the dashboard and treat a mismatch as an incident, not a typo.
+2. **missing or rejected credentials** — T1 expired or was rotated without updating the `production` environment. `infra.yml` → `verify-tokens` says which; `11` §7.3 rotates it.
+3. **API errors or timeouts** — re-run `audit.yml` by dispatch. If it passes, the issue closes itself on that run.
+
+**A run that could not complete never touches the drift issue.** An audit that failed on a bad token has learned nothing about drift, so reporting `ok` for it would close a genuine drift issue on the strength of a run that never looked. Expect to see the two issues in different states, and that is correct rather than confusing.
 
 ### 7.2b Applying infrastructure, then probing it
 
