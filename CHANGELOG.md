@@ -44,6 +44,36 @@ All notable changes to this project are documented here. The format follows
   could not be built at all (`pip install --require-hashes` refused it). Regenerated with
   `--allow-unsafe`; a unit test now checks the file itself.
 
+### Added — the daily missing-key series, before the baseline expires
+
+The pre-launch period is the only one in which the missing-key rate is uncontaminated
+background scanning, and it cannot be reconstructed later. `usage` now returns it and
+`ops_log` commits it.
+
+- `usage --daily-days N` (default 32) adds a **`daily`** array to the JSON document: per-day
+  Class A, Class B and `GetObject`/`userError` counts. Month-to-date counters cannot express
+  a rate — they are cumulative and reset at the month boundary.
+- **Two API limits, read off the API's own refusals rather than off documentation**:
+  retention **90 days** (*"cannot request data older than 12w6d"*) and a maximum window of
+  **32 days** (*"cannot request a time range wider than 4w4d"*). Both are constants with a
+  guard that refuses before the request is sent, so the caller learns which limit it crossed
+  instead of receiving a 200 with an `errors` array. The guard ships with a negative control
+  that it admits the windows it is meant to admit.
+- `ops_log` writes **one row per day**, not one per week. Each weekly commit backfills the
+  days in its report and **replaces** a date already present, so overlapping 32-day windows
+  converge on one row per day rather than double-counting. A log written by the previous
+  weekly-row code merges rather than breaking.
+- The em-dash rule gains its negative control: a genuinely zero day must render `0`, so a
+  formatter that rendered every cell as `—` can no longer pass the "absent is not zero" test.
+- `docs/19` §3.2 records the baseline itself: **≈380–780 external missing-key reads a day**,
+  bursty rather than smooth — one or two credential scans of 250–285 requests account for
+  most of it, and between scans the rate falls to ≈0.1/min. The floor is **not** the daily
+  average; quoting it as the baseline would understate by about a factor of three.
+- `docs/19` §3.1 gains the calibration: the 2026-09-10 scanner ran at **≈2.3 req/s from one
+  address**, under a tenth of the rate limit's 30 rps threshold, so **the limit never engaged
+  and would not have**. Scenario 1 models a single IP sustaining the ceiling for thirty days;
+  it is an **upper bound, not an expectation**, and that now rests on an observation.
+
 ### Verified — R2 counts a 404 as a Class B read; the cost model's premise holds
 
 The measurement pre-registered in `docs/19` §3 was run attended, as a handshake with the

@@ -94,3 +94,102 @@ def test_an_unexpected_shape_is_refused_rather_than_read_as_zero() -> None:
 def test_the_query_asks_for_the_dimensions_the_model_needs() -> None:
     for field in ("actionType", "actionStatus", "bucketName", "requests"):
         assert field in usage.OPERATIONS_QUERY
+
+
+# --- the daily series (docs/19 §3.2) ----------------------------------------
+
+
+def daily_row(date: str, action: str, status: str, requests: int) -> dict[str, Any]:
+    return {
+        "sum": {"requests": requests},
+        "dimensions": {"date": date, "actionType": action, "actionStatus": status},
+    }
+
+
+def test_the_daily_series_separates_the_rate_from_the_running_total(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Month-to-date cannot express a rate; the baseline in `docs/19` §3.2 is a series."""
+    monkeypatch.setenv("CLOUDFLARE_ANALYTICS_TOKEN", "t")
+    monkeypatch.setenv("CLOUDFLARE_ACCOUNT_ID", "a")
+    monkeypatch.setattr(
+        usage,
+        "_post",
+        lambda *_a, **_k: {
+            "data": {
+                "viewer": {
+                    "accounts": [
+                        {
+                            "r2OperationsAdaptiveGroups": [
+                                daily_row("2026-09-10", "GetObject", "userError", 1404),
+                                daily_row("2026-09-08", "GetObject", "userError", 382),
+                                daily_row("2026-09-08", "GetObject", "success", 20),
+                                daily_row("2026-09-08", "PutObject", "success", 3),
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+    )
+    now = dt.datetime(2026, 9, 11, tzinfo=dt.UTC)
+    days = usage.daily(now - dt.timedelta(days=7), now, now=now)
+
+    assert [d.date for d in days] == ["2026-09-08", "2026-09-10"], "oldest first"
+    assert days[0].missing_key_reads == 382
+    assert days[0].class_b == 402, "successful GETs are Class B too, and are not missing keys"
+    assert days[0].class_a == 3
+    assert days[1].missing_key_reads == 1404
+
+
+def test_a_window_wider_than_the_api_allows_is_refused_here(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Measured 2026-09-10: 'cannot request a time range wider than 4w4d'.
+
+    Driven through `daily` rather than `check_window` so the stub is load-bearing: if the
+    guard stopped firing, the call would reach `_post` and the stub would say so.
+    """
+    monkeypatch.setenv("CLOUDFLARE_ANALYTICS_TOKEN", "t")
+    monkeypatch.setenv("CLOUDFLARE_ACCOUNT_ID", "a")
+    monkeypatch.setattr(usage, "_post", _must_not_be_called)
+    now = dt.datetime(2026, 9, 11, tzinfo=dt.UTC)
+    with pytest.raises(UsageError, match="maximum"):
+        usage.daily(now - dt.timedelta(days=usage.MAX_WINDOW_DAYS + 1), now, now=now)
+
+
+def test_history_past_retention_is_refused_rather_than_returned_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Measured 2026-09-10: 'cannot request data older than 12w6d'.
+
+    An empty answer for a period that is simply gone would read as a quiet period, which
+    is the failure this whole series exists to prevent.
+    """
+    monkeypatch.setenv("CLOUDFLARE_ANALYTICS_TOKEN", "t")
+    monkeypatch.setenv("CLOUDFLARE_ACCOUNT_ID", "a")
+    monkeypatch.setattr(usage, "_post", _must_not_be_called)
+    now = dt.datetime(2026, 9, 11, tzinfo=dt.UTC)
+    start = now - dt.timedelta(days=usage.RETENTION_DAYS + 1)
+    with pytest.raises(UsageError, match="retention"):
+        usage.daily(start, start + dt.timedelta(days=1), now=now)
+
+
+def test_the_guard_admits_the_windows_it_is_meant_to_admit() -> None:
+    """Negative control: a guard that refused everything would pass both tests above."""
+    now = dt.datetime(2026, 9, 11, tzinfo=dt.UTC)
+    usage.check_window(now - dt.timedelta(days=usage.MAX_WINDOW_DAYS), now, now=now)
+    usage.check_window(
+        now - dt.timedelta(days=usage.RETENTION_DAYS),
+        now - dt.timedelta(days=usage.RETENTION_DAYS - 1),
+        now=now,
+    )
+
+
+def _must_not_be_called(*_a: object, **_k: object) -> dict[str, Any]:
+    raise AssertionError("the window guard must refuse before any request is made")
+
+
+def test_the_daily_query_asks_for_the_date_dimension() -> None:
+    for field in ("date", "actionType", "actionStatus", "requests"):
+        assert field in usage.DAILY_QUERY

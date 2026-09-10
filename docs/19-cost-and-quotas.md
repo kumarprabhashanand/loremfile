@@ -122,12 +122,61 @@ records, not an observed invoice.
 (`34.19.163.21`, a cloud host) sprayed the zone with `.env`, `phpinfo.php`,
 `firebase-adminsdk.json` and similar credential paths — about 283 requests, 282 of them
 cache misses, 43 distinct paths in the sample. R2 recorded **273** further
-`GetObject`/`userError` operations in those two minutes. Nobody arranged it. The scenario
+`GetObject`/`userError` operations in those two minutes. Nobody arranged it: the scenario
 table's own vector arrived unprompted, on a domain with no audience yet, and produced the
-same kind of record as the synthetic burst. It also sizes the floor: outside these two
-events the background rate was ≈0.1 missing-key reads per minute. The mitigation — a rule
-bounding requests to known prefixes — belongs to M4.4; this section records only that the
-vector is live rather than theoretical.
+same kind of record as the synthetic burst.
+
+**What that observation calibrates.** The scan ran at **≈2.3 req/s** — 283 requests over
+about 120 seconds, from **one** address, so it counted against **one**
+`(ip.src, cf.colo.id)` counter. That is under a tenth of the rate limit's 30 rps threshold.
+**The limit never engaged, and would not have**: nothing about a faster scanner is implied,
+but the scanner that actually showed up was nowhere near the bound. Scenario 1 below models
+a single IP sustaining the *ceiling* for thirty days. It is therefore an **upper bound**,
+not an expectation, and that reading now rests on an observation rather than on an
+assumption. The mitigation — a rule bounding requests to known prefixes — belongs to M4.4;
+this section records only that the vector is live and that its observed rate is two orders
+of magnitude below what the worst case assumes.
+
+### 3.2 The pre-launch baseline, and why it is committed rather than queried
+
+Before the site has an audience — no links, no index presence, nothing published — every
+missing-key read is **uncontaminated background scanning**. That is the only period in
+which the number can be measured cleanly, and once launch traffic arrives the pre- and
+post-launch series are the comparison that says what launch actually cost. It cannot be
+reconstructed afterwards, for a measured reason:
+
+| Limit | Value | How it is known |
+|---|---|---|
+| Retention | **90 days** | the API's own refusal: *"cannot request data older than 12w6d"* |
+| Maximum window per query | **32 days** | *"cannot request a time range wider than 4w4d"* |
+
+Both were read off refusals on 2026-09-10 rather than off documentation, and both are
+constants in `usage.py` (`RETENTION_DAYS`, `MAX_WINDOW_DAYS`) with a guard that refuses the
+query before it is sent. Past 90 days the history is simply gone, so `health.yml` commits
+the series to the `ops-log` branch — one row per **day**, backfilled by each weekly commit —
+instead of leaving it to be re-queried. A month-to-date counter could not serve: it is
+cumulative and resets at the month boundary, so it cannot express a rate.
+
+**What the series holds so far.** The bucket's whole recorded history at the time of
+writing, external traffic and ours separated:
+
+| Day | Missing-key reads | Ours | External | Note |
+|---|---|---|---|---|
+| 2026-09-08 | 382 | 0 | **382** | the one clean full day: no probe run, no uploads, an empty bucket. The single `infra` dispatch that day was `verify-tokens`, 25 seconds of bucket metadata and no GETs |
+| 2026-09-09 | 1,385 | ~608 | ~777 | M2.4 probe runs 3–9 from a GitHub runner |
+| 2026-09-10 | 1,404 | 1,000 | ~404 | the Class B burst above |
+
+The external figure is **≈380–780 missing-key reads per day**, and it is **bursty rather
+than smooth**: one or two credential scans of 250–285 requests each account for most of it
+(276 from a Chilean cloud host on the 8th; 271 and 257 from Canadian and Brazilian hosts on
+the 9th; 283 on the 10th), with a long tail of scattered 404s from ~50 distinct addresses a
+day. Between scans the rate falls to **≈0.1 missing-key reads per minute**; that is the
+quiet floor, not the daily average, and quoting the floor as the baseline would understate
+it by roughly a factor of three.
+
+At 500/day that is ~15,000 a month, **0.15 % of the 10 M monthly free tier** — the cost is
+not the point. The point is that the post-launch series will have something to be read
+against, and that this is the last month in which the comparison can be established.
 
 ## 4. What spending a little money would buy — and whether it is worth it
 
