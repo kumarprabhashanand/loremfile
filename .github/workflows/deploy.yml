@@ -22,28 +22,23 @@
 # Each is added by the milestone that implements it, rather than standing here as a
 # guaranteed red cross.
 #
-# NOT ON `push` YET, and this is the one deferral that is a judgement rather than a
-# missing command. `docs/09` §3.2 specifies `push: branches: [main]`, and that is the
-# steady state (`docs/15` M3): every merge deploys within hours, on the same fleet.
-# But the first run of this workflow is also the first time `loremfile upload` has ever
-# touched a bucket, and its writes land under **indefinite lock rules** — published,
-# locked, permanent. A first exercise that is also an irreversible one is the wrong
-# order, and the same shape as the `release.py` caveat: a green unit suite is not
-# evidence that a path which has never seen a real object works.
+# ON `push` SINCE 2026-09-10. The trigger was deferred until this workflow had been
+# exercised for real, because its first run was also the first time `loremfile upload`
+# had ever addressed a bucket and its writes land under indefinite lock rules —
+# published, locked, permanent. A first exercise that is also an irreversible one is the
+# wrong order. Four runs discharged that: a dry run (161 planned, 0 written), then three
+# staged deploys — 10 objects, then 1 over the multipart path, then the remaining 150 —
+# each verified against `docs/03` §4.1 before the next was dispatched.
 #
-# So: dispatch `mode: dry-run` first. It does everything except write — real listing,
-# real HEADs, real gate evaluation, `--dry-run` on both upload steps and no infra apply.
-# When that run is green, the trigger below becomes
-#
-#     on:
-#       push:
-#         branches: [main]
-#       workflow_dispatch:
-#
-# which is a three-line change, and the deferral ends.
+# Enabling it also closes a window that dispatch-only left open. Fixtures marked
+# `expected_drift` are fulfillable only by the artifact of the run that built them, so
+# adopting their manifest entries starts a 90-day clock; with publication following a
+# merge rather than someone remembering, that clock never starts (`11` §7.9b).
 name: deploy
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       mode:
@@ -95,6 +90,11 @@ jobs:
       image: ${{ needs.setup.outputs.digest }}
     timeout-minutes: 60
     env:
+      # A push is always a real deploy: `inputs.mode` exists only on a dispatch, and is
+      # the empty string on `push`. Resolved once here rather than at three `if:`s,
+      # because the failure mode of getting it wrong is silent — the upload would run and
+      # the verification would be skipped, which reads as a green deploy.
+      MODE: ${{ inputs.mode || 'deploy' }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
@@ -190,7 +190,7 @@ jobs:
         run: |
           loremfile upload --fixtures --carry-forward carry-forward \
             ${{ steps.only.outputs.flags }} \
-            ${{ inputs.mode == 'dry-run' && '--dry-run' || '' }}
+            ${{ env.MODE == 'dry-run' && '--dry-run' || '' }}
 
       # `only` reaches this too, so a staged run touches nothing outside the paths it
       # names — including deletions.
@@ -198,7 +198,7 @@ jobs:
         run: |
           loremfile upload --apply-removals \
             ${{ steps.only.outputs.flags }} \
-            ${{ inputs.mode == 'dry-run' && '--dry-run' || '' }}
+            ${{ env.MODE == 'dry-run' && '--dry-run' || '' }}
 
       - id: infra_changed
         run: |
@@ -216,7 +216,7 @@ jobs:
 
       - name: Apply infra when infra/ changed or requested
         if: >-
-          inputs.mode == 'deploy'
+          env.MODE == 'deploy'
           && (steps.infra_changed.outputs.changed == 'true' || inputs.apply_infra)
         run: loremfile infra apply
 
@@ -234,6 +234,6 @@ jobs:
       # from the *whole* manifest, most of which is not there yet, so the staged run has
       # to name its paths rather than trust the sampler.
       - name: Verify what was published
-        if: inputs.mode == 'deploy'
+        if: env.MODE == 'deploy'
         run: |
           loremfile verify-live --mode smoke ${{ steps.only.outputs.flags }}

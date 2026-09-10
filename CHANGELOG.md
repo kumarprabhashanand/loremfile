@@ -56,6 +56,80 @@ An audit that inherited this would open an `infra-drift` issue every run, and a 
 fires every run stops meaning anything — the failure already avoided for `fonts`/
 `speed_brain` and for `expected_drift`.
 
+### Verified — every published byte, checked against the manifest
+
+`verify-live --mode full` against production, run locally as `docs/15` M5.2 specifies:
+
+```
+verify-live: ok (mode=full, checked=322, failing=0)
+```
+
+**322 = 161 header checks + 161 GET-and-hash checks.** Every published fixture was
+downloaded, hashed, and matched its manifest entry, and every one carried the full header
+contract of `docs/03` §4.1 by value. Smoke mode had covered 50 of 161 — one per format —
+so this is the first check of the complete set.
+
+**It took 2 minutes 12 seconds**, against `docs/12` §4's estimate of 15–30 minutes. The
+estimate was an order of magnitude high, and the consequence is worth acting on rather
+than filing: `full` is cheap enough to run on any change worth checking, not only at M5.2.
+The table now carries the measurement and a note to re-measure at 228 fixtures.
+
+### Changed — `deploy.yml` runs on push to `main`
+
+The trigger was deferred because this workflow's first run was also the first time
+`loremfile upload` had ever addressed a bucket, and its writes land under indefinite lock
+rules. Four runs discharged that: a dry run (161 planned, **0 written**), then three staged
+deploys — 10 objects, 1 over the multipart path, then the remaining 150 — each verified
+before the next was dispatched. `docs/09` §3.2 records the four runs and the date.
+
+- **A push is always a real deploy.** `inputs.mode` exists only on a dispatch and is empty
+  on `push`, so it is resolved once into a job-level `MODE` rather than at three separate
+  `if:`s. Getting that wrong fails silently in the worst direction: the upload runs and the
+  verification is skipped, which reads as a green deploy.
+- **It closes the pairing window.** `expected_drift` fixtures are fulfillable only by the
+  artifact of the run that built them, so adopting their entries starts a 90-day clock.
+  While publication waited on someone remembering to dispatch, that clock could start with
+  nobody watching it. `11` §7.9b's same-session rule now collapses to "merge and read the
+  run".
+
+### Changed — the audit's two failures are two issues
+
+`infra audit` gains a third exit code: **0 clean, 1 drift, 2 could not run.** They have
+different remedies, so `audit.yml` opens them under the same `infra-drift` label with
+different titles — "Infra drift detected" and "Infra audit could not run" — and `gh_issue`
+de-duplicates on label **plus** title, so they open and close independently.
+
+**The load-bearing half is what a 2 does *not* do.** An audit that could not run has
+learned nothing about drift, so the drift issue is left exactly as it was found. Collapsing
+the two would let a run that failed on a rotated token close a genuine drift issue by
+reporting `ok`. `docs/11` §7.2 now documents both, with the three causes of a 2 in the
+order worth checking them — and says plainly that a `ZONE SCOPE REFUSED` is an incident
+rather than a typo, because that guard exists to stop a write reaching someone else's zone.
+
+### Changed — `health.yml`'s absent steps have an owner
+
+An intentionally absent step with no named milestone becomes a permanently absent one.
+`docs/09` §3.3 now carries the same deferral table §3.2 has: `loremfile site build` and the
+site-key **defacement** check both return with **M4.1**, and `docs/15` M4.1 carries it as a
+DoD line. Stated in the open, because until then the daily run performs no defacement check
+at all and a green summary would not say so.
+
+### Added — a fourth shape: vacuously true over an empty set
+
+`AGENTS.md` gains the shape that `test_workflow_commands.py` had to defend against, and the
+habit that goes with it. Whenever a test's claims are **universally quantified over a set it
+discovered** — a glob, a regex sweep, a parse, a filter — the discovery is part of the
+assertion and has to be asserted too. "For each `loremfile …` found in a workflow, the
+command exists" is entirely true of a search that finds nothing.
+
+The rule: **a suite that says "everything found is valid" ships with a control that
+something is found**, and the control names specifics rather than counting — `len(x) > 0`
+passes on one accidental match, naming five commands you know are there does not. Write it
+first. It costs three lines and fails immediately when the finder breaks.
+
+*(Also fixed: the table said "Three shapes" while listing four, in the section about checks
+that do not check.)*
+
 ### Added — `infra audit`, `audit.yml` and `health.yml` (M4.4, second half begins)
 
 **`loremfile infra audit` compares content, not writes.** `apply` PUTs every ruleset phase

@@ -74,6 +74,17 @@ def _zone_client() -> Client:
     return client
 
 
+#: `infra audit` distinguishes its two failures, because they have different remedies
+#: and must open and close independently (docs/11 §7.2). The one that matters is
+#: `AUDIT_UNUSABLE`: an audit that could not run has learned **nothing** about drift, so
+#: the caller must leave the drift issue exactly as it found it. Collapsing the two would
+#: let a run that failed on a bad token close a genuine drift issue.
+AUDIT_CLEAN = 0
+AUDIT_DRIFT = 1
+AUDIT_UNUSABLE = 2
+AUDIT_OUTCOMES = {AUDIT_CLEAN: "clean", AUDIT_DRIFT: "drift", AUDIT_UNUSABLE: "unusable"}
+
+
 class UploadUnavailable(RuntimeError):
     """A publish mode whose producer does not exist yet.
 
@@ -847,6 +858,7 @@ def infra_audit(as_json: bool) -> None:
     errors: list[str] = []
     summary: dict[str, Any] = {}
     items: list[Item] = []
+    code = AUDIT_CLEAN
     try:
         # Read-only at the transport: a check that grew a write raises rather than
         # quietly converging the drift it was sent to report.
@@ -864,20 +876,22 @@ def infra_audit(as_json: bool) -> None:
             {"path": f.resource, "status": f.state, "detail": f.detail} for f in report.findings
         ]
         errors = [f"{f.resource}: {f.detail}" for f in report.drifted]
+        code = AUDIT_DRIFT if report.drifted else AUDIT_CLEAN
     except ZoneScopeError as exc:
         errors.append(f"ZONE SCOPE REFUSED: {exc}")
+        code = AUDIT_UNUSABLE
     except (CloudflareError, OSError, ValueError, KeyError) as exc:
         errors.append(str(exc))
-    sys.exit(
-        _emit(
-            "infra audit",
-            ok=not errors,
-            summary=summary,
-            items=items,
-            errors=errors,
-            as_json=as_json,
-        )
+        code = AUDIT_UNUSABLE
+    _emit(
+        "infra audit",
+        ok=code == AUDIT_CLEAN,
+        summary={**summary, "outcome": AUDIT_OUTCOMES[code]},
+        items=items,
+        errors=errors,
+        as_json=as_json,
     )
+    sys.exit(code)
 
 
 @infra.command("locks")
