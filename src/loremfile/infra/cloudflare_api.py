@@ -45,6 +45,16 @@ class CloudflareError(RuntimeError):
     """An API call failed, or a safety precondition was not met."""
 
 
+class ReadOnlyError(CloudflareError):
+    """A write was attempted through a client that promised not to make any.
+
+    `audit.yml` runs with T1 because Cloudflare tokens cannot be split read/write per
+    call (`docs/09` §3.4), so "the audit never writes" was a property of the code being
+    read correctly. This makes it a property of the client instead: an audit that grew a
+    write would raise here rather than quietly converge the drift it was sent to report.
+    """
+
+
 class ZoneScopeError(CloudflareError):
     """A write was aimed somewhere other than the verified zone. Always fatal.
 
@@ -85,12 +95,16 @@ class Client:
     zone_id: str
     account_id: str
     dry_run: bool = False
+    #: Refuse every write outright, rather than no-opping it as `dry_run` does. The two
+    #: are different promises: a dry run is a *rehearsal* of writing and reports what it
+    #: would have done; a read-only client asserts that writing is not part of the job.
+    read_only: bool = False
     #: Set by :meth:`verify_zone`. Until then no write is allowed to leave the process.
     verified_hostname: str | None = None
     calls: list[tuple[str, str]] = field(default_factory=list)
 
     @classmethod
-    def from_env(cls, *, dry_run: bool = False) -> Client:
+    def from_env(cls, *, dry_run: bool = False, read_only: bool = False) -> Client:
         missing = [
             name
             for name in ("CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ZONE_ID", "CLOUDFLARE_ACCOUNT_ID")
@@ -107,6 +121,7 @@ class Client:
             zone_id=os.environ["CLOUDFLARE_ZONE_ID"],
             account_id=os.environ["CLOUDFLARE_ACCOUNT_ID"],
             dry_run=dry_run,
+            read_only=read_only,
         )
 
     # --- the guard ---------------------------------------------------------
@@ -155,6 +170,11 @@ class Client:
     # --- transport ---------------------------------------------------------
 
     def request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> Response:
+        if self.read_only and method in WRITE_METHODS:
+            raise ReadOnlyError(
+                f"{method} {path} attempted through a read-only client. The audit reports "
+                "state; it does not converge it (docs/09 §3.4)."
+            )
         self._assert_scoped(method, path)
         self.calls.append((method, path))
         if self.dry_run and method in WRITE_METHODS:

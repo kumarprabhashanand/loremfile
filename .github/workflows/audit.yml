@@ -1,0 +1,118 @@
+# Weekly infrastructure audit, and a monthly determinism audit (docs/09 §3.4).
+#
+# THIS JOB READS. It holds T1, which can write — Cloudflare tokens cannot be split
+# read/write per call — so "the audit never calls apply" is enforced in three places
+# rather than trusted: the client is constructed `read_only=True` and raises on any
+# write, a unit test walks `audit.py`'s AST for write calls, and no step here invokes
+# `infra apply`.
+#
+# WHY IT IS NOT `apply --dry-run`. `apply` writes every ruleset phase with an
+# unconditional full PUT, so a dry run reports `updated` for all five phases plus
+# `tiered-cache` whether or not anything differs. Inheriting that would open an
+# `infra-drift` issue every single week, and a label that fires every run stops meaning
+# anything. `infra audit` reads the deployed rules and compares content, so `drift`
+# means drift.
+name: audit
+
+on:
+  schedule:
+    # Mondays, offset from the health check so two containers do not start together.
+    - cron: "43 5 * * 1"
+  workflow_dispatch:
+    inputs:
+      determinism:
+        description: Run the determinism audit too, regardless of the date
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  setup:
+    runs-on: ubuntu-24.04
+    outputs:
+      digest: ${{ steps.read.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: read
+        run: echo "digest=$(cat tools/TOOLCHAIN_DIGEST)" >> "$GITHUB_OUTPUT"
+
+  infra:
+    needs: setup
+    runs-on: ubuntu-24.04
+    environment: production
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      - id: audit
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          loremfile infra audit --json > audit.json || echo "drift=true" >> "$GITHUB_OUTPUT"
+
+      # De-duplicated by label plus title, so a month of drift is one issue with four
+      # comments rather than four issues, and it closes itself on the first clean run.
+      - name: Open, update or close the infra-drift issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m loremfile.gh_issue \
+            --label infra-drift \
+            --title "Infrastructure has drifted from infra/" \
+            --report audit.json \
+            --state ${{ steps.audit.outputs.drift == 'true' && 'failing' || 'ok' }}
+
+  # First Monday of the month, or on demand. Separate job because it needs no
+  # credentials at all and takes minutes rather than seconds.
+  determinism:
+    needs: setup
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - id: due
+        run: |
+          day="$(date -u +%d)"
+          if [ "${{ inputs.determinism }}" = "true" ] || [ "$day" -le 7 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "not the first Monday of the month; skipping the determinism audit"
+          fi
+
+      - name: Install the package
+        if: steps.due.outputs.run == 'true'
+        run: pip install -e . --no-deps
+
+      # Reports drift; never a deploy blocker. Published bytes are canonical (docs/06
+      # §8), and `expected_drift` paths are reported in their own section so the four
+      # fixtures that are known not to reproduce off this fleet do not train anyone to
+      # scroll past the section that matters.
+      - id: audit
+        if: steps.due.outputs.run == 'true'
+        run: |
+          loremfile build --all --audit --json > determinism.json \
+            || echo "drift=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open, update or close the determinism issue
+        if: steps.due.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m loremfile.gh_issue \
+            --label determinism \
+            --title "Fixtures no longer regenerate byte for byte" \
+            --report determinism.json \
+            --state ${{ steps.audit.outputs.drift == 'true' && 'failing' || 'ok' }}
