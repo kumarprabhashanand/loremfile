@@ -15,9 +15,31 @@ from typing import Any
 import pytest
 
 from loremfile import build as build_module
+from loremfile import cli
 from loremfile.build import BuildError, Selection
 from loremfile.catalog import Catalog
 from loremfile.infra import locks, r2
+from loremfile.infra.upload import MULTIPART_THRESHOLD
+
+#: The staged first publish (`docs/09` §3.2). Ten small fixtures across ten prefixes,
+#: chosen to exercise both sides of the CSP asymmetry, the charset'd content types and
+#: the binary ones — the header contract is written into object metadata at upload and
+#: frozen there by the bucket lock, so it has exactly one chance to be right.
+STAGED_FIRST_PUBLISH = (
+    "pdf/minimal.pdf",
+    "svg/simple-shapes.svg",
+    "png/1x1.png",
+    "csv/people-10-semicolon.csv",
+    "json/all-types.json",
+    "xml/with-namespaces.xml",
+    "txt/lorem-1kb.txt",
+    "bin/1-byte.bin",
+    "mp3/sine-440hz-3s.mp3",
+    "docx/with-table.docx",
+)
+
+#: Stage two, on its own: the smallest object above the multipart threshold.
+MULTIPART_PROBE = "csv/people-100k.csv"
 
 CATALOG = Catalog.load()
 
@@ -202,3 +224,53 @@ def test_the_five_withheld_fixtures_are_the_gap_between_catalog_and_manifest() -
     assert len(published) + len(withheld) == len(list(CATALOG.fixtures()))
     assert len(published) + len(withheld) + REMAINING_M37_M38 == LAUNCH_SET
     assert {f.path for f in withheld} == {f.path for f in CATALOG.fixtures() if f.expected_drift}
+
+
+# --- the staged first publish -----------------------------------------------
+
+
+def test_only_narrows_the_plan_so_the_gates_still_cover_what_is_written() -> None:
+    """A staged publish must not be a weaker pass. `--only` filters the entries *before*
+    the plan is built, so the lock gate and the carry-forward gate run over exactly the
+    keys about to be written."""
+    entries = [
+        {"path": "pdf/minimal.pdf", "sha256": "a" * 64, "bytes": 1},
+        {"path": "png/1x1.png", "sha256": "b" * 64, "bytes": 1},
+    ]
+    assert [e["path"] for e in cli._restrict(entries, ("png/1x1.png",))] == ["png/1x1.png"]
+    assert cli._restrict(entries, ()) == entries
+
+
+def test_only_refuses_a_path_the_manifest_does_not_hold() -> None:
+    """Ignoring it would report success over an empty selection: "verified 0 of the paths
+    you named" and "verified them all" render identically in a summary line."""
+    entries = [{"path": "pdf/minimal.pdf", "sha256": "a" * 64, "bytes": 1}]
+    with pytest.raises(ValueError, match="not in the manifest"):
+        cli._restrict(entries, ("pdf/typo.pdf",))
+
+
+def test_the_staged_set_named_in_the_docs_exists_and_spans_the_header_branches() -> None:
+    """`docs/09` §3.2's staged set is only useful if it exercises both sides of the CSP
+    asymmetry and the charset'd and binary content types. If a path is ever renamed, this
+    fails here rather than in a dispatch that half-publishes."""
+    manifest = json.loads((Path(__file__).resolve().parents[2] / "manifest.json").read_text())
+    by_path = {e["path"]: e for e in manifest["fixtures"]}
+    for path in STAGED_FIRST_PUBLISH:
+        assert path in by_path, path
+
+    mimes = {by_path[p]["mime"] for p in STAGED_FIRST_PUBLISH}
+    assert any(m.startswith("image/svg") for m in mimes), "a markup fixture, for the sandbox CSP"
+    assert "application/pdf" in mimes, "a PDF, which must carry no CSP at all"
+    assert any("charset=utf-8" in m for m in mimes), "a type whose charset is part of it"
+    assert "application/octet-stream" in mimes
+    assert len({p.split("/")[0] for p in STAGED_FIRST_PUBLISH}) >= 8, "several families"
+
+
+def test_the_staged_set_stays_under_the_multipart_threshold() -> None:
+    """Deliberate. Multipart is a separate untested path — `upload_file` splits at 16 MiB
+    and sets the metadata at initiate rather than on each part — so it gets its own stage
+    with one object, not a first stage with ten."""
+    manifest = json.loads((Path(__file__).resolve().parents[2] / "manifest.json").read_text())
+    by_path = {e["path"]: e for e in manifest["fixtures"]}
+    assert all(by_path[p]["bytes"] < MULTIPART_THRESHOLD for p in STAGED_FIRST_PUBLISH)
+    assert by_path[MULTIPART_PROBE]["bytes"] > MULTIPART_THRESHOLD

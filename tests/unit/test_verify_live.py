@@ -21,9 +21,10 @@ from loremfile.infra import probe, purge, verify_live
 from loremfile.infra.verify_live import Response, Status
 
 MIME = "application/pdf"
+PATH = "pdf/a4-3pages.pdf"
 
 
-def entry(path: str = "pdf/a4-3pages.pdf", body: bytes = b"%PDF-1.7") -> dict[str, Any]:
+def entry(path: str = PATH, body: bytes = b"%PDF-1.7") -> dict[str, Any]:
     return {
         "path": path,
         "bytes": len(body),
@@ -32,15 +33,15 @@ def entry(path: str = "pdf/a4-3pages.pdf", body: bytes = b"%PDF-1.7") -> dict[st
     }
 
 
-def good_headers(length: int, mime: str = MIME) -> dict[str, str]:
+def good_headers(length: int, mime: str = MIME, path: str = PATH) -> dict[str, str]:
+    """Exactly what `docs/03` §4.1 promises. Note `no-transform`: it was missing here
+    until the value check was added, and it is the clause that makes `Content-Length`
+    trustworthy by keeping the edge from recompressing a fixture."""
     return {
         "content-type": mime,
         "content-length": str(length),
-        "cache-control": "public, max-age=31536000, immutable",
-        "accept-ranges": "bytes",
-        "x-content-type-options": "nosniff",
-        "cross-origin-resource-policy": "cross-origin",
-        "x-robots-tag": "noindex",
+        "content-disposition": verify_live.expected_disposition(path),
+        **verify_live.EXPECTED_FIXTURE_HEADERS,
     }
 
 
@@ -133,7 +134,9 @@ def test_a_missing_header_is_reported_by_name() -> None:
 def test_markup_needs_the_sandbox_csp_and_a_pdf_must_not_have_one() -> None:
     """The asymmetry matters: a CSP on a PDF breaks viewers and passes every other check."""
     markup = entry("html/basic.html", b"<!doctype html>")
-    without = Response(status=200, headers=good_headers(markup["bytes"], "text/html"))
+    without = Response(
+        status=200, headers=good_headers(markup["bytes"], "text/html", markup["path"])
+    )
     assert any(
         "sandbox CSP" in f.detail for f in verify_live.check_fixture_headers(markup, without)
     )
@@ -189,3 +192,54 @@ def test_purge_covers_both_forms_of_a_format_page() -> None:
 def test_purge_batches_at_the_free_plan_limit() -> None:
     assert purge.BATCH == 100
     assert len(purge._batched(list(range(250)))) == 3  # type: ignore[arg-type]
+
+
+# --- M4.4: the values, not just the names -----------------------------------
+
+
+def test_a_header_with_the_right_name_and_the_wrong_value_is_caught() -> None:
+    """The bucket-lock case. `Cache-Control` and `Content-Disposition` come from object
+    metadata written at upload, and the lock makes them unchangeable afterwards — so a
+    presence-only check would confirm the header exists while the contract is broken
+    permanently."""
+    e = entry()
+    headers = good_headers(e["bytes"])
+    headers["cache-control"] = "public, max-age=31536000, immutable"  # no-transform dropped
+    findings = verify_live.check_fixture_headers(e, Response(status=200, headers=headers))
+
+    assert [f.status for f in findings] == [Status.HEADER_VALUE]
+    assert "no-transform" in findings[0].detail
+
+
+def test_a_wrong_filename_in_content_disposition_is_caught() -> None:
+    e = entry()
+    headers = good_headers(e["bytes"])
+    headers["content-disposition"] = 'inline; filename="wrong.pdf"'
+    findings = verify_live.check_fixture_headers(e, Response(status=200, headers=headers))
+
+    assert [f.status for f in findings] == [Status.HEADER_VALUE]
+    assert "a4-3pages.pdf" in findings[0].detail
+
+
+def test_every_value_in_the_table_is_actually_compared() -> None:
+    """Negative control for the two above: a check that only looked at `cache-control`
+    would pass both. Each header in the table must be able to fail on its own."""
+    e = entry()
+    for name in verify_live.EXPECTED_FIXTURE_HEADERS:
+        headers = good_headers(e["bytes"])
+        headers[name] = "definitely-not-the-contract"
+        findings = verify_live.check_fixture_headers(e, Response(status=200, headers=headers))
+        assert [f.status for f in findings] == [Status.HEADER_VALUE], name
+        assert name in findings[0].detail
+
+
+def test_the_contract_table_matches_the_metadata_the_uploader_writes() -> None:
+    """`docs/03` §4.1 is one promise made in two places — the header the checker expects
+    and the metadata `r2.put_fixture` sets. They are frozen together by the lock."""
+    from loremfile.config import FIXTURE_CACHE_CONTROL  # noqa: PLC0415 - local to the assertion
+
+    assert verify_live.EXPECTED_FIXTURE_HEADERS["cache-control"] == FIXTURE_CACHE_CONTROL
+    assert "no-transform" in FIXTURE_CACHE_CONTROL
+    assert verify_live.expected_disposition("pdf/a4-3pages.pdf") == (
+        'inline; filename="a4-3pages.pdf"'
+    )

@@ -2,7 +2,7 @@
   "always_use_https": "on",
   "ssl": "strict",
   "min_tls_version": "1.2",
-  "tls_1_3": "on",
+  "tls_1_3": "zrt",
   "http3": "on",
   "0rtt": "on",
   "ipv6": "on",
