@@ -10,16 +10,20 @@ This runs only in GitHub Actions, where the secrets live. Nothing here writes an
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import os
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
+
+from loremfile import config
 
 API = "https://api.cloudflare.com/client/v4"
 TIMEOUT = 30
@@ -160,3 +164,50 @@ def verify_all() -> Report:
             "T2 credentials are present", False, "R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY are empty"
         )
     return report
+
+
+#: docs/08 §6: `health.yml` opens a `rotation-due` issue this far ahead of expiry.
+ROTATION_WARNING_DAYS = 30
+
+
+@dataclass
+class Expiry:
+    key: str
+    name: str
+    expires: dt.date
+    days_left: int
+    note: str = ""
+
+    @property
+    def due(self) -> bool:
+        return self.days_left <= ROTATION_WARNING_DAYS
+
+
+def expiry_path() -> Path:
+    return config.repo_root() / "infra" / "token-expiry.json"
+
+
+def tokens_due(today: dt.date | None = None) -> list[Expiry]:
+    """Every recorded token with the days left before it expires.
+
+    Reads dates only — the file never holds a secret, and a test asserts that. Rotation
+    is an owner action, so the value of this is lead time: a token that expires without
+    warning takes the deploy with it.
+    """
+    when = today or dt.datetime.now(tz=dt.UTC).date()
+    document = json.loads(expiry_path().read_text(encoding="utf-8"))
+    out: list[Expiry] = []
+    for key, row in sorted(document.items()):
+        if key.startswith("_"):
+            continue
+        expires = dt.date.fromisoformat(row["expires"])
+        out.append(
+            Expiry(
+                key=key,
+                name=row.get("name", key),
+                expires=expires,
+                days_left=(expires - when).days,
+                note=row.get("note", ""),
+            )
+        )
+    return out

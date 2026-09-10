@@ -14,6 +14,8 @@ from pathlib import Path
 
 import pytest
 
+from loremfile.infra import tokens
+
 EXPIRY = Path(__file__).resolve().parents[2] / "infra" / "token-expiry.json"
 EXPECTED = {"T1", "T2", "T4"}
 
@@ -67,3 +69,29 @@ def test_expiry_dates_are_in_the_future() -> None:
         if dt.date.fromisoformat(v["expires"]) < dt.date.today()
     ]
     assert not stale, "rotate these and update the file: " + "; ".join(stale)
+
+
+# --- rotation lead time (M4.3) ----------------------------------------------
+
+
+def test_every_recorded_token_reports_days_left() -> None:
+    rows = tokens.tokens_due()
+    assert {row.key for row in rows} == {"T1", "T2", "T4"}
+    assert all(row.days_left > 0 for row in rows), "a token has already expired"
+
+
+def test_a_token_inside_the_window_is_due_and_one_outside_is_not() -> None:
+    """The threshold is what health.yml keys off; both sides of it are asserted."""
+    soonest = min(tokens.tokens_due(), key=lambda row: row.expires).expires
+    inside = soonest - dt.timedelta(days=tokens.ROTATION_WARNING_DAYS - 1)
+    outside = soonest - dt.timedelta(days=tokens.ROTATION_WARNING_DAYS + 5)
+
+    assert any(row.due for row in tokens.tokens_due(today=inside))
+    assert not any(row.due for row in tokens.tokens_due(today=outside))
+
+
+def test_the_expiry_file_is_read_for_dates_only() -> None:
+    """It is committed to a public repository; a value that looks like a secret is a bug."""
+    for row in tokens.tokens_due():
+        assert row.name.startswith("loremfile-ci-")
+        assert len(row.name) < 64
