@@ -89,7 +89,9 @@ def test_the_archive_is_reproducible_for_the_same_inputs(tmp_path: Path) -> None
 # --- ops_log ----------------------------------------------------------------
 
 
-def usage_report(class_b: int = 1234, ok: bool = True) -> dict[str, Any]:
+def usage_report(
+    class_b: int = 1234, ok: bool = True, daily: list[dict[str, Any]] | None = None
+) -> dict[str, Any]:
     return {
         "command": "usage",
         "ok": ok,
@@ -98,42 +100,95 @@ def usage_report(class_b: int = 1234, ok: bool = True) -> dict[str, Any]:
             "r2_class_b_mtd": class_b,
             "missing_key_reads": 1329,
         },
+        "daily": [] if daily is None else daily,
         "errors": [],
     }
 
 
-def test_the_weekly_row_carries_the_numbers_health_watches(tmp_path: Path) -> None:
-    report = tmp_path / "usage.json"
-    report.write_text(json.dumps(usage_report()))
-    log = tmp_path / "ops-log.md"
-    line = ops_log.append(report, log, today=dt.date(2026, 9, 14))
-    assert "2026-09-14" in line
-    assert "1,234" in line
-    assert "1,329" in line
-    assert log.read_text().startswith("# ops-log")
+def day(date: str, missing: int, class_b: int | None = None) -> dict[str, Any]:
+    return {
+        "date": date,
+        "r2_class_a": 0,
+        "r2_class_b": class_b if class_b is not None else missing,
+        "missing_key_reads": missing,
+    }
 
 
-def test_running_twice_in_one_day_replaces_rather_than_doubles(tmp_path: Path) -> None:
-    """A re-run of the scheduled job must not double-count the week."""
+def test_the_log_carries_one_row_per_day_oldest_first(tmp_path: Path) -> None:
+    """The number is only useful as a series, so the resolution is the day (docs/19 §3.2)."""
     report = tmp_path / "usage.json"
+    report.write_text(
+        json.dumps(usage_report(daily=[day("2026-09-10", 1404), day("2026-09-08", 382)]))
+    )
     log = tmp_path / "ops-log.md"
-    report.write_text(json.dumps(usage_report(class_b=1)))
-    ops_log.append(report, log, today=dt.date(2026, 9, 14))
-    report.write_text(json.dumps(usage_report(class_b=2)))
     ops_log.append(report, log, today=dt.date(2026, 9, 14))
 
-    rows = [line for line in log.read_text().splitlines() if line.startswith("| 2026-09-14")]
-    assert len(rows) == 1
-    assert "| 2 |" in rows[0]
+    written = [line for line in log.read_text().splitlines() if line.startswith("| 2026-")]
+    assert [line.split("|")[1].strip() for line in written] == ["2026-09-08", "2026-09-10"]
+    assert "382" in written[0]
+    assert "1,404" in written[1]
+
+
+def test_overlapping_backfills_converge_on_one_row_per_day(tmp_path: Path) -> None:
+    """Weekly commits with a 32-day window overlap by design; they must not double-count."""
+    report = tmp_path / "usage.json"
+    log = tmp_path / "ops-log.md"
+    report.write_text(
+        json.dumps(usage_report(daily=[day("2026-09-08", 382), day("2026-09-09", 1)]))
+    )
+    ops_log.append(report, log, today=dt.date(2026, 9, 14))
+    report.write_text(
+        json.dumps(usage_report(daily=[day("2026-09-09", 1385), day("2026-09-10", 1404)]))
+    )
+    ops_log.append(report, log, today=dt.date(2026, 9, 21))
+
+    written = [line for line in log.read_text().splitlines() if line.startswith("| 2026-")]
+    assert [line.split("|")[1].strip() for line in written] == [
+        "2026-09-08",
+        "2026-09-09",
+        "2026-09-10",
+    ]
+    assert "1,385" in written[1], "the later read must replace the earlier one, not sit beside it"
+
+
+def test_a_log_written_before_the_daily_series_is_not_corrupted(tmp_path: Path) -> None:
+    """The `ops-log` branch may already hold weekly rows; a backfill must merge into them."""
+    log = tmp_path / "ops-log.md"
+    log.write_text(
+        "# ops-log\n\n| week | R2 class A | R2 class B | missing-key GETs | notes |\n"
+        "|---|---|---|---|---|\n| 2026-09-07 | 56 | 1,234 | 1,329 |  |\n"
+    )
+    report = tmp_path / "usage.json"
+    report.write_text(json.dumps(usage_report(daily=[day("2026-09-08", 382)])))
+    ops_log.append(report, log, today=dt.date(2026, 9, 14))
+
+    text = log.read_text()
+    assert text.startswith("# ops-log")
+    written = [line for line in text.splitlines() if line.startswith("| 2026-")]
+    assert [line.split("|")[1].strip() for line in written] == ["2026-09-07", "2026-09-08"]
 
 
 def test_a_failed_usage_read_is_visible_in_the_row(tmp_path: Path) -> None:
-    """A week with no numbers must not look like a week with zero traffic."""
+    """A day with no numbers must not look like a day with zero traffic."""
     report = tmp_path / "usage.json"
     report.write_text(json.dumps({"command": "usage", "ok": False, "summary": {}, "errors": ["x"]}))
     line = ops_log.append(report, tmp_path / "ops-log.md", today=dt.date(2026, 9, 14))
     assert "—" in line, "an absent number must not render as 0"
     assert "check failed" in line
+    assert "| 0 |" not in line
+
+
+def test_the_em_dash_is_not_a_coincidence_of_the_failure_path(tmp_path: Path) -> None:
+    """Negative control for the row above: a real zero renders as `0`, not as an em dash.
+
+    Without this, a formatter that rendered *every* cell as `—` would pass the test above
+    while destroying the series.
+    """
+    report = tmp_path / "usage.json"
+    report.write_text(json.dumps(usage_report(daily=[day("2026-09-08", 0, class_b=0)])))
+    line = ops_log.append(report, tmp_path / "ops-log.md", today=dt.date(2026, 9, 14))
+    assert "| 0 |" in line
+    assert "—" not in line
 
 
 # --- gh_issue ---------------------------------------------------------------

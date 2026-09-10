@@ -53,6 +53,7 @@ def _emit(
     items: list[Item],
     errors: list[str],
     as_json: bool,
+    extra: dict[str, Any] | None = None,
 ) -> int:
     if as_json:
         click.echo(
@@ -63,6 +64,7 @@ def _emit(
                     "summary": summary,
                     "items": items,
                     "errors": errors,
+                    **(extra or {}),
                 },
                 indent=2,
                 ensure_ascii=False,
@@ -541,12 +543,19 @@ def tokens_due_command(as_json: bool) -> None:
 
 @main.command("usage")
 @click.option("--days", type=int, default=0, help="Look back N days instead of month-to-date.")
+@click.option(
+    "--daily-days",
+    type=int,
+    default=usage_module.MAX_WINDOW_DAYS,
+    help="Days of per-day history to include; 0 omits the series.",
+)
 @click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
-def usage_command(days: int, as_json: bool) -> None:
+def usage_command(days: int, daily_days: int, as_json: bool) -> None:
     """R2 operations from the Analytics API (docs/19 §3). Read-only, T4."""
     errors: list[str] = []
     summary: dict[str, Any] = {}
     items: list[Item] = []
+    series: list[dict[str, Any]] = []
     try:
         if days:
             now = dt.datetime.now(tz=dt.UTC)
@@ -575,8 +584,24 @@ def usage_command(days: int, as_json: bool) -> None:
         ]
     except usage_module.UsageError as exc:
         errors.append(str(exc))
+    # The daily series is fetched separately and its failure is reported separately: a
+    # month-to-date read that worked must not be discarded because the series did not,
+    # and a series that silently vanished must not read as a quiet period.
+    if daily_days:
+        try:
+            series = [day.as_dict() for day in usage_module.recent_days(daily_days)]
+        except usage_module.UsageError as exc:
+            errors.append(f"daily series: {exc}")
     sys.exit(
-        _emit("usage", ok=not errors, summary=summary, items=items, errors=errors, as_json=as_json)
+        _emit(
+            "usage",
+            ok=not errors,
+            summary=summary,
+            items=items,
+            errors=errors,
+            as_json=as_json,
+            extra={"daily": series},
+        )
     )
 
 
