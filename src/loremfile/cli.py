@@ -29,6 +29,7 @@ from loremfile.infra import apply as apply_infra
 from loremfile.infra import locks
 from loremfile.infra import probe as probe_module
 from loremfile.infra import purge as purge_module
+from loremfile.infra import tokens as tokens_module
 from loremfile.infra import usage as usage_module
 from loremfile.infra import verify_live as verify_live_module
 from loremfile.infra.cloudflare_api import Client, CloudflareError, ZoneScopeError
@@ -496,6 +497,48 @@ def verify_live_command(mode: str, inject_failure: str | None, as_json: bool) ->
     )
 
 
+@main.command("tokens-due")
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def tokens_due_command(as_json: bool) -> None:
+    """Tokens expiring within the rotation warning window (docs/08 §6).
+
+    Reads dates only from `infra/token-expiry.json`; the file never holds a secret. The
+    value here is lead time — a token that expires without warning takes the deploy with
+    it, and rotation is an owner action that cannot be done at short notice.
+    """
+    errors: list[str] = []
+    items: list[Item] = []
+    summary: dict[str, Any] = {}
+    try:
+        rows = tokens_module.tokens_due()
+        items = [
+            {
+                "path": row.name,
+                "status": "due" if row.due else "ok",
+                "detail": f"expires {row.expires.isoformat()} ({row.days_left} days)",
+            }
+            for row in rows
+        ]
+        due = [row for row in rows if row.due]
+        summary = {"tokens": len(rows), "due": len(due)}
+        errors = [
+            f"{row.name}: expires {row.expires.isoformat()} in {row.days_left} days" for row in due
+        ]
+        for row in rows:
+            click.echo(
+                f"  {row.name:24s} {row.expires.isoformat()}  {row.days_left:>4d} days"
+                f"{'  <-- rotate' if row.due else ''}",
+                err=True,
+            )
+    except (OSError, ValueError, KeyError) as exc:
+        errors.append(str(exc))
+    # `due` is a count, not a failure: health.yml decides the state from the summary, so
+    # the command exits 0 with the number and lets the caller apply the threshold.
+    sys.exit(
+        _emit("tokens-due", ok=True, summary=summary, items=items, errors=errors, as_json=as_json)
+    )
+
+
 @main.command("usage")
 @click.option("--days", type=int, default=0, help="Look back N days instead of month-to-date.")
 @click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
@@ -511,10 +554,16 @@ def usage_command(days: int, as_json: bool) -> None:
         else:
             counts = usage_module.month_to_date()
         click.echo(counts.render(), err=True)
+        # docs/09 §4's health.yml step reads `summary.r2_class_b_mtd`, so the key names
+        # the metric exactly. A windowed run gets a different key rather than claiming
+        # to be month-to-date, because a threshold compared against the wrong window is
+        # the kind of wrong that looks right.
+        suffix = "window" if days else "mtd"
         summary = {
-            "class_a": counts.class_a,
-            "class_b": counts.class_b,
+            f"r2_class_a_{suffix}": counts.class_a,
+            f"r2_class_b_{suffix}": counts.class_b,
             "missing_key_reads": counts.missing_key_reads,
+            "days": days or "month-to-date",
         }
         items = [
             {
