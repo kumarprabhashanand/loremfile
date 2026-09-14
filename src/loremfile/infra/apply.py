@@ -222,9 +222,7 @@ def apply_dns(client: Client, report: Report) -> None:
         label = f"dns:{record['type']} {record['name']}"
         found = existing.get((record["type"], fqdn))
         if found is None:
-            response = client.post(
-                f"/zones/{client.zone_id}/dns_records", {**record, "name": fqdn}
-            )
+            response = client.post(f"/zones/{client.zone_id}/dns_records", {**record, "name": fqdn})
             done = "created"
         elif dns_content(record["type"], found.get("content")) == dns_content(
             record["type"], record.get("content")
