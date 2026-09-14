@@ -9,7 +9,7 @@
     {
       "type": "TXT",
       "name": "_dmarc",
-      "content": "v=DMARC1; p=reject; rua=mailto:dmarc@loremfile.dev; adkim=s; aspf=s"
+      "content": "v=DMARC1; p=reject; adkim=s; aspf=s"
     }
   ],
   "expected_managed": [

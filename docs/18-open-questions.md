@@ -10,7 +10,7 @@ Each question lists the default assumed by this documentation. If the owner says
 | Q-04 | R2 bucket location hint: `auto`, or pin to a region near most expected users (`ENAM`/`WEUR`/`APAC`)? | `auto` | Cache misses' latency only; immaterial with tiered cache |
 | Q-05 | Off-account cold backup to AWS S3 (Glacier Deep Archive ≈ USD 0.001/GB-month; ≈ USD 0.01/month) in addition to GitHub Releases? | No (GitHub Releases suffice); yes if the owner wants to use the AWS account for something | Resilience vs another account to keep alive |
 | Q-06 | Registrar: Cloudflare Registrar (default) or a separate registrar (e.g. Porkbun, ≈ USD 13/year) to split domain control from CDN/DNS? A separate registrar turns "recover the domain from a lost Cloudflare account" from a support process into a DNS change | Cloudflare Registrar, with the honest RTO in `11` §7.6 | Blast radius vs simplicity (ADR-020, RISK-19); the reviewer recommends splitting |
-| Q-07 | Contact addresses: `hello@`, `security@`, `dmarc@` forwarding to the owner's mailbox — which mailbox? | The owner's primary email | Email Routing setup; legal notices |
+| Q-07 | Contact addresses: `hello@`, `security@` forwarding to the owner's mailbox — which mailbox? | The owner's primary email | Email Routing setup; legal notices |
 | Q-08 | Approve in principle a **separate** domain for unsafe fixtures in Phase 4 (EICAR, zip bombs…)? | Not now; revisit after month 6 | Legal/reputation exposure |
 | Q-09 | Session cadence: is ~2 h/week for the first month and ~1 h/week afterwards acceptable? | Yes | Determines M3 elapsed time (≈ 4–6 weeks) |
 | Q-10 | Launch posts: the owner will publish agent-drafted posts on HN, dev.to, Reddit, X/Bluesky under their own name? | Yes | RISK-01 |
