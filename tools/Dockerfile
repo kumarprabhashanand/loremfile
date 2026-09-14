@@ -12,7 +12,7 @@
 # python 3.12.14, Debian 12.15 "bookworm". Pinned by the multi-arch index digest;
 # Dependabot bumps it (docs/09 §4), which is a reviewed PR that also re-pins
 # tools/apt-versions.txt and tools/TOOLCHAIN_DIGEST.
-FROM python:3.12-slim-bookworm@sha256:782412e85d0f0984994c290652577d4018aff08145c85b262bb63dc0c7522254
+FROM python:3.14-slim-bookworm@sha256:9ab8d9c8514b44f90cf0029dd42fdd7e9e211e639c8b995304cc04568dee900f
 
 # Links the GHCR package to this repository (docs/09 §1) and is what makes the
 # package page show the source, README and licence. toolchain.yml overrides SOURCE_URL
