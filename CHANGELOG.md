@@ -56,6 +56,50 @@ An audit that inherited this would open an `infra-drift` issue every run, and a 
 fires every run stops meaning anything — the failure already avoided for `fonts`/
 `speed_brain` and for `expected_drift`.
 
+### Verified — the first alerting control drill, and the defect it found
+
+The three post-#52 dispatches were run by the owner on 2026-09-14 and read here; they are
+the first entry in `docs/11` §7.11, a new standing drill re-run after any change to
+`health.yml`, `audit.yml` or `gh_issue`.
+
+- **Injected failure** (`34894269022`): `1 failing` on `pdf/minimal.pdf`; issue **#53
+  opened**; cost and rotation still ran. **Clean run** (`34896362833`): #53 **closed**.
+  **`force_ops_log`** (`34896553339`): the keep-alive ran for the first time and created
+  the `ops-log` branch (`6f2bf9b`), rows 2026-09-08 → 2026-09-14.
+- **The defect: a check that found a problem ended the run green.** Run 1 opened its issue
+  and was a green tick. `verify`, cost and rotation each swallow their result so the others
+  still run, and nothing failed the job afterwards. **This corrects #52's entry above**,
+  which said the job "still ends red" — true only for a step that *crashes*.
+
+### Fixed — health ends red on a finding; full mode; the ops-log header
+
+- **A final verdict step** exits 1 when `verify`, cost or rotation reported failing; cost
+  and rotation now record their `state` to `$GITHUB_OUTPUT` before reporting, as `verify`
+  records `failed`. **It is the last step, and that is load-bearing**: placed before the two
+  did-not-complete steps, its exit 1 would make `failure()` open "Health workflow did not
+  complete" on every real finding and the `success()`-gated close would never run.
+  `tests/unit/test_health_workflow.py` pins the order, with the empty-set control first
+  (the steps it orders must exist, or every index assertion is vacuous).
+- **`health.yml` runs `verify-live --mode full`.** `daily` never hashed a fixture of 1 MB
+  or more; full closes that without sampling logic. The 10-minute step bound stays: CI full
+  is estimated at 50–235 s (~330 s at 228 fixtures) from the measured full/daily ratio, and
+  is marked unmeasured until its first CI run. `docs/12` §4 records both.
+- **`ops-log.md` described itself as "One line a week" above "One row per day"**, because
+  `append` kept whatever header it found. The header is now generated and rewritten on every
+  write, so the live branch heals on its next commit; rows are still merged. `docs/11` §8
+  now documents the implemented columns.
+- **`docs/09` §3.3's spec YAML** no longer switches the checkout for the ops-log commit (the
+  bug #52 fixed in the workflow but only noted in the listing), and lists the verdict step.
+
+### Changed — Dependabot proposes only patch-level Python base-image updates
+
+`ignore` on `python` for `version-update:semver-minor` and `semver-major`, syntax checked
+against GitHub's Dependabot options reference. The base image is part of the determinism
+contract, so a minor or major Python move is one deliberate PR at a milestone boundary with
+a determinism audit. **#50 (3.12 → 3.14) and #51 are held, not closed.** GitHub's reference
+does not say how a tag like `3.12-slim-bookworm` is read as a version, so whether the rule
+suppresses that exact proposal is confirmed on Dependabot's next run, not assumed.
+
 ### Fixed — the alerting path failed silently for four days
 
 **Every scheduled run of `health.yml` since it merged — four of four, 09-11 to 09-14 — and

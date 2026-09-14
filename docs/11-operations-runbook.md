@@ -198,8 +198,37 @@ Response template:
 >
 > Our privacy notice is at https://loremfile.dev/legal/privacy. You may complain to your supervisory authority — in the EU the one where you live or work, in the UK the Information Commissioner's Office.
 
+### 7.11 Alerting control drill
+
+**A control that has never been exercised is a hypothesis.** REQ-27's `inject_failure` existed from M4.3 and was never dispatched; the ops-log keep-alive shipped unable to run; and four scheduled health runs failed with no issue opened (`09` §3.3). The drill proves the alerting path end to end, against production, with the real `gh`.
+
+**When to run it:** after **any** change to `.github/workflows/health.yml`, `.github/workflows/audit.yml` or `src/loremfile/gh_issue.py` — in the same session as the merge — and otherwise once a quarter.
+
+**Procedure** (Actions → `health` → Run workflow; three dispatches, in order, reading each before the next):
+
+| # | Inputs | Must show |
+|---|---|---|
+| 1 | `inject_failure` = any published manifest path (e.g. `pdf/minimal.pdf`) | `verify-live` reports `1 failing`, `injected by --inject-failure`; issue **"Health check failing" opens**; the cost and rotation steps still run; **the run ends red** |
+| 2 | none | `0 failing`; that issue **closes** with the green comment; the run ends green |
+| 3 | `force_ops_log: true` | `Weekly ops-log commit` succeeds and the `ops-log` branch gains a commit with one row per day |
+
+If any row does not show what it must, the alerting path is broken: fix it before anything else, because until then a real failure is silent.
+
+**Drill record**
+
+| Date | Runs | Result |
+|---|---|---|
+| 2026-09-14 | `34894269022` (inject), `34896362833` (clean), `34896553339` (`force_ops_log`) | **Passed, with one defect found.** #53 opened at 20:41 on the injected `pdf/minimal.pdf` and closed at 21:02 on the clean run; cost and rotation ran in all three; the `ops-log` branch was created (`6f2bf9b`, rows 2026-09-08 → 2026-09-14). **Defect:** run 1 ended **green** — a check that found a problem did not fail the run. Fixed by the final verdict step (`09` §3.3); the drill is re-run after that fix, when row 1's "the run ends red" is checked for the first time |
+
 ## 8. `ops-log.md` format (on the `ops-log` branch)
 
+**One row per day, backfilled weekly.** The Monday `health.yml` run (or a dispatch with `force_ops_log`) writes a row for every day in its usage report — the last 32 days — and **replaces** a date already present rather than adding a second row, so overlapping windows converge (`09` §3.3, `19` §3.2).
+
 ```
-| date | requests/day | bandwidth/day | cache hit % | R2 class B (month) | spend (month) | notes |
+| date | R2 class A | R2 class B | missing-key GETs | notes |
 ```
+
+- Counts are **per day**, not month-to-date: a cumulative counter cannot express a rate.
+- An absent reading renders `—`, never `0`, so a day with no numbers does not look like a quiet day. A failed usage read writes one `—` row for that date, noted `check failed`.
+- The descriptive header is **regenerated on every write**, so a stale description of the format cannot outlive the next commit — the first file on the branch described itself as "One line a week" directly above "One row per day".
+- First written 2026-09-14 by the control drill (`7.11`), commit `6f2bf9b`, rows 2026-09-08 → 2026-09-14.
