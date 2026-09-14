@@ -247,3 +247,92 @@ def test_a_repeat_failure_comments_rather_than_opening_a_second_issue(
     outcome = gh_issue.apply(label="health", title="t", report=report, state="failing")
     assert outcome.action == "commented"
     assert calls[0][:2] == ["issue", "comment"]
+
+
+# --- gh_issue at the subprocess boundary ------------------------------------
+#
+# Every test above replaces `_gh`, so the one function that actually failed in production
+# was the one function no test ran. These patch one level lower — `subprocess.run` — so
+# the real `_gh` builds the real argv.
+
+
+class _GhRecorder:
+    """Replaces `subprocess.run` once for a whole test, so every call lands in one list.
+
+    Patched once rather than per operation. The first draft re-patched between operations,
+    and each re-patch started a fresh list — so two of the four operations were recorded
+    into lists the test then discarded. The empty-set control below caught it: it asserted
+    all four operations were seen, and only two were.
+    """
+
+    def __init__(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self.calls: list[list[str]] = []
+        self.stdout = "[]"
+        monkeypatch.setattr(gh_issue.shutil, "which", lambda _name: "/usr/bin/gh")
+        monkeypatch.setattr(gh_issue.subprocess, "run", self._run)
+
+    def _run(self, argv: list[str], **_kwargs: object) -> object:
+        self.calls.append(list(argv))
+        return gh_issue.subprocess.CompletedProcess(argv, 0, stdout=self.stdout, stderr="")
+
+
+def test_every_gh_operation_names_the_repository_in_actions(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The incident: `gh issue list` without `--repo` inferred the repository from a
+    container checkout git refused as "dubious ownership", four scheduled runs in a row."""
+    monkeypatch.setenv("GITHUB_REPOSITORY", "owner/loremfile")
+    report = tmp_path / "health.json"
+    report.write_text(json.dumps({"ok": False, "summary": {}, "errors": ["x"]}))
+    gh = _GhRecorder(monkeypatch)
+
+    gh.stdout = "[]"
+    gh_issue.apply(label="health", title="t", report=report, state="failing")  # list, create
+    gh.stdout = json.dumps([{"number": 7, "title": "t"}])
+    gh_issue.apply(label="health", title="t", report=report, state="failing")  # list, comment
+    gh_issue.apply(label="health", title="t", report=report, state="ok")  # list, close
+
+    # The empty-set control (AGENTS.md): "every call has --repo" is true of no calls, so
+    # first pin that all four operations were actually exercised.
+    assert {argv[2] for argv in gh.calls} == {"list", "create", "comment", "close"}
+    for argv in gh.calls:
+        assert "--repo" in argv, argv
+        assert argv[argv.index("--repo") + 1] == "owner/loremfile"
+
+
+def test_without_actions_the_repository_is_left_to_inference(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Negative control: locally the checkout is the caller's own, and inference works."""
+    monkeypatch.delenv("GITHUB_REPOSITORY", raising=False)
+    gh = _GhRecorder(monkeypatch)
+    gh_issue.find_open("health", "t")
+    assert gh.calls
+    assert all("--repo" not in argv for argv in gh.calls)
+
+
+def test_a_gh_failure_surfaces_its_own_message(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The error text is what made the incident diagnosable in one read of the log."""
+    monkeypatch.setattr(gh_issue.shutil, "which", lambda _name: "/usr/bin/gh")
+    monkeypatch.setattr(
+        gh_issue.subprocess,
+        "run",
+        lambda argv, **_k: gh_issue.subprocess.CompletedProcess(
+            argv, 1, stdout="", stderr="fatal: detected dubious ownership in repository"
+        ),
+    )
+    with pytest.raises(gh_issue.IssueError, match="dubious ownership"):
+        gh_issue.find_open("health", "t")
+
+
+@pytest.mark.parametrize("content", [None, "", "{not json", "[1, 2]"])
+def test_an_unreadable_report_is_a_failure_with_an_honest_body(
+    tmp_path: Path, content: str | None
+) -> None:
+    """A check that timed out or crashed writes no report. That must open an issue
+    saying the check did not complete — never read as a clean result."""
+    report = tmp_path / "health.json"
+    if content is not None:
+        report.write_text(content)
+    body = gh_issue.summarise(report)
+    assert "did not complete" in body
