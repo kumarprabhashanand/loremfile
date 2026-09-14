@@ -60,10 +60,13 @@ on:
         type: boolean
         default: false
 
-# Never two deploys at once, and never cancel one midway: a cancelled upload leaves the
-# bucket in a state nothing described.
+# One group for every job that reads or writes the zone's desired state: this workflow,
+# infra.yml, and audit.yml's `infra` job (ADR-029). Never cancel one midway: a cancelled
+# upload or apply leaves the zone in a state nothing described. health.yml stays outside.
+# No `queue:` key — GitHub documents it, but actionlint 1.7.12 rejects it — so a pending run
+# can still be replaced by a newer one in this group (ADR-029, docs/11 §7.2).
 concurrency:
-  group: deploy
+  group: loremfile-zone
   cancel-in-progress: false
 
 permissions:

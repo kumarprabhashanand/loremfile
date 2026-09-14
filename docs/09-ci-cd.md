@@ -150,7 +150,7 @@ name: deploy
 on:
   push: { branches: [main] }
   workflow_dispatch: { inputs: { force_site: { type: boolean, default: false }, apply_infra: { type: boolean, default: false } } }
-concurrency: { group: deploy, cancel-in-progress: false }
+concurrency: { group: loremfile-zone, cancel-in-progress: false }   # shared with infra.yml and audit.yml's infra job (ADR-029)
 permissions: { contents: read }
 jobs:
   deploy:
@@ -203,7 +203,9 @@ Ordering rationale: fixtures first (immutable, safe to be early), removals next 
 | `http_ratelimit` (1 rule) | unconditional `PUT` |
 | `tiered-cache` (`smart topology on`) | unconditional `PATCH` |
 
-`audit` must **GET each deployed ruleset and compare rule content** — with the server-assigned fields (`id`, `version`, `ref`, `last_updated`) normalised out — and read the tiered-cache topology before reporting it, rather than reusing `apply`'s outcome. An audit that inherited this opens an `infra-drift` issue every single run, and a label that fires every run stops meaning anything: the same failure avoided for `fonts`/`speed_brain` (§8 of `08`) and for `expected_drift` (`06` §8).
+`audit` must **GET each deployed ruleset and compare rule content** — with the server-assigned fields (`id`, `version`, `last_updated`; `ref` is ours and compared) normalised out — and read the tiered-cache topology before reporting it, rather than reusing `apply`'s outcome. An audit that inherited this opens an `infra-drift` issue every single run, and a label that fires every run stops meaning anything: the same failure avoided for `fonts`/`speed_brain` (§8 of `08`) and for `expected_drift` (`06` §8).
+
+**Fixed 2026-09-15: `apply` now compares before it writes, too.** The table above described `apply` reporting the write rather than a difference; #56's dry run showed the cost — `updated` for four phases the audit called `ok`, a report asserting something adjacent to what would change. `apply_rulesets` now reads each phase and PUTs only when `apply.compare_rules` — the function the audit uses — finds a difference, and `apply_tiered_cache` PATCHes only when the topology is not already on; both report `unchanged` otherwise. `ref` joined the compared fields at the same time: the live zone preserves every committed ref, so treating it as Cloudflare-assigned would have let a changed ref compare equal and never be applied. Every declared leaf of every committed rule is mutated in `tests/unit/test_infra_apply.py` to prove the comparison catches it.
 
 **As implemented in M4.4, and what it does not yet carry.** The workflow above is the target. What landed differs in five places, each recorded here rather than left for a reader to discover from a red cross:
 
@@ -388,11 +390,13 @@ Runs `loremfile infra audit` (unreadable settings are warnings; opens/updates an
 2. a unit test walks `audit.py`'s AST for calls to `put`/`patch`/`post`/`delete` and names the offender;
 3. no step in the workflow invokes `infra apply`.
 
-**`audit` is not `apply --dry-run`, and the difference is the point.** A dry run rehearses the write and reports what it *would* do; because ruleset phases are written with an unconditional full `PUT`, that is `updated` for all five phases plus `tiered-cache` on every run, drift or none. `infra audit` reads each deployed ruleset and compares **rule content**, dropping the fields Cloudflare assigns (`id`, `version`, `ref`, `last_updated`) and comparing only the fields the committed rule declares, **in order** — order is part of a ruleset's meaning. The consequence is stated rather than hidden: a field Cloudflare filled in on its own is invisible here. We own what we declare.
+**`audit` is not `apply --dry-run`, and the difference is the point.** A dry run rehearses the write and reports what it *would* do; because ruleset phases are written with an unconditional full `PUT`, that is `updated` for all five phases plus `tiered-cache` on every run, drift or none. `infra audit` reads each deployed ruleset and compares **rule content**, dropping the fields Cloudflare assigns (`id`, `version`, `last_updated`; `ref` is ours and compared) and comparing only the fields the committed rule declares, **in order** — order is part of a ruleset's meaning. The consequence is stated rather than hidden: a field Cloudflare filled in on its own is invisible here. We own what we declare.
 
 **First real run, 2026-09-14 (Monday schedule): the content comparison works.** 33 resources `ok` against the live zone — including all five ruleset phases reporting `N rule(s) match`, the same phases `apply` reports as `updated` on every run — plus `tiered-cache` and `tls_1_3`. One `unreadable`: **`url-normalization`**, whose endpoint T1 cannot read. That is a permission warning, correctly not drift, and it opens no issue; URL normalization was verified behaviourally by M2.4's encoded-path probe. The run then died in `gh_issue` (the incident in §3.3). The could-not-run state is now `ok` **only** on an exit code of 0 or 1: keyed on `== '2'` alone, a job that failed before the audit produced any code would have closed an open could-not-run issue on a run that never looked at the zone.
 
 A further guard covers the whole set: a unit test asserts `audit.CHECKS` covers exactly the resources `apply.STEPS` writes. An audit that silently skipped one would report a clean zone for a zone it never looked at, which is worse than reporting drift because it looks like good news.
+
+**Serialised with every job that touches the zone (ADR-029, 2026-09-15).** #58 was a race: this job read a ruleset phase at 22:44:46 while a deploy applied a fourth rule at 22:45:16, and reported drift that was a timing artefact. `deploy.yml`, `infra.yml` and this workflow's `infra` job now share the `loremfile-zone` group with `cancel-in-progress: false`; the `determinism` job and `health.yml` stay outside. GitHub's `queue` property would stop a pending run being replaced, but actionlint 1.7.12 rejects it, so it is not used and the leftover risk — a pending scheduled audit cancelled without opening an issue — is handled in `11` §7.2.
 
 `build --audit` exits non-zero on **real** drift only; `expected_drift` paths are reported in their own section and exit 0, so the four fixtures known not to reproduce off this fleet do not train anyone to close the issue unread (`06` §8).
 

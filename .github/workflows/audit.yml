@@ -46,6 +46,13 @@ jobs:
     container:
       image: ${{ needs.setup.outputs.digest }}
     timeout-minutes: 20
+    # Job-level, on this job only: it is the one that reads the zone. The `determinism` job
+    # touches nothing remote and stays outside the group (ADR-029). The race this prevents is
+    # #58: this job read a ruleset phase at 22:44:46 while a deploy applied a fourth rule at
+    # 22:45:16, and reported drift that was only a timing artefact.
+    concurrency:
+      group: loremfile-zone
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 

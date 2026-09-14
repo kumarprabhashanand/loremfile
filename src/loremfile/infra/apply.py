@@ -265,13 +265,78 @@ def managed_ruleset_deployed(client: Client) -> dict[str, Any] | None:
     return None
 
 
+#: Fields Cloudflare assigns to a stored rule. Everything else a committed rule declares is
+#: ours and is compared. **`ref` is not in this set**: the committed files declare it, and the
+#: live zone was checked on 2026-09-15 — every deployed rule carries exactly the committed ref.
+#: Treating it as Cloudflare's would make a changed ref compare "equal" and never be applied.
+SERVER_ASSIGNED = frozenset({"id", "version", "last_updated"})
+
+
+def declared_fields(rule: dict[str, Any]) -> dict[str, Any]:
+    """The rule as we declared it: Cloudflare-assigned keys dropped."""
+    return {k: v for k, v in rule.items() if k not in SERVER_ASSIGNED}
+
+
+def compare_rules(desired: list[dict[str, Any]], deployed: list[dict[str, Any]]) -> list[str]:
+    """Differences between committed rules and deployed ones, in order. Empty means equal.
+
+    Shared by `apply` (write only on a difference) and `audit` (report drift). The dangerous
+    direction is a false "equal": a committed change that compares equal is never applied,
+    so every declared leaf of every committed rule is mutated in the tests to prove it is
+    caught. Order is part of a ruleset's meaning, so rules are compared by position. A
+    field Cloudflare fills in on its own is not compared — we own what we declare.
+    """
+    differences: list[str] = []
+    if len(desired) != len(deployed):
+        differences.append(f"{len(deployed)} rule(s) deployed, {len(desired)} committed")
+    for index, want in enumerate(desired):
+        if index >= len(deployed):
+            differences.append(f"[{index}] missing: {want.get('description', '?')!r}")
+            continue
+        have = deployed[index]
+        for key, value in declared_fields(want).items():
+            if key not in have or have[key] != value:
+                differences.append(
+                    f"[{index}] {want.get('description', '?')!r}: {key} is "
+                    f"{json.dumps(have.get(key))} not {json.dumps(value)}"
+                )
+    for index in range(len(desired), len(deployed)):
+        extra = deployed[index]
+        differences.append(f"[{index}] extra rule deployed: {extra.get('description', '?')!r}")
+    return differences
+
+
 def apply_rulesets(client: Client, report: Report) -> None:
+    """Read each phase, compare, and write only what differs.
+
+    It used to PUT every phase unconditionally and report `updated`, so a dry run said
+    `updated` for phases the audit calls `ok` — a report of the write, not of what would
+    change. Now `updated` means a difference was found and written, and `unchanged` means
+    the deployed rules already equal the committed ones. The write is still a full PUT of
+    the phase, behind the same zone guard.
+    """
     for phase in WRITTEN_PHASES:
         path = f"/zones/{client.zone_id}/rulesets/phases/{phase}/entrypoint"
         rules = load_desired(f"rulesets/{phase}.json")["rules"]
+        current = client.get(path)
+        if current.ok:
+            differences = compare_rules(rules, list((current.result or {}).get("rules") or []))
+            if not differences:
+                report.add(phase, "unchanged", f"{len(rules)} rule(s) match")
+                continue
+            detail = f"{len(differences)} difference(s): " + "; ".join(differences[:3])
+        elif current.status == HTTP_NOT_FOUND:
+            detail = f"no entry point yet; {len(rules)} rule(s)"
+        elif _is_forbidden(current):
+            report.add(phase, "manual", FALLBACKS[phase])
+            continue
+        else:
+            # Unreadable for another reason: nothing to compare against, so no write.
+            report.add(phase, "failed", current.errors)
+            continue
         response = client.put(path, {"rules": rules})
         if response.ok:
-            report.add(phase, "updated", f"{len(rules)} rule(s)")
+            report.add(phase, "updated", detail)
         elif _is_forbidden(response):
             report.add(phase, "manual", FALLBACKS[phase])
         else:
@@ -301,10 +366,22 @@ def verify_managed_ruleset(client: Client, report: Report) -> None:
 
 
 def apply_tiered_cache(client: Client, report: Report) -> None:
+    """Read the topology; PATCH it `on` only if it is not already on."""
     path = f"/zones/{client.zone_id}/cache/tiered_cache_smart_topology_enable"
+    current = client.get(path)
+    if current.ok and (current.result or {}).get("value") == "on":
+        report.add("tiered-cache", "unchanged", "smart topology on")
+        return
+    if _is_forbidden(current):
+        report.add("tiered-cache", "manual", FALLBACKS["tiered-cache"])
+        return
+    if not current.ok and current.status != HTTP_NOT_FOUND:
+        report.add("tiered-cache", "failed", current.errors)
+        return
+    was = (current.result or {}).get("value") if current.ok else None
     response = client.patch(path, {"value": "on"})
     if response.ok:
-        report.add("tiered-cache", "updated", "smart topology on")
+        report.add("tiered-cache", "updated", f"smart topology {was!r} → 'on'")
     elif _is_forbidden(response):
         report.add("tiered-cache", "manual", FALLBACKS["tiered-cache"])
     else:
