@@ -17,7 +17,8 @@ The site is static HTML rendered at build time from the manifest and stored in t
 | `/docs/contributing` | Rendered `CONTRIBUTING.md` | Links to the fixture-request issue template |
 | `/docs/security-policy` | `site/content/pages/security-policy.md` = `10` §7 verbatim | Referenced by security.txt |
 | `/docs` and `/legal` | Index pages listing their children (so `/docs/` and `/legal/` resolve after the trailing-slash rewrite) | |
-| `/legal/license`, `/legal/terms`, `/legal/privacy` | Legal | Full texts in `13` §1.1, §2, §3. `/legal/privacy` **cannot be rendered until Q-07 and Q-21 are answered** — it still carries the `<CONTACT_EMAIL>` and `<CONTROLLER>` placeholders (`13` §3, `18`) |
+| `/legal/license`, `/legal/terms`, `/legal/privacy` | Legal | Full texts in `13` §1.1, §2, §3. `/legal/privacy` names the operator: its values are filled in **only** in jobs using the `production` environment (`13` §3b, ADR-028); pull-request CI renders placeholders |
+| `/legal/imprint` | Legal — heading **"Impressum"** | Template in `13` §3b (§ 18 Abs. 1 MStV, ADR-028). Filled in only in `production`-environment jobs from `IMPRINT_NAME`, `IMPRINT_STREET`, `IMPRINT_POSTAL_CITY`; the deploy **fails** if any is missing or empty |
 | `/changelog` | Catalog versions | From `CHANGELOG.md` |
 | `/status` | Static page explaining that a daily health check runs and linking to the open `health` issues in GitHub | No dynamic status (nothing to host it) |
 
@@ -31,16 +32,18 @@ The site is static HTML rendered at build time from the manifest and stored in t
 - **Performance**: each page ≤ 60 KB HTML gzip; CSS ≤ 15 KB; JS ≤ 10 KB; the 100k-row-family pages are still small because the table lists files, not rows.
 - **Brand**: wordmark "loremfile" in monospace, a simple SVG mark (a page outline with "Lorem" text) **inlined as `<svg>` in the templates** — never loaded via `<object>`/`<iframe>`, because `.svg` responses carry the sandbox CSP; `assets/mark.svg` exists only for the Open Graph fallback and README badges.
 - **Trailing slashes**: canonical URLs have none. The edge rewrite makes `/`, `/{format}/`, `/docs/` and `/legal/` work; deeper paths with a trailing slash (`/docs/faq/`) return 404 by design.
+- **Legal links in the header *and* the footer of every page**, labelled **"Impressum"** and **"Privacy"**. A regulator warns against links visible only "erst nach langem Scrollen", and format pages are long, so a footer link alone is not enough.
 
 ## 3. SEO
 
 - Titles follow the search demand: "Sample PDF files for testing (free, CC0, direct links) — loremfile.dev". H1 repeats it. Meta description mentions "hotlink", "no signup", "stable URLs".
 - Canonical `<link>` to the non-trailing-slash form. `www` redirects at the edge.
-- `sitemap.xml`, `robots.txt` (allow all), Open Graph and Twitter card tags with a static `/assets/og.png` (generated 1200×630 test card with the wordmark; it is itself a fixture-like image but lives under `/assets`).
+- `sitemap.xml`, `robots.txt` (allows everything for `*`; disallows the two legal pages for named AI tokens — `04` §6), Open Graph and Twitter card tags with a static `/assets/og.png` (generated 1200×630 test card with the wordmark; it is itself a fixture-like image but lives under `/assets`).
 - JSON-LD exactly as specified in `04` §10.
 - Internal linking: every format page links to its `related` formats (catalog field; defaults in `05` §8) and to the naming page.
 - Content per format page: 120–250 words of genuinely useful text (what the format is used for, gotchas the fixtures cover) — not filler. See §5 for authoring.
 - Raw fixtures carry `X-Robots-Tag: noindex` so search results land on pages, which have the context and copy buttons.
+- **`/legal/imprint` and `/legal/privacy` are the exception to "pages are indexable"** (ADR-016 amendment): `X-Robots-Tag: noindex, nofollow, nosnippet` from the edge plus the same `<meta name="robots">` in the HTML, and both are excluded from `sitemap.xml`, `llms.txt`, `llms-full.txt`, `search-index.json` and all JSON-LD. `search-index.json` lists fixtures rather than pages, so this is stated as a rule the builder must keep rather than a removal.
 
 ## 4. Build
 

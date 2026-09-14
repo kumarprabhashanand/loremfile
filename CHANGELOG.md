@@ -56,6 +56,47 @@ An audit that inherited this would open an `infra-drift` issue every run, and a 
 fires every run stops meaning anything — the failure already avoided for `fonts`/
 `speed_brain` and for `expected_drift`.
 
+### Added — the Impressum decision, and keeping the legal pages out of search and AI crawlers
+
+The owner's decisions, recorded without any personal value. Rendering lands with M4.1; this
+is the part that can land before it.
+
+- **ADR-028**: loremfile.dev is **not *geschäftsmäßig* under § 5 DDG** — never offered for
+  payment, no advertising, and the owner's cited position of the Berlin regulator (mabb)
+  that an unpaid service is *geschäftsmäßig* only when regular advertising covers its
+  costs. The Impressum follows **§ 18 Abs. 1 MStV**: name, a serviceable address and
+  hello@loremfile.dev; no telephone number. **Reopen triggers**: any payment, advertising,
+  sponsorship or affiliate link — and a second contact channel must be added **before**
+  such a change ships. `docs/14`'s allowance for a "sponsored by" footer line is removed,
+  and Q-12 is tied to the ADR.
+- **The values exist only as production secrets** `IMPRINT_NAME`, `IMPRINT_STREET`,
+  `IMPRINT_POSTAL_CITY` — separate plain secrets, never a JSON blob, since GitHub warns
+  structured data can defeat log redaction. `docs/13` §3b holds the template with
+  `%%IMPRINT_*%%` placeholders and the M4.1 rules: fill only in `production` jobs, hard-fail
+  on a missing secret, assert no marker survives, never print or artifact a rendered page,
+  and a `git grep -qF` guard proving no value entered git. **`AGENTS.md` rule 5**: never write
+  the values anywhere, for any reason.
+- **Q-07 and Q-21 are resolved without recording a value.** Q-21's basis is corrected: the
+  serviceable-address requirement comes from § 18 MStV, not Art. 13 GDPR.
+- **Header rule `legal_pages_noindex`** sets `X-Robots-Tag: noindex, nofollow, nosnippet` on
+  exactly the two pages; transform rules go **5 → 6 of 10**. It applies on merge; its effect on
+  real pages is verified when M4.1 publishes them. `docs/12` §4 no longer claims site pages carry
+  no robots tag.
+- **robots.txt (specified in `docs/04` §6)** keeps `User-agent: *` / `Allow: /` — Google honours
+  `noindex` only on a page it may crawl — and adds one group disallowing only the two paths for
+  `GPTBot`, `OAI-SearchBot`, `ChatGPT-User`, `ClaudeBot`, `Claude-User`, `Claude-SearchBot` and
+  `Google-Extended`, each checked against its vendor's own documentation. Both pages are also
+  excluded from `sitemap.xml`, `llms.txt`, `llms-full.txt`, `search-index.json` and all JSON-LD.
+  **The limit is stated**: these reduce reading, they cannot prevent it (RFC 9309: robots.txt is
+  "not a form of access authorization").
+- **The WAF custom rule is a documented [VERIFY], not yet a rule** (`docs/08` §5.3). Established
+  before any write: 0 of 5 custom rules used; `http.user_agent` has no stated plan restriction,
+  so only a write can settle it; `Google-Extended` sends no user agent of its own and must never
+  be matched; Anthropic's header strings are unconfirmed; and a full-`PUT` phase would delete any
+  incident rule added in the dashboard, which the runbook must address first. It lands as its own
+  pull request with a probe and a negative control.
+- Also: `AGENTS.md` said the launch set is 229 of 417; it has been 228 of 416 since Q-22.
+
 ### Changed — DMARC requests no reports; apply updates DNS records by content
 
 - **`_dmarc` is now `v=DMARC1; p=reject; adkim=s; aspf=s`.** `rua` is removed: RFC 7489

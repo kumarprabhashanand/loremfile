@@ -168,19 +168,37 @@ Follow the llmstxt.org layout (H1 title, blockquote summary, H2 sections with li
 
 `llms-full.txt` (≈ 60–100 KB): the same header, then for each format a table of every fixture: path, bytes, one-line description, key props. Regenerated from the manifest on every deploy.
 
+**Neither file ever lists `/legal/imprint` or `/legal/privacy`** (ADR-016 amendment, ADR-028). Neither lists legal pages today; this is a rule the builder must keep, not a removal.
+
 ## 6. `robots.txt`
 
 ```
 User-agent: *
 Allow: /
+
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-User
+User-agent: Claude-SearchBot
+User-agent: Google-Extended
+Disallow: /legal/imprint
+Disallow: /legal/privacy
+
 Sitemap: https://loremfile.dev/sitemap.xml
 ```
 
-AI crawlers are deliberately allowed (the audience includes agents). Raw fixtures carry `X-Robots-Tag: noindex`; pages are indexable.
+AI crawlers are deliberately allowed (the audience includes agents). Raw fixtures carry `X-Robots-Tag: noindex`; pages are indexable — **except the two legal pages that name the operator** (ADR-016 amendment, ADR-028).
+
+- **`User-agent: *` keeps `Allow: /`.** Google honours `noindex` only on a page it is "not … blocked by a robots.txt file"; disallowing the legal pages for everyone would stop search engines from ever seeing the `noindex` that keeps them out.
+- **The named group replaces the `*` group for those crawlers, and disallows only the two paths** — everything else stays allowed for them. Each token is checked against its vendor's own documentation, and **no token is added without that check**: OpenAI documents `GPTBot`, `OAI-SearchBot` and `ChatGPT-User`, and says of `ChatGPT-User` that "robots.txt rules may not apply" to user-initiated actions; Anthropic documents `ClaudeBot`, `Claude-User` and `Claude-SearchBot` as robots.txt user agents; Google documents `Google-Extended` as a robots.txt token that "does not impact a site's inclusion in Google Search". OpenAI also documents `OAI-AdsBot`, which is not in the owner's list and is not added.
+- **`Google-Extended` sends no requests of its own** — Google says it "doesn't have a separate HTTP request user agent string" — so it belongs here and **never** in a user-agent-matching rule, where it could not fire.
+- **The limit.** RFC 9309: robots.txt is "not a form of access authorization". These groups ask; they cannot enforce (`13` §3b).
 
 ## 7. `sitemap.xml`
 
-Lists the home page, every format page, docs pages, legal pages and the changelog. Does not list raw fixtures. `lastmod` = the committer date of the built commit (`07` §4), never the clock. Under 50 MB / 50,000 URLs, so a single file suffices.
+Lists the home page, every format page, docs pages, legal pages **except `/legal/imprint` and `/legal/privacy`**, and the changelog. Does not list raw fixtures. `lastmod` = the committer date of the built commit (`07` §4), never the clock. Under 50 MB / 50,000 URLs, so a single file suffices.
 
 ## 8. `.well-known/security.txt` (RFC 9116)
 
@@ -201,4 +219,4 @@ Deployed copy of the JSON Schema (§1.4). `application/schema+json`, immutable c
 
 ## 10. Structured data on pages
 
-JSON-LD per page type (single source of truth; `07` §3 refers here): home → `WebSite` + `SoftwareSourceCode` (pointing at the repository); format page → `Dataset` (`name`, `description`, `license: CC0`, `distribution` with `contentUrl` and `encodingFormat` per active fixture, `isAccessibleForFree: true`) + `BreadcrumbList`; docs and legal pages → `TechArticle` + `BreadcrumbList`. No `Organization` node.
+JSON-LD per page type (single source of truth; `07` §3 refers here): home → `WebSite` + `SoftwareSourceCode` (pointing at the repository); format page → `Dataset` (`name`, `description`, `license: CC0`, `distribution` with `contentUrl` and `encodingFormat` per active fixture, `isAccessibleForFree: true`) + `BreadcrumbList`; docs and legal pages → `TechArticle` + `BreadcrumbList`, **except `/legal/imprint` and `/legal/privacy`, which carry no JSON-LD at all** (ADR-028). No `Organization` node.

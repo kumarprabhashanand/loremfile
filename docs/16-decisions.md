@@ -81,6 +81,7 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
 ## ADR-016 Raw fixtures `noindex`; pages indexable; AI crawlers allowed
 - **Context**: search should land on pages with context; agents should still find fixtures via `llms.txt`/manifest.
 - **Decision**: `X-Robots-Tag: noindex` on files via header rule; `robots.txt` allows everything.
+- **Amended 2026-09-15 — the legal pages that name a person are the exception** (ADR-028). `/legal/imprint` and `/legal/privacy` carry `X-Robots-Tag: noindex, nofollow, nosnippet` (header rule `legal_pages_noindex`, `08` §5.3) and the same `<meta name="robots">`; `robots.txt` still allows everything for `User-agent: *` — Google honours `noindex` only on a page it is not blocked from crawling — but disallows both paths for a named group of AI tokens, each checked against its vendor's own documentation (`04` §6); both pages are excluded from `sitemap.xml`, `llms.txt`, `llms-full.txt`, `search-index.json` and all JSON-LD. Every other page stays indexable and every AI crawler stays welcome everywhere else.
 
 ## ADR-017 No analytics script; usage from Cloudflare zone analytics
 - **Context**: privacy, CSP strictness, no cookie banner.
@@ -146,4 +147,21 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
 - **Rejected alternative — set `0rtt: "off"` so that `tls_1_3` reads `on`.** That would also converge, and it was rejected for two reasons. It contradicts the desired state's own `0rtt: "on"`, which was a deliberate declaration, so "fixing" the inconsistency by discarding the other half is a coin toss dressed as a decision. And the exposure 0-RTT carries — replay of early data — is **inert on this origin**: every response is a public, immutable GET, so a replayed request produces a byte-identical response and changes nothing. Nothing here has a session, a cookie, a credential or a side effect.
 - **Consequences**: 23 of 23 settings converge, so any `infra-drift` issue about zone settings after this is a real one. `zrt` also keeps the round-trip saving on resumed connections, which is worth having for a hotlink CDN where clients open many short-lived connections.
 - **What would reopen this**: **a non-idempotent endpoint.** Phase 3's Worker routes (`/random`, `/bytes/N`, `/dl/`) are still side-effect-free GETs and do not. Anything that accepts a POST, mutates state, or acts on a credential does, and 0-RTT should be turned off before it ships rather than after.
+
+## ADR-028 Impressum under § 18 Abs. 1 MStV, not § 5 DDG; its values exist only as production secrets (M4.1)
+
+*This records the owner's decision and the facts it rests on. It is not legal advice, and the regulator's position below is the owner's cited basis rather than something this repository verified.*
+
+- **Context**: `/legal/imprint` and `/legal/privacy` must identify the operator. Which law sets the requirement decides what the page has to contain, and the identity of a private individual must never enter a public repository, its issues, pull requests, logs or artifacts.
+- **Facts the decision depends on** — every one of them is a reopen trigger if it stops being true:
+  1. loremfile.dev has **never been offered for payment**.
+  2. It carries **no advertising**.
+  3. It has **no sponsorship** and **no affiliate links**.
+  4. The Berlin regulator (mabb) treats an unpaid service as *geschäftsmäßig* only when regular advertising covers its costs.
+- **Decision**:
+  - loremfile.dev is **not geschäftsmäßig under § 5 DDG**. The Impressum follows **§ 18 Abs. 1 MStV**: **name**, **a serviceable address**, and the contact address **hello@loremfile.dev**. **No telephone number.**
+  - The values exist **only** as the GitHub `production` environment secrets **`IMPRINT_NAME`**, **`IMPRINT_STREET`** and **`IMPRINT_POSTAL_CITY`** — three separate plain secrets, **never a JSON blob**, because GitHub warns that structured data "can cause secret redaction within logs to fail".
+  - Committed templates hold `%%IMPRINT_*%%` placeholders only. Rendering, and every guard around it, is specified in `13` §3b and lands with M4.1.
+- **Reopen triggers**: **any** payment, advertising, sponsorship or affiliate link. Any one of them makes § 5 DDG apply, and **a second contact channel must be added before that change ships** — not after. `14`'s "Ideas explicitly rejected" no longer allows a "sponsored by" line, and Q-12's "no sponsor or donate link" is tied to this ADR.
+- **Consequences**: Q-07 and Q-21 are resolved without recording any value (`18`). `AGENTS.md` rule 5 forbids writing the values anywhere, for any reason. The pages are kept out of search and AI crawlers as far as the web's conventions allow (ADR-016 amendment), and `13` §3b states the limit plainly: those measures reduce reading, they cannot prevent it.
 
