@@ -336,3 +336,24 @@ def test_an_unreadable_report_is_a_failure_with_an_honest_body(
         report.write_text(content)
     body = gh_issue.summarise(report)
     assert "did not complete" in body
+
+
+def test_a_stale_header_is_replaced_and_every_row_survives(tmp_path: Path) -> None:
+    """The first file on the `ops-log` branch described itself as "One line a week"
+    directly above "One row per day", because `append` kept whatever header it found.
+    The header is generated, so it is rewritten; rows are data, so they are merged."""
+    log = tmp_path / "ops-log.md"
+    log.write_text(
+        "# ops-log\n\nOne line a week, stale prose.\n\n"
+        "| date | R2 class A | R2 class B | missing-key GETs | notes |\n|---|---|---|---|---|\n"
+        "| 2026-09-08 | 0 | 405 | 382 |  |\n"
+    )
+    report = tmp_path / "usage.json"
+    report.write_text(json.dumps(usage_report(daily=[day("2026-09-09", 1385)])))
+    ops_log.append(report, log, today=dt.date(2026, 9, 14))
+
+    text = log.read_text()
+    assert "One line a week" not in text
+    assert text.startswith(ops_log.HEADER)
+    written = [line for line in text.splitlines() if line.startswith("| 2026-")]
+    assert [line.split("|")[1].strip() for line in written] == ["2026-09-08", "2026-09-09"]

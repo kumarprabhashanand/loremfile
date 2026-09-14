@@ -21,15 +21,18 @@ import datetime as dt
 import json
 from pathlib import Path
 
+#: Generated prose, rewritten on every write by `append` — so it can never contradict the
+#: format it sits above. The first file on the branch said "One line a week" directly
+#: above "One row per day", because the old `append` kept whatever header it found.
 HEADER = (
     "# ops-log\n\n"
-    "One line a week, written by `health.yml` (docs/09 §4). This branch carries no\n"
-    "ruleset; `main` keeps its pull-request requirement and no workflow is granted a\n"
-    "bypass. The commit doubles as the keep-alive that stops GitHub disabling scheduled\n"
-    "workflows after 60 quiet days.\n\n"
-    "One row per **day**, written weekly: each run backfills the days in its report, so\n"
-    "the series survives the API's 90-day retention window. Counts are per day, not\n"
-    "month-to-date, because a cumulative counter cannot express a rate.\n\n"
+    "One row per **day**, written by `health.yml` in a weekly commit (docs/09 §3.3): each\n"
+    "run backfills the days in its report, so the series survives the API's 90-day\n"
+    "retention window. Counts are per day, not month-to-date, because a cumulative\n"
+    "counter cannot express a rate. This header is regenerated on every write.\n\n"
+    "This branch carries no ruleset; `main` keeps its pull-request requirement and no\n"
+    "workflow is granted a bypass. The commit doubles as the keep-alive that stops GitHub\n"
+    "disabling scheduled workflows after 60 quiet days.\n\n"
     "| date | R2 class A | R2 class B | missing-key GETs | notes |\n"
     "|---|---|---|---|---|\n"
 )
@@ -88,16 +91,14 @@ def append(report_path: Path, log_path: Path, *, today: dt.date | None = None) -
     existing = log_path.read_text(encoding="utf-8") if log_path.is_file() else HEADER
 
     incoming = {_stamp_of(line): line for line in lines}
-    header: list[str] = []
     kept: dict[str, str] = {}
     for line in existing.splitlines(keepends=True):
         if line.startswith("| ") and _stamp_of(line) not in {"date", "week"}:
             kept.setdefault(_stamp_of(line), line)
-        else:
-            header.append(line)
     kept.update(incoming)
     ordered = [kept[stamp] for stamp in sorted(kept)]
-    log_path.write_text("".join(header) + "".join(ordered), encoding="utf-8")
+    # Rows are data and are merged; the header is generated and is replaced outright.
+    log_path.write_text(HEADER + "".join(ordered), encoding="utf-8")
     return "".join(lines)
 
 

@@ -314,7 +314,7 @@ jobs:
       - run: pip install -e . --no-deps
       - run: loremfile site build                       # deterministic for a given commit; its hashes are the site-integrity baseline (never read from the bucket)
       - id: verify
-        run: loremfile verify-live --mode daily --json ${{ inputs.inject_failure != '' && format('--inject-failure {0}', inputs.inject_failure) || '' }} > health.json || echo "failed=true" >> "$GITHUB_OUTPUT"
+        run: loremfile verify-live --mode full --json ${{ inputs.inject_failure != '' && format('--inject-failure {0}', inputs.inject_failure) || '' }} > health.json || echo "failed=true" >> "$GITHUB_OUTPUT"
       - name: Open or update issue on failure, close on recovery
         env: { GH_TOKEN: ${{ github.token }} }
         run: python -m loremfile.gh_issue --label health --title "Health check failing" --report health.json --state ${{ steps.verify.outputs.failed == 'true' && 'failing' || 'ok' }}
@@ -327,12 +327,21 @@ jobs:
       - name: Weekly ops-log commit (Mondays) on the unprotected ops-log branch — backfills a row per day; also keeps scheduled workflows alive
         if: github.event_name == 'schedule'
         run: |
-          if [ "$(date -u +%u)" = "1" ]; then
-            git config user.name loremfile-bot && git config user.email bot@loremfile.dev
-            git fetch origin ops-log && git checkout ops-log || { git checkout --orphan ops-log && git rm -rfq . ; }
-            python -m loremfile.ops_log --from usage.json --append ops-log.md
-            git add ops-log.md && git commit -m "ops-log: weekly numbers" && git push origin ops-log
-          fi
+          # In a separate worktree. This listing used to check `ops-log` out in place, which
+          # removes src/ — the editable install the next line imports — so it could never run.
+          [ "$(date -u +%u)" = "1" ] || exit 0
+          LOG="$RUNNER_TEMP/ops-log-worktree"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global --add safe.directory "$LOG"
+          git fetch origin +refs/heads/ops-log:refs/remotes/origin/ops-log 2>/dev/null || true
+          if git show-ref --verify --quiet refs/remotes/origin/ops-log; then git worktree add -B ops-log "$LOG" origin/ops-log
+          else git worktree add --detach "$LOG" HEAD && git -C "$LOG" checkout --orphan ops-log && git -C "$LOG" rm -rfq . ; fi
+          python -m loremfile.ops_log --from usage.json --append "$LOG/ops-log.md"
+          git -C "$LOG" add ops-log.md
+          git -C "$LOG" diff --cached --quiet || { git -C "$LOG" -c user.name=loremfile-bot -c user.email=bot@loremfile.dev commit -qm "ops-log: weekly numbers" && git -C "$LOG" push origin ops-log; }
+      - name: Fail the run if any check reported a problem   # must be last; why is in the table below
+        if: ${{ !cancelled() }}
+        run: '[ "${{ steps.verify.outputs.failed }}" != "true" ] && [ "${{ steps.cost.outputs.state }}" != "failing" ] && [ "${{ steps.rotation.outputs.state }}" != "failing" ]'
 ```
 
 `loremfile usage` queries the GraphQL Analytics API (`r2OperationsAdaptiveGroups` for Class A/B operations month-to-date on the bucket; zone HTTP request totals and cache-status breakdown for the last 7 days) with the read-only T4 token. It **also** returns a `daily` array — per-day Class A, Class B and `GetObject`/`userError` counts for the last `--daily-days` days, default 32, which is the API's own maximum window (`19` §3.2). `ops_log` writes **one row per day** from that array and replaces any date already present, so the weekly commit backfills the week and overlapping windows converge instead of double-counting. The month-to-date counters answer "are we near the threshold"; the daily series answers "what is the rate", which is the question the pre-launch baseline needs and which a cumulative counter cannot express. The series lives in the repository because Cloudflare keeps only 90 days of it. `verify-live` treats a 429 from our own rate limit as "retry after 10 s", not as a failure. The ops-log commit goes to the dedicated **`ops-log` branch**, which carries no ruleset, so `main` keeps its pull-request requirement and no bypass is granted to any workflow (rulesets bypass by actor, not by path — a bypass for the Actions app would have applied to every workflow). `GITHUB_TOKEN` with `contents: write` can push only to unprotected branches. GitHub's 60-day rule speaks of "repository activity"; a push to any branch is repository activity. Should the rule turn out to count only default-branch commits (**[VERIFY]** by observing the workflow still runs after the first quiet 60 days), the weekly session's merged PRs keep `main` active anyway and the runbook's re-enable step covers the rest. The ops-log is read at `https://github.com/<OWNER>/loremfile/blob/ops-log/ops-log.md`.
@@ -351,7 +360,8 @@ Until then the daily run performs no defacement check at all, which is stated he
 | Defect | Fix |
 |---|---|
 | `gh` inferred the repository from a checkout git refused | every `gh_issue` call passes `--repo $GITHUB_REPOSITORY`. Tested at the `subprocess.run` boundary: every earlier test replaced `_gh`, so the one function that failed was the one no test ran |
-| one reporting failure skipped every independent check | `if: ${{ !cancelled() }}` on each independent step; the job still ends red |
+| one reporting failure skipped every independent check | `if: ${{ !cancelled() }}` on each independent step. *(Corrected 2026-09-14: this row said "the job still ends red". That holds only for a step that **crashes** — see the next row)* |
+| **a check that found a problem ended the run green** — found by the first control drill: the injected failure opened #53 and the run was a green tick. `verify` (`\|\| echo failed=true`), cost and rotation (`\|\| true`) each swallow their result so the others still run, and nothing failed the job afterwards | cost and rotation record `state` to `$GITHUB_OUTPUT` as `verify` records `failed`; a **final** step with `if: ${{ !cancelled() }}` exits 1 when any of the three reported failing. **It must be last**: before the two did-not-complete steps, its exit 1 would make `failure()` open "Health workflow did not complete" on every real finding, and the `success()`-gated close would never run |
 | a hung `verify-live` would read as `ok` and **close** a real health issue | state is `ok` only if the step **completed and passed** (`steps.verify.outcome`) — a timeout kills the shell before `|| echo failed=true`, so the output alone cannot tell "passed" from "never finished" |
 | `verify-live` unbounded within a 30-minute job | step-level `timeout-minutes: 10`, sized from the four measured CI runs (21–99 s) with the arithmetic in the workflow. The job timeout is **not** re-sized: the whole job has never completed |
 | the ops-log step **could never have succeeded** | it checked out `ops-log` in place, removing `src/` — the editable install `python -m loremfile.ops_log` needs — one line before running it. This section's own YAML block above has the same shape. It now works in a separate `git worktree` |
@@ -360,9 +370,13 @@ Until then the daily run performs no defacement check at all, which is stated he
 
 **Not verifiable before merge, and verified after it instead.** The `production` environment is restricted to `main`, so the check job cannot run from a branch. After merging, three dispatches are the test, in order: `inject_failure` set to any manifest path (watch "Health check failing" **open**); a plain dispatch (watch it **close**); `force_ops_log: true` (watch the `ops-log` branch appear). REQ-27's `inject_failure` control existed from M4.3 and was never dispatched — had it been, this would have been found on day one. `force_ops_log` is new, because the Monday commit is gated on a scheduled run and could not otherwise be exercised on demand.
 
+**Done 2026-09-14 — the first alerting control drill passed**, recorded in `11` §7.11: the injected failure opened #53, the clean run closed it, and `force_ops_log` created the `ops-log` branch (`6f2bf9b`). It also exposed the green-on-finding defect in the table above, so the drill is re-run after that fix: the injected run must now end **red** while #53 still opens and closes as before.
+
+**Health runs `verify-live --mode full` since 2026-09-14.** `daily` never hashed a fixture of 1 MB or more (`12` §4); full closes that gap without adding sampling logic, and at a measured 2 min 12 s it fits the unchanged 10-minute step bound. The `daily` description below is kept as the definition of that mode, which remains available.
+
 The cost and rotation thresholds are applied in the workflow rather than inside the commands, because a threshold belongs to the check and `usage`/`tokens-due` should stay plain readers.
 
-`verify-live --mode daily` = HEAD every manifest path (parallel, 16 workers, rate ≤ 20 rps to stay under our own limit) comparing `Content-Length` and `Content-Type`; GET + SHA-256 for all fixtures < 1 MB and a rotating 5 % sample of larger ones (rotation = day-of-year modulo); full header contract on one fixture per format (the smallest P1 fixture of that format by bytes, ties broken by path order); the encoded-path and warm-cache CORS probes from `08` §6; every site key hashed against the **rebuild of the checked-out commit** in `build/site/` (defacement check — the baseline must never come from the bucket, because whoever holds T2 can rewrite any site key including any manifest stored there; a mismatch during the few minutes between a merge and its deploy is tolerated by retrying once after 10 minutes); discovery files; `www` redirect; RDAP expiry ≥ 45 days; TLS certificate expiry ≥ 14 days; `security.txt` `Expires` ≥ 30 days; total time reported. `gh_issue.py` de-duplicates by label + title, appends a comment per failing day, and closes with a comment on the first green run.
+*(The next paragraph specifies `daily` as designed; `12` §4 records what is implemented, and `health.yml` now runs `full`.)* `verify-live --mode daily` = HEAD every manifest path (parallel, 16 workers, rate ≤ 20 rps to stay under our own limit) comparing `Content-Length` and `Content-Type`; GET + SHA-256 for all fixtures < 1 MB and a rotating 5 % sample of larger ones (rotation = day-of-year modulo); full header contract on one fixture per format (the smallest P1 fixture of that format by bytes, ties broken by path order); the encoded-path and warm-cache CORS probes from `08` §6; every site key hashed against the **rebuild of the checked-out commit** in `build/site/` (defacement check — the baseline must never come from the bucket, because whoever holds T2 can rewrite any site key including any manifest stored there; a mismatch during the few minutes between a merge and its deploy is tolerated by retrying once after 10 minutes); discovery files; `www` redirect; RDAP expiry ≥ 45 days; TLS certificate expiry ≥ 14 days; `security.txt` `Expires` ≥ 30 days; total time reported. `gh_issue.py` de-duplicates by label + title, appends a comment per failing day, and closes with a comment on the first green run.
 
 ### 3.4 `audit.yml` — weekly (Mondays) and on demand
 
