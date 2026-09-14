@@ -161,7 +161,7 @@ Each file is the complete desired list of rules for one phase's zone entry-point
 ] }
 ```
 
-### 5.3 `http_response_headers_transform.json` (3 of the 10, plus an optional fourth below)
+### 5.3 `http_response_headers_transform.json` (4 of the 10, plus an optional fifth below)
 
 ```json
 { "rules": [
@@ -183,13 +183,17 @@ Each file is the complete desired list of rules for one phase's zone entry-point
       "X-Frame-Options": { "operation": "set", "value": "DENY" },
       "Referrer-Policy": { "operation": "set", "value": "strict-origin-when-cross-origin" },
       "X-Content-Type-Options": { "operation": "set", "value": "nosniff" },
-      "Permissions-Policy": { "operation": "set", "value": "camera=(), microphone=(), geolocation=()" } } } }
+      "Permissions-Policy": { "operation": "set", "value": "camera=(), microphone=(), geolocation=()" } } } },
+  { "ref": "legal_pages_noindex", "description": "keep the pages that name the operator out of search (ADR-028)", "enabled": true,
+    "expression": "(http.request.uri.path eq \"/legal/imprint\" or http.request.uri.path eq \"/legal/privacy\")",
+    "action": "rewrite", "action_parameters": { "headers": {
+      "X-Robots-Tag": { "operation": "set", "value": "noindex, nofollow, nosnippet" } } } }
 ] }
 ```
 
 Notes: the `site_pages_headers` expression groups `(not A) or B` explicitly; the Rules language would evaluate it the same way without the parentheses (documented precedence: `not` first, then `and`, `xor`, `or`), but a security-relevant rule should not depend on a reader knowing that. `http.request.uri.path` in this phase reflects the URL-rewrite result, so `/` and `/pdf/` are seen as `/index.html` and `/pdf/index.html` and get site headers. `assets/site.<hash>.css` gets file headers (harmless). The sandbox CSP also lands on `sitemap.xml` and RSS/Atom fixtures, which is harmless for non-document consumers and desirable when opened in a browser.
 
-These suffix tests rely on Cloudflare's **URL normalization** (Rules → Settings → Normalize incoming URLs, on by default) so that `/html/basic%2Ehtml` is evaluated as `/html/basic.html`; the setting is part of the desired state and audit probes request encoded paths. As belt-and-braces, a fourth header rule keyed on the response type is added if the field is available on the Free plan (**[VERIFY]** in M2.3; the `http.response.content_type` field is documented for response-phase rules):
+These suffix tests rely on Cloudflare's **URL normalization** (Rules → Settings → Normalize incoming URLs, on by default) so that `/html/basic%2Ehtml` is evaluated as `/html/basic.html`; the setting is part of the desired state and audit probes request encoded paths. As belt-and-braces, a fifth header rule keyed on the response type is added if the field is available on the Free plan (**[VERIFY]** in M2.3; the `http.response.content_type` field is documented for response-phase rules):
 
 ```json
   { "ref": "active_content_sandbox_by_type", "description": "sandbox CSP by response Content-Type (belt and braces)", "enabled": true,
@@ -198,7 +202,17 @@ These suffix tests rely on Cloudflare's **URL normalization** (Rules → Setting
       "Content-Security-Policy": { "operation": "set", "value": "sandbox; default-src 'none'; img-src https://loremfile.dev data:; media-src https://loremfile.dev; style-src 'unsafe-inline'; font-src https://loremfile.dev" } } } }
 ```
 
-That makes 6 of the 10 free transform rules if the optional rule is added (2 URL rewrites + 4 header rules); 5 without it.
+**`legal_pages_noindex`** (added 2026-09-15, ADR-028) sets only `X-Robots-Tag` on the two legal pages that name the operator. Both paths are extensionless, so `site_pages_headers` matches them too; it sets no `X-Robots-Tag`, so the two rules never set the same header. The expression uses `eq`, already proven on this zone by the request transform, rather than a set literal. Verified against the published pages when M4.1 first publishes them (`15` M4.1).
+
+Transform rules now: **2 URL rewrites + 4 header rules = 6 of the 10**; 7 if the optional content-type rule is ever added.
+
+**Pending [VERIFY]: a WAF custom rule refusing self-identifying AI agents on the two legal pages.** robots.txt only asks (`04` §6), and OpenAI says `ChatGPT-User` may not apply it. Established so far, before any write:
+- Free allows **5** custom rules ("All except Log" actions, no regex); **0 are used** — this zone has no `http_request_firewall_custom` entry point (`10003: could not find entrypoint ruleset`). The rule would use 1, leaving 4 for incidents.
+- Cloudflare's `http.user_agent` field reference states **no plan restriction, and no plan availability either** — so whether the field works in a Free custom rule is decided by writing one, not by reading.
+- **`Google-Extended` must not appear in it**: Google says it has no separate HTTP user agent string, so a clause matching it could never fire. OpenAI's own page gives header strings containing `GPTBot`, `OAI-SearchBot` and `ChatGPT-User`; Anthropic's page names `ClaudeBot`, `Claude-User` and `Claude-SearchBot` as robots.txt user agents but does not quote the header strings, so a match on those is unverified until confirmed.
+- **Operational hazard to settle first:** `apply` writes a phase with a full `PUT`. Once this phase is desired state, an incident rule added in the dashboard would be **deleted** by the next apply. The four reserved slots must be managed through `infra/`, and `11` §7.4 must say so before the phase is added.
+
+It lands as its own pull request: the phase file, `apply`/`audit` coverage, and a probe that requests both pages with a `GPTBot` user agent (expect a block) and a browser user agent (expect no block) — the negative control that the rule is not blocking everyone.
 
 ### 5.4 `http_request_cache_settings.json` (1 of 10 cache rules)
 

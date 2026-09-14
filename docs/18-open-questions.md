@@ -10,12 +10,12 @@ Each question lists the default assumed by this documentation. If the owner says
 | Q-04 | R2 bucket location hint: `auto`, or pin to a region near most expected users (`ENAM`/`WEUR`/`APAC`)? | `auto` | Cache misses' latency only; immaterial with tiered cache |
 | Q-05 | Off-account cold backup to AWS S3 (Glacier Deep Archive ≈ USD 0.001/GB-month; ≈ USD 0.01/month) in addition to GitHub Releases? | No (GitHub Releases suffice); yes if the owner wants to use the AWS account for something | Resilience vs another account to keep alive |
 | Q-06 | Registrar: Cloudflare Registrar (default) or a separate registrar (e.g. Porkbun, ≈ USD 13/year) to split domain control from CDN/DNS? A separate registrar turns "recover the domain from a lost Cloudflare account" from a support process into a DNS change | Cloudflare Registrar, with the honest RTO in `11` §7.6 | Blast radius vs simplicity (ADR-020, RISK-19); the reviewer recommends splitting |
-| Q-07 | Contact addresses: `hello@`, `security@` forwarding to the owner's mailbox — which mailbox? | The owner's primary email | Email Routing setup; legal notices |
+| Q-07 | Contact addresses: `hello@`, `security@` forwarding to the owner's mailbox — which mailbox? | ✅ **Resolved 2026-09-15**: the published contact address is **hello@loremfile.dev**. Where it forwards is the owner's and is recorded nowhere in this repository | Email Routing setup; legal notices |
 | Q-08 | Approve in principle a **separate** domain for unsafe fixtures in Phase 4 (EICAR, zip bombs…)? | Not now; revisit after month 6 | Legal/reputation exposure |
 | Q-09 | Session cadence: is ~2 h/week for the first month and ~1 h/week afterwards acceptable? | Yes | Determines M3 elapsed time (≈ 4–6 weeks) |
 | Q-10 | Launch posts: the owner will publish agent-drafted posts on HN, dev.to, Reddit, X/Bluesky under their own name? | Yes | RISK-01 |
 | Q-11 | Budget: approve up to USD 5/month for Workers Paid when Phase 3 starts, and up to USD 15/year in domains? | Assume yes for Phase 3 only | ADR-003 |
-| Q-12 | Should the site show a "sponsor / donate" link (e.g. GitHub Sponsors) to offset the domain cost? | No | Keeps the pitch clean |
+| Q-12 | Should the site show a "sponsor / donate" link (e.g. GitHub Sponsors) to offset the domain cost? | No — and a sponsor link would reopen ADR-028 (§ 5 DDG) | Keeps the pitch clean; keeps the Impressum's legal basis |
 | Q-13 | Preferred bucket name (`loremfile-public`) and toolchain image name (`loremfile-toolchain`)? | As stated | Cosmetic |
 | Q-14 | When will M0 (account, domain, bucket, tokens) be done? | Unknown; M1 and M3 proceed with placeholders, M2 and M5 wait | Schedules the first deploy |
 | Q-15 | May the agent post answers linking to loremfile.dev on Stack Overflow / forums under the owner's accounts, or only draft them? | Draft only | RISK-01 |
@@ -24,12 +24,12 @@ Each question lists the default assumed by this documentation. If the owner says
 | Q-18 | On a legal takedown, re-publish GitHub Release assets without the object and remove the generator parameters? | Yes | Completeness of removals |
 | Q-19 | Is the launch set in `05` §9 the right 228 fixtures, or should specific fixtures be swapped in or out? | As listed | Launch scope (ADR-024) |
 | Q-20 | Is the account pay-as-you-go (payment method on file)? If yes, the Usage Based Billing notification may be available as a second cost signal | Assume not; the automated check is the control | Cost detection |
-| Q-21 | Privacy notice: name the controller publicly (legal name and a postal address, which Art. 13 GDPR expects) or publish a contact address only and give the identity on request? | **No default** — the owner must answer | `13` §3/§3a cannot be rendered; blocks M4.2 |
+| Q-21 | Privacy notice and Impressum: name the operator publicly (name and a serviceable postal address — which **§ 18 Abs. 1 MStV** requires for the Impressum; Art. 13 GDPR asks only for identity and contact details) or publish a contact address only? | ✅ **Resolved 2026-09-15 (ADR-028)**: named, with a serviceable address, rendered at deploy from production environment secrets. **No value is recorded in this repository** | `13` §3/§3b render from secrets in M4.1; M4.2 no longer blocked on this |
 | Q-22 | Should `MAX_FIXTURE_BYTES` become 104,857,600 (100 MiB) so the top-end boundary pairs (`100mb-plus-1`, `100mib`, `100mib-plus-1`) become possible? The bandwidth rationale is unaffected — R2 egress is free, and one cache miss costs one Class B read regardless of object size — but the decision should follow operational data, not precede it. | **No change.** REQ-23 stays at 100,000,000; the three rows stay phase 2 | Revisit at the month-6 retrospective (`15` M6.4). Nothing gets an exception at launch |
 
 **Q-22 is not blocking.** It was raised by an oversight found in M3.1 — `bin/100mib.bin` was listed phase 1 while exceeding REQ-23 — and that oversight is already resolved: the row is phase 2 and the launch set is 228 files. Q-22 is only the forward-looking question of whether the cap itself should move, and its default (no change) is the shipping behaviour.
 
-**Q-07 and Q-21 have no working default.** Every other question here falls back to the documented default if the owner says nothing; these two cannot. `13` §3 is a published legal text — an unreachable contact address or a missing controller identity is a defect in itself — so it keeps the `<CONTACT_EMAIL>` and `<CONTROLLER>` placeholders and **M4.2 is blocked** until both are answered. They are listed as open blockers in the "Implementation status" issue every session.
+**Q-07 and Q-21 are resolved (2026-09-15, ADR-028)** without recording any value: the contact address is hello@loremfile.dev, and the operator's name and address exist only as production environment secrets (`13` §3b). They had no working default because a published legal text with an unreachable contact address or a missing identity is a defect in itself; that is why they blocked M4.2 until answered.
 
 ## Questions a reviewer may ask, answered
 
@@ -70,7 +70,7 @@ A fresh-context review by a "junior implementer" reader produced 28 questions. E
 | 20 | Which fixture per format for smoke/daily headers? | Smallest P1 fixture by bytes, ties by path | `09` §3.3, `12` §4 |
 | 21 | How is REQ-27 tested? | `health.yml` `inject_failure` input / `verify-live --inject-failure` | `01`, `06` §10, `12` §5 |
 | 22 | Where do Lighthouse, actionlint, gitleaks run? | On the host; informational except gitleaks | `06` §9 |
-| 23 | Real `<OWNER>` and mailbox? | Placeholders until Q-03/Q-07; M1/M3 do not need them | `15` header |
+| 23 | Real `<OWNER>` and mailbox? | `<OWNER>` stays a placeholder until Q-03; the contact address is resolved (Q-07: hello@loremfile.dev) | `15` header |
 | 24 | When is M0 done? | Q-14; M2/M5 wait, M1/M3 do not | `18` |
 | 25 | `control-characters.txt` edge case? | Yes, `edge_case: true` | `05` §3.6 |
 | 26 | `float16` in the Arrow types fixture? | No; the type list is now explicit | `05` §3.7 |

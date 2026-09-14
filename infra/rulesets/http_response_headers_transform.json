@@ -72,6 +72,21 @@
           }
         }
       }
+    },
+    {
+      "ref": "legal_pages_noindex",
+      "description": "keep the pages that name the operator out of search (ADR-028)",
+      "enabled": true,
+      "expression": "(http.request.uri.path eq \"/legal/imprint\" or http.request.uri.path eq \"/legal/privacy\")",
+      "action": "rewrite",
+      "action_parameters": {
+        "headers": {
+          "X-Robots-Tag": {
+            "operation": "set",
+            "value": "noindex, nofollow, nosnippet"
+          }
+        }
+      }
     }
   ]
 }

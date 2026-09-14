@@ -44,6 +44,6 @@ Purpose: security tooling needs EICAR, zip bombs, oversized headers, polyglots, 
 | User uploads or "share a file" | Moderation, abuse, legal exposure; contradicts the no-write-path principle |
 | Screenshots / URL-to-PDF / conversions | Compute, SSRF, abuse |
 | Public API keys / tiers | Adds accounts and a database |
-| Ads or sponsorship banners | The entire value is being the clean option; a "sponsored by" text line in the footer is acceptable if ever needed |
+| Ads, sponsorship or affiliate links, in any form | The entire value is being the clean option — and any of them would make the service *geschäftsmäßig* under § 5 DDG and change the Impressum's legal basis (ADR-028), which requires a second contact channel **before** such a change ships. There is no acceptable "sponsored by" line |
 | Copying real-world sample media (Big Buck Bunny, etc.) | Licence bookkeeping; generated media is enough for tests |
 | Hosting `.zip` of the whole catalog at a fixed URL | 1 GB object behind the cache limit; use GitHub Releases |

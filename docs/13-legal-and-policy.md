@@ -35,8 +35,8 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 
 > **Privacy**
 >
-> **Who is responsible.** `<CONTROLLER>` is the controller for the personal data described
-> here. Contact: `<CONTACT_EMAIL>`.
+> **Who is responsible.** `%%IMPRINT_NAME%%`, `%%IMPRINT_STREET%%`, `%%IMPRINT_POSTAL_CITY%%`
+> is the controller for the personal data described here. Contact: hello@loremfile.dev.
 >
 > **What is processed, and by whom.** loremfile.dev has no server, no accounts, no logins,
 > no cookies and no analytics scripts. Every request is answered by Cloudflare's network in
@@ -82,7 +82,7 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 >
 > **Your rights.** Under the GDPR and the UK GDPR you have the right of access,
 > rectification, erasure, restriction and portability, and the right to object to processing
-> based on legitimate interests. Write to `<CONTACT_EMAIL>`; we answer within one month.
+> based on legitimate interests. Write to hello@loremfile.dev; we answer within one month.
 > In practice we hold nothing that identifies you except an email thread you started, so an
 > access or erasure request is normally answered with exactly that. For the data Cloudflare
 > processes on our behalf, send us the approximate time and the URL and we will pass the
@@ -92,12 +92,54 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 > **Changes.** This notice lives in the project's public repository; its version history is
 > the changelog.
 
-**Placeholders (blocking).** `<CONTROLLER>` (Q-21: named controller vs contact address only)
-and `<CONTACT_EMAIL>` (Q-07: which mailbox `hello@`/`security@` route to; the documents
-assume `hello@loremfile.dev`) are **not yet decided by the owner**. M4.2 must not render
-`/legal/privacy` while either placeholder is unresolved — an unreachable contact address or
-an absent controller identity is itself a defect under Art. 13 GDPR. Both are tracked as
-open blockers in the "Implementation status" issue.
+**Placeholders (resolved 2026-09-15, ADR-028).** The contact address is
+**hello@loremfile.dev** (Q-07). The controller is named, with a serviceable address (Q-21):
+the notice keeps the `%%IMPRINT_*%%` placeholders in the repository, and the values are filled
+in at deploy from production secrets exactly as for the Impressum (§3b). Art. 13 GDPR asks
+for the controller's identity and contact details; the requirement for a **serviceable postal
+address** comes from **§ 18 Abs. 1 MStV** for the Impressum, not from Art. 13.
+
+## 3b. Impressum (`/legal/imprint`) — template, and how its values are handled
+
+> **Impressum**
+>
+> Angaben gemäß § 18 Abs. 1 MStV
+>
+> %%IMPRINT_NAME%%
+> %%IMPRINT_STREET%%
+> %%IMPRINT_POSTAL_CITY%%
+>
+> Kontakt: hello@loremfile.dev
+
+**Legal basis (ADR-028).** loremfile.dev is not *geschäftsmäßig* under § 5 DDG, so the Impressum
+follows § 18 Abs. 1 MStV: name, a serviceable address, and hello@loremfile.dev. No telephone
+number. Any payment, advertising, sponsorship or affiliate link reopens that decision, and a
+second contact channel must be added **before** such a change ships.
+
+**The values are never committed.** They exist only as three separate plain secrets in the GitHub
+`production` environment — `IMPRINT_NAME`, `IMPRINT_STREET`, `IMPRINT_POSTAL_CITY` — never as a
+JSON blob, because GitHub warns structured data "can cause secret redaction within logs to fail".
+`AGENTS.md` rule 5 forbids writing them anywhere, for any reason. Rendering lands with M4.1:
+
+1. Committed templates hold `%%IMPRINT_NAME%%`, `%%IMPRINT_STREET%%` and `%%IMPRINT_POSTAL_CITY%%`
+   only. `/legal/imprint` and `/legal/privacy` are filled in **only** in jobs using the
+   `production` environment — `deploy.yml` and `health.yml`'s integrity rebuild. Pull-request CI
+   renders the placeholders.
+2. **The deploy hard-fails if any `IMPRINT_*` secret is missing or empty** — a blank Impressum
+   breaches § 18 MStV — and asserts that the uploaded pages contain no `%%IMPRINT_` marker.
+3. **Never print a rendered legal page, never upload one as an artifact, never `set -x` in those
+   steps.** GitHub: "automatic redaction is not guaranteed". **If a value ever reaches a log,
+   delete the log and open an incident** — an address cannot be rotated.
+4. **Proof the values never entered git, without printing them:** production jobs pass each
+   secret via `env` and run `git grep -qF -- "$VAR"` for it; it must find nothing.
+5. Links labelled "Impressum" and "Privacy" in the header **and** footer of every page (`07` §2).
+
+**Keeping the pages out of search and AI crawlers** — `X-Robots-Tag: noindex, nofollow,
+nosnippet` and the matching meta tag, robots.txt groups for verified AI tokens, and exclusion from
+every sitemap, `llms` file, search index and JSON-LD (`04` §6–§10, ADR-016 amendment).
+**The limit, stated plainly: these measures reduce reading; they cannot prevent it.** A page
+served to the public can be read by anyone who requests it, and RFC 9309 says of robots.txt that
+it is "not a form of access authorization".
 
 ## 3a. Compliance posture
 
@@ -131,7 +173,7 @@ nothing else.
 
 | # | Art. 30(1) item | Entry |
 |---|---|---|
-| 1 | Controller and contact details | `<CONTROLLER>`, `<CONTACT_EMAIL>` (Q-21, Q-07) |
+| 1 | Controller and contact details | The operator named in the Impressum — values held only as production environment secrets, never in this record (ADR-028); hello@loremfile.dev |
 | 2 | Joint controller, DPO, EU/UK representative | None. No DPO required (no large-scale or special-category processing, no systematic monitoring); Art. 27 representative not appointed — see §8 |
 | 3 | Processing activity | Delivery of a public, read-only static file service (loremfile.dev), and the contact mailbox |
 | 4 | Purposes | Serve the requested file; keep the service available; detect and mitigate abuse; answer correspondence and legal notices |

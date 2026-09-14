@@ -3,7 +3,7 @@
 Read this before touching anything. `docs/15-implementation-plan.md` has the task order;
 work through it, do not improvise a different plan.
 
-## The four rules that outrank everything
+## The five rules that outrank everything
 
 1. **IMMUTABILITY.** Never change the bytes, `sha256`, byte count or MIME type at a
    published path. Ever. A fix is a **new path**, and the old manifest entry records
@@ -25,6 +25,13 @@ work through it, do not improvise a different plan.
    `deploy.yml` or `infra.yml` (modes `audit`, `apply`, `probe`, `restore`, `redact`).
    If a task seems to need a token locally, you have misread the task — check
    `docs/09-ci-cd.md` §3.2b.
+5. **NEVER WRITE IMPRINT VALUES ANYWHERE, FOR ANY REASON.** The operator's name and address
+   exist only as the `production` environment secrets `IMPRINT_NAME`, `IMPRINT_STREET` and
+   `IMPRINT_POSTAL_CITY`. Never put them in the repository, an issue, a pull request, a commit
+   message, a test, a fixture, a log, an artifact or any message — not as an example, not
+   partially, not "redacted". Templates hold `%%IMPRINT_*%%` placeholders only (ADR-028,
+   `docs/13` §3b). If a value ever appears in a log, stop: delete the log and open an
+   incident. An address cannot be rotated.
 
 ## The commands
 
@@ -59,8 +66,10 @@ grep -rn '<OWNER>' --exclude-dir=.git .
 ```
 
 M1 and M3 can be built with the placeholders in place. M2 and M5 cannot.
-`<CONTROLLER>`, `<CONTACT_EMAIL>` and `<DPA_ACCEPTED_DATE>` in `docs/13-legal-and-policy.md`
-block M4.2 — do not invent values for them.
+The legal texts' controller and contact placeholders are **resolved** (Q-07, Q-21, ADR-028): the
+contact address is hello@loremfile.dev, and the operator's name and address are the `%%IMPRINT_*%%`
+placeholders filled from production secrets at deploy — see rule 5. The DPA acceptance date was
+resolved by M0.6 (no date is published).
 
 ## Never
 
@@ -72,8 +81,9 @@ block M4.2 — do not invent values for them.
 - Never skip tests to fit a session. Stop mid-milestone and write down where you stopped.
 - Never decide anything `docs/18-open-questions.md` marks as an owner decision.
 - Never publish or post anything publicly. The owner publishes launch posts.
-- Never expand scope. The launch set is the 229 fixtures in `docs/05-fixture-catalog.md` §9,
-  not all 417.
+- Never expand scope. The launch set is the 228 fixtures in `docs/05-fixture-catalog.md` §9,
+  not all 416. *(Corrected 2026-09-15: this read 229 and 417, the counts before `bin/100mib.bin`
+  moved to phase 2 under Q-22.)*
 
 ## Determinism
 
