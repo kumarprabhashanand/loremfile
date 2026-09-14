@@ -5,12 +5,22 @@ issue with seven comments rather than seven issues. It closes with a comment on 
 first green run, which is the half that makes the label meaningful: an issue tracker
 where nothing ever closes is one nobody reads.
 
-Uses the `gh` CLI, which is in the toolchain image and already authenticated in Actions.
+Uses the `gh` CLI, which is in the toolchain image and authenticated in Actions.
+
+**Every call names the repository explicitly** (`--repo $GITHUB_REPOSITORY`). Without it
+`gh` infers the repository from the git checkout in the working directory — and inside a
+job container git refuses that checkout as "dubious ownership", because it belongs to the
+runner's uid rather than the container's. That is not hypothetical: the first four
+scheduled `health.yml` runs and the first `audit.yml` run all died in `gh issue list` on
+exactly that error, opened **no** issue, and — with the default implicit `success()` —
+skipped every check after it. The alerting path failed silently, which is the one failure
+it exists to make loud. `deploy.yml`'s `gh` calls always passed `--repo` and never hit it.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -28,12 +38,26 @@ class Outcome:
     detail: str = ""
 
 
+def _repository() -> list[str]:
+    """`--repo OWNER/REPO` when Actions provides it; nothing locally.
+
+    Locally the checkout belongs to whoever runs the command, so inference works and a
+    developer need not export anything.
+    """
+    repository = os.environ.get("GITHUB_REPOSITORY", "")
+    return ["--repo", repository] if repository else []
+
+
 def _gh(args: list[str], *, check: bool = True) -> str:
     executable = shutil.which("gh")
     if executable is None:
         raise IssueError("gh is not on PATH; it lives in the toolchain image")
     completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
-        [executable, *args], capture_output=True, text=True, timeout=120, check=False
+        [executable, *args, *_repository()],
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
     )
     if check and completed.returncode != 0:
         raise IssueError(f"gh {' '.join(args[:3])}…: {completed.stderr.strip()}")
@@ -50,8 +74,23 @@ def find_open(label: str, title: str) -> int | None:
 
 
 def summarise(report: Path) -> str:
-    """The failing detail from a `--json` report, as a Markdown body."""
-    document = json.loads(report.read_text(encoding="utf-8"))
+    """The failing detail from a `--json` report, as a Markdown body.
+
+    A report that is missing or not valid JSON is itself the finding: the check did not
+    complete — it timed out, crashed, or never started. That is reported as a failure with
+    an honest body, never read as success. A run that learned nothing must not look like a
+    run that found nothing.
+    """
+    try:
+        document = json.loads(report.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return (
+            f"The check did not produce a readable report (`{report.name}`: "
+            f"{type(exc).__name__}). It did not complete — it timed out, crashed or never "
+            "started — so nothing is known about what it was checking. See the run log."
+        )
+    if not isinstance(document, dict):
+        return f"`{report.name}` is not a report object; the check did not complete."
     lines = [f"`{document.get('command', report.name)}` reported a failure.", ""]
     summary = document.get("summary") or {}
     if summary:

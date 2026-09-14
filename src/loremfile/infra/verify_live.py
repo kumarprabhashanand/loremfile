@@ -74,8 +74,12 @@ def expected_disposition(path: str) -> str:
     return f'inline; filename="{path.rsplit("/", 1)[-1]}"'
 
 
-#: docs/12 §4: `daily` hashes everything below this and samples above it; `full` hashes
-#: everything. The line exists because hashing 0.6 GB daily is not a daily job.
+#: `daily` GETs and hashes every fixture below this; `full` hashes everything. The line
+#: exists because hashing the whole catalog daily is not a daily job. **`daily` does not
+#: yet sample above it**: docs/12 §4 specifies a 5 % rotating sample of larger fixtures,
+#: and this comment used to claim it existed. It does not — a fixture of 1 MB or more is
+#: never hashed by `daily`, only by `full`. Recorded in docs/12 §4 with the other checks
+#: that table promised and this module does not perform.
 DAILY_HASH_LIMIT_BYTES = 1_000_000
 
 #: Markup is sandboxed; a PDF or a video must **not** carry a CSP, or viewers break.

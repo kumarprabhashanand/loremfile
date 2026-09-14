@@ -56,6 +56,94 @@ An audit that inherited this would open an `infra-drift` issue every run, and a 
 fires every run stops meaning anything — the failure already avoided for `fonts`/
 `speed_brain` and for `expected_drift`.
 
+### Fixed — the alerting path failed silently for four days
+
+**Every scheduled run of `health.yml` since it merged — four of four, 09-11 to 09-14 — and
+the first run of `audit.yml` failed, and no issue was opened.** Found by reading the run
+history. **The project's alert is the issue, and none was opened** — the one failure
+this machinery exists to prevent. (GitHub may also email a failure notice for scheduled
+runs; that is outside the repository, not verifiable from here, and not relied on.)
+
+- **Root cause.** `verify-live` passed each time. The next step, `gh_issue`, died on
+  `gh issue list`: `fatal: detected dubious ownership in repository at
+  '/__w/loremfile/loremfile'`. Without `--repo`, `gh` infers the repository from the git
+  checkout, and inside a job container git refuses a checkout owned by the runner's uid.
+  `deploy.yml`'s `gh` calls always passed `--repo` and never hit it. **Fix:** every
+  `gh_issue` call passes `--repo $GITHUB_REPOSITORY`.
+- **Why it was silent, twice over.** Every `gh_issue` test replaced `_gh`, so the one
+  function that failed was the one no test ran; the new tests patch `subprocess.run`
+  instead. And REQ-27's `inject_failure` control — built to watch the issue automation
+  fire — had never been dispatched. Both are now instances in `AGENTS.md`.
+- **Why it cost more than issues.** With the implicit `success()`, every step after the
+  failed report was skipped: **the cost check, the rotation reminder and the ops-log
+  keep-alive did not run once.** Independent steps now run `if: ${{ !cancelled() }}`; the
+  job still ends red.
+- **The ops-log keep-alive could never have succeeded.** It checked out `ops-log` in place,
+  which removes `src/` — the editable install `python -m loremfile.ops_log` needs — one
+  line before running it. `docs/09` §3.3's own YAML has the same shape. It now works in a
+  separate `git worktree`. Verified by running the step's exact script from `health.yml`
+  against scratch repositories with git 2.39.5, the container's version: first run creates
+  the orphan branch and pushes; a fresh clone takes the existing-branch path and appends;
+  both main checkouts untouched. The container-specific parts — uid, credentials for the
+  push — are verified only by the post-merge dispatch.
+- **Two "a run that learned nothing reads as ok" holes, closed before they could open.**
+  Adding a `verify-live` timeout would have made a hang set no output, so the health issue
+  would read `ok` and **close** a real issue; state is now `ok` only if the step completed
+  and passed. And the audit's could-not-run issue keyed on exit code `2` alone would have
+  been closed by a job that died before the audit produced any code; it is now `ok` only
+  on a 0 or 1.
+- `gh_issue` reports a **missing or corrupt report** as "the check did not complete", never
+  as success. A final `if: failure()` step opens "Health workflow did not complete" for
+  every failure no individual check reports.
+- **`force_ops_log`** dispatch input, because the Monday commit is gated on a scheduled run
+  and could not otherwise be exercised on demand.
+
+**Post-merge, three dispatches are the test** (the `production` environment is restricted
+to `main`, so the check job cannot run from a branch): `inject_failure` set to a manifest
+path — watch the health issue open; a plain dispatch — watch it close; `force_ops_log` —
+watch the `ops-log` branch appear.
+
+**The first real `infra audit` works** (Monday 2026-09-14): 33 resources `ok` against the
+live zone, all five ruleset phases `N rule(s) match` — the phases `apply` reports as
+`updated` every run. One `unreadable`, `url-normalization`, whose endpoint T1 cannot read:
+a warning, not drift, and it opens no issue.
+
+### Measured — the `verify-live` table was wrong in both directions
+
+`docs/12` §4 was written from estimates. Rather than correct one row, each mode now carries
+**specified**, **implemented** and **measured** separately — because a time measured for a
+subset is not a time for the mode.
+
+| Mode | Measured, 161 fixtures | Estimate was |
+|---|---|---|
+| `smoke` | 9 s, 50 checks | < 1 min |
+| `daily` | 56 s at home; **21, 54, 70, 99 s** on the first four CI runs — 278 checks | 3–5 min |
+| `full` | 2 min 12 s, 322 checks, 414 MB | 15–30 min |
+
+**The larger finding is scope, not time.** `daily` is specified as parallel, with a 5 %
+rotating sample of fixtures ≥ 1 MB, site-key hashes and RDAP/TLS/`security.txt` expiry
+checks. It implements none of them: it is sequential, and a fixture of 1 MB or more is
+**never** hashed by `daily` — only by `full`. `smoke` is specified to check `/`, the
+manifest count, OPTIONS, Range and the `www` redirect, and does not. A comment in
+`verify_live.py` claimed `daily` "samples above" the 1 MB line; it does not, and the
+comment is corrected.
+
+`health.yml`'s `verify-live` step now has its own `timeout-minutes: 10`, sized from the CI
+measurements with the arithmetic in the workflow (slowest 99 s, ×1.42 to 228 fixtures,
+~4.7× run-to-run spread). The job's `timeout-minutes: 30` is deliberately **not** re-sized:
+the whole job has never completed, and sizing it against a run that died at step five would
+be sizing it against nothing. The table's re-measure note now covers all three modes, at
+228 fixtures **and** when the unimplemented checks land.
+
+### Documented — the `inputs.mode` catch, where the next person will reach for it
+
+`docs/09` §3.2 now records, beside the note enabling the push trigger, that `inputs.x ==`
+in an `if:` silently becomes `false` on every event that carries no inputs — which would
+have made the first push upload and skip verification: a green deploy that verified
+nothing. Confirmed on that first push (run `34525369410`): `Publish fixtures` ran with
+`dry_run=False` and `Verify what was published` ran rather than being skipped. The rule:
+default an input where it is resolved, never compare it where it is used.
+
 ### Verified — every published byte, checked against the manifest
 
 `verify-live --mode full` against production, run locally as `docs/15` M5.2 specifies:

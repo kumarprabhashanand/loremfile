@@ -23,6 +23,13 @@ on:
           can trust.
         type: string
         default: ""
+      force_ops_log:
+        description: >-
+          Write the ops-log rows now, regardless of the day. The Monday commit is gated
+          on a scheduled run, so without this it cannot be exercised on demand, and a
+          step that has never run is not known to work.
+        type: boolean
+        default: false
 
 permissions:
   # `contents: write` only for the Monday ops-log commit, and only to the `ops-log`
@@ -47,6 +54,9 @@ jobs:
     environment: production
     container:
       image: ${{ needs.setup.outputs.digest }}
+    # Not re-sized: this bounds the whole job, and the whole job has never completed —
+    # the first four scheduled runs died at step five. The dominant step is bounded on its
+    # own below, from measurements. Re-size this after the first complete run.
     timeout-minutes: 30
     env:
       CLOUDFLARE_ANALYTICS_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}
@@ -60,25 +70,45 @@ jobs:
         run: pip install -e . --no-deps
 
       # Needs no credentials: it reads production over HTTPS like any visitor.
+      #
+      # Bounded on its own, from measurements rather than docs/12 §4's old estimate: 21, 54,
+      # 70 and 99 s on the first four scheduled runs, 278 checks at 161 fixtures. Scaled to
+      # 228 fixtures (x1.42) the slowest is ~140 s; runs varied ~4.7x between each other,
+      # so 10 minutes is headroom for runner variance and the unimplemented checks, not for
+      # a hang. A hang now costs 10 minutes, not 30.
       - id: verify
+        timeout-minutes: 10
         run: |
           loremfile verify-live --mode daily --json \
             ${{ inputs.inject_failure != '' && format('--inject-failure {0}', inputs.inject_failure) || '' }} \
             > health.json || echo "failed=true" >> "$GITHUB_OUTPUT"
 
+      # Failing unless verify-live **completed and passed**. A timeout kills the shell before
+      # `|| echo failed=true` runs, so a check that hung sets no output — reading only that
+      # output would report `ok` and close a genuine health issue on a run that learned
+      # nothing. The step outcome is what distinguishes "passed" from "never finished".
       - name: Open, update or close the health issue
+        if: ${{ !cancelled() }}
         run: |
           python -m loremfile.gh_issue \
             --label health \
             --title "Health check failing" \
             --report health.json \
-            --state ${{ steps.verify.outputs.failed == 'true' && 'failing' || 'ok' }}
+            --state ${{ (steps.verify.outcome == 'success' && steps.verify.outputs.failed != 'true') && 'ok' || 'failing' }}
 
       # The cost control. The Free plan has no usage-based billing notification, so this
       # read *is* the alert (docs/19 §2, ADR-025). The threshold is applied here rather
       # than inside `usage`, because the threshold belongs to the check and the command
       # should stay a plain reader.
+      # `!cancelled()` on every step after the first report, because the checks are
+      # independent and their *reporting* is not a precondition for running them. The
+      # first four scheduled runs of this workflow proved why: `gh_issue` failed on the
+      # health issue, and with the default implicit `success()` every later step was
+      # skipped — the cost check, the rotation reminder and the ops-log keep-alive did
+      # not run once in four days. The job still ends red when any step fails; this only
+      # stops one failure from hiding the others.
       - name: R2 usage and the cost threshold
+        if: ${{ !cancelled() }}
         run: |
           loremfile usage --json > usage.json || true
           state=$(python - <<'PY'
@@ -95,6 +125,7 @@ jobs:
             --state "$state"
 
       - name: Token rotation reminder
+        if: ${{ !cancelled() }}
         run: |
           loremfile tokens-due --json > tokens.json || true
           state=$(python - <<'PY'
@@ -115,16 +146,60 @@ jobs:
       # 90-day retention). It doubles as the keep-alive that stops GitHub disabling
       # scheduled workflows after 60 quiet days.
       - name: Weekly ops-log commit
-        if: github.event_name == 'schedule'
+        if: ${{ !cancelled() && (github.event_name == 'schedule' || inputs.force_ops_log) }}
+        env:
+          # Defaulted where it is read, not compared where it is used: on `schedule`
+          # there are no inputs, and `inputs.force_ops_log` is empty (docs/09 §3.2).
+          FORCE: ${{ inputs.force_ops_log || false }}
         run: |
-          [ "$(date -u +%u)" = "1" ] || { echo "not Monday; no ops-log commit"; exit 0; }
+          [ "$(date -u +%u)" = "1" ] || [ "$FORCE" = "true" ] \
+            || { echo "not Monday; no ops-log commit"; exit 0; }
+          # In a separate worktree, not by switching this checkout. docs/09 §3.3's block
+          # checked out `ops-log` in place — which replaces `src/`, the editable install
+          # `python -m loremfile.ops_log` needs, one line before running it. It could never
+          # have succeeded, and never ran to show it.
+          LOG="${RUNNER_TEMP:-/tmp}/ops-log-worktree"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git config user.name loremfile-bot
-          git config user.email bot@loremfile.dev
-          git fetch origin ops-log && git checkout ops-log \
-            || { git checkout --orphan ops-log && git rm -rfq . ; }
-          python -m loremfile.ops_log --from usage.json --append ops-log.md
-          git add ops-log.md
-          git diff --cached --quiet && { echo "no new rows"; exit 0; }
-          git commit -m "ops-log: weekly numbers"
-          git push origin ops-log
+          git config --global --add safe.directory "$LOG"
+          # Absent on the very first run, when git prints "fatal: couldn't find remote ref".
+          # Expected, and silenced so a green log carries no alarming line to misread.
+          git fetch origin +refs/heads/ops-log:refs/remotes/origin/ops-log 2>/dev/null || true
+          if git show-ref --verify --quiet refs/remotes/origin/ops-log; then
+            git worktree add -B ops-log "$LOG" origin/ops-log
+          else
+            git worktree add --detach "$LOG" HEAD
+            git -C "$LOG" checkout --orphan ops-log
+            git -C "$LOG" rm -rfq .
+          fi
+          python -m loremfile.ops_log --from usage.json --append "$LOG/ops-log.md"
+          git -C "$LOG" add ops-log.md
+          git -C "$LOG" diff --cached --quiet && { echo "no new rows"; exit 0; }
+          git -C "$LOG" -c user.name=loremfile-bot -c user.email=bot@loremfile.dev \
+            commit -qm "ops-log: weekly numbers"
+          git -C "$LOG" push origin ops-log
+
+      # The catch-all. Every check above reports its own result, but a job can also fail
+      # in ways no check reports — a crashed reader, a broken step, a timeout. Four silent
+      # days are the reason this exists. It cannot catch a broken `gh_issue` itself (that
+      # is what the subprocess-boundary tests and the post-merge `inject_failure` dispatch
+      # are for), but it catches everything else.
+      - name: Open the did-not-complete issue
+        if: ${{ failure() }}
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          printf '{"command": "health.yml", "ok": false, "summary": {}, "errors": ["A step failed or timed out: %s"]}\n' "$RUN_URL" > incomplete.json
+          python -m loremfile.gh_issue \
+            --label health \
+            --title "Health workflow did not complete" \
+            --report incomplete.json \
+            --state failing
+
+      - name: Close the did-not-complete issue
+        if: ${{ success() }}
+        run: |
+          python -m loremfile.gh_issue \
+            --label health \
+            --title "Health workflow did not complete" \
+            --report health.json \
+            --state ok
