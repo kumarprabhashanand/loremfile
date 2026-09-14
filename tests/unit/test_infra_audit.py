@@ -278,3 +278,23 @@ def test_unreadable_resources_alone_do_not_make_it_exit_non_zero(
     report.add("bot-management", UNREADABLE, "403")
     report.add("setting:ssl", OK)
     assert audit_exit(monkeypatch, report) == 0
+
+
+def test_the_audit_reads_txt_content_the_way_apply_writes_it() -> None:
+    """Apply and audit share one comparison. If the audit compared raw strings while apply
+    ignored surrounding quotes, a record apply calls correct would be drift every week."""
+    dmarc = next(
+        r for r in apply_module.load_desired("dns.json")["records"] if r["name"] == "_dmarc"
+    )
+    www = {"type": "CNAME", "name": "www.loremfile.dev", "content": "loremfile.dev"}
+    quoted = {"type": "TXT", "name": "_dmarc.loremfile.dev", "content": f'"{dmarc["content"]}"'}
+
+    report = AuditReport()
+    audit.audit_dns(FakeZone({"dns_records?per_page=100": response([quoted, www])}), report)  # type: ignore[arg-type]
+    assert report.drifted == []
+
+    # Negative control: a real difference in the text is still drift.
+    wrong = {**quoted, "content": '"v=DMARC1; p=none"'}
+    report = AuditReport()
+    audit.audit_dns(FakeZone({"dns_records?per_page=100": response([wrong, www])}), report)  # type: ignore[arg-type]
+    assert [f.resource for f in report.drifted] == ["dns:TXT _dmarc"]

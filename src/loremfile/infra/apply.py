@@ -183,30 +183,71 @@ def apply_dnssec(client: Client, report: Report) -> None:
         report.add("dnssec", "failed", response.errors)
 
 
+def dns_content(record_type: str, content: object) -> str:
+    """A record's content in comparable form.
+
+    Cloudflare's API reference says TXT content "must consist of quoted character
+    strings", and the live `_dmarc` record was stored unquoted. Comparing raw strings would
+    turn that formatting difference into permanent drift in both `apply` and `audit`, so a
+    TXT value is compared with one pair of surrounding double quotes removed. Nothing else
+    is normalised: a real difference in the text is still a difference.
+    """
+    text = str(content or "").strip()
+    if record_type == "TXT" and len(text) >= 2 and text[0] == text[-1] == '"':  # noqa: PLR2004
+        text = text[1:-1]
+    return text
+
+
 def apply_dns(client: Client, report: Report) -> None:
-    """Ensure the records we own. Never deletes: Email Routing owns MX and SPF."""
+    """Ensure the records we own, **content included**. Never deletes: Email Routing owns
+    MX and SPF.
+
+    It used to check only that a record of the right type and name existed. A content
+    change in `infra/dns.json` could therefore never reach the zone: apply said
+    `unchanged`, and the audit — which compares content — would have reported drift on
+    every run. Found when removing `rua` from `_dmarc`.
+    """
     desired = load_desired("dns.json")["records"]
     listing = client.get(f"/zones/{client.zone_id}/dns_records?per_page=100")
     if not listing.ok:
         report.add("dns", "failed", listing.errors)
         return
-    existing = {(r["type"], r["name"]) for r in (listing.result or [])}
+    existing = {(r["type"], r["name"]): r for r in (listing.result or [])}
     for record in desired:
         fqdn = (
             record["name"]
             if record["name"].endswith(SITE_HOST)
             else f"{record['name']}.{SITE_HOST}"
         )
-        if (record["type"], fqdn) in existing:
-            report.add(f"dns:{record['type']} {record['name']}", "unchanged")
+        label = f"dns:{record['type']} {record['name']}"
+        found = existing.get((record["type"], fqdn))
+        if found is None:
+            response = client.post(
+                f"/zones/{client.zone_id}/dns_records", {**record, "name": fqdn}
+            )
+            done = "created"
+        elif dns_content(record["type"], found.get("content")) == dns_content(
+            record["type"], record.get("content")
+        ):
+            report.add(label, "unchanged")
             continue
-        response = client.post(f"/zones/{client.zone_id}/dns_records", {**record, "name": fqdn})
-        if response.ok:
-            report.add(f"dns:{record['type']} {record['name']}", "updated", "created")
-        elif _is_forbidden(response):
-            report.add(f"dns:{record['type']} {record['name']}", "manual", FALLBACKS["dns"])
+        elif not found.get("id"):
+            report.add(label, "failed", "record exists but the listing carries no id to update")
+            continue
         else:
-            report.add(f"dns:{record['type']} {record['name']}", "failed", response.errors)
+            # PATCH is a partial update: only the content moves; name, type, TTL and
+            # proxying stay as the zone has them.
+            response = client.patch(
+                f"/zones/{client.zone_id}/dns_records/{found['id']}",
+                {"content": record["content"]},
+            )
+            done = f"content {found.get('content')!r} → {record['content']!r}"
+        if response.ok:
+            report.add(label, "updated", done)
+        elif _is_forbidden(response):
+            report.add(label, "manual", FALLBACKS["dns"])
+        else:
+            report.add(label, "failed", response.errors)
 
 
 def managed_ruleset_deployed(client: Client) -> dict[str, Any] | None:

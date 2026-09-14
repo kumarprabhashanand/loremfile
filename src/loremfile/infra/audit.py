@@ -40,6 +40,7 @@ from loremfile.infra.apply import (
     HTTP_NOT_FOUND,
     MANAGED_PHASE,
     WRITTEN_PHASES,
+    dns_content,
     load_desired,
     managed_ruleset_deployed,
 )
@@ -220,7 +221,9 @@ def audit_dns(client: Client, report: AuditReport) -> None:
         name = f"dns:{record['type']} {record['name']}"
         if found is None:
             report.add(name, DRIFT, "absent")
-        elif found.get("content") != record.get("content"):
+        elif dns_content(record["type"], found.get("content")) != dns_content(
+            record["type"], record.get("content")
+        ):
             report.add(name, DRIFT, f"content is {found.get('content')!r}")
         else:
             report.add(name, OK)

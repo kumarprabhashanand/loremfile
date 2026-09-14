@@ -245,8 +245,8 @@ def test_the_managed_ruleset_is_never_looked_up_at_account_scope() -> None:
 def test_dns_never_deletes_and_only_adds_what_is_missing() -> None:
     """Email Routing owns MX and SPF; apply must not touch them."""
     existing = [
-        {"type": "TXT", "name": "_dmarc.loremfile.dev"},
-        {"type": "MX", "name": "loremfile.dev"},
+        {"id": "d1", "type": "TXT", "name": "_dmarc.loremfile.dev", "content": _dmarc()["content"]},
+        {"id": "m1", "type": "MX", "name": "loremfile.dev", "content": "route1.mx.cloudflare.net"},
     ]
     client = FakeClient({f"GET /zones/{OUR_ZONE}/dns_records": ok(existing)})
     client.verify_zone()
@@ -255,3 +255,93 @@ def test_dns_never_deletes_and_only_adds_what_is_missing() -> None:
     assert all(method != "DELETE" for method, _, _ in client.writes)
     created = [payload for method, path, payload in client.writes if method == "POST"]
     assert [c["type"] for c in created] == ["CNAME"], "only the missing www record"
+    assert not [w for w in client.writes if w[0] == "PATCH"], "a matching record is left alone"
+
+
+# --- DNS content, not only existence ------------------------------------------
+
+
+def _dmarc() -> dict[str, Any]:
+    return next(
+        r for r in apply_module.load_desired("dns.json")["records"] if r["name"] == "_dmarc"
+    )
+
+
+def _www() -> dict[str, Any]:
+    return {"id": "w1", "type": "CNAME", "name": "www.loremfile.dev", "content": "loremfile.dev"}
+
+
+def _dns_client(records: list[dict[str, Any]], **answers: Response) -> FakeClient:
+    table = {f"GET /zones/{OUR_ZONE}/dns_records": ok(records), **answers}
+    client = FakeClient(table)
+    client.verify_zone()
+    return client
+
+
+def test_a_record_whose_content_changed_is_patched_in_place() -> None:
+    """Apply used to check existence only, so a content change in infra/dns.json could never
+    reach the zone and the audit would have reported drift on every run."""
+    stale = {
+        "id": "d1",
+        "type": "TXT",
+        "name": "_dmarc.loremfile.dev",
+        "content": "v=DMARC1; p=reject; rua=mailto:reports@example.invalid; adkim=s; aspf=s",
+    }
+    client = _dns_client([stale, _www()])
+    report = apply_module.Report()
+    apply_module.apply_dns(client, report)
+
+    assert client.writes == [
+        ("PATCH", f"/zones/{OUR_ZONE}/dns_records/d1", {"content": _dmarc()["content"]})
+    ], "updated in place: no create, no delete"
+    outcome = next(o for o in report.outcomes if o.resource == "dns:TXT _dmarc")
+    assert outcome.state == "updated"
+
+
+def test_a_txt_value_differing_only_by_surrounding_quotes_is_left_alone() -> None:
+    """Cloudflare's reference says TXT content "must consist of quoted character strings";
+    the live record was stored unquoted. Either form must read as the same value, or the
+    first apply after a quoting change would write forever and the audit would drift.
+
+    Negative control for the test above: that one proves a real difference is patched."""
+    quoted = {
+        "id": "d1",
+        "type": "TXT",
+        "name": "_dmarc.loremfile.dev",
+        "content": f'"{_dmarc()["content"]}"',
+    }
+    client = _dns_client([quoted, _www()])
+    report = apply_module.Report()
+    apply_module.apply_dns(client, report)
+    assert client.writes == []
+
+
+def test_quotes_are_only_ignored_on_txt_records() -> None:
+    assert apply_module.dns_content("TXT", '"v=DMARC1"') == "v=DMARC1"
+    assert apply_module.dns_content("CNAME", '"loremfile.dev"') == '"loremfile.dev"'
+    assert apply_module.dns_content("TXT", "v=DMARC1; p=none") != "v=DMARC1; p=reject"
+
+
+def test_a_refused_record_update_is_manual_not_failed() -> None:
+    stale = {
+        "id": "d1",
+        "type": "TXT",
+        "name": "_dmarc.loremfile.dev",
+        "content": "v=DMARC1; p=none",
+    }
+    refused = Response(403, {"success": False, "errors": [{"code": 10000, "message": "no"}]})
+    client = _dns_client([stale, _www()], **{f"PATCH /zones/{OUR_ZONE}/dns_records/d1": refused})
+    report = apply_module.Report()
+    apply_module.apply_dns(client, report)
+    outcome = next(o for o in report.outcomes if o.resource == "dns:TXT _dmarc")
+    assert outcome.state == "manual"
+    assert report.ok
+
+
+def test_dmarc_keeps_the_strict_policy_and_requests_no_reports() -> None:
+    """RFC 7489 §6.3 marks rua OPTIONAL. The domain sends no mail, there is no mailbox for
+    reports, and aggregate reports carry third-party sending-server data. The exact list
+    also pins p=reject and strict alignment, so dropping `rua` cannot weaken the policy."""
+    tags = [tag.strip() for tag in _dmarc()["content"].split(";") if tag.strip()]
+    assert tags == ["v=DMARC1", "p=reject", "adkim=s", "aspf=s"]
+    assert not any(tag.startswith(("rua=", "ruf=")) for tag in tags)

@@ -56,6 +56,30 @@ An audit that inherited this would open an `infra-drift` issue every run, and a 
 fires every run stops meaning anything — the failure already avoided for `fonts`/
 `speed_brain` and for `expected_drift`.
 
+### Changed — DMARC requests no reports; apply updates DNS records by content
+
+- **`_dmarc` is now `v=DMARC1; p=reject; adkim=s; aspf=s`.** `rua` is removed: RFC 7489
+  §6.3 marks it OPTIONAL, the domain sends no mail, there was never a route for the report
+  address, and aggregate reports would carry third-party sending-server data into a
+  personal inbox. The policy is unchanged — `p=reject` with strict alignment, pinned by a
+  test that asserts the exact tag list. Every mention of the report address is gone from
+  `docs/08` (the component table, §2 step 11, the apply description, the JSON block),
+  `docs/15` M0.5 and `docs/18` Q-07.
+- **This change could not have reached the zone before.** `apply_dns` only checked that a
+  record of the right type and name *existed*; a content change in `infra/dns.json` would
+  have been reported `unchanged` by apply and as drift by the audit on every run. It now
+  updates a record we own in place (`PATCH /zones/{id}/dns_records/{record_id}`, a partial
+  update per Cloudflare's API reference; T1 holds `Zone → DNS → Edit`). Still never
+  deletes, still never touches MX or SPF.
+- **TXT values are compared ignoring one pair of surrounding quotes, in apply and audit
+  alike.** Cloudflare's reference says TXT content "must consist of quoted character
+  strings", and the live record is stored unquoted; comparing raw strings would make that
+  formatting difference permanent drift. Tests cover both sides — quoted equals unquoted,
+  and a real difference in the text is still patched and still drift.
+
+The push to `main` applies this automatically. After it, `audit.yml` is dispatched and read:
+the expected result is `dns:TXT _dmarc ok` with 0 drift.
+
 ### Verified — the first alerting control drill, and the defect it found
 
 The three post-#52 dispatches were run by the owner on 2026-09-14 and read here; they are
