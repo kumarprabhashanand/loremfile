@@ -9,17 +9,17 @@
 # fails the build otherwise (docs/09 §4).
 
 # --- documents -------------------------------------------------------------
-fpdf2>=2.8
-pypdf>=5
+fpdf2>=2.8.8
+pypdf>=6.18.1
 python-docx>=1.2          # comments API
 openpyxl
 python-pptx
 
 # --- images ----------------------------------------------------------------
-Pillow>=11.3              # AVIF support in the published wheels starts at 11.3.0
+Pillow>=12.3.0              # AVIF support in the published wheels starts at 11.3.0
 
 # --- data ------------------------------------------------------------------
-pyarrow>=17
+pyarrow>=25.0.1
 fastavro
 ijson
 lxml
@@ -45,7 +45,7 @@ vobject
 cryptography
 
 # --- framework -------------------------------------------------------------
-pydantic>=2
+pydantic>=2.13.5
 click
 Jinja2
 boto3
