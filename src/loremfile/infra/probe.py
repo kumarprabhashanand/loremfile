@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import itertools
 import os
+import re
 import threading
 import time
 import urllib.error
@@ -26,6 +27,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from loremfile.config import SITE_HOST
+from loremfile.infra.apply import CUSTOM_PHASE, custom_rules_desired
 
 BASE = f"https://{SITE_HOST}"
 
@@ -89,6 +91,7 @@ TRACE_SAMPLES = 12
 
 HTTP_OK = 200
 HTTP_MOVED_PERMANENTLY = 301
+HTTP_FORBIDDEN = 403
 HTTP_NOT_FOUND = 404
 HTTP_TOO_MANY_REQUESTS = 429
 
@@ -751,6 +754,56 @@ def check_404s_are_cached() -> str:
     return f"404s served from cache ({evidence})"
 
 
+#: The committed rule the legal-pages check reads its paths and tokens from.
+AI_AGENT_RULE_REF = "loremfile_legal_pages_ai_agents"
+PATH_EQUALS = re.compile(r'http\.request\.uri\.path eq "([^"]+)"')
+USER_AGENT_CONTAINS = re.compile(r'http\.user_agent contains "([^"]+)"')
+#: A desktop browser: the request the rule must not refuse.
+BROWSER_USER_AGENT = (
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/131.0.0.0 Safari/537.36"
+)
+
+
+def ai_agent_rule_terms() -> tuple[list[str], list[str]]:
+    """The paths and User-Agent tokens the committed rule names, in its own order."""
+    rule = next((r for r in custom_rules_desired() if r["ref"] == AI_AGENT_RULE_REF), None)
+    if rule is None:
+        raise PreconditionUnmet(f"infra/rulesets/{CUSTOM_PHASE}.json has no {AI_AGENT_RULE_REF}")
+    expression = rule["expression"]
+    return PATH_EQUALS.findall(expression), USER_AGENT_CONTAINS.findall(expression)
+
+
+def check_legal_pages_refuse_ai_agents() -> str:
+    """Self-identifying AI agents get 403 on the two legal pages; a browser does not.
+
+    The browser request is the negative control: a rule that refused everyone would pass
+    every agent request. The pages need not exist — the edge answers before R2 does, so an
+    agent gets 403 and a browser gets whatever the path is (a 404 until M4.1 publishes it).
+    Each agent sends `compatible; <token>/1.0`: this checks our rule's matching, not any
+    vendor's header string (docs/08 §5.7).
+    """
+    paths, tokens = ai_agent_rule_terms()
+    require(bool(paths), f"{AI_AGENT_RULE_REF} names no path, so there is nothing to request")
+    require(bool(tokens), f"{AI_AGENT_RULE_REF} names no User-Agent token")
+    for path in paths:
+        browser = fetch(path, extra_headers={"User-Agent": BROWSER_USER_AGENT})
+        check(
+            browser.status != HTTP_FORBIDDEN,
+            f"{path} refused a browser with 403: the rule is not scoped to AI agents",
+        )
+        for token in tokens:
+            agent = fetch(
+                path, extra_headers={"User-Agent": f"Mozilla/5.0 (compatible; {token}/1.0)"}
+            )
+            check(
+                agent.status == HTTP_FORBIDDEN,
+                f"{path} answered {agent.status} to {token}, not 403: the rule is not deployed, "
+                "or Free did not accept http.user_agent, or it does not match",
+            )
+    return f"{len(tokens)} agent tokens refused on {len(paths)} pages; a browser was not"
+
+
 #: Every check the probe runs against the live site.
 SITE_CHECKS: dict[str, Check] = {
     "url-normalization": check_url_normalization_is_on,
@@ -762,6 +815,7 @@ SITE_CHECKS: dict[str, Check] = {
     "query-string-cache-key": check_query_strings_share_one_cache_entry,
     "dir-key-coexistence": check_key_named_dir_coexists_with_its_index,
     "404-caching": check_404s_are_cached,
+    "legal-pages-ai-agents": check_legal_pages_refuse_ai_agents,
     "rate-limit-rule": check_rate_limit_rule_is_deployed,
     "rate-limit": check_rate_limit_blocks_a_burst,
 }

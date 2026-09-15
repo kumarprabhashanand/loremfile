@@ -31,9 +31,12 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from typing import Any
 
 from loremfile.config import SITE_HOST
 from loremfile.infra.apply import (
+    CUSTOM_PHASE,
+    CUSTOM_REF_PREFIX,
     FALLBACKS,
     FREE_MANAGED_RULESET_NAME,
     HTTP_FORBIDDEN,
@@ -41,9 +44,12 @@ from loremfile.infra.apply import (
     MANAGED_PHASE,
     WRITTEN_PHASES,
     compare_rules,
+    custom_rules_desired,
     dns_content,
+    is_ours,
     load_desired,
     managed_ruleset_deployed,
+    no_entry_point,
 )
 from loremfile.infra.cloudflare_api import Client, CloudflareError, Response
 
@@ -51,6 +57,8 @@ from loremfile.infra.cloudflare_api import Client, CloudflareError, Response
 OK = "ok"
 DRIFT = "drift"
 UNREADABLE = "unreadable"
+#: A custom rule that is not ours (ADR-030): reported, never drift, never deleted.
+WARNING = "warning"
 
 
 @dataclass
@@ -78,6 +86,10 @@ class AuditReport:
         return [f for f in self.findings if f.state == UNREADABLE]
 
     @property
+    def warnings(self) -> list[Finding]:
+        return [f for f in self.findings if f.state == WARNING]
+
+    @property
     def ok(self) -> bool:
         """Unreadable is a **warning**, not a failure (docs/09 §3.4).
 
@@ -95,6 +107,9 @@ class AuditReport:
         if self.unreadable:
             lines += ["", "Could not be read (warning, not drift):"]
             lines += [f"  {f.resource}: {f.detail}" for f in self.unreadable]
+        if self.warnings:
+            lines += ["", "Not ours, left in place (warning, not drift):"]
+            lines += [f"  {f.resource}: {f.detail}" for f in self.warnings]
         return "\n".join(lines)
 
 
@@ -128,6 +143,50 @@ def audit_rulesets(client: Client, report: AuditReport) -> None:
         report.add(MANAGED_PHASE, DRIFT, f"deployed ruleset is {deployed_managed.get('name')!r}")
     else:
         report.add(MANAGED_PHASE, OK, FREE_MANAGED_RULESET_NAME)
+
+
+def audit_custom_rules(client: Client, report: AuditReport) -> None:
+    """Our custom rules, by ref. Anyone else's are a warning, never drift (ADR-030)."""
+    desired = custom_rules_desired()
+    response = client.get(f"/zones/{client.zone_id}/rulesets/phases/{CUSTOM_PHASE}/entrypoint")
+    if no_entry_point(response):
+        for want in desired:
+            resource = f"{CUSTOM_PHASE}:{want['ref']}"
+            report.add(resource, DRIFT, "missing: the phase has no entry point")
+        if not desired:
+            report.add(CUSTOM_PHASE, OK, "no entry point, and no rule of ours")
+        return
+    ruleset = response.result if response.ok else None
+    if not isinstance(ruleset, dict):
+        forbidden = response.status == HTTP_FORBIDDEN
+        report.add(
+            CUSTOM_PHASE, UNREADABLE, FALLBACKS[CUSTOM_PHASE] if forbidden else response.errors
+        )
+        return
+
+    ours: dict[str, dict[str, Any]] = {}
+    for rule in ruleset.get("rules") or []:
+        if is_ours(rule):
+            ours[rule["ref"]] = rule
+        else:
+            name = rule.get("ref") or rule.get("id", "?")
+            report.add(
+                f"{CUSTOM_PHASE}:{name}",
+                WARNING,
+                "not ours: never deleted; port it into infra/ if it should stay (docs/11 §7.4)",
+            )
+    for want in desired:
+        resource = f"{CUSTOM_PHASE}:{want['ref']}"
+        have = ours.pop(want["ref"], None)
+        if have is None:
+            report.add(resource, DRIFT, "missing")
+        elif differences := compare_rules([want], [have]):
+            report.add(resource, DRIFT, "; ".join(differences))
+        else:
+            report.add(resource, OK, "matches")
+    for ref in ours:
+        detail = f"deployed with the {CUSTOM_REF_PREFIX} prefix but not committed"
+        report.add(f"{CUSTOM_PHASE}:{ref}", DRIFT, detail)
 
 
 def audit_zone_settings(client: Client, report: AuditReport) -> None:
@@ -226,6 +285,7 @@ CHECKS = (
     audit_dnssec,
     audit_dns,
     audit_rulesets,
+    audit_custom_rules,
     audit_tiered_cache,
     audit_url_normalization,
 )

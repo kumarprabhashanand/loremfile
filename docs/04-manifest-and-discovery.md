@@ -179,6 +179,7 @@ Allow: /
 User-agent: GPTBot
 User-agent: OAI-SearchBot
 User-agent: ChatGPT-User
+User-agent: OAI-AdsBot
 User-agent: ClaudeBot
 User-agent: Claude-User
 User-agent: Claude-SearchBot
@@ -192,8 +193,9 @@ Sitemap: https://loremfile.dev/sitemap.xml
 AI crawlers are deliberately allowed (the audience includes agents). Raw fixtures carry `X-Robots-Tag: noindex`; pages are indexable — **except the two legal pages that name the operator** (ADR-016 amendment, ADR-028).
 
 - **`User-agent: *` keeps `Allow: /`.** Google honours `noindex` only on a page it is "not … blocked by a robots.txt file"; disallowing the legal pages for everyone would stop search engines from ever seeing the `noindex` that keeps them out.
-- **The named group replaces the `*` group for those crawlers, and disallows only the two paths** — everything else stays allowed for them. Each token is checked against its vendor's own documentation, and **no token is added without that check**: OpenAI documents `GPTBot`, `OAI-SearchBot` and `ChatGPT-User`, and says of `ChatGPT-User` that "robots.txt rules may not apply" to user-initiated actions; Anthropic documents `ClaudeBot`, `Claude-User` and `Claude-SearchBot` as robots.txt user agents; Google documents `Google-Extended` as a robots.txt token that "does not impact a site's inclusion in Google Search". OpenAI also documents `OAI-AdsBot`, which is not in the owner's list and is not added.
+- **The named group replaces the `*` group for those crawlers, and disallows only the two paths** — everything else stays allowed for them. Each token is checked against its vendor's own documentation, and **no token is added without that check**: OpenAI documents `GPTBot`, `OAI-SearchBot`, `ChatGPT-User` and `OAI-AdsBot` ("OAI-AdsBot only visits pages submitted as ads, and the data collected by OAI-AdsBot is not used to train generative AI foundation models"), and says of `ChatGPT-User` that "robots.txt rules may not apply" to user-initiated actions; Anthropic documents `ClaudeBot`, `Claude-User` and `Claude-SearchBot` as robots.txt user agents; Google documents `Google-Extended` as a robots.txt token that "does not impact a site's inclusion in Google Search".
 - **`Google-Extended` sends no requests of its own** — Google says it "doesn't have a separate HTTP request user agent string" — so it belongs here and **never** in a user-agent-matching rule, where it could not fire.
+- **robots.txt asks; a WAF custom rule refuses.** Every token in this group except `Google-Extended` is also matched by the custom rule `loremfile_legal_pages_ai_agents` (`08` §5.7, ADR-030), which answers `403` on the two paths. `tests/unit/test_legal_pages.py` keeps the two lists equal.
 - **The limit.** RFC 9309: robots.txt is "not a form of access authorization". These groups ask; they cannot enforce (`13` §3b).
 
 ## 7. `sitemap.xml`

@@ -70,9 +70,12 @@ def everything_ok(path: str, **_: Any) -> Fetched:
 
 #: Every check that reads the edge. Each must refuse to evaluate against a 404.
 #: `404-caching` is excluded: a 404 is its *subject*, not a missing precondition,
-#: so driving it against one tests nothing. Every other edge check must refuse.
+#: so driving it against one tests nothing. So is `legal-pages-ai-agents`: a 404 to a
+#: browser is expected until M4.1 publishes the pages, and a 404 to an agent is its
+#: finding (the rule did not fire), tested below. Every other edge check must refuse.
 EDGE_CHECKS = sorted(
-    set(probe.SITE_CHECKS) - {"www-redirect", "404-caching", "rate-limit", "rate-limit-rule"}
+    set(probe.SITE_CHECKS)
+    - {"www-redirect", "404-caching", "legal-pages-ai-agents", "rate-limit", "rate-limit-rule"}
 )
 
 
@@ -598,3 +601,85 @@ def test_a_rate_outside_the_band_is_a_precondition_failure(
     detail = report.results[0].detail
     assert "precondition unmet" in detail
     assert "different experiment" in detail
+
+
+# --- legal-pages-ai-agents (ADR-030) -------------------------------------------------
+
+
+def _refuses(tokens: list[str]) -> Any:
+    def answer(_path: str, **kwargs: Any) -> Fetched:
+        agent = (kwargs.get("extra_headers") or {}).get("User-Agent", "")
+        return Fetched(status=403 if any(t in agent for t in tokens) else 404, headers={}, body=b"")
+
+    return answer
+
+
+def _legal_check() -> probe.ProbeReport:
+    return probe.run_checks({"legal-pages-ai-agents": probe.SITE_CHECKS["legal-pages-ai-agents"]})
+
+
+def test_the_legal_pages_check_reads_paths_and_tokens_from_the_committed_rule() -> None:
+    """Empty-set control: every assertion below iterates these lists."""
+    paths, tokens = probe.ai_agent_rule_terms()
+    assert set(paths) == {"/legal/imprint", "/legal/privacy"}
+    assert "OAI-AdsBot" in tokens
+    assert "Google-Extended" not in tokens
+
+
+def test_the_legal_pages_check_passes_when_only_agents_are_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _paths, tokens = probe.ai_agent_rule_terms()
+    responder(monkeypatch, _refuses(tokens))
+    report = _legal_check()
+    assert report.ok, report.render()
+
+
+def test_the_legal_pages_check_fails_when_a_browser_is_refused_too(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The negative control the check exists for: a rule that blocks everyone."""
+    responder(monkeypatch, Fetched(status=403, headers={}, body=b""))
+    report = _legal_check()
+    assert not report.ok
+    assert "browser" in report.results[0].detail
+
+
+def test_the_legal_pages_check_fails_when_one_token_is_not_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _paths, tokens = probe.ai_agent_rule_terms()
+    responder(monkeypatch, _refuses(tokens[1:]))
+    report = _legal_check()
+    assert not report.ok
+    assert tokens[0] in report.results[0].detail
+
+
+def test_the_legal_pages_check_asks_every_token_on_every_page(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths, tokens = probe.ai_agent_rule_terms()
+    asked: set[tuple[str, str]] = set()
+
+    def answer(path: str, **kwargs: Any) -> Fetched:
+        agent = (kwargs.get("extra_headers") or {}).get("User-Agent", "")
+        asked.add((path, agent))
+        return _refuses(tokens)(path, **kwargs)
+
+    responder(monkeypatch, answer)
+    assert _legal_check().ok
+    for path in paths:
+        assert (path, probe.BROWSER_USER_AGENT) in asked
+        for token in tokens:
+            assert any(p == path and f"{token}/" in agent for p, agent in asked), (path, token)
+
+
+def test_the_legal_pages_check_fails_against_a_site_that_answers_404_to_everyone(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Why it sits outside the 404 sweep, and what it does instead: a 404 to an agent is
+    the finding, so the check fails and names what was not refused."""
+    responder(monkeypatch, everything_404)
+    report = _legal_check()
+    assert not report.ok
+    assert "not 403" in report.results[0].detail

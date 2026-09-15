@@ -133,7 +133,7 @@ Applied with `PUT /zones/{zone_id}/bot_management`. `cf_robots_variant: "off"` a
 
 ## 5. Rulesets — `infra/rulesets/`
 
-Each file is the complete desired list of rules for one phase's zone entry-point ruleset. apply.py `PUT`s `https://api.cloudflare.com/client/v4/zones/<ZONE_ID>/rulesets/phases/<phase>/entrypoint` with `{"rules": [...]}` (creating the entry point if the GET returns 404). Rule `ref` values are stable identifiers so audits can diff by ref.
+Each file is the complete desired list of rules for one phase's zone entry-point ruleset — **except `http_request_firewall_custom.json` (§5.7)**. That file holds only our rules, in a phase shared with incident rules, and is written one rule at a time (ADR-030). apply.py `PUT`s `https://api.cloudflare.com/client/v4/zones/<ZONE_ID>/rulesets/phases/<phase>/entrypoint` with `{"rules": [...]}` (creating the entry point if the GET returns 404). Rule `ref` values are stable identifiers so audits can diff by ref.
 
 ### 5.1 `http_request_dynamic_redirect.json` (Single Redirects)
 
@@ -206,13 +206,7 @@ These suffix tests rely on Cloudflare's **URL normalization** (Rules → Setting
 
 Transform rules now: **2 URL rewrites + 4 header rules = 6 of the 10**; 7 if the optional content-type rule is ever added.
 
-**Pending [VERIFY]: a WAF custom rule refusing self-identifying AI agents on the two legal pages.** robots.txt only asks (`04` §6), and OpenAI says `ChatGPT-User` may not apply it. Established so far, before any write:
-- Free allows **5** custom rules ("All except Log" actions, no regex); **0 are used** — this zone has no `http_request_firewall_custom` entry point (`10003: could not find entrypoint ruleset`). The rule would use 1, leaving 4 for incidents.
-- Cloudflare's `http.user_agent` field reference states **no plan restriction, and no plan availability either** — so whether the field works in a Free custom rule is decided by writing one, not by reading.
-- **`Google-Extended` must not appear in it**: Google says it has no separate HTTP user agent string, so a clause matching it could never fire. OpenAI's own page gives header strings containing `GPTBot`, `OAI-SearchBot` and `ChatGPT-User`; Anthropic's page names `ClaudeBot`, `Claude-User` and `Claude-SearchBot` as robots.txt user agents but does not quote the header strings, so a match on those is unverified until confirmed.
-- **Operational hazard to settle first:** `apply` writes a phase with a full `PUT`. Once this phase is desired state, an incident rule added in the dashboard would be **deleted** by the next apply. The four reserved slots must be managed through `infra/`, and `11` §7.4 must say so before the phase is added.
-
-It lands as its own pull request: the phase file, `apply`/`audit` coverage, and a probe that requests both pages with a `GPTBot` user agent (expect a block) and a browser user agent (expect no block) — the negative control that the rule is not blocking everyone.
+**Self-identifying AI agents are refused on the two legal pages by a WAF custom rule**, in §5.7 (ADR-030). robots.txt only asks (`04` §6).
 
 ### 5.4 `http_request_cache_settings.json` (1 of 10 cache rules)
 
@@ -265,9 +259,56 @@ So `apply.py` **confirms the managed ruleset is deployed and stops** — a perma
 
 **Two corrections this produced.** The name is **"Cloudflare Managed Free Ruleset"**, not "Cloudflare Free Managed Ruleset" as this section said; a `name ==` match against the old string would never have succeeded. And the lookup is **zone-scoped** (`GET /zones/{id}/rulesets`), not `GET /accounts/{id}/rulesets`: T1 is a zone token, and it failing to list account rulesets is the token working as designed, not a permission to widen. The id in the constant was correct.
 
+### 5.7 `http_request_firewall_custom.json` (1 of the 5 free custom rules; written rule by rule — ADR-030)
+
+```json
+{ "rules": [
+  { "ref": "loremfile_legal_pages_ai_agents", "description": "block self-identifying AI agents on the two legal pages that name the operator (ADR-028, ADR-030)", "enabled": true,
+    "expression": "(http.request.uri.path eq \"/legal/imprint\" or http.request.uri.path eq \"/legal/privacy\") and (http.user_agent contains \"GPTBot\" or http.user_agent contains \"OAI-SearchBot\" or http.user_agent contains \"ChatGPT-User\" or http.user_agent contains \"OAI-AdsBot\" or http.user_agent contains \"ClaudeBot\" or http.user_agent contains \"Claude-User\" or http.user_agent contains \"Claude-SearchBot\")",
+    "action": "block" }
+] }
+```
+
+**Why rule by rule, not the ADR-008 `PUT`.** This is the phase `11` §7.4 reaches for during an incident, adding custom rules in the dashboard. Cloudflare on writing an entry point with `PUT`: "This API method requires that you include in the request all rules you want to keep in the ruleset, or else they will be removed." So the next apply after an incident would delete the incident's rule. Instead:
+
+- **Ours means the `ref` starts with `loremfile_`.** Every committed rule carries the prefix (tested).
+- **Compare, then write one rule.** `apply` reads the entry point and compares each of our rules by `ref` with `apply.compare_rules`. Only on a difference does it write:
+  - `POST /zones/{id}/rulesets/{ruleset_id}/rules` to add a rule;
+  - `PATCH …/rules/{rule_id}` to change one, sending the whole rule ("You must include all the rule fields that you want to be part of the new rule definition, even if you are not changing their values");
+  - `DELETE …/rules/{rule_id}` to remove a rule of ours that is no longer committed.
+- **No entry point yet** (`10003`, as in §5.6): `POST /zones/{id}/rulesets` creates it, carrying our rules.
+- **Any other rule is a `warning` and is never deleted** — by `apply` and by `infra audit` alike.
+- **The phase is never `PUT`.** `cloudflare_api` refuses such a request before sending it, dry run included (`PhaseWriteRefused`).
+- **Rule order in this phase is neither compared nor changed.**
+
+**The rule.** It is scoped to the two paths with `eq`, as `legal_pages_noindex` is (§5.3), and matches `http.user_agent contains` each token in its vendor's casing. Cloudflare: "All string operators are case-sensitive unless explicitly stated as case-insensitive". The tokens are exactly the `04` §6 AI group minus `Google-Extended`, which `tests/unit/test_legal_pages.py` keeps true:
+
+- **OpenAI** publishes a full header string containing each of its four tokens. On `ChatGPT-User` it says "robots.txt rules may not apply", which is why this rule exists. On `OAI-AdsBot`: "OAI-AdsBot is used to validate the safety of web pages submitted as ads on ChatGPT. When you submit an ad, OpenAI may visit the landing page to ensure it complies with our policies. We may also use content from the landing page to determine when it's most relevant to show the ad to users. OAI-AdsBot only visits pages submitted as ads, and the data collected by OAI-AdsBot is not used to train generative AI foundation models." Its header is `Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; OAI-AdsBot/1.0; +https://openai.com/adsbot`.
+- **Anthropic** names `ClaudeBot`, `Claude-User` and `Claude-SearchBot` as robots.txt user agents but publishes **no header strings**. Matching them assumes the header carries the token in that casing, and that stays unverified until a request from one is seen.
+- **`Google-Extended` never.** Google: "Google-Extended doesn't have a separate HTTP request user agent string." A clause for it could not fire.
+
+**[VERIFY] `http.user_agent` on Free — still open, and the first write decides it.**
+
+What Cloudflare's documentation says:
+- The custom-rules availability table gives Free 5 rules, "All except Log" actions and no regex support, and names no field restriction.
+- The `http.user_agent` field reference states no plan availability at all.
+- User Agent Blocking (10 rules on Free) says "Cloudflare recommends that you use custom rules instead of user agent rules to block specific user agents", with an `http.user_agent eq` example.
+
+**None of that is the zone accepting the rule.**
+
+**What the first apply shows.** The first apply after this lands is the test. If the zone refuses the field, that apply reports `failed` with Cloudflare's error, the deploy is red, and this section records the error.
+
+**What the probe checks.** Once the rule is written, `infra.yml` → `probe` runs `legal-pages-ai-agents`:
+- every token gets a `403` on both pages (a block is "`403` (most security features)");
+- a browser User-Agent does not, which is the negative control.
+
+The pages need not be published for this, because the edge answers before R2 does.
+
+**Budget.** 1 of 5 custom rules, leaving 4 for incidents (`11` §7.4).
+
 ## 6. `apply.py` and `audit.py`
 
-Common: read `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_ACCOUNT_ID` from env; retry with backoff on 429/5xx; never delete resources it did not define (rulesets are `PUT` in full because each file is the complete desired list for that phase — the phases used are owned by this project; other phases are never touched). Both run from GitHub Actions (`infra.yml`, `deploy.yml`, `audit.yml`); nobody needs the tokens locally.
+Common: read `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_ACCOUNT_ID` from env; retry with backoff on 429/5xx; never delete resources it did not define (rulesets are `PUT` in full because each file is the complete desired list for that phase — the phases used are owned by this project; other phases are never touched. **`http_request_firewall_custom` is the exception**: it is shared with incident rules, written one rule at a time, and never `PUT` — §5.7, ADR-030). Both run from GitHub Actions (`infra.yml`, `deploy.yml`, `audit.yml`); nobody needs the tokens locally.
 
 `apply.py [--dry-run]`:
 1. Zone settings: `GET /zones/{id}/settings`; for each key in `zone-settings.json`, if `editable` and value differs → `PATCH /zones/{id}/settings/{key}`.
@@ -275,9 +316,14 @@ Common: read `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_ACCOUNT_I
 3. DNSSEC: `GET /zones/{id}/dnssec`; if not `active` → `PATCH {"status":"active"}`.
 4. DNS: ensure `www` CNAME → `loremfile.dev` proxied; ensure `_dmarc` TXT `v=DMARC1; p=reject; adkim=s; aspf=s` — **by content, not only by existence**: a record we own whose content differs is updated in place with `PATCH /zones/{id}/dns_records/{record_id}`, TXT values compared ignoring one pair of surrounding double quotes (Cloudflare's API reference says TXT content "must consist of quoted character strings"; the live record was stored unquoted). Until 2026-09-14 apply only checked existence, so a content change in `infra/dns.json` could never have reached the zone; ensure the SPF TXT contains `include:_spf.mx.cloudflare.net` **only if** Email Routing already created it (never create SPF from scratch; Email Routing owns it). Never delete records.
 5. Rulesets: for each phase file, `GET …/phases/{phase}/entrypoint` and compare its rules with the committed file — the same comparison `infra audit` uses (`apply.compare_rules`): every field the committed rule declares, `ref` included, by position; `id`, `version` and `last_updated` are Cloudflare's. **Write only on a difference**, with `PUT …/phases/{phase}/entrypoint` (a full PUT of the phase, which also creates a missing entry point), and report `updated`; otherwise report `unchanged`. A phase that cannot be read is reported `failed` and is **not** written blind. *(Until 2026-09-15 every phase was PUT unconditionally and reported `updated`, so a dry run named phases as changing that the audit called `ok`.)* For `http_request_firewall_managed`, first list `GET /accounts/{account_id}/rulesets` to resolve the Free Managed Ruleset ID by name and skip if the entry point already executes it.
+5b. WAF custom rules (§5.7): `GET …/phases/http_request_firewall_custom/entrypoint`, then:
+   - for each committed rule, whose `ref` starts with `loremfile_`, compare by `ref`, and on a difference `POST`, `PATCH` or `DELETE` that one rule by id;
+   - with no entry point, `POST /zones/{id}/rulesets` with our rules;
+   - any other rule is reported as a `warning` and left untouched;
+   - never `PUT`.
 6. Tiered cache: `GET …/cache/tiered_cache_smart_topology_enable`; `PATCH` it `on` only if it is not already on.
 7. URL normalization: `GET`; if not `type: cloudflare, scope: incoming` → write it (or print the dashboard path when the API refuses).
-8. Print a summary table: resource → unchanged / updated / skipped(reason) / manual.
+8. Print a summary table: resource → unchanged / updated / skipped(reason) / manual / warning (a custom rule that is not ours, left in place).
 
 `infra/dns.json` (desired records; apply.py step 4 reads it rather than hard-coding):
 
@@ -307,6 +353,7 @@ Endpoints, expected token permissions and the fallback when the API answers 403 
 | 5 | `…/http_request_cache_settings` | Cache Rules: Edit | Caching → Cache Rules |
 | 5 | `…/http_ratelimit` | Zone WAF: Edit | Security → WAF |
 | 5 | `…/http_request_firewall_managed` | **none — never written** (**resolved 2026-09-09**: no zone entry point exists; Cloudflare deploys the managed ruleset itself, verified zone-scoped via `GET /zones/{id}/rulesets`) | n/a |
+| 5b | `…/phases/http_request_firewall_custom/entrypoint` (read); `…/rulesets/{ruleset_id}/rules[/{rule_id}]` (`POST`/`PATCH`/`DELETE`); `POST /zones/{id}/rulesets` (create) — **never `PUT`** | Zone WAF: Edit, as for `http_ratelimit` **[VERIFY at the first write]** | Security → WAF → Custom rules |
 | 6 | `/zones/{id}/cache/tiered_cache_smart_topology_enable` | Cache Settings: Edit (endpoint verified) | Caching → Tiered Cache |
 | 7 | `/zones/{id}/url_normalization` (read; write only if off) | Zone Settings: Edit **[VERIFY endpoint]** | Rules → Settings → Normalize incoming URLs |
 | health | GraphQL Analytics `r2OperationsAdaptiveGroups` (T4) | Account → Account Analytics: Read **[VERIFY in M0.4 when T4 is created]** | Read R2 usage in the dashboard |

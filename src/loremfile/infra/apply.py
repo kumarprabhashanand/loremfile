@@ -46,8 +46,15 @@ WRITTEN_PHASES = (
 #: phase Cloudflare owns, so apply confirms the managed ruleset is deployed and stops.
 MANAGED_PHASE = "http_request_firewall_managed"
 
+#: Written one rule at a time, never as a phase (ADR-030): incident rules are added here
+#: in the dashboard (docs/11 §7.4), and a PUT of the entry point would delete them.
+#: `cloudflare_api.NEVER_PUT_PHASES` refuses that PUT before it is sent.
+CUSTOM_PHASE = "http_request_firewall_custom"
+#: The custom rules that are ours to add, change or delete. Any other rule is a warning.
+CUSTOM_REF_PREFIX = "loremfile_"
+
 #: Every phase with a file in infra/rulesets/.
-PHASES = (*WRITTEN_PHASES, MANAGED_PHASE)
+PHASES = (*WRITTEN_PHASES, MANAGED_PHASE, CUSTOM_PHASE)
 
 #: docs/08 §6: the dashboard path to print when the API refuses a step.
 FALLBACKS = {
@@ -61,6 +68,7 @@ FALLBACKS = {
     "http_request_cache_settings": "Caching → Cache Rules",
     "http_ratelimit": "Security → WAF → Rate limiting rules",
     "http_request_firewall_managed": "Security → WAF → Managed rules",
+    "http_request_firewall_custom": "Security → WAF → Custom rules",
     "tiered-cache": "Caching → Tiered Cache → Smart Tiered Cache",
     "url-normalization": "Rules → Settings → Normalize incoming URLs",
 }
@@ -73,12 +81,14 @@ FREE_MANAGED_RULESET_NAME = "Cloudflare Managed Free Ruleset"
 #: endpoint means the API shape in docs/08 §6 is wrong and M2.3 has to record that.
 HTTP_FORBIDDEN = 403
 HTTP_NOT_FOUND = 404
+#: Cloudflare's error when a phase has no entry point ruleset (docs/08 §5.6).
+NO_ENTRY_POINT_CODE = 10003
 
 
 @dataclass
 class Outcome:
     resource: str
-    state: str  # unchanged | updated | skipped | manual | failed
+    state: str  # unchanged | updated | skipped | manual | warning | failed
     detail: str = ""
 
 
@@ -105,6 +115,10 @@ class Report:
         if manual:
             lines += ["", "Needs the dashboard:"]
             lines += [f"  {o.resource}: {o.detail}" for o in manual]
+        warnings = [o for o in self.outcomes if o.state == "warning"]
+        if warnings:
+            lines += ["", "Not ours, left in place (warning):"]
+            lines += [f"  {o.resource}: {o.detail}" for o in warnings]
         return "\n".join(lines)
 
 
@@ -118,6 +132,12 @@ def load_desired(name: str) -> Any:  # noqa: ANN401 - each file has its own shap
 
 def _is_forbidden(response: Response) -> bool:
     return response.status == HTTP_FORBIDDEN
+
+
+def no_entry_point(response: Response) -> bool:
+    """No entry point in this phase: HTTP 404, or Cloudflare's 10003 whatever the status."""
+    codes = {e.get("code") for e in response.body.get("errors") or [] if isinstance(e, dict)}
+    return response.status == HTTP_NOT_FOUND or NO_ENTRY_POINT_CODE in codes
 
 
 def apply_zone_settings(client: Client, report: Report) -> None:
@@ -365,6 +385,117 @@ def verify_managed_ruleset(client: Client, report: Report) -> None:
     )
 
 
+def custom_rules_desired() -> list[dict[str, Any]]:
+    return list(load_desired(f"rulesets/{CUSTOM_PHASE}.json")["rules"])
+
+
+def is_ours(rule: dict[str, Any]) -> bool:
+    """A custom rule `apply` may add, change or delete: its `ref` carries our prefix."""
+    return str(rule.get("ref") or "").startswith(CUSTOM_REF_PREFIX)
+
+
+def _record_write(report: Report, resource: str, response: Response, detail: str) -> None:
+    if response.ok:
+        report.add(resource, "updated", detail)
+    elif _is_forbidden(response):
+        report.add(resource, "manual", FALLBACKS[CUSTOM_PHASE])
+    else:
+        report.add(resource, "failed", response.errors)
+
+
+def apply_custom_rules(client: Client, report: Report) -> None:
+    """Our WAF custom rules, one at a time — never the phase as a whole (ADR-030).
+
+    The phase is shared. Incident rules are added in the dashboard (docs/11 §7.4), and a
+    PUT of the entry point removes every rule the request does not carry. So only rules
+    whose `ref` starts with `loremfile_` are ours: each is compared by ref and, only on a
+    difference, added with POST, changed with PATCH or removed with DELETE, by rule id.
+    Every other rule is reported as a `warning` and left exactly where it is.
+    """
+    desired = custom_rules_desired()
+    zone = f"/zones/{client.zone_id}"
+    current = client.get(f"{zone}/rulesets/phases/{CUSTOM_PHASE}/entrypoint")
+    if no_entry_point(current):
+        _create_custom_entry_point(client, report, desired)
+        return
+    if _is_forbidden(current):
+        report.add(CUSTOM_PHASE, "manual", FALLBACKS[CUSTOM_PHASE])
+        return
+    ruleset = current.result if current.ok else None
+    if not isinstance(ruleset, dict) or not ruleset.get("id"):
+        # Nothing to compare against, and no ruleset to write through: no write at all.
+        detail = current.errors if not current.ok else "the entry point has no id"
+        report.add(CUSTOM_PHASE, "failed", detail)
+        return
+    ours, unwritable = _sort_custom_rules(list(ruleset.get("rules") or []), report)
+    rules_path = f"{zone}/rulesets/{ruleset['id']}/rules"
+    _converge_custom_rules(client, report, rules_path, desired, ours, unwritable)
+
+
+def _create_custom_entry_point(
+    client: Client, report: Report, desired: list[dict[str, Any]]
+) -> None:
+    """No entry point yet: create it carrying our rules (not a PUT, which ADR-030 forbids)."""
+    if not desired:
+        report.add(CUSTOM_PHASE, "unchanged", "no entry point, and no rule of ours")
+        return
+    created = client.post(
+        f"/zones/{client.zone_id}/rulesets",
+        {"name": "default", "kind": "zone", "phase": CUSTOM_PHASE, "rules": desired},
+    )
+    for want in desired:
+        resource = f"{CUSTOM_PHASE}:{want['ref']}"
+        _record_write(report, resource, created, "added, creating the entry point")
+
+
+def _sort_custom_rules(
+    deployed: list[dict[str, Any]], report: Report
+) -> tuple[dict[str, dict[str, Any]], set[str]]:
+    """Ours by ref, and the refs of ours that cannot be written. Every other rule is
+    reported as a warning here and goes no further."""
+    ours: dict[str, dict[str, Any]] = {}
+    unwritable: set[str] = set()
+    for rule in deployed:
+        name = rule.get("ref") or rule.get("id", "?")
+        if not is_ours(rule):
+            detail = (
+                f"not ours (no {CUSTOM_REF_PREFIX} ref), left in place: {rule.get('description')!r}"
+            )
+            report.add(f"{CUSTOM_PHASE}:{name}", "warning", detail)
+        elif not rule.get("id"):
+            report.add(f"{CUSTOM_PHASE}:{name}", "failed", "deployed without an id; not written")
+            unwritable.add(rule["ref"])
+        else:
+            ours[rule["ref"]] = rule
+    return ours, unwritable
+
+
+def _converge_custom_rules(
+    client: Client,
+    report: Report,
+    rules_path: str,
+    desired: list[dict[str, Any]],
+    ours: dict[str, dict[str, Any]],
+    unwritable: set[str],
+) -> None:
+    """Add, change or delete one rule of ours at a time, and only on a difference."""
+    for want in desired:
+        if want["ref"] in unwritable:
+            continue  # already reported: there is no id to write through
+        resource = f"{CUSTOM_PHASE}:{want['ref']}"
+        have = ours.pop(want["ref"], None)
+        if have is None:
+            _record_write(report, resource, client.post(rules_path, want), "added")
+        elif differences := compare_rules([want], [have]):
+            response = client.patch(f"{rules_path}/{have['id']}", want)
+            _record_write(report, resource, response, "; ".join(differences[:3]))
+        else:
+            report.add(resource, "unchanged", "matches")
+    for ref, stale in ours.items():
+        response = client.delete(f"{rules_path}/{stale['id']}")
+        _record_write(report, f"{CUSTOM_PHASE}:{ref}", response, "deleted: no longer committed")
+
+
 def apply_tiered_cache(client: Client, report: Report) -> None:
     """Read the topology; PATCH it `on` only if it is not already on."""
     path = f"/zones/{client.zone_id}/cache/tiered_cache_smart_topology_enable"
@@ -417,6 +548,7 @@ STEPS = (
     apply_dnssec,
     apply_dns,
     apply_rulesets,
+    apply_custom_rules,
     apply_tiered_cache,
     apply_url_normalization,
 )

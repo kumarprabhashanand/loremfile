@@ -43,6 +43,7 @@ SPEC = {
     "rulesets/http_request_cache_settings.json": "### 5.4 ",
     "rulesets/http_ratelimit.json": "### 5.5 ",
     "rulesets/http_request_firewall_managed.json": "### 5.6 ",
+    "rulesets/http_request_firewall_custom.json": "### 5.7 ",
     "dns.json": "`infra/dns.json` (desired records",
 }
 
