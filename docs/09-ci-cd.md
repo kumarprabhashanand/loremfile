@@ -151,7 +151,7 @@ on:
   push: { branches: [main] }
   workflow_dispatch: { inputs: { force_site: { type: boolean, default: false }, apply_infra: { type: boolean, default: false } } }
 concurrency: { group: loremfile-zone, cancel-in-progress: false }   # shared with infra.yml and audit.yml's infra job (ADR-029)
-permissions: { contents: read }
+permissions: { contents: read, actions: read }                        # actions: the carry-forward artifact, and the run list infra_changed reads
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -177,11 +177,9 @@ jobs:
       - run: loremfile upload --apply-removals           # only objects whose manifest entry is status: removed (takedown flow); no-op otherwise
       - run: loremfile upload --site ${{ inputs.force_site && '--force-site' || '' }}
       - run: loremfile purge --site
-      - id: infra_changed
-        run: |
-          base="${{ github.event.before }}"
-          if [ "$base" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$base" 2>/dev/null; then base="$(git rev-parse HEAD~1)"; fi
-          if git diff --name-only "$base" "${{ github.sha }}" -- infra/ | grep -q .; then echo "changed=true" >> "$GITHUB_OUTPUT"; fi
+      - id: infra_changed                              # base: the last successful push deploy on main — not HEAD~1, not event.before (ADR-029)
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: loremfile infra changed --exclude-run "$GITHUB_RUN_ID" --head "$GITHUB_SHA" >> "$GITHUB_OUTPUT"
       - run: loremfile infra apply --dry-run
       - name: Apply infra when infra/ changed or requested
         if: steps.infra_changed.outputs.changed == 'true' || inputs.apply_infra == true
@@ -192,20 +190,16 @@ jobs:
 
 Ordering rationale: fixtures first (immutable, safe to be early), removals next (rare), then site (references fixtures), then purge, then infra, then verification. A failure at any step stops the job; nothing after "upload --fixtures" can undo a fixture upload, and nothing needs to (immutability).
 
-**What still reports `updated` on every apply, and why `infra audit` cannot inherit that.** `apply` writes ruleset entry points with a full unconditional `PUT` by design, so it reports the *write*, not a difference. After `tls_1_3` converged (ADR-027) the standing six are:
+**When `Apply infra` runs (ADR-029).** On `mode: deploy`, when `apply_infra` is ticked or `infra/` changed since the commit the zone last converged to: the head SHA of the most recent successful `push` run of this workflow on `main`, other than the current run (`loremfile infra changed`). Not `HEAD~1`, and not `github.event.before`, which is the same commit for a squash merge: a pending deploy replaced in the concurrency group never runs, so an `infra/` change in its commit is invisible from a newer commit that does not touch `infra/` itself. No earlier successful push run means changed; a lookup that fails fails the step. It deliberately does not apply on every deploy — an apply converges `security_level` and would switch off Under Attack Mode mid-incident (`11` §7.4).
 
-| Reported `updated` every run | What it actually is |
-|---|---|
-| `http_request_dynamic_redirect` (1 rule) | unconditional `PUT` |
-| `http_request_transform` (2 rules) | unconditional `PUT` |
-| `http_response_headers_transform` (3 rules) | unconditional `PUT` |
-| `http_request_cache_settings` (1 rule) | unconditional `PUT` |
-| `http_ratelimit` (1 rule) | unconditional `PUT` |
-| `tiered-cache` (`smart topology on`) | unconditional `PATCH` |
+**What `apply` writes, and why `infra audit` still does not reuse its report.** `apply` reads before it writes; until 2026-09-15 it PUT the five ruleset phases and PATCHed tiered cache unconditionally, reporting `updated` for all six on every run, drift or none.
 
-`audit` must **GET each deployed ruleset and compare rule content** — with the server-assigned fields (`id`, `version`, `last_updated`; `ref` is ours and compared) normalised out — and read the tiered-cache topology before reporting it, rather than reusing `apply`'s outcome. An audit that inherited this opens an `infra-drift` issue every single run, and a label that fires every run stops meaning anything: the same failure avoided for `fonts`/`speed_brain` (§8 of `08`) and for `expected_drift` (`06` §8).
+| Resource | Written only when | Otherwise reported |
+|---|---|---|
+| `http_request_dynamic_redirect` (1 rule), `http_request_transform` (2), `http_response_headers_transform` (4), `http_request_cache_settings` (1), `http_ratelimit` (1) | `apply.compare_rules` finds a difference, or the phase has no entry point yet (404) — then one full `PUT` of the phase | `unchanged`, "N rule(s) match". A 403 is `manual`; any other unreadable answer is `failed` and **not written**, because there is nothing to compare against |
+| `tiered-cache` (`smart topology on`) | the topology is not already `on` — then one `PATCH` | `unchanged` |
 
-**Fixed 2026-09-15: `apply` now compares before it writes, too.** The table above described `apply` reporting the write rather than a difference; #56's dry run showed the cost — `updated` for four phases the audit called `ok`, a report asserting something adjacent to what would change. `apply_rulesets` now reads each phase and PUTs only when `apply.compare_rules` — the function the audit uses — finds a difference, and `apply_tiered_cache` PATCHes only when the topology is not already on; both report `unchanged` otherwise. `ref` joined the compared fields at the same time: the live zone preserves every committed ref, so treating it as Cloudflare-assigned would have let a changed ref compare equal and never be applied. Every declared leaf of every committed rule is mutated in `tests/unit/test_infra_apply.py` to prove the comparison catches it.
+`compare_rules` drops the fields Cloudflare assigns (`id`, `version`, `last_updated`; `ref` is ours and compared — the live zone preserves every committed ref) and compares only the fields the committed rule declares, in order. Every declared leaf of every committed rule is mutated in `tests/unit/test_infra_apply.py` to prove the comparison catches it. `infra audit` calls the same function but reports from its own reads, never from `apply`'s outcomes (§3.4), so its `drift` does not depend on every writer comparing first.
 
 **As implemented in M4.4, and what it does not yet carry.** The workflow above is the target. What landed differs in five places, each recorded here rather than left for a reader to discover from a red cross:
 
@@ -390,9 +384,9 @@ Runs `loremfile infra audit` (unreadable settings are warnings; opens/updates an
 2. a unit test walks `audit.py`'s AST for calls to `put`/`patch`/`post`/`delete` and names the offender;
 3. no step in the workflow invokes `infra apply`.
 
-**`audit` is not `apply --dry-run`, and the difference is the point.** A dry run rehearses the write and reports what it *would* do; because ruleset phases are written with an unconditional full `PUT`, that is `updated` for all five phases plus `tiered-cache` on every run, drift or none. `infra audit` reads each deployed ruleset and compares **rule content**, dropping the fields Cloudflare assigns (`id`, `version`, `last_updated`; `ref` is ours and compared) and comparing only the fields the committed rule declares, **in order** — order is part of a ruleset's meaning. The consequence is stated rather than hidden: a field Cloudflare filled in on its own is invisible here. We own what we declare.
+**`audit` is not `apply --dry-run`.** They share `apply.compare_rules`, so a dry run reports `updated` only for a phase or topology that differs; until 2026-09-15 it reported `updated` for all five phases plus `tiered-cache` on every run. They still answer different questions. A dry run says what `apply` *would write*: a difference is `updated` and exits 0, so it opens no issue, and its client no-ops writes rather than refusing them. `infra audit` reports *state*: drift exits 1, an audit that could not run exits 2, a resource it cannot read is a warning, and its client raises on any write. It reads each deployed ruleset and compares **rule content**, dropping the fields Cloudflare assigns (`id`, `version`, `last_updated`; `ref` is ours and compared) and comparing only the fields the committed rule declares, **in order** — order is part of a ruleset's meaning. The consequence is stated rather than hidden: a field Cloudflare filled in on its own is invisible here. We own what we declare.
 
-**First real run, 2026-09-14 (Monday schedule): the content comparison works.** 33 resources `ok` against the live zone — including all five ruleset phases reporting `N rule(s) match`, the same phases `apply` reports as `updated` on every run — plus `tiered-cache` and `tls_1_3`. One `unreadable`: **`url-normalization`**, whose endpoint T1 cannot read. That is a permission warning, correctly not drift, and it opens no issue; URL normalization was verified behaviourally by M2.4's encoded-path probe. The run then died in `gh_issue` (the incident in §3.3). The could-not-run state is now `ok` **only** on an exit code of 0 or 1: keyed on `== '2'` alone, a job that failed before the audit produced any code would have closed an open could-not-run issue on a run that never looked at the zone.
+**First real run, 2026-09-14 (Monday schedule): the content comparison works.** 33 resources `ok` against the live zone — including all five ruleset phases reporting `N rule(s) match`, the same phases `apply` then reported as `updated` on every run — plus `tiered-cache` and `tls_1_3`. One `unreadable`: **`url-normalization`**, whose endpoint T1 cannot read. That is a permission warning, correctly not drift, and it opens no issue; URL normalization was verified behaviourally by M2.4's encoded-path probe. The run then died in `gh_issue` (the incident in §3.3). The could-not-run state is now `ok` **only** on an exit code of 0 or 1: keyed on `== '2'` alone, a job that failed before the audit produced any code would have closed an open could-not-run issue on a run that never looked at the zone.
 
 A further guard covers the whole set: a unit test asserts `audit.CHECKS` covers exactly the resources `apply.STEPS` writes. An audit that silently skipped one would report a clean zone for a zone it never looked at, which is worse than reporting drift because it looks like good news.
 

@@ -3,14 +3,13 @@
 **`apply` reports the write. `audit` reports the state.** They are not the same function
 with a flag, and the distinction is the whole reason this module exists.
 
-`apply` writes ruleset entry points with an unconditional full `PUT` — deliberately, so
-that a phase converges in one call regardless of what was there — and therefore reports
-`updated` on every run whether or not anything differed. Six resources do this today: the
-five written phases and the tiered-cache topology. An audit that reused those outcomes
-would open an `infra-drift` issue every single week, and **a label that fires every run
-stops meaning anything.** That is the failure already avoided for `fonts`/`speed_brain`
-(`docs/08` §8) and for `expected_drift` (`docs/06` §8); this is the third place it would
-have appeared.
+`apply` reports what it wrote — or, in a dry run, would write — and exits 0 on a
+difference. Until 2026-09-15 it wrote the five ruleset phases and the tiered-cache topology
+unconditionally and said `updated` for all six on every run; an audit that had reused those
+outcomes would have opened an `infra-drift` issue every week, and **a label that fires every
+run stops meaning anything** — the failure avoided for `fonts`/`speed_brain` (`docs/08` §8)
+and for `expected_drift` (`docs/06` §8). `apply` compares before it writes now, with the
+function below, but the audit still reports from its own reads, never from `apply`'s outcomes.
 
 So every check here **reads**, and the client is constructed read-only: a write raises
 `ReadOnlyError` rather than silently converging the drift the audit was sent to report.
@@ -198,7 +197,7 @@ def audit_dns(client: Client, report: AuditReport) -> None:
 
 
 def audit_tiered_cache(client: Client, report: AuditReport) -> None:
-    """Read the topology. `apply` PATCHes it unconditionally and always says `updated`."""
+    """Read the topology and compare it; never borrowed from `apply`'s outcome."""
     path = f"/zones/{client.zone_id}/cache/tiered_cache_smart_topology_enable"
     current = client.get(path)
     if _unreadable(current) or not current.ok:

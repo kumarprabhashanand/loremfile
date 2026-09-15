@@ -6,12 +6,11 @@
 # write, a unit test walks `audit.py`'s AST for write calls, and no step here invokes
 # `infra apply`.
 #
-# WHY IT IS NOT `apply --dry-run`. `apply` writes every ruleset phase with an
-# unconditional full PUT, so a dry run reports `updated` for all five phases plus
-# `tiered-cache` whether or not anything differs. Inheriting that would open an
-# `infra-drift` issue every single week, and a label that fires every run stops meaning
-# anything. `infra audit` reads the deployed rules and compares content, so `drift`
-# means drift.
+# WHY IT IS NOT `apply --dry-run`. A dry run says what `apply` would write: a difference
+# is `updated`, it exits 0 and opens no issue, and its client no-ops writes rather than
+# refusing them. (Until 2026-09-15 it also reported `updated` for all five ruleset phases
+# plus `tiered-cache` on every run.) `infra audit` reads the deployed state, compares
+# content, and exits 1 on drift and 2 when it could not run, so `drift` means drift.
 name: audit
 
 on:

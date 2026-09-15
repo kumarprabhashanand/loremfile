@@ -27,6 +27,7 @@ from loremfile import build as build_module
 from loremfile.catalog import Catalog, CatalogError
 from loremfile.infra import apply as apply_infra
 from loremfile.infra import audit as audit_infra
+from loremfile.infra import changed as changed_infra
 from loremfile.infra import locks
 from loremfile.infra import probe as probe_module
 from loremfile.infra import purge as purge_module
@@ -850,10 +851,9 @@ def usage_command(days: int, daily_days: int, as_json: bool) -> None:
 def infra_audit(as_json: bool) -> None:
     """Report how the zone differs from infra/ (docs/09 §3.4). Reads; never writes.
 
-    Not `apply --dry-run`. A dry run rehearses the write and reports what it *would*
-    do — and because ruleset phases are written with an unconditional PUT, that is
-    `updated` on every run whether or not anything differs. This reads the deployed
-    state and compares content, so `drift` means drift.
+    Not `apply --dry-run`. A dry run says what apply would write and exits 0 on a
+    difference; this reads the deployed state, compares content, and exits 1 on drift
+    and 2 when it could not run — through a client that raises on any write.
     """
     errors: list[str] = []
     summary: dict[str, Any] = {}
@@ -892,6 +892,41 @@ def infra_audit(as_json: bool) -> None:
         as_json=as_json,
     )
     sys.exit(code)
+
+
+@infra.command("changed")
+@click.option(
+    "--exclude-run",
+    type=int,
+    required=True,
+    help="This run's id ($GITHUB_RUN_ID). A run is never its own base.",
+)
+@click.option("--head", default="HEAD", show_default=True, help="The commit being deployed.")
+@click.option(
+    "--repository",
+    envvar="GITHUB_REPOSITORY",
+    default="",
+    help="OWNER/REPO whose deploy.yml runs are read; $GITHUB_REPOSITORY by default.",
+)
+def infra_changed(exclude_run: int, head: str, repository: str) -> None:
+    """Print changed=true|false for deploy.yml's `Apply infra` step (ADR-029).
+
+    The base is the head SHA of the most recent deploy.yml run that was a push to main and
+    succeeded, other than this one — not HEAD~1, which cannot see an infra/ change in a
+    pending deploy the concurrency group replaced. With no such run, infra/ counts as
+    changed.
+
+    Stdout carries the verdict line and nothing else, because the workflow appends it to
+    $GITHUB_OUTPUT; the reasoning goes to stderr, and that is also why there is no --json.
+    When it cannot tell, it prints no verdict and exits 1: never a guess in either direction.
+    """
+    try:
+        decision = changed_infra.decide(repository=repository, exclude_run=exclude_run, head=head)
+    except changed_infra.Undecided as exc:
+        click.echo(f"error: cannot tell whether infra/ changed: {exc}", err=True)
+        sys.exit(1)
+    click.echo(decision.reason, err=True)
+    click.echo(f"changed={'true' if decision.changed else 'false'}")
 
 
 @infra.command("locks")

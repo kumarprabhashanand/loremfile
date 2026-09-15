@@ -71,7 +71,8 @@ concurrency:
 
 permissions:
   contents: read
-  # Reading the `carry-forward-fixtures` artifact from the pull request's CI run.
+  # Reading the `carry-forward-fixtures` artifact from the pull request's CI run, and this
+  # workflow's own run list (`loremfile infra changed`).
   actions: read
 
 jobs:
@@ -203,14 +204,19 @@ jobs:
             ${{ steps.only.outputs.flags }} \
             ${{ env.MODE == 'dry-run' && '--dry-run' || '' }}
 
-      - id: infra_changed
+      # Changed since the zone last converged: the head of the most recent successful push
+      # run of this workflow on main, other than this run (ADR-029). Not HEAD~1 — a pending
+      # deploy replaced in the concurrency group never runs, so an infra/ change in its commit
+      # was invisible from a newer commit that did not touch infra/. No such run: changed. A
+      # lookup that fails fails this step and is never read as either answer, because an
+      # apply nobody needed is not harmless: it converges `security_level` and switches off
+      # Under Attack Mode mid-incident (docs/11 §7.4).
+      - name: Decide whether infra/ changed since the last successful deploy
+        id: infra_changed
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          base="$(git rev-parse HEAD~1 2>/dev/null || true)"
-          if [ -z "$base" ]; then
-            echo "no previous commit to compare against; treating infra/ as unchanged"
-          elif git diff --name-only "$base" "$GITHUB_SHA" -- infra/ | grep -q .; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
+          loremfile infra changed --exclude-run "$GITHUB_RUN_ID" --head "$GITHUB_SHA" >> "$GITHUB_OUTPUT"
 
       # Prints the target zone id and hostname before anything could write; the account
       # holds unrelated production zones (docs/10 §3).
