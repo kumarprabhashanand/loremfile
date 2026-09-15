@@ -118,7 +118,8 @@ def fetch_source(source: str, *, repository: str, dest: Path) -> Path:
             raise RestoreError(f"{source}: not a local .tar file")
         return path
     prefix = release_download_prefix(repository)
-    if not source.startswith(prefix) or not ASSET_PATH.fullmatch(source[len(prefix) :]):
+    rest = source[len(prefix) :]
+    if not source.startswith(prefix) or not ASSET_PATH.fullmatch(rest) or ".." in rest:
         raise RestoreError(
             f"{source}: only release archive parts of {repository} are accepted "
             f"({prefix}<tag>/<name>.tar)"

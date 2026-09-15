@@ -56,6 +56,10 @@ An audit that inherited this would open an `infra-drift` issue every run, and a 
 fires every run stops meaning anything — the failure already avoided for `fonts`/
 `speed_brain` and for `expected_drift`.
 
+### Internal
+
+- M4.4 complete: `release redact`, restore verifies only what it wrote, and `verify-live` checks domain and TLS expiry.
+
 ### Added — `upload --restore`, `upload --from-dir`, and `infra.yml`'s restore modes (M4.4)
 
 - **Sources.** A restore reads release archive parts: `https://github.com/<repository>/releases/download/<tag>/<name>.tar`,

@@ -57,15 +57,9 @@ failure and supports `--json`.
 
 ## Placeholders
 
-`<OWNER>` and the contact mailbox are placeholders until the owner answers Q-03 and Q-07
-(`docs/18-open-questions.md`). They live in `src/loremfile/config.py`, the workflows,
-`CODEOWNERS`, `security.txt` and `llms.txt`. Find them with:
-
-```bash
-grep -rn '<OWNER>' --exclude-dir=.git .
-```
-
-M1 and M3 can be built with the placeholders in place. M2 and M5 cannot.
+Resolved: the owner is `kumarprabhashanand` (Q-03) and the contact mailbox hello@loremfile.dev (Q-07).
+`manifest.json`'s `source` field keeps the old placeholder until the next
+`loremfile manifest update` rewrites it; never edit the manifest by hand.
 The legal texts' controller and contact placeholders are **resolved** (Q-07, Q-21, ADR-028): the
 contact address is hello@loremfile.dev, and the operator's name and address are the `%%IMPRINT_*%%`
 placeholders filled from production secrets at deploy — see rule 5. The DPA acceptance date was

@@ -47,7 +47,7 @@ src/loremfile/
 ## 2. `config.py`
 
 ```python
-OWNER = "<OWNER>"                        # GitHub owner; replace once Q-03 is answered (grep -rn "<OWNER>")
+OWNER = "kumarprabhashanand"               # GitHub owner (Q-03)
 SITE_HOST = "loremfile.dev"
 BASE_URL = f"https://{SITE_HOST}/"
 BUCKET = "loremfile-public"
@@ -285,10 +285,10 @@ WORKDIR /work
 - `tools/requirements.in` lists direct deps with minimum versions where a feature depends on it: `fpdf2>=2.8`, `pypdf>=5`, `Pillow>=11.3` (AVIF support in wheels starts at 11.3.0), `python-docx>=1.2` (comments API), `openpyxl`, `python-pptx`, `pyarrow>=17`, `fastavro`, `py7zr`, `pyzipper`, `zstandard`, `fonttools[woff]`, `brotli`, `mutagen`, `lxml`, `PyYAML`, `tomli-w`, `jsonschema`, `pydantic>=2`, `click`, `Jinja2`, `boto3`, `requests`, `icalendar`, `vobject`, `cryptography`, `markdown-it-py`, `ijson`, `html5lib`, `pytest`, `responses`, `ruff`, `mypy` plus stub packages (`types-requests`, `types-PyYAML`, `boto3-stubs[s3]`), `pip-tools`. `tools/requirements.lock` is produced by `pip-compile --generate-hashes` and pinned exactly. EPUB files are built with the standard library `zipfile` (no EPUB library); DOCX table-of-contents fields are inserted as raw `w:fldSimple` XML because python-docx has no TOC API.
 - Tools that run on the host, not in the image: `actionlint` (workflow lint), `gitleaks` (secret scan), Lighthouse (`npx lighthouse https://loremfile.dev/ --only-categories=accessibility,performance,seo --preset=desktop`) — all informational except gitleaks, which must be clean once in M1.8.
 - `fonts-dejavu-core` is installed **only** for rendering label text inside images/PDF test cards where Pillow's default font is too small; it is a Debian package under the Bitstream Vera licence, which permits embedding and redistribution. The generated font family is not derived from it.
-- The image is built and pushed to `ghcr.io/<OWNER>/loremfile-toolchain` by `toolchain.yml`; workflows reference it by `@sha256:` digest recorded in `tools/TOOLCHAIN_DIGEST`. Changing the digest is a reviewed PR.
+- The image is built and pushed to `ghcr.io/kumarprabhashanand/loremfile-toolchain` by `toolchain.yml`; workflows reference it by `@sha256:` digest recorded in `tools/TOOLCHAIN_DIGEST`. Changing the digest is a reviewed PR.
 - **Verified in M1.2 on 2026-09-07** (linux/amd64, `python:3.12-slim-bookworm@sha256:782412e8…` = python 3.12.14 on Debian 12.15, ffmpeg `7:5.1.9-0+deb12u1`). `ffmpeg -encoders` lists every P1 encoder — `libx264`, `libvpx` (VP8), `libvpx-vp9`, `libopus`, `libvorbis`, `libmp3lame`, `aac` (native), `flac`, `libtheora`, `prores_ks` — and **also `libx265` and `libsvtav1`**, so the P2 HEVC/AV1 fixtures need no rebuild of the image. Two naming details the generators must use: the Theora encoder is **`libtheora`**, not `theora`; ProRes ships as three encoders (`prores`, `prores_aw`, `prores_ks`) and the catalog means **`prores_ks`**. AVIF is produced with `avifenc` from `libavif-bin` 0.11.1 (aom 3.6.0 encoder, dav1d 1.0.0 decoder), not through ffmpeg.
 - **Verified in M1.2 on 2026-09-07**: the image's SQLite is 3.40.1 and `sqlite3 :memory: "PRAGMA compile_options;"` lists `ENABLE_FTS5` (also FTS3/FTS4). `.tar.zst` is produced by piping through the `zstandard` Python package: the image's Python 3.12.14 raises `CompressionError: unknown compression type 'zst'` for `tarfile.open(..., "w:zst")` and has no `compression.zstd` module.
-- `tools/TOOLCHAIN_DIGEST` contains exactly one line: the full image reference `ghcr.io/<OWNER>/loremfile-toolchain@sha256:<64 hex>`; workflows and `docker pull` read it verbatim.
+- `tools/TOOLCHAIN_DIGEST` contains exactly one line: the full image reference `ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:<64 hex>`; workflows and `docker pull` read it verbatim.
 
 ## 10. CLI
 
@@ -318,7 +318,7 @@ All commands exit non-zero on any failure. With `--json` every command prints on
 ## 11. Local development
 
 ```bash
-git clone https://github.com/<OWNER>/loremfile && cd loremfile
+git clone https://github.com/kumarprabhashanand/loremfile && cd loremfile
 docker pull $(cat tools/TOOLCHAIN_DIGEST)
 docker run --rm -it -v "$PWD:/work" $(cat tools/TOOLCHAIN_DIGEST) bash
 pip install -e .

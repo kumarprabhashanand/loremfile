@@ -1,8 +1,7 @@
 """Single source of truth for hosts, limits and the fixed build clock (docs/06 §2).
 
-Every module reads from here; nothing else hard-codes the host. ``OWNER`` and the
-contact mailbox stay placeholders until Q-03 and Q-07 are answered — find them with
-``grep -rn '<OWNER>' --exclude-dir=.git .``
+Every module reads from here; nothing else hard-codes the host. The owner is
+resolved (Q-03) and so is the contact mailbox (Q-07).
 """
 
 from __future__ import annotations
@@ -10,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
-OWNER: Final = "<OWNER>"  # GitHub owner; replace once Q-03 is recorded
+OWNER: Final = "kumarprabhashanand"  # Q-03
 SITE_HOST: Final = "loremfile.dev"
 BASE_URL: Final = f"https://{SITE_HOST}/"
 BUCKET: Final = "loremfile-public"

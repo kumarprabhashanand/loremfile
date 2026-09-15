@@ -72,7 +72,7 @@ permissions: { contents: read }
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
-    container: { image: "ghcr.io/<OWNER>/loremfile-toolchain@sha256:<DIGEST>" }
+    container: { image: "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:<DIGEST>" }
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@<SHA-v4>            # v4
@@ -85,7 +85,7 @@ jobs:
       - run: pytest -q tests/unit
   build-and-validate:
     runs-on: ubuntu-latest
-    container: { image: "ghcr.io/<OWNER>/loremfile-toolchain@sha256:<DIGEST>" }
+    container: { image: "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:<DIGEST>" }
     timeout-minutes: 45
     needs: lint-and-test
     steps:
@@ -156,7 +156,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
-    container: { image: "ghcr.io/<OWNER>/loremfile-toolchain@sha256:<DIGEST>" }
+    container: { image: "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:<DIGEST>" }
     timeout-minutes: 60
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -261,7 +261,7 @@ on:
   workflow_dispatch:
     inputs:
       mode: { type: choice, options: [audit, apply, probe, restore, redact], default: audit }
-      restore_archive_url: { type: string, default: "" }   # restore mode only; must start with https://github.com/<OWNER>/loremfile/releases/download/ — the tool refuses any other origin
+      restore_archive_url: { type: string, default: "" }   # restore mode only; must start with https://github.com/kumarprabhashanand/loremfile/releases/download/ — the tool refuses any other origin
       restore_only: { type: string, default: "" }          # optional comma-separated paths
       redact_path: { type: string, default: "" }           # fixture path, redact mode only
 permissions: { contents: write }                            # write only for redact (re-uploading release assets); other modes do not touch the repository
@@ -269,7 +269,7 @@ jobs:
   run:
     runs-on: ubuntu-latest
     environment: production
-    container: { image: "ghcr.io/<OWNER>/loremfile-toolchain@sha256:<DIGEST>" }
+    container: { image: "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:<DIGEST>" }
     timeout-minutes: 60
     env: { <same env block as deploy.yml> }
     steps:
@@ -291,9 +291,9 @@ jobs:
 This is how M2.3 (`apply`), M2.4 (`probe`), rotation checks (`audit`) and restores run: tokens never leave GitHub. The probe mode uploads `_probe/index.html`, `_probe/ok.txt`, `_probe/page.html`, `_probe/dir/index.html` and `_probe/missing-404-check` is a GET of a non-existent key; it asserts `/`, `/_probe/`, headers (files, markup, page), CORS preflight, `www` redirect, 404 cache TTL (`cf-cache-status` and `age` on a repeated 404), and the rate limit (400 requests in 10 s → at least one 429, then 200 after 10 s); then deletes `_probe/*`. Deletion is limited to that prefix in code.
 
 **As implemented (restore, M4.4):**
-- **Restore is two modes.** `restore-dry-run` downloads, verifies and prints the plan, and writes nothing. `restore` writes, purges what it wrote, and then runs `verify-live --mode full`.
+- **Restore is two modes.** `restore-dry-run` downloads, verifies and prints the plan, and writes nothing. `restore` writes, purges what it wrote, and verifies only those paths (`11` §7.6 applies lock rules and the site later).
 - **The inputs** `restore_archive_url` and `restore_only` are space-separated. They reach the shell only through `env`, and are checked for shape before anything runs.
-- **`redact` is not offered yet.** It arrives with `loremfile release redact`.
+- **Redact is two modes:** `redact-dry-run` names the releases that would change and reads the immutable-releases setting; `redact` rewrites them (§10, ADR-031).
 
 ### 3.3 `health.yml` — daily
 
@@ -307,7 +307,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     environment: production                          # for the read-only analytics token
-    container: { image: "ghcr.io/<OWNER>/loremfile-toolchain@sha256:<DIGEST>" }
+    container: { image: "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:<DIGEST>" }
     timeout-minutes: 30
     env: { CLOUDFLARE_ANALYTICS_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}, CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}, CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }} }
     steps:
@@ -345,7 +345,7 @@ jobs:
         run: '[ "${{ steps.verify.outputs.failed }}" != "true" ] && [ "${{ steps.cost.outputs.state }}" != "failing" ] && [ "${{ steps.rotation.outputs.state }}" != "failing" ]'
 ```
 
-`loremfile usage` queries the GraphQL Analytics API (`r2OperationsAdaptiveGroups` for Class A/B operations month-to-date on the bucket; zone HTTP request totals and cache-status breakdown for the last 7 days) with the read-only T4 token. It **also** returns a `daily` array — per-day Class A, Class B and `GetObject`/`userError` counts for the last `--daily-days` days, default 32, which is the API's own maximum window (`19` §3.2). `ops_log` writes **one row per day** from that array and replaces any date already present, so the weekly commit backfills the week and overlapping windows converge instead of double-counting. The month-to-date counters answer "are we near the threshold"; the daily series answers "what is the rate", which is the question the pre-launch baseline needs and which a cumulative counter cannot express. The series lives in the repository because Cloudflare keeps only 90 days of it. `verify-live` treats a 429 from our own rate limit as "retry after 10 s", not as a failure. The ops-log commit goes to the dedicated **`ops-log` branch**, which carries no ruleset, so `main` keeps its pull-request requirement and no bypass is granted to any workflow (rulesets bypass by actor, not by path — a bypass for the Actions app would have applied to every workflow). `GITHUB_TOKEN` with `contents: write` can push only to unprotected branches. GitHub's 60-day rule speaks of "repository activity"; a push to any branch is repository activity. Should the rule turn out to count only default-branch commits (**[VERIFY]** by observing the workflow still runs after the first quiet 60 days), the weekly session's merged PRs keep `main` active anyway and the runbook's re-enable step covers the rest. The ops-log is read at `https://github.com/<OWNER>/loremfile/blob/ops-log/ops-log.md`.
+`loremfile usage` queries the GraphQL Analytics API (`r2OperationsAdaptiveGroups` for Class A/B operations month-to-date on the bucket; zone HTTP request totals and cache-status breakdown for the last 7 days) with the read-only T4 token. It **also** returns a `daily` array — per-day Class A, Class B and `GetObject`/`userError` counts for the last `--daily-days` days, default 32, which is the API's own maximum window (`19` §3.2). `ops_log` writes **one row per day** from that array and replaces any date already present, so the weekly commit backfills the week and overlapping windows converge instead of double-counting. The month-to-date counters answer "are we near the threshold"; the daily series answers "what is the rate", which is the question the pre-launch baseline needs and which a cumulative counter cannot express. The series lives in the repository because Cloudflare keeps only 90 days of it. `verify-live` treats a 429 from our own rate limit as "retry after 10 s", not as a failure. The ops-log commit goes to the dedicated **`ops-log` branch**, which carries no ruleset, so `main` keeps its pull-request requirement and no bypass is granted to any workflow (rulesets bypass by actor, not by path — a bypass for the Actions app would have applied to every workflow). `GITHUB_TOKEN` with `contents: write` can push only to unprotected branches. GitHub's 60-day rule speaks of "repository activity"; a push to any branch is repository activity. Should the rule turn out to count only default-branch commits (**[VERIFY]** by observing the workflow still runs after the first quiet 60 days), the weekly session's merged PRs keep `main` active anyway and the runbook's re-enable step covers the rest. The ops-log is read at `https://github.com/kumarprabhashanand/loremfile/blob/ops-log/ops-log.md`.
 
 **Implemented M4.4, and what it does not yet carry.** An intentionally absent step with no owner becomes a permanently absent one, so each is named with the milestone that adds it, the same way §3.2 does:
 
@@ -436,13 +436,13 @@ A further guard covers the whole set: a unit test asserts `audit.CHECKS` covers 
 - **Fix.** Every containerised job now trusts the checkout explicitly with `git config --global --add safe.directory "$GITHUB_WORKSPACE"`, before its first step that runs git. That covers both `release.yml` jobs, `deploy.yml`, and `ci.yml`'s lint job (`tools/check_lock.sh`).
   - `tests/unit/test_workflow_git.py` pins the rule for every containerised step that runs git — directly, or through `infra changed`, `release archive`, `build --new`, `manifest check`/`update`/`adopt` or `check_lock.sh`.
   - It also checks that command list against the code in `src/` and `tools/` that actually runs git.
-- **Next:** re-dispatch the rehearsal. Expect a snapshot of `v1.0.0` with 161 members and 414,208,239 bytes in one part, and the notes missing.
+- **Passed:** run `34985088713` (`71d32d657f`) — snapshot `v1.0.0`, 161 members, 414,208,239 bytes, one part, notes missing.
 
 ### 3.6 `toolchain.yml` — on changes under `tools/`
 
 Triggered by a push touching `tools/Dockerfile`, `tools/apt-versions.txt`, `tools/requirements.lock`, `tools/smoke.sh` or the workflow itself, and by `workflow_dispatch`. Permissions are per job and least-privilege: the `build` job takes `contents: read, packages: write`; only `propose-digest-bump` takes `contents: write, pull-requests: write`.
 
-`build` builds `tools/Dockerfile`, pushes to `ghcr.io/<OWNER>/loremfile-toolchain:<git-sha>` (**no `latest` tag** — workflows reference the image by digest and a moving tag would be a mutable surface), then smoke-tests **the pushed digest**, not a local build:
+`build` builds `tools/Dockerfile`, pushes to `ghcr.io/kumarprabhashanand/loremfile-toolchain:<git-sha>` (**no `latest` tag** — workflows reference the image by digest and a moving tag would be a mutable surface), then smoke-tests **the pushed digest**, not a local build:
 
 1. `tools/smoke.sh` inside the image — asserts every apt version matches `tools/apt-versions.txt`, all twelve ffmpeg encoders are present, SQLite answers an FTS5 `MATCH`, 31 Python modules import, `zstandard` round-trips, and the four determinism environment variables are set. It exits non-zero on the first failure.
 2. `pip install -e .` with the repository mounted, then `import loremfile` — the image deliberately does **not** contain the package (the repository is mounted at run time), so this proves the image can still host it.
@@ -489,7 +489,7 @@ Python updates change `requirements.in`; the PR must also regenerate `requiremen
 - **Fixtures** (`--fixtures`): for each manifest entry with `status: active`, `HEAD` the key. Missing → the bytes must exist in `build/fixtures/` (produced by `build --missing-in-bucket`) or the job fails; upload with `ContentType`, `CacheControl` (fixture value), `ContentDisposition: inline; filename="<last path segment>"`, `Metadata: {sha256, catalog-version}`; multipart (16 MiB parts, 8 threads) for objects > 16 MiB. Present → compare the stored `sha256` metadata with the manifest; equal → skip; different → **fail the job** (immutability).
 - **Removals** (`--apply-removals`): for each manifest entry with `status: removed` whose key still exists, `DeleteObject` and purge the URL. This is the only delete in the tool besides `probe --down` (prefix `_probe/`); the code refuses any other key.
 - **Site** (`--site`): upload every file under `build/site/` with the content-type table (`html`→`text/html; charset=utf-8`, extensionless→`text/html; charset=utf-8`, `json`→`application/json`, `txt`→`text/plain; charset=utf-8`, `xml`→`application/xml`, `css`→`text/css; charset=utf-8`, `js`→`text/javascript; charset=utf-8`, `svg`→`image/svg+xml`, `png`→`image/png`, `schema/*.json`→`application/schema+json`) and cache-control per `02` §4. Skip unchanged (compare sha256 metadata) unless `--force-site`.
-- **Restore** (`--restore <archive> [--only …]`, `--from-dir <dir>`): `--restore` accepts only URLs under `https://github.com/<OWNER>/loremfile/releases/download/` (or a local file); read fixtures from the release archive or directory, verify each against the manifest, upload where the live object is missing; where a live object exists with a different hash the overwrite is attempted and, under a bucket lock, refused by R2 — the tool reports each refusal explicitly and the owner must lift that prefix's lock rule first (same ceremony as a takedown, `11` §7.8). A hash-differing object under an intact lock should never exist.
+- **Restore** (`--restore <archive> [--only …]`, `--from-dir <dir>`): `--restore` accepts only URLs under `https://github.com/kumarprabhashanand/loremfile/releases/download/` (or a local file); read fixtures from the release archive or directory, verify each against the manifest, upload where the live object is missing; where a live object exists with a different hash the overwrite is attempted and, under a bucket lock, refused by R2 — the tool reports each refusal explicitly and the owner must lift that prefix's lock rule first (same ceremony as a takedown, `11` §7.8). A hash-differing object under an intact lock should never exist.
 
   **As implemented (M4.4, 2026-09-15).**
   - **Sources.**
@@ -534,8 +534,8 @@ Python updates change `requirements.in`; the PR must also regenerate `requiremen
 
 ## 9. AGENTS.md (checked into the repo root; instructions for coding agents)
 
-Contains: the CLI commands, the immutability rule in bold, "never edit manifest.json by hand — run `loremfile manifest update` in the container and commit the result", "always run inside the toolchain image", "never commit secrets or generated binaries", "placeholders `<OWNER>` live in `config.py` and workflows; replace with `grep -rn '<OWNER>'` once Q-03 is answered", the PR checklist, and a pointer to `docs/15-implementation-plan.md` for task order.
+Contains: the CLI commands, the immutability rule in bold, "never edit manifest.json by hand — run `loremfile manifest update` in the container and commit the result", "always run inside the toolchain image", "never commit secrets or generated binaries", the owner (`kumarprabhashanand`, Q-03), the PR checklist, and a pointer to `docs/15-implementation-plan.md` for task order.
 
 ## 10. Takedown support in the release flow (`loremfile release redact`)
 
-A removed fixture must also disappear from public GitHub Release assets. `loremfile release redact --path <path>` downloads every release archive that contains the path (from `parts.txt`/archive indexes), rebuilds the archive without it, re-uploads with `gh release upload --clobber`, updates `parts.txt` and the release notes with a "redacted <path> on <date>" line, and keeps the tombstone in `sha256sums.txt`. Runs from `infra.yml` (mode `redact`, input `redact_path`) so it needs no local credentials beyond `GITHUB_TOKEN` (`contents: write`).
+A removed fixture must also disappear from public GitHub Release assets. `loremfile release redact --path <path>` downloads every release archive that contains the path (from `parts.txt`/archive indexes), rebuilds the archive without it, re-uploads with `gh release upload --clobber`, updates `parts.txt` and the release notes with a "redacted <path> on <date>" line, and keeps the tombstone in `sha256sums.txt`. Runs from `infra.yml` (mode `redact`, input `redact_path`) so it needs no local credentials beyond `GITHUB_TOKEN` (`contents: write`). **As implemented:** affected releases are found from their part names and each tag's manifest in git; parts are rebuilt from the released bytes, re-verified, and replaced; `sha256sums.txt` and `manifest.json` stay as released; immutable releases are refused (ADR-031).

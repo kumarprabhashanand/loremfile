@@ -6,7 +6,7 @@ Each question lists the default assumed by this documentation. If the owner says
 |---|---|---|---|
 | Q-01 | Confirm the domain name: `loremfile.dev` (available; two small GitHub CLIs share the word "loremfile", no hosted service, no trademark found) vs `fixtures.dev` (available; sports-schedule search noise) | `loremfile.dev` | Brand, SEO, all docs |
 | Q-02 | Buy defensive aliases (`fixtures.dev`, `loremfile.com`, `loremfile.org` were available on 2026-09-06)? | No (≈ USD 9–13/year each if yes; redirect to apex) | Cost vs copycat risk |
-| Q-03 | GitHub location: personal account `<OWNER>/loremfile` or a new org `loremfile/loremfile`? | Personal account | Org adds admin overhead but eases hand-over; can be transferred later |
+| Q-03 | GitHub location: personal account `kumarprabhashanand/loremfile` or a new org `loremfile/loremfile`? | **Resolved 2026-09-15:** personal account, `kumarprabhashanand/loremfile` | Org adds admin overhead but eases hand-over; can be transferred later |
 | Q-04 | R2 bucket location hint: `auto`, or pin to a region near most expected users (`ENAM`/`WEUR`/`APAC`)? | `auto` | Cache misses' latency only; immaterial with tiered cache |
 | Q-05 | Off-account cold backup to AWS S3 (Glacier Deep Archive ≈ USD 0.001/GB-month; ≈ USD 0.01/month) in addition to GitHub Releases? | No (GitHub Releases suffice); yes if the owner wants to use the AWS account for something | Resilience vs another account to keep alive |
 | Q-06 | Registrar: Cloudflare Registrar (default) or a separate registrar (e.g. Porkbun, ≈ USD 13/year) to split domain control from CDN/DNS? A separate registrar turns "recover the domain from a lost Cloudflare account" from a support process into a DNS change | Cloudflare Registrar, with the honest RTO in `11` §7.6 | Blast radius vs simplicity (ADR-020, RISK-19); the reviewer recommends splitting |
@@ -70,7 +70,7 @@ A fresh-context review by a "junior implementer" reader produced 28 questions. E
 | 20 | Which fixture per format for smoke/daily headers? | Smallest P1 fixture by bytes, ties by path | `09` §3.3, `12` §4 |
 | 21 | How is REQ-27 tested? | `health.yml` `inject_failure` input / `verify-live --inject-failure` | `01`, `06` §10, `12` §5 |
 | 22 | Where do Lighthouse, actionlint, gitleaks run? | On the host; informational except gitleaks | `06` §9 |
-| 23 | Real `<OWNER>` and mailbox? | `<OWNER>` stays a placeholder until Q-03; the contact address is resolved (Q-07: hello@loremfile.dev) | `15` header |
+| 23 | Real owner and mailbox? | Resolved: `kumarprabhashanand` (Q-03) and hello@loremfile.dev (Q-07) | `15` header |
 | 24 | When is M0 done? | Q-14; M2/M5 wait, M1/M3 do not | `18` |
 | 25 | `control-characters.txt` edge case? | Yes, `edge_case: true` | `05` §3.6 |
 | 26 | `float16` in the Arrow types fixture? | No; the type list is now explicit | `05` §3.7 |

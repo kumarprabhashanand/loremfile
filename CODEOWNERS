@@ -2,8 +2,8 @@
 # `main` requires a pull request but 0 approvals, so nothing here blocks a merge
 # (docs/09 §1, docs/02 §6). It exists to say which files the owner must look at.
 
-/LICENSE                        @<OWNER>
-/LICENSES/                      @<OWNER>
-/docs/13-legal-and-policy.md    @<OWNER>
-/infra/                         @<OWNER>
-/.github/workflows/             @<OWNER>
+/LICENSE                        @kumarprabhashanand
+/LICENSES/                      @kumarprabhashanand
+/docs/13-legal-and-policy.md    @kumarprabhashanand
+/infra/                         @kumarprabhashanand
+/.github/workflows/             @kumarprabhashanand

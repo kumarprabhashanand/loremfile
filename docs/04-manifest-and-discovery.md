@@ -15,8 +15,8 @@ Location: repository root (committed) and `https://loremfile.dev/manifest.json` 
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
-  "source": "https://github.com/<OWNER>/loremfile",
-  "toolchain_image": "ghcr.io/<OWNER>/loremfile-toolchain@sha256:<digest>",
+  "source": "https://github.com/kumarprabhashanand/loremfile",
+  "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:<digest>",
   "count": 416,
   "total_bytes": 1060000000,
   "formats": ["avif", "bin", "csv", "..."],
@@ -163,7 +163,7 @@ Follow the llmstxt.org layout (H1 title, blockquote summary, H2 sections with li
 
 ## Rules
 - Query strings are ignored. Stay under 30 requests/second per IP.
-- License: CC0 1.0 for all fixtures. Source: https://github.com/<OWNER>/loremfile
+- License: CC0 1.0 for all fixtures. Source: https://github.com/kumarprabhashanand/loremfile
 ```
 
 `llms-full.txt` (≈ 60–100 KB): the same header, then for each format a table of every fixture: path, bytes, one-line description, key props. Regenerated from the manifest on every deploy.
@@ -205,7 +205,7 @@ Lists the home page, every format page, docs pages, legal pages **except `/legal
 ## 8. `.well-known/security.txt` (RFC 9116)
 
 ```
-Contact: https://github.com/<OWNER>/loremfile/security/advisories/new
+Contact: https://github.com/kumarprabhashanand/loremfile/security/advisories/new
 Contact: mailto:security@loremfile.dev
 Expires: <one year from deploy, RFC 3339>
 Preferred-Languages: en

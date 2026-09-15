@@ -35,7 +35,7 @@
 
 - **MUST / SHOULD / MAY** are used as in RFC 2119.
 - `loremfile.dev` is the production host. It is configurable (see `config.py` in `06-generation-pipeline.md`); every document uses the literal for readability.
-- Placeholders in angle brackets are values you fill in: `<OWNER>` (GitHub user or org), `<ACCOUNT_ID>` (Cloudflare account ID), `<ZONE_ID>` (Cloudflare zone ID), `<BUCKET>` (R2 bucket name, default `loremfile-public`).
+- Placeholders in angle brackets are values you fill in: `<ACCOUNT_ID>` (Cloudflare account ID), `<ZONE_ID>` (Cloudflare zone ID), `<BUCKET>` (R2 bucket name, default `loremfile-public`).
 - Identifiers: `REQ-nn` requirement, `ADR-nnn` decision, `RISK-nn` risk, `Mn.n` milestone task, `Q-nn` open question. Cross-references use these IDs.
 - All facts about third-party services (Cloudflare plan limits, prices, API shapes) were verified against the vendors' documentation on 2026-09-06/07. Where a fact could not be verified it is marked **[VERIFY]** and the implementation plan includes a task to verify it before relying on it.
 - Byte sizes: `kb`, `mb`, `gb` are decimal (1 MB = 1,000,000 bytes). `kib`, `mib`, `gib` are binary (1 MiB = 1,048,576 bytes). This convention appears in fixture names and is enforced by the validators.
@@ -43,7 +43,7 @@
 ## Repository layout this documentation assumes
 
 ```
-loremfile/                      # public GitHub repository <OWNER>/loremfile
+loremfile/                      # public GitHub repository kumarprabhashanand/loremfile
 ├── README.md                   # short public readme (not this file)
 ├── AGENTS.md                   # instructions for coding agents working in the repo
 ├── LICENSE                     # MIT, covers code
@@ -68,4 +68,4 @@ loremfile/                      # public GitHub repository <OWNER>/loremfile
 
 ## Placeholders you must fill in
 
-`<OWNER>` (GitHub owner), the contact mailbox, `<ACCOUNT_ID>` and `<ZONE_ID>` appear in `config.py`, the workflows, `security.txt`, `llms.txt` and the legal pages. M1 and M3 can be built with the placeholders in place; replace them with `grep -rn '<OWNER>'` before M2 (infrastructure) and M5 (first deploy). The legal texts' controller and contact placeholders are resolved (Q-07, Q-21, ADR-028): the contact address is hello@loremfile.dev, and the operator's name and address appear in the repository only as `%%IMPRINT_*%%` placeholders, filled from production environment secrets at deploy (`13-legal-and-policy.md` §3b) — never committed. `<OWNER>` still waits on Q-03; the DPA acceptance date was resolved by M0.6.
+`<ACCOUNT_ID>` and `<ZONE_ID>` appear in `config.py`, the workflows, `security.txt`, `llms.txt` and the legal pages. M1 and M3 can be built with the placeholders in place; replace them before M2 (infrastructure) and M5 (first deploy). The legal texts' controller and contact placeholders are resolved (Q-07, Q-21, ADR-028): the contact address is hello@loremfile.dev, and the operator's name and address appear in the repository only as `%%IMPRINT_*%%` placeholders, filled from production environment secrets at deploy (`13-legal-and-policy.md` §3b) — never committed. The owner is `kumarprabhashanand` (Q-03); the DPA acceptance date was resolved by M0.6.

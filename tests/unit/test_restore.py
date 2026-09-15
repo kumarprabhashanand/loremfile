@@ -13,8 +13,10 @@ import hashlib
 import io
 import json
 import os
+import re
 import shutil
 import subprocess
+import sys
 import tarfile
 import urllib.error
 from pathlib import Path
@@ -111,6 +113,7 @@ def test_a_release_asset_of_this_repository_is_downloaded(
         "https://github.com/owner/loremfile/releases/download/v1.0.0/../../x.tar",
         "https://github.com/owner/loremfile/releases/download/v1.0.0/f.tar?x=1",
         "https://github.com/owner/loremfile/releases/download/f.part1.tar",
+        "https://github.com/owner/loremfile/releases/download/../f.part1.tar",
     ],
 )
 def test_anything_else_from_the_network_is_refused_before_it_is_requested(
@@ -343,6 +346,8 @@ def test_a_refused_replacement_fails_and_says_how_to_lift_the_lock(
     assert "png/b.png" in error
     assert "docs/11 §7.8" in error
     assert world["purged"] == [[f"https://{config.SITE_HOST}/pdf/a.pdf"]]
+    statuses = {item["path"]: item["status"] for item in report["items"]}
+    assert statuses == {"pdf/a.pdf": "written", "png/b.png": "refused"}
 
 
 def test_restore_is_its_own_mode() -> None:
@@ -362,11 +367,10 @@ def restore_steps() -> list[dict[str, Any]]:
     return list(infra()["jobs"]["restore"]["steps"])
 
 
-def test_the_restore_modes_are_offered_and_redact_is_not_yet() -> None:
+def test_the_restore_and_redact_modes_are_offered() -> None:
     triggers = infra().get("on", infra().get(True))
     options = triggers["workflow_dispatch"]["inputs"]["mode"]["options"]
-    assert {"restore-dry-run", "restore"} <= set(options)
-    assert "redact" not in options, "offered only when `release redact` exists"
+    assert {"restore-dry-run", "restore", "redact-dry-run", "redact"} <= set(options)
 
 
 def test_the_inputs_reach_the_shell_only_through_the_environment() -> None:
@@ -382,19 +386,40 @@ def test_the_inputs_reach_the_shell_only_through_the_environment() -> None:
     }
 
 
-def test_only_a_real_restore_writes_and_then_verifies_everything() -> None:
+def test_only_a_real_restore_writes_and_then_verifies_what_it_wrote() -> None:
     by_name = {step.get("name", ""): step for step in restore_steps()}
     dry = by_name["Plan the restore (downloads and verifies; writes nothing)"]
     real = by_name["Restore"]
-    verify = by_name["Verify every published fixture"]
+    verify = by_name["Verify the restored fixtures"]
     assert dry["if"] == "inputs.mode == 'restore-dry-run'"
     assert dry["run"].rstrip().endswith("--dry-run")
     assert real["if"] == "inputs.mode == 'restore'"
     assert "--dry-run" not in real["run"]
-    assert verify["if"] == "inputs.mode == 'restore'"
-    assert "verify-live --mode full" in verify["run"]
+    assert "--json > restore.json" in real["run"]
+    assert "inputs.mode == 'restore'" in verify["if"]
+    assert "verify-live --mode full $paths" in verify["run"], "hash what was written, nothing more"
     names = list(by_name)
-    assert names.index("Restore") < names.index("Verify every published fixture")
+    assert names.index("Restore") < names.index("Verify the restored fixtures")
+
+
+def test_the_verify_step_selects_exactly_the_written_paths(tmp_path: Path) -> None:
+    verify = next(s for s in restore_steps() if s.get("name") == "Verify the restored fixtures")
+    match = re.search(r"python -c '(.+?)'\)", verify["run"])
+    assert match is not None
+    items = [
+        {"path": "pdf/a.pdf", "status": "written"},
+        {"path": "png/b.png", "status": "refused"},
+        {"path": "csv/c.csv", "status": "skip"},
+    ]
+    (tmp_path / "restore.json").write_text(json.dumps({"items": items}))
+    done = subprocess.run(  # noqa: S603 - the workflow's own one-liner
+        [sys.executable, "-c", match.group(1)],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert done.stdout.strip() == "--only pdf/a.pdf"
 
 
 def test_the_restore_job_uses_production_inside_the_zone_group() -> None:

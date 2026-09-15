@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         For a **security** issue, do not open an issue — use private reporting
-        (see [`SECURITY.md`](https://github.com/<OWNER>/loremfile/blob/main/SECURITY.md)).
+        (see [`SECURITY.md`](https://github.com/kumarprabhashanand/loremfile/blob/main/SECURITY.md)).
   - type: input
     id: url
     attributes:

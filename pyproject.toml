@@ -26,8 +26,8 @@ loremfile = "loremfile.cli:main"
 
 [project.urls]
 Homepage = "https://loremfile.dev"
-Source = "https://github.com/<OWNER>/loremfile"
-Issues = "https://github.com/<OWNER>/loremfile/issues"
+Source = "https://github.com/kumarprabhashanand/loremfile"
+Issues = "https://github.com/kumarprabhashanand/loremfile/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

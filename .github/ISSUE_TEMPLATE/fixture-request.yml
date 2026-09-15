@@ -6,10 +6,10 @@ body:
   - type: markdown
     attributes:
       value: |
-        Before opening: check [`docs/05-fixture-catalog.md`](https://github.com/<OWNER>/loremfile/blob/main/docs/05-fixture-catalog.md)
+        Before opening: check [`docs/05-fixture-catalog.md`](https://github.com/kumarprabhashanand/loremfile/blob/main/docs/05-fixture-catalog.md)
         and [`manifest.json`](https://loremfile.dev/manifest.json) — it may already exist, or
         be scheduled. Fixtures are boring by design; see the content policy in
-        [`docs/13-legal-and-policy.md` §5](https://github.com/<OWNER>/loremfile/blob/main/docs/13-legal-and-policy.md).
+        [`docs/13-legal-and-policy.md` §5](https://github.com/kumarprabhashanand/loremfile/blob/main/docs/13-legal-and-policy.md).
   - type: input
     id: format
     attributes:
