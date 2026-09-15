@@ -15,7 +15,9 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 import sys
+import tempfile
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -32,6 +34,7 @@ from loremfile.infra import locks
 from loremfile.infra import probe as probe_module
 from loremfile.infra import purge as purge_module
 from loremfile.infra import r2 as r2_module
+from loremfile.infra import restore as restore_module
 from loremfile.infra import tokens as tokens_module
 from loremfile.infra import upload as upload_module
 from loremfile.infra import usage as usage_module
@@ -469,6 +472,98 @@ def infra_apply(dry_run: bool, as_json: bool) -> None:
     )
 
 
+def _restore(
+    sources: tuple[str, ...],
+    from_dir: Path | None,
+    only: tuple[str, ...],
+    *,
+    dry_run: bool,
+    as_json: bool,
+) -> int:
+    """`upload --restore` and `upload --from-dir` (docs/09 §5, docs/11 §7.6)."""
+    errors: list[str] = []
+    summary: dict[str, Any] = {}
+    items: list[Item] = []
+    try:
+        manifest = Manifest.load()
+        _restrict(list(manifest.active), only)  # refuses an --only path the manifest lacks
+        wanted = set(only) or None
+        repository = os.environ.get("GITHUB_REPOSITORY") or f"{config.OWNER}/loremfile"
+        with tempfile.TemporaryDirectory(prefix="loremfile-restore-") as scratch:
+            work = Path(scratch)
+            if from_dir is not None:
+                available = restore_module.files_from_dir(from_dir, manifest.entries, only=wanted)
+            else:
+                archives = [
+                    restore_module.fetch_source(source, repository=repository, dest=work / "in")
+                    for source in sources
+                ]
+                available = restore_module.extract_verified(
+                    archives, manifest.entries, work / "members", only=wanted
+                )
+            s3 = r2_module.client()
+            bucket = r2_module.bucket_name()
+            live = r2_module.live_hashes(s3, bucket, sorted(available.files))
+            plan = restore_module.plan_restore(available, live, manifest.by_path, only=wanted)
+            click.echo(plan.render(), err=True)
+            written: list[str] = []
+            refused: list[str] = []
+            if plan.ok and not dry_run:
+                for step in plan.steps:
+                    if step.action is restore_module.Action.SKIP:
+                        continue
+                    entry = manifest.by_path[step.key]
+                    refusal = r2_module.try_put_fixture(
+                        s3,
+                        bucket,
+                        step.key,
+                        Path(step.source),
+                        mime=str(entry["mime"]),
+                        sha256=str(entry["sha256"]),
+                    )
+                    if refusal is None:
+                        written.append(step.key)
+                    else:
+                        refused.append(
+                            f"{step.key}: R2 refused the write ({refusal}). Under a bucket lock "
+                            "that is expected: lift the prefix's lock rule first (docs/11 §7.8), "
+                            "then restore again."
+                        )
+                if written:
+                    purged = purge_module.purge_restored_urls(
+                        _zone_client(), [f"https://{config.SITE_HOST}/{key}" for key in written]
+                    )
+                    errors += purged.errors
+        summary = {
+            "mode": "from-dir" if from_dir is not None else "restore",
+            **{action.value: len(plan.by_action(action)) for action in restore_module.Action},
+            "written": len(written),
+            "refused": len(refused),
+            "notes": len(plan.notes),
+            "dry_run": dry_run,
+            "only": len(only),
+        }
+        items = [
+            {"path": step.key, "status": step.action.value, "detail": step.reason}
+            for step in plan.steps
+        ]
+        errors = [*plan.blockers, *refused, *errors]
+    except ZoneScopeError as exc:
+        errors.append(f"ZONE SCOPE REFUSED: {exc}")
+    except (
+        restore_module.RestoreError,
+        r2_module.R2Error,
+        CloudflareError,
+        ManifestError,
+        OSError,
+        ValueError,
+    ) as exc:
+        errors.append(str(exc))
+    return _emit(
+        "upload", ok=not errors, summary=summary, items=items, errors=errors, as_json=as_json
+    )
+
+
 @main.command("upload")
 @click.option("--fixtures", "fixtures", is_flag=True, help="Publish missing manifest entries.")
 @click.option(
@@ -491,6 +586,20 @@ def infra_apply(dry_run: bool, as_json: bool) -> None:
     metavar="PATH",
     help="Publish only these manifest paths (staged first publish).",
 )
+@click.option(
+    "--restore",
+    "restore_sources",
+    multiple=True,
+    metavar="SOURCE",
+    help="Restore from a release archive part: a release asset URL of this repository or a "
+    "local .tar. Repeatable.",
+)
+@click.option(
+    "--from-dir",
+    "from_dir",
+    type=click.Path(path_type=Path, file_okay=False),
+    help="Restore from a directory holding fixtures at their manifest paths.",
+)
 @click.option("--dry-run", "dry_run", is_flag=True, help="Print the plan; write nothing.")
 @click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
 def upload_command(
@@ -499,16 +608,28 @@ def upload_command(
     site: bool,
     carry_forward: Path | None,
     only: tuple[str, ...],
+    restore_sources: tuple[str, ...],
+    from_dir: Path | None,
     dry_run: bool,
     as_json: bool,
 ) -> None:
-    """Publish to R2 (docs/09 §5). Needs T2; never overwrites a fixture."""
+    """Publish to R2 (docs/09 §5). Needs T2.
+
+    A deploy never overwrites a fixture. `--restore` and `--from-dir` put fixtures back
+    from verified bytes, and attempt to replace a live object the manifest disowns.
+    """
     errors: list[str] = []
     summary: dict[str, Any] = {}
     items: list[Item] = []
     chosen = [
         name
-        for name, on in (("--fixtures", fixtures), ("--apply-removals", removals), ("--site", site))
+        for name, on in (
+            ("--fixtures", fixtures),
+            ("--apply-removals", removals),
+            ("--site", site),
+            ("--restore", bool(restore_sources)),
+            ("--from-dir", from_dir is not None),
+        )
         if on
     ]
     if len(chosen) != 1:
@@ -518,10 +639,15 @@ def upload_command(
                 ok=False,
                 summary={},
                 items=[],
-                errors=["choose exactly one of --fixtures, --apply-removals, --site"],
+                errors=[
+                    "choose exactly one of --fixtures, --apply-removals, --site, "
+                    "--restore, --from-dir"
+                ],
                 as_json=as_json,
             )
         )
+    if restore_sources or from_dir is not None:
+        sys.exit(_restore(restore_sources, from_dir, only, dry_run=dry_run, as_json=as_json))
     try:
         if site:
             raise UploadUnavailable(

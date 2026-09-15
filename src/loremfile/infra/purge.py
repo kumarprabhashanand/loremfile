@@ -100,6 +100,16 @@ def purge(client: Client, prefixes: list[str], files: list[str]) -> PurgeReport:
     return report
 
 
+def purge_restored_urls(client: Client, urls: list[str]) -> PurgeReport:
+    """The restore path (`docs/09` §5) — with takedown, the only purges that name fixtures.
+
+    A restored object can be shadowed at the edge: by the 404 cached while it was missing,
+    or by the wrong bytes it replaced. Named explicitly, like `purge_removed_url`, so that
+    no routine deploy reaches it.
+    """
+    return purge(client, [], urls)
+
+
 def purge_removed_url(client: Client, url: str) -> PurgeReport:
     """The takedown path (`docs/11` §7.8) — the only purge that may name a fixture.
 

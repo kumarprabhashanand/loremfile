@@ -2,9 +2,9 @@
 # (docs/09 §3.2b, ADR-022). The tokens live in the `production` environment and are only
 # ever read by a job running here.
 #
-# M2.2 adds `apply-dry-run` and `apply`. The probe, restore and redact modes arrive with
-# M2.4 and M4.4; a mode that does not exist yet is not offered, so the workflow can never
-# look like it checked something it did not.
+# M2.2 adds `apply-dry-run` and `apply`, M2.4 `probe`, and M4.4 `restore-dry-run` and
+# `restore`. `redact` arrives with `loremfile release redact`; a mode that does not exist
+# yet is not offered, so the workflow can never look like it did something it did not.
 #
 # `apply-dry-run` exists as its own mode rather than a flag on `apply` because the point
 # of it is to be run first and read: it resolves and prints the target zone id and
@@ -25,6 +25,20 @@ on:
           - apply-dry-run
           - apply
           - probe
+          - restore-dry-run
+          - restore
+      restore_archive_url:
+        description: >-
+          restore modes only: space-separated release archive parts of this repository,
+          https://github.com/OWNER/REPO/releases/download/TAG/NAME.tar
+        type: string
+        default: ""
+      restore_only:
+        description: >-
+          restore modes only: space-separated fixture paths; empty restores every fixture
+          the archives hold
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -172,3 +186,76 @@ jobs:
       - name: Clean up
         if: always()
         run: loremfile probe --down
+
+  # docs/09 §5, docs/11 §7.6. Run `restore-dry-run` first: it downloads and verifies every
+  # member and prints the plan — including any live object it would try to replace — and
+  # writes nothing. Only `restore` writes, purges what it wrote, and then verifies the
+  # whole published set.
+  restore:
+    needs: setup
+    if: inputs.mode == 'restore-dry-run' || inputs.mode == 'restore'
+    runs-on: ubuntu-24.04
+    environment: production
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 90
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      R2_BUCKET: ${{ vars.R2_BUCKET }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      # Read through the environment and checked for shape rather than interpolated into
+      # the shell — the same guard as deploy.yml's `only`. `upload --restore` checks each URL
+      # again; this refuses before anything is downloaded.
+      - name: Check the inputs
+        id: flags
+        env:
+          SOURCES: ${{ inputs.restore_archive_url }}
+          ONLY: ${{ inputs.restore_only }}
+        run: |
+          set -eu
+          prefix="https://github.com/$GITHUB_REPOSITORY/releases/download/"
+          flags=""
+          for url in $SOURCES; do
+            case "$url" in
+              "$prefix"*) ;;
+              *) echo "refusing '$url': not a release asset of $GITHUB_REPOSITORY" >&2; exit 1 ;;
+            esac
+            case "${url#"$prefix"}" in
+              *[!A-Za-z0-9._/-]*|*..*|*/*/*) echo "refusing '$url': not TAG/NAME.tar" >&2; exit 1 ;;
+              */*.tar) ;;
+              *) echo "refusing '$url': not TAG/NAME.tar" >&2; exit 1 ;;
+            esac
+            flags="$flags --restore $url"
+          done
+          if [ -z "$flags" ]; then
+            echo "restore_archive_url is empty" >&2
+            exit 1
+          fi
+          for path in $ONLY; do
+            case "$path" in
+              *[!A-Za-z0-9._/-]*|*..*|/*) echo "refusing '$path': not the shape of a fixture path" >&2; exit 1 ;;
+            esac
+            flags="$flags --only $path"
+          done
+          echo "flags=$flags" >> "$GITHUB_OUTPUT"
+
+      - name: Plan the restore (downloads and verifies; writes nothing)
+        if: inputs.mode == 'restore-dry-run'
+        run: loremfile upload ${{ steps.flags.outputs.flags }} --dry-run
+
+      - name: Restore
+        if: inputs.mode == 'restore'
+        run: loremfile upload ${{ steps.flags.outputs.flags }}
+
+      - name: Verify every published fixture
+        if: inputs.mode == 'restore'
+        run: loremfile verify-live --mode full
