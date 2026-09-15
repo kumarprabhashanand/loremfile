@@ -401,6 +401,28 @@ A further guard covers the whole set: a unit test asserts `audit.CHECKS` covers 
 3. `loremfile release archive --since <previous tag>` (or `--snapshot` for the first release and for every 10th minor release): downloads the fixtures added since the previous release **from production** (not regenerated), verifies each against the manifest hash, and writes `fixtures-<from>-<to>.tar` (uncompressed; contents are already compressed or incompressible) plus `manifest.json`, `sha256sums.txt` and a `CHANGELOG` excerpt. Archives are split at 1.5 GB into `…part1.tar`, `…part2.tar` with a `parts.txt` listing the parts and their SHA-256, so every asset stays under GitHub's 2 GB limit.
 4. `gh release create v<version> --notes-file …` with the assets attached (needs `permissions: contents: write`).
 
+**As implemented (M4.4, 2026-09-15).**
+
+- **No environment, and no secret.** `production` admits only `main`, so a job started by a tag could not read its secrets, and the release needs none. Members are fetched from `https://loremfile.dev` through `verify_live.fetch`, which retries only a 429 from our own rate limit. `GITHUB_TOKEN` creates the release. There are two jobs:
+  - `release` runs on a pushed `v*` tag only, and is the one job with `contents: write`;
+  - `rehearse` runs on dispatch and publishes nothing.
+- **The previous release** is the highest `vX.Y.Z` tag reachable from the tagged commit whose version is below the one being released (`git tag --merged HEAD`). It is not `git describe --tags --abbrev=0 <tag>^`, for two reasons:
+  - `describe` exits 128 both when no tag exists and when something is actually wrong, and "no previous tag" means a snapshot;
+  - `<tag>^` does not exist on a root commit.
+
+  Versions compare as numbers, so `v1.10.0` follows `v1.9.0`.
+- **"Every 10th minor release"** is read as a minor version that is a multiple of ten with patch 0 (`v1.10.0`, `v1.20.0`). `--since` and `--snapshot` override the choice.
+- **The notes** are CHANGELOG.md's `## [X.Y.Z]` section. A tag run fails **before downloading anything** if that section is missing or empty (§7); a rehearsal records the absence instead.
+- **Assets:**
+  - `fixtures-<since>-<tag>.partN.tar`, or `fixtures-snapshot-<tag>.partN.tar`;
+  - `parts.txt`;
+  - `manifest.json` — the tag's file, byte for byte;
+  - `sha256sums.txt` — every active fixture, as in `04` §2, so deltas extracted together check with `--ignore-missing` (`11` §7.6);
+  - `notes.md`.
+
+  A patch release usually adds no fixtures, so its archive is empty and no part is attached. The output directory must start empty, because every file in it is attached.
+- **Rehearse before the first tag.** Dispatch `release.yml` on `main` before tagging `v1.0.0` (M5.5). It fetches and verifies every published fixture, assembles the snapshot, and publishes nothing.
+
 ### 3.6 `toolchain.yml` — on changes under `tools/`
 
 Triggered by a push touching `tools/Dockerfile`, `tools/apt-versions.txt`, `tools/requirements.lock`, `tools/smoke.sh` or the workflow itself, and by `workflow_dispatch`. Permissions are per job and least-privilege: the `build` job takes `contents: read, packages: write`; only `propose-digest-bump` takes `contents: write, pull-requests: write`.
@@ -462,7 +484,7 @@ Python updates change `requirements.in`; the PR must also regenerate `requiremen
 ## 7. Release and versioning
 
 - `catalog_version` is semver in `manifest.json` and `CHANGELOG.md`. **Minor** = fixtures added or removed (tombstoned); **patch** = descriptions, tags, notes, deprecation flags or site-only changes (`props`, `bytes`, `sha256`, `mime` never change); **major** = manifest schema or URL contract change (never removes anything).
-- Tags `v1.2.0` are created by the maintainer after the deploy that introduced the fixtures is green; `release.yml` runs.
+- Tags `v1.2.0` are created by the maintainer after the deploy that introduced the fixtures is green; `release.yml` runs. **Before tagging, move the released entries out of `[Unreleased]` under `## [1.2.0]`**: the release notes are that section, and a tag without it fails before anything is downloaded.
 - `CHANGELOG.md` follows Keep a Changelog; every fixture addition lists the path.
 
 ## 8. Pull request template (excerpt)
