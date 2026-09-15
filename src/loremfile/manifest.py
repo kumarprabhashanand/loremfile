@@ -87,8 +87,14 @@ class Manifest:
             data = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
             raise ManifestError(f"{path} is not valid JSON: {exc}") from exc
+        return cls.from_document(data, source=str(path))
+
+    @classmethod
+    def from_document(cls, data: object, *, source: str = "manifest") -> Manifest:
+        """A manifest from already-parsed JSON — for example an earlier release's, read
+        with `git show <tag>:manifest.json` rather than from the working tree."""
         if not isinstance(data, dict):
-            raise ManifestError(f"{path} must contain a JSON object")
+            raise ManifestError(f"{source} must contain a JSON object")
         return cls(
             catalog_version=data.get("catalog_version", "0.0.0"),
             generated_at=data.get("generated_at"),
