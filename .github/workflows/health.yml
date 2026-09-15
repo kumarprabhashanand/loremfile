@@ -5,10 +5,8 @@
 # seven comments, not seven issues — and an issue that never closes itself is one nobody
 # reads by the second month.
 #
-# NOT HERE YET: `loremfile site build` and the site-key half of `verify-live`. The site
-# arrives with M4.1 (`09` §3.3 lists both); a step that hashed an empty `build/site/`
-# would report a clean defacement check for a site that does not exist, which is the
-# worst possible shape for that particular check.
+# The defacement check compares every site key with this job's own rebuild of the commit,
+# never with anything read from the bucket (docs/09 §3.3).
 name: health
 
 on:
@@ -69,6 +67,18 @@ jobs:
       - name: Install the package
         run: pip install -e . --no-deps
 
+      - name: Let git read the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      # The defacement baseline. The legal pages need their real values to hash equal to
+      # production, and nothing here prints a page (docs/13 §3b).
+      - name: Build the site
+        env:
+          IMPRINT_NAME: ${{ secrets.IMPRINT_NAME }}
+          IMPRINT_STREET: ${{ secrets.IMPRINT_STREET }}
+          IMPRINT_POSTAL_CITY: ${{ secrets.IMPRINT_POSTAL_CITY }}
+        run: loremfile site build --legal-values-from-env
+
       # Needs no credentials: it reads production over HTTPS like any visitor.
       #
       # FULL mode since 2026-09-14: `daily` never hashed a fixture of 1 MB or more, and full
@@ -80,10 +90,11 @@ jobs:
       # across seven runs, so full on CI is estimated at 50-235 s, ~330 s at 228 fixtures.
       # 10 minutes is ~1.8x that worst estimate. CI full itself is UNMEASURED until the
       # first run after this change; revisit the bound if it exceeds 5 minutes.
+      # +10 minutes when a site key differs: the retry waits out a deploy still publishing.
       - id: verify
-        timeout-minutes: 10
+        timeout-minutes: 20
         run: |
-          loremfile verify-live --mode full --json \
+          loremfile verify-live --mode full --json --site-dir build/site --site-retry-seconds 600 \
             ${{ inputs.inject_failure != '' && format('--inject-failure {0}', inputs.inject_failure) || '' }} \
             > health.json || echo "failed=true" >> "$GITHUB_OUTPUT"
 

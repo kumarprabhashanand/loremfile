@@ -329,3 +329,31 @@ def test_a_published_object_with_no_sha256_metadata_fails_rather_than_skipping(
     assert [s.action for s in plan.steps] == [Action.FAIL]
     assert "no sha256 metadata" in plan.steps[0].reason
     assert not plan.ok
+
+
+# --- site gates (ADR-032, docs/13 §3b) ----------------------------------------
+
+
+def test_a_site_key_under_a_locked_prefix_blocks_the_site_upload(tmp_path: Path) -> None:
+    (tmp_path / "pdf").mkdir()
+    (tmp_path / "pdf" / "index.json").write_text("{}")
+    (tmp_path / "pdf.html").write_text("<p>pdf</p>")
+    files = upload.site_files(tmp_path)
+    assert set(files) == {"pdf", "pdf/index.json"}
+    rules = [{"prefix": "pdf/", "enabled": True}]
+    (blocker,) = upload.site_gates(tmp_path, files, lock_rules=rules)
+    assert "pdf/index.json" in blocker and "ADR-032" in blocker
+    # Control: the format page itself, `pdf`, is not under the `pdf/` lock.
+    (tmp_path / "pdf" / "index.json").unlink()
+    assert upload.site_gates(tmp_path, upload.site_files(tmp_path), lock_rules=rules) == []
+
+
+def test_an_unfilled_legal_page_blocks_the_site_upload(tmp_path: Path) -> None:
+    (tmp_path / "legal").mkdir()
+    (tmp_path / "legal" / "imprint.html").write_text("<p>%%IMPRINT_NAME%%</p>")
+    (blocker,) = upload.site_gates(tmp_path, upload.site_files(tmp_path), lock_rules=[])
+    assert "legal/imprint" in blocker and "--legal-values-from-env" in blocker
+
+
+def test_a_missing_build_is_no_files_rather_than_an_empty_upload(tmp_path: Path) -> None:
+    assert upload.site_files(tmp_path / "absent") == {}

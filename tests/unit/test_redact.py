@@ -116,15 +116,9 @@ def tampered_part(part: Path, paths: list[str]) -> None:
 class Gh:
     """GitHub, as `gh` answers it: canned views, real tar parts on download, recorded writes."""
 
-    def __init__(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-        *,
-        setting: tuple[int, str, str] = (1, "", "HTTP 404"),
-    ) -> None:
+    def __init__(self, monkeypatch: pytest.MonkeyPatch) -> None:
         self.calls: list[list[str]] = []
         self.views = json.loads(json.dumps(VIEWS))
-        self.setting = setting
         self.uploaded: dict[str, list[str]] = {}
         self.notes: dict[str, str] = {}
         self.tamper = False
@@ -133,9 +127,8 @@ class Gh:
     def run(self, args: list[str]) -> subprocess.CompletedProcess[str]:
         self.calls.append(list(args))
         out = ""
-        if args[0] == "api":
-            code, out, err = self.setting
-            return subprocess.CompletedProcess(args, code, out, err)
+        # GITHUB_TOKEN cannot read the repository setting (run 34989880279, HTTP 403).
+        assert args[0] == "release", f"redact must only call `gh release`, not {args[0]}"
         verb, tag = args[1], (args[2] if len(args) > 2 else "")
         if verb == "list":
             out = json.dumps([{"tagName": t} for t in self.views])
@@ -238,7 +231,7 @@ def test_a_dry_run_names_the_releases_and_writes_nothing(
     assert not any(c[1] == "download" for c in gh.calls if c[0] == "release")
 
 
-def test_a_path_that_is_not_a_tombstone_is_refused_but_the_setting_is_still_read(
+def test_a_path_that_is_not_a_tombstone_is_refused_before_anything_is_read(
     monkeypatch: pytest.MonkeyPatch, repo: Path, tmp_path: Path
 ) -> None:
     gh = Gh(monkeypatch)
@@ -252,31 +245,7 @@ def test_a_path_that_is_not_a_tombstone_is_refused_but_the_setting_is_still_read
         today="2026-10-01",
     )
     assert "not a tombstone" in report.errors[0]
-    assert report.setting == "off"
-    assert [c[0] for c in gh.calls] == ["api"]
-
-
-@pytest.mark.parametrize(
-    ("answer", "state", "is_error"),
-    [
-        ((0, '{"enabled": true, "enforced_by_owner": false}', ""), "on", True),
-        ((0, '{"enabled": false, "enforced_by_owner": false}', ""), "off", False),
-        ((1, "", "gh: Not Found (HTTP 404)"), "off", False),
-        ((1, "", "gh: Resource not accessible by integration (HTTP 403)"), "unreadable", False),
-    ],
-)
-def test_the_repository_setting(
-    monkeypatch: pytest.MonkeyPatch,
-    repo: Path,
-    tmp_path: Path,
-    answer: tuple[int, str, str],
-    state: str,
-    is_error: bool,
-) -> None:
-    Gh(monkeypatch, setting=answer)
-    report = run(repo, tmp_path, "png/b.png", dry_run=True)
-    assert report.setting.startswith(state)
-    assert any("must stay off" in e for e in report.errors) is is_error
+    assert gh.calls == []
 
 
 def test_released_bytes_that_no_longer_match_stop_the_redaction(

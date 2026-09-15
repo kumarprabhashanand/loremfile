@@ -70,7 +70,7 @@ def test_the_site_page_rule_sets_no_robots_tag_so_the_two_never_collide() -> Non
 
 def test_transform_rules_stay_within_the_free_plan() -> None:
     total = len(ruleset("http_request_transform")) + len(ruleset("http_response_headers_transform"))
-    assert total == 6
+    assert total == 8
     assert total <= 10
 
 

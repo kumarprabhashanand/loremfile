@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="prose">
+<p>loremfile.dev has no server, so there is nothing to host a live status page on. Instead, the project checks production from the outside, the same way you reach it, and writes down what it finds where anyone can read it.</p>
+<h2 id="daily">Every day</h2>
+<p>A scheduled job downloads every published file and compares its bytes with the SHA-256 hash in the manifest, and checks the headers each file must carry. It fetches every page and discovery file of this website and compares them with a fresh build of the same commit, so a page that changed without a deploy is noticed. It also checks that the domain registration, the TLS certificate and <code>security.txt</code> are not close to expiring.</p>
+<h2 id="failures">When a check fails</h2>
+<p>A failing check opens a GitHub issue labelled <code>health</code>, adds a comment on every further failing day, and closes the issue on the first clean run. If there is no open issue, the last check passed.</p>
+<p><a href="{{ issues }}">Open health issues on GitHub</a></p>
+</div>
+{% endblock %}

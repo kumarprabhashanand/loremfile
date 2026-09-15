@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }}</title>
+<meta name="description" content="{{ page.description }}">
+{% if page.robots %}
+<meta name="robots" content="{{ page.robots }}">
+{% endif %}
+<link rel="canonical" href="{{ page.canonical }}">
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="{{ site.css }}">
+<script src="{{ site.js }}" defer></script>
+{% if page.listed %}
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ page.h1 }}">
+<meta property="og:description" content="{{ page.description }}">
+<meta property="og:url" content="{{ page.canonical }}">
+<meta property="og:image" content="{{ site.og_image }}">
+<meta name="twitter:card" content="summary_large_image">
+{% endif %}
+{% for item in jsonld %}
+<script type="application/ld+json">{{ item }}</script>
+{% endfor %}
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <a class="brand" href="/">{{ site.mark }}<span>loremfile</span></a>
+  <nav aria-label="Site">
+    <ul>
+      <li><a href="/formats">Formats</a></li>
+      <li><a href="/docs">Docs</a></li>
+      <li><a href="/legal/imprint">Impressum</a></li>
+      <li><a href="/legal/privacy">Privacy</a></li>
+    </ul>
+  </nav>
+</header>
+<main id="main">
+{% if page.crumbs %}
+<nav class="crumbs" aria-label="Breadcrumb">
+  <ol>
+{% for text, href in page.crumbs %}
+    <li><a href="{{ href }}">{{ text }}</a></li>
+{% endfor %}
+  </ol>
+</nav>
+{% endif %}
+<h1>{{ page.h1 }}</h1>
+{% block content %}{% endblock %}
+</main>
+<footer class="site-footer">
+  <nav aria-label="Footer">
+    <ul>
+      <li><a href="{{ site.source }}">Source</a></li>
+      <li><a href="/docs/security-policy">Security</a></li>
+      <li><a href="/legal/license">Licences</a></li>
+      <li><a href="/legal/terms">Terms</a></li>
+      <li><a href="/legal/imprint">Impressum</a></li>
+      <li><a href="/legal/privacy">Privacy</a></li>
+      <li><a href="/status">Status</a></li>
+      <li><a href="/changelog">Changelog</a></li>
+      <li><a href="/llms.txt">llms.txt</a></li>
+      <li><a href="/manifest.json">manifest.json</a></li>
+    </ul>
+  </nav>
+  <p>Files are CC0. Code is MIT. No cookies, no analytics, no third-party requests.</p>
+</footer>
+<p id="copy-status" class="visually-hidden" aria-live="polite"></p>
+</body>
+</html>

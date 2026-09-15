@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="table-wrap">
+<table>
+  <caption>{{ rows|length }} formats</caption>
+  <thead>
+    <tr><th scope="col">Format</th><th scope="col">Family</th><th scope="col">Files</th><th scope="col">Total size</th><th scope="col">Default MIME type</th></tr>
+  </thead>
+  <tbody>
+{% for row in rows %}
+    <tr><th scope="row"><a href="/{{ row.format }}">{{ row.label }}</a></th><td>{{ row.family }}</td><td>{{ row.count }}</td><td>{{ row.size }}</td><td><code>{{ row.mime }}</code></td></tr>
+{% endfor %}
+  </tbody>
+</table>
+</div>
+
+<p>The same list is machine-readable at <a href="/formats.json">formats.json</a>.</p>
+{% endblock %}

@@ -144,9 +144,12 @@ jobs:
       - name: Integration tests
         run: pytest -q tests/integration
 
-      # docs/09 §3.1 also lists `loremfile site build` and `pytest tests/site` here.
-      # Neither exists until M4.1, so they are added by that milestone rather than
-      # standing here as a guaranteed red cross.
+      # Placeholders only: pull-request CI never sees the legal values (docs/13 §3b).
+      - name: Build the site
+        run: loremfile site build
+
+      - name: Site tests
+        run: pytest -q tests/site
 
       - name: Fixture inventory
         # Deliberately *not* the fixture bytes. docs/09 §3.1 asks for a `new-fixtures`

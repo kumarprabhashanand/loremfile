@@ -36,26 +36,19 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # origin/main:manifest.json, check_lock.sh diffs against the merge-base, and
 # gh_issue.py and release.py shell out to gh.
 #
-# gh comes from GitHub's own apt repository. The keyring it ships is already a
-# binary OpenPGP keyring, so it is fetched with curl and used via signed-by=;
-# apt verifies it with gpgv (an apt dependency), and gnupg is not installed.
+# gh comes from its GitHub release tarball, pinned by version and by SHA-256 for each
+# architecture. GitHub's apt repository keeps only recent versions, so a pinned `gh=` stopped
+# resolving (toolchain run on #66, 2026-09-15). tools/smoke.sh checks the installed version.
 #
-# When a pinned version disappears from the mirrors after a Debian point release,
+# When a pinned apt version disappears from the mirrors after a Debian point release,
 # see the note at the top of tools/apt-versions.txt.
+ARG GH_VERSION=2.100.0
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         ca-certificates=20250419~deb12u1 \
-        curl=7.88.1-10+deb12u15; \
-    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-        -o /usr/share/keyrings/githubcli-archive-keyring.gpg; \
-    chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg; \
-    printf 'deb [arch=%s signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main\n' \
-        "$(dpkg --print-architecture)" > /etc/apt/sources.list.d/github-cli.list; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
+        curl=7.88.1-10+deb12u15 \
         git=1:2.39.5-0+deb12u3 \
-        gh=2.100.0 \
         ffmpeg=7:5.1.9-0+deb12u1 \
         qpdf=11.3.0-1+deb12u1 \
         libavif-bin=0.11.1-1+deb12u1 \
@@ -64,7 +57,20 @@ RUN set -eux; \
         bzip2=1.0.8-5+b1 \
         sqlite3=3.40.1-2+deb12u2 \
         fonts-dejavu-core=2.37-6; \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/*; \
+    arch="$(dpkg --print-architecture)"; \
+    case "$arch" in \
+        amd64) sha256=e4d4bb4498e8d007abe545b6568926793ace1b6447da598294a610018cb164be ;; \
+        arm64) sha256=ea4e7a581a32ccad6cc7923cb1576ac5859ba4b9a16ab22eb8f8a96e78e2e961 ;; \
+        *) echo "no pinned gh for $arch" >&2; exit 1 ;; \
+    esac; \
+    curl -fsSL -o /tmp/gh.tar.gz \
+        "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${arch}.tar.gz"; \
+    echo "${sha256}  /tmp/gh.tar.gz" | sha256sum -c -; \
+    tar -xzf /tmp/gh.tar.gz -C /tmp; \
+    install -m 0755 "/tmp/gh_${GH_VERSION}_linux_${arch}/bin/gh" /usr/local/bin/gh; \
+    rm -rf /tmp/gh.tar.gz "/tmp/gh_${GH_VERSION}_linux_${arch}"; \
+    gh --version
 
 COPY tools/requirements.lock /tmp/requirements.lock
 RUN pip install --no-cache-dir --require-hashes -r /tmp/requirements.lock \

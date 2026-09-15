@@ -112,6 +112,7 @@ ignore_errors = true
 #   lxml      — `lxml-stubs` exists but is incomplete and third-party.
 #   pyarrow   — ships no stubs at all; upstream tracks it as unresolved.
 #   fastavro  — a compiled C extension, so there is nothing to infer from.
+#   html5lib  — ships no py.typed; `types-html5lib` is third-party and a toolchain change.
 #   openpyxl  — ships no stubs; `types-openpyxl` is third-party and would be a
 #               toolchain change (see below). python-docx and python-pptx both ship
 #               py.typed and are deliberately absent from this list.
@@ -122,7 +123,7 @@ ignore_errors = true
 # stubs are wanted, batch them into a single deliberate toolchain-bump pull request at
 # the M3 -> M4 boundary, where a determinism audit runs anyway.
 [[tool.mypy.overrides]]
-module = ["lxml.*", "pyarrow.*", "fastavro.*", "openpyxl.*"]
+module = ["lxml.*", "pyarrow.*", "fastavro.*", "openpyxl.*", "html5lib.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------

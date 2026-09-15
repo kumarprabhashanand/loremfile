@@ -34,7 +34,7 @@ flowchart LR
 3. Request phases, in Cloudflare's fixed order (see `08-infrastructure.md` §5 for the exact rules):
    - **Single Redirect** (`http_request_dynamic_redirect`): `www.loremfile.dev/*` → 301 to apex. This phase runs before URL normalization, so the redirect forwards the raw path; the apex request is then normalized and evaluated by every later rule as usual.
    - **URL normalization** (`http_request_sanitize`, Cloudflare-managed, must stay on): percent-decodes and normalizes the path before rules see it.
-   - **URL Rewrite** (`http_request_transform`): path `/` → `/index.html`. Paths ending in `/` → `…/index.html`.
+   - **URL Rewrite** (`http_request_transform`): path `/` → `/index.html`; a trailing slash → the extensionless key; `/{format}/index.json` → `_formats/{format}.json`; `_probe/` directories → `…/index.html` (ADR-032).
    - **Rate limiting** (`http_ratelimit`): 300 requests / 10 s per client IP → block 10 s. Runs before the managed WAF.
    - **WAF managed rules** (`http_request_firewall_managed`): Cloudflare Free Managed Ruleset.
    - **Cache rule** (`http_request_cache_settings`): everything is cache-eligible; the cache key ignores the query string; TTL follows the object's `Cache-Control`.
@@ -47,8 +47,8 @@ flowchart LR
 | Key pattern | What | Content-Type | Cache-Control |
 |---|---|---|---|
 | `{format}/{name}` | Fixture bytes (each `{format}/` prefix is covered by an indefinite R2 bucket-lock rule, so the storage layer refuses overwrites and deletes) | from catalog | `public, max-age=31536000, immutable, no-transform` |
-| `{format}/index.json` | Per-format manifest subset | `application/json` | `public, max-age=300, must-revalidate` |
-| `{format}` (no slash, no extension) and `{format}/index.html` | Format landing page | `text/html; charset=utf-8` | `public, max-age=300, must-revalidate` |
+| `_formats/{format}.json` (served at `/{format}/index.json`) | Per-format manifest subset | `application/json` | `public, max-age=300, must-revalidate` |
+| `{format}` (no slash, no extension; `/{format}/` is rewritten to it) | Format landing page | `text/html; charset=utf-8` | `public, max-age=300, must-revalidate` |
 | `index.html`, `docs/…`, `legal/…`, `changelog` | Site pages (extensionless keys) | `text/html; charset=utf-8` | `public, max-age=300, must-revalidate` |
 | `assets/site.css`, `assets/site.js`, `assets/*.svg` | Site assets (content-hashed names) | per type | `public, max-age=31536000, immutable` |
 | `manifest.json`, `sha256sums.txt`, `formats.json`, `search-index.json`, `llms.txt`, `llms-full.txt`, `sitemap.xml`, `robots.txt` | Discovery files | per type | `public, max-age=300, must-revalidate` |
@@ -59,7 +59,7 @@ flowchart LR
 | `.well-known/security.txt` | RFC 9116 | `text/plain; charset=utf-8` | `public, max-age=86400` |
 | `_probe/*` | Exists only while `infra.yml` probe mode runs (M2.4) | — | — |
 
-Why each format page exists twice (`pdf` and `pdf/index.html`): R2 has no directory-index behaviour, so `/pdf` is served by an object literally named `pdf`, while `/pdf/` is rewritten to `pdf/index.html` by a transform rule. Both are uploaded from the same rendered HTML (see ADR-006).
+Why format pages and per-format indexes live outside `{format}/`: every format prefix carries an indefinite bucket lock, which refuses overwrites, so a page stored there could never change again (ADR-032).
 
 ## 5. Build-time pipeline
 
