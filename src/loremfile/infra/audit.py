@@ -17,8 +17,10 @@ So every check here **reads**, and the client is constructed read-only: a write 
 `audit.yml` runs with T1 because Cloudflare tokens cannot be split read/write per call, so
 "the audit never writes" needs to be enforced by something other than a comment.
 
-**What "the same" means for a rule.** Cloudflare adds `id`, `version`, `ref` and
-`last_updated` to every rule it stores, and fills defaults for fields we did not send.
+**What "the same" means for a rule.** Cloudflare adds `id`, `version` and `last_updated`
+to every rule it stores, and fills defaults for fields we did not send. (`ref` is ours: the
+committed files declare it and the live zone preserves it, so it is compared.) The comparison
+lives in `apply.compare_rules`, shared with `apply`, which writes only on a difference.
 Comparing whole objects would report drift on every rule forever, so the comparison is
 over **the fields the committed rule actually declares**, in order. The consequence is
 stated rather than hidden: a field Cloudflare added on its own is invisible here. We own
@@ -30,7 +32,6 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Any
 
 from loremfile.config import SITE_HOST
 from loremfile.infra.apply import (
@@ -40,14 +41,12 @@ from loremfile.infra.apply import (
     HTTP_NOT_FOUND,
     MANAGED_PHASE,
     WRITTEN_PHASES,
+    compare_rules,
     dns_content,
     load_desired,
     managed_ruleset_deployed,
 )
 from loremfile.infra.cloudflare_api import Client, CloudflareError, Response
-
-#: Cloudflare assigns these; they are not ours to compare.
-SERVER_ASSIGNED = frozenset({"id", "version", "ref", "last_updated"})
 
 #: One outcome per resource. `drift` is the only one that opens an issue.
 OK = "ok"
@@ -102,37 +101,6 @@ class AuditReport:
 
 def _unreadable(response: Response) -> bool:
     return response.status in {HTTP_FORBIDDEN, HTTP_NOT_FOUND}
-
-
-def declared_fields(rule: dict[str, Any]) -> dict[str, Any]:
-    """The rule as we declared it: server-assigned keys dropped."""
-    return {k: v for k, v in rule.items() if k not in SERVER_ASSIGNED}
-
-
-def compare_rules(desired: list[dict[str, Any]], deployed: list[dict[str, Any]]) -> list[str]:
-    """Differences between committed rules and deployed ones, in order.
-
-    Order is part of a ruleset's meaning — rules are evaluated top to bottom — so this
-    compares position by position rather than as sets.
-    """
-    differences: list[str] = []
-    if len(desired) != len(deployed):
-        differences.append(f"{len(deployed)} rule(s) deployed, {len(desired)} committed")
-    for index, want in enumerate(desired):
-        if index >= len(deployed):
-            differences.append(f"[{index}] missing: {want.get('description', '?')!r}")
-            continue
-        have = deployed[index]
-        for key, value in declared_fields(want).items():
-            if have.get(key) != value:
-                differences.append(
-                    f"[{index}] {want.get('description', '?')!r}: {key} is "
-                    f"{json.dumps(have.get(key))} not {json.dumps(value)}"
-                )
-    for index in range(len(desired), len(deployed)):
-        extra = deployed[index]
-        differences.append(f"[{index}] extra rule deployed: {extra.get('description', '?')!r}")
-    return differences
 
 
 def audit_rulesets(client: Client, report: AuditReport) -> None:

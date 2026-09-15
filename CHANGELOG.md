@@ -56,6 +56,50 @@ An audit that inherited this would open an `infra-drift` issue every run, and a 
 fires every run stops meaning anything — the failure already avoided for `fonts`/
 `speed_brain` and for `expected_drift`.
 
+### Fixed — the zone is serialised, and `apply` compares before it writes
+
+**#58 was a race.** Audit run `34905539807` read `http_response_headers_transform` at
+22:44:46 (three rules) while deploy run `34905529591` applied the fourth at 22:45:16–21, and
+opened "Infra drift detected" for a zone that was mid-apply. The owner's re-run closed it
+through `gh_issue`. `deploy.yml` had a concurrency group; `infra.yml` and `audit.yml` had none.
+
+- **ADR-029: one group, `loremfile-zone`, `cancel-in-progress: false`**, on `deploy.yml`,
+  `infra.yml` and `audit.yml`'s `infra` job (job level). The determinism job and `health.yml`
+  stay outside — a cancelled pending health run would silence alerting.
+  `tests/unit/test_zone_concurrency.py` pins it, existence first.
+- **[VERIFY] `queue`: documented by GitHub, rejected by actionlint 1.7.12** (latest,
+  checksum-verified) at both levels. Not used. The leftover risk — GitHub keeps one pending
+  run per group, so a third arrival cancels a pending scheduled audit, which then opens no
+  issue — is in ADR-029 and `docs/11` §7.2, with the check to make on a busy Monday.
+
+**`apply` reported the write, not the change.** It PUT all five ruleset phases and PATCHed
+tiered cache unconditionally, reporting `updated` each time — so #56's dry run named four
+phases as changing that the audit called `ok`. It now reads first and writes only when
+`compare_rules` — moved into `apply` and shared with the audit — finds a difference, reporting
+`unchanged` otherwise; a phase that cannot be read is `failed`, not written blind. The zone
+guard is unchanged.
+
+- **The dangerous direction is a false "equal"**, so every declared leaf of every committed rule
+  is mutated in a parametrised test and must be caught, along with every declared field removed.
+  Both carry controls: the mutation set must reach every phase and field, and an unchanged copy
+  must compare equal. Equal zone → zero writes and `unchanged`; one changed phase → exactly one
+  write and `updated`; tiered cache the same.
+- **`ref` is now compared.** It had been treated as Cloudflare-assigned. The live zone was read
+  on 2026-09-15: every deployed rule carries exactly the committed ref, so ignoring it would let
+  a changed ref compare equal and never be applied.
+
+### Recorded — the second control drill, M0.5, and the Python move
+
+- **Drill 2** (after #54): run `34904105748` ended **red** and opened #57 at 22:29:39; run
+  `34904276619` closed it at 22:30:45. **The runs overlapped** — run 2 started at 22:28:25,
+  before run 1 ended at 22:29:48. The issue events are in order, so the owner accepted it with
+  no re-drill; `docs/11` §7.11 records both run ids, the overlap, and a new rule to wait for each
+  run before dispatching the next.
+- **M0.5 is done**: the email routes exist. Their destinations are not recorded.
+- **Dependabot closed #50 itself** (22:26:13, "python is no longer being updated by
+  Dependabot") once the ignore rule took effect; the comment no longer says "held". The Python
+  3.12 → 3.14 move is tracked in #1 as a milestone-boundary item with a determinism audit.
+
 ### Added — the Impressum decision, and keeping the legal pages out of search and AI crawlers
 
 The owner's decisions, recorded without any personal value. Rendering lands with M4.1; this

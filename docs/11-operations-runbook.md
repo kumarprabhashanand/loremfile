@@ -90,6 +90,10 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 
 **A run that could not complete never touches the drift issue.** An audit that failed on a bad token has learned nothing about drift, so reporting `ok` for it would close a genuine drift issue on the strength of a run that never looked. Expect to see the two issues in different states, and that is correct rather than confusing.
 
+**A scheduled audit can be cancelled before it starts (ADR-029).** `deploy.yml`, `infra.yml` and the audit's `infra` job share the `loremfile-zone` concurrency group, so they never overlap — but GitHub keeps only **one run pending** per group, and a third arrival cancels the pending one. **A cancelled audit opens no issue.** After a busy Monday — merges or `infra.yml` dispatches around the audit's 05:43 UTC schedule, which GitHub often runs hours late — check that the week's `audit` run **completed**; if it shows *cancelled*, dispatch `audit.yml`. This instruction goes away when `queue: max` can be used: GitHub documents it, but actionlint 1.7.12 rejects it.
+
+**Drift that appears right after a deploy may be a race, not drift** — #58 was exactly that, before the group existed. Re-run `audit.yml` and let `gh_issue` close the issue; never close an `infra-drift` issue by hand.
+
 ### 7.2b Applying infrastructure, then probing it
 
 **`infra.yml apply` returns before its rules have reached every edge. Running `probe`
@@ -214,11 +218,14 @@ Response template:
 
 If any row does not show what it must, the alerting path is broken: fix it before anything else, because until then a real failure is silent.
 
+**Wait for each run to finish before dispatching the next.** `health.yml` is deliberately outside the zone concurrency group (ADR-029) — a cancelled pending health run would silence alerting — so nothing stops two drill dispatches overlapping. The second drill's runs did; only the order of the issue events made it readable.
+
 **Drill record**
 
 | Date | Runs | Result |
 |---|---|---|
 | 2026-09-14 | `34894269022` (inject), `34896362833` (clean), `34896553339` (`force_ops_log`) | **Passed, with one defect found.** #53 opened at 20:41 on the injected `pdf/minimal.pdf` and closed at 21:02 on the clean run; cost and rotation ran in all three; the `ops-log` branch was created (`6f2bf9b`, rows 2026-09-08 → 2026-09-14). **Defect:** run 1 ended **green** — a check that found a problem did not fail the run. Fixed by the final verdict step (`09` §3.3); the drill is re-run after that fix, when row 1's "the run ends red" is checked for the first time |
+| 2026-09-14 (after #54) | `34904105748` (inject), `34904276619` (clean) | **Passed — accepted by the owner; no re-drill.** Run 1 ended **red** and opened #57 at 22:29:39; run 2 closed #57 at 22:30:45. **The runs overlapped**: run 2 started at 22:28:25, before run 1 ended at 22:29:48. The issue events are in the right order, so the open-then-close lifecycle is still shown, but the overlap is recorded rather than smoothed — hence the wait rule above. `force_ops_log` was not re-run; the first drill proved the keep-alive |
 
 ## 8. `ops-log.md` format (on the `ops-log` branch)
 

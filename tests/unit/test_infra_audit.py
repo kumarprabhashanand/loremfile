@@ -52,12 +52,14 @@ def rule(description: str, expression: str, **extra: Any) -> dict[str, Any]:
 
 
 def deployed(base: dict[str, Any], **server: Any) -> dict[str, Any]:
-    """What Cloudflare stores: our rule plus the fields it assigns."""
+    """What Cloudflare stores: our rule plus the fields it assigns.
+
+    `ref` is not among them: the committed files declare it and the live zone preserves it
+    (checked 2026-09-15), so a fake that overwrote it would test a zone that does not exist."""
     return {
         **base,
         "id": "3f2c" * 8,
         "version": "7",
-        "ref": "abc123",
         "last_updated": "2026-09-10T00:00:00Z",
     } | server
 

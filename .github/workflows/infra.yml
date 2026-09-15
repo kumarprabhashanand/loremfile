@@ -29,6 +29,13 @@ on:
 permissions:
   contents: read
 
+# Serialised with deploy.yml and audit.yml's `infra` job (ADR-029): an apply dispatched here
+# must not race a deploy's apply — both write whole ruleset phases — and an audit must not
+# read the zone mid-apply. Never cancelled midway.
+concurrency:
+  group: loremfile-zone
+  cancel-in-progress: false
+
 jobs:
   # tools/TOOLCHAIN_DIGEST is the only place the digest lives (docs/09 §2). Jobs read it
   # here and refer to the output, so a digest bump touches one file and no workflow —

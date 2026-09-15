@@ -9,7 +9,9 @@ it is tested for refusal rather than for being present.
 
 from __future__ import annotations
 
+import copy
 import json
+from collections.abc import Iterator
 from typing import Any
 
 import pytest
@@ -345,3 +347,187 @@ def test_dmarc_keeps_the_strict_policy_and_requests_no_reports() -> None:
     tags = [tag.strip() for tag in _dmarc()["content"].split(";") if tag.strip()]
     assert tags == ["v=DMARC1", "p=reject", "adkim=s", "aspf=s"]
     assert not any(tag.startswith(("rua=", "ruf=")) for tag in tags)
+
+
+# --- compare before write (rulesets and tiered cache) --------------------------
+#
+# `apply` used to PUT every phase and PATCH tiered cache unconditionally, reporting `updated`
+# for phases the audit called `ok`. It now writes only on a difference. The dangerous
+# direction is a false "equal" — a committed change that is never applied — so every declared
+# leaf of every committed rule is mutated and the comparison must catch each one.
+
+PATH_TYPE = tuple[str | int, ...]
+
+
+def committed(phase: str) -> list[dict[str, Any]]:
+    return list(apply_module.load_desired(f"rulesets/{phase}.json")["rules"])
+
+
+def as_deployed(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """What the zone returns: our declared rules plus the fields Cloudflare assigns."""
+    out = []
+    for index, rule in enumerate(rules):
+        stored = copy.deepcopy(rule)
+        stored.update(
+            {"id": f"rule{index}", "version": "3", "last_updated": "2026-09-15T00:00:00Z"}
+        )
+        out.append(stored)
+    return out
+
+
+def leaves(value: Any, path: PATH_TYPE) -> Iterator[tuple[PATH_TYPE, Any]]:
+    if isinstance(value, dict):
+        for key, inner in value.items():
+            yield from leaves(inner, (*path, key))
+    elif isinstance(value, list):
+        for index, inner in enumerate(value):
+            yield from leaves(inner, (*path, index))
+    else:
+        yield path, value
+
+
+def changed(leaf: Any) -> Any:
+    if isinstance(leaf, bool):
+        return not leaf
+    if isinstance(leaf, int | float):
+        return leaf + 1
+    if isinstance(leaf, str):
+        return leaf + "-changed"
+    if leaf is None:
+        return "not-null"
+    raise AssertionError(f"no mutation for leaf {leaf!r}")
+
+
+def set_at(target: Any, path: PATH_TYPE, value: Any) -> None:
+    for step in path[:-1]:
+        target = target[step]
+    target[path[-1]] = value
+
+
+MUTATIONS = [
+    (phase, index, path, leaf)
+    for phase in apply_module.WRITTEN_PHASES
+    for index, rule in enumerate(committed(phase))
+    for field, value in apply_module.declared_fields(rule).items()
+    for path, leaf in leaves(value, (field,))
+]
+
+
+def test_the_mutation_set_reaches_every_phase_and_every_field_that_matters() -> None:
+    """Empty-set control first: the parametrised test below is vacuous if this set is thin."""
+    assert {case[0] for case in MUTATIONS} == set(apply_module.WRITTEN_PHASES)
+    fields = {case[2][0] for case in MUTATIONS}
+    assert {"ref", "description", "enabled", "expression", "action"} <= fields
+    assert "action_parameters" in fields
+    assert "ratelimit" in fields, "the rate limit's own parameters are declared leaves too"
+
+
+def test_committed_rules_compare_equal_to_their_deployed_form() -> None:
+    """Negative control for the mutation test: an unchanged copy must not be a difference."""
+    for phase in apply_module.WRITTEN_PHASES:
+        assert apply_module.compare_rules(committed(phase), as_deployed(committed(phase))) == []
+
+
+@pytest.mark.parametrize(
+    ("phase", "index", "path", "leaf"),
+    MUTATIONS,
+    ids=[f"{p}[{i}]:{'/'.join(map(str, path))}" for p, i, path, _ in MUTATIONS],
+)
+def test_a_change_to_any_declared_leaf_is_a_difference(
+    phase: str, index: int, path: PATH_TYPE, leaf: Any
+) -> None:
+    rules = committed(phase)
+    live = as_deployed(rules)
+    set_at(live[index], path, changed(leaf))
+    assert apply_module.compare_rules(rules, live), f"{phase}[{index}] {path}: compared equal"
+
+
+def test_a_declared_field_missing_from_the_zone_is_a_difference() -> None:
+    for phase in apply_module.WRITTEN_PHASES:
+        rules = committed(phase)
+        for index, rule in enumerate(rules):
+            for field in apply_module.declared_fields(rule):
+                live = as_deployed(rules)
+                del live[index][field]
+                assert apply_module.compare_rules(rules, live), f"{phase}[{index}] {field}"
+
+
+def _zone_with(live: dict[str, list[dict[str, Any]]], **extra: Response) -> FakeClient:
+    answers = {
+        f"GET /zones/{OUR_ZONE}/rulesets/phases/{phase}/entrypoint": ok({"rules": rules})
+        for phase, rules in live.items()
+    }
+    client = FakeClient({**answers, **extra})
+    client.verify_zone()
+    return client
+
+
+def _phase_writes(client: FakeClient) -> list[tuple[str, str, dict[str, Any] | None]]:
+    return [write for write in client.writes if "/rulesets/phases/" in write[1]]
+
+
+def _states(report: apply_module.Report) -> dict[str, str]:
+    return {
+        o.resource: o.state for o in report.outcomes if o.resource in apply_module.WRITTEN_PHASES
+    }
+
+
+def test_rulesets_equal_to_the_zone_are_not_written_and_report_unchanged() -> None:
+    client = _zone_with({p: as_deployed(committed(p)) for p in apply_module.WRITTEN_PHASES})
+    report = apply_module.Report()
+    apply_module.apply_rulesets(client, report)
+    assert _phase_writes(client) == []
+    assert _states(report) == dict.fromkeys(apply_module.WRITTEN_PHASES, "unchanged")
+
+
+@pytest.mark.parametrize("phase", apply_module.WRITTEN_PHASES)
+def test_one_different_phase_is_written_exactly_once_and_reports_updated(phase: str) -> None:
+    live = {p: as_deployed(committed(p)) for p in apply_module.WRITTEN_PHASES}
+    live[phase][0]["expression"] += " and true"
+    client = _zone_with(live)
+    report = apply_module.Report()
+    apply_module.apply_rulesets(client, report)
+    assert _phase_writes(client) == [
+        (
+            "PUT",
+            f"/zones/{OUR_ZONE}/rulesets/phases/{phase}/entrypoint",
+            {"rules": committed(phase)},
+        )
+    ]
+    expected = dict.fromkeys(apply_module.WRITTEN_PHASES, "unchanged") | {phase: "updated"}
+    assert _states(report) == expected
+
+
+def test_a_phase_that_cannot_be_read_is_not_written_blind() -> None:
+    phase = apply_module.WRITTEN_PHASES[0]
+    live = {p: as_deployed(committed(p)) for p in apply_module.WRITTEN_PHASES}
+    del live[phase]
+    broken = Response(500, {"success": False, "errors": [{"code": 1, "message": "boom"}]})
+    client = _zone_with(
+        live, **{f"GET /zones/{OUR_ZONE}/rulesets/phases/{phase}/entrypoint": broken}
+    )
+    report = apply_module.Report()
+    apply_module.apply_rulesets(client, report)
+    assert _phase_writes(client) == []
+    assert _states(report)[phase] == "failed"
+
+
+TIERED = f"/zones/{OUR_ZONE}/cache/tiered_cache_smart_topology_enable"
+
+
+def test_tiered_cache_already_on_is_not_written() -> None:
+    client = FakeClient({f"GET {TIERED}": ok({"value": "on"})})
+    client.verify_zone()
+    report = apply_module.Report()
+    apply_module.apply_tiered_cache(client, report)
+    assert client.writes == []
+    assert [o.state for o in report.outcomes] == ["unchanged"]
+
+
+def test_tiered_cache_off_is_written_exactly_once() -> None:
+    client = FakeClient({f"GET {TIERED}": ok({"value": "off"})})
+    client.verify_zone()
+    report = apply_module.Report()
+    apply_module.apply_tiered_cache(client, report)
+    assert client.writes == [("PATCH", TIERED, {"value": "on"})]
+    assert [o.state for o in report.outcomes] == ["updated"]
