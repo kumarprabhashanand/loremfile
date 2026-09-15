@@ -73,6 +73,33 @@ fires every run stops meaning anything — the failure already avoided for `font
   confirms behaviour: every token gets `403`, a browser does not.
 - `docs/11` §7.4: dashboard custom rules survive every apply; 4 of 5 remain for incidents.
 
+### Fixed — an `infra/` change in a replaced deploy is no longer lost
+
+**`infra_changed` diffed `HEAD~1..HEAD`.** GitHub keeps one pending run per concurrency group
+and a newer arrival replaces it (ADR-029), so a replaced deploy's commit is never deployed by
+its own run. Its fixtures are not lost — the next run builds `--missing-in-bucket`, and an
+`expected_drift` path it cannot fulfil fails the upload gate — but an `infra/` change in it was
+invisible from a newer commit that did not touch `infra/`, and was never applied. ADR-029 had
+called the replacement benign; it now says for what.
+
+- **`loremfile infra changed`** diffs `infra/` against the head SHA of the most recent
+  `deploy.yml` run with `event: push` on `main` and `conclusion: success`, excluding the current
+  run. No such run: `changed=true`. A lookup that fails, a run list whose shape changed, a base
+  missing from the checkout, or a base that is not an ancestor of the commit being deployed
+  fails the step — never a guess either way. `tests/unit/test_infra_changed.py` pins that
+  cancelled, failed, in-progress, `workflow_dispatch` and other-branch runs are skipped and that
+  the current run is excluded, each with a control, and replays the replaced-deploy history in a
+  real git repository: `HEAD~1` finds nothing, the new base finds the change.
+- **Not "apply on every deploy"**, and ADR-029 records why: Under Attack Mode is
+  `security_level = "under_attack"` and `infra/zone-settings.json` commits `"essentially_off"`,
+  so every merge would switch it off mid-incident. `docs/11` §7.4 step 4 now says not to merge
+  `infra/` changes or dispatch an apply while it is on, and not to close the resulting
+  `security_level` drift issue by hand.
+- **Stale since #59:** `docs/09` still described the ruleset phases and tiered cache as
+  unconditional writes — the table and the "`audit` is not `apply --dry-run`" paragraph — and so
+  did `audit.yml`'s header, `infra audit --help`, `audit.py` and three test docstrings. They
+  describe compare-before-write now, with the history in one sentence.
+
 ### Fixed — the zone is serialised, and `apply` compares before it writes
 
 **#58 was a race.** Audit run `34905539807` read `http_response_headers_transform` at

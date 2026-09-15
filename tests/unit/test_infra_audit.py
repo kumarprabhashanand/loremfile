@@ -1,10 +1,10 @@
 """M4.4: the audit reports state, and `apply` reports the write.
 
-The distinction is the whole point. `apply` PUTs every ruleset phase unconditionally, so
-it says `updated` on every run whether or not anything differed — six resources do this.
-An audit that reused those outcomes would open an `infra-drift` issue weekly, and a label
-that fires every run stops meaning anything. These tests are mostly about that: that the
-audit is comparing content, and that it cannot write even if someone later wishes it did.
+The distinction is the whole point. `apply` used to PUT every ruleset phase unconditionally
+and say `updated` on every run whether or not anything differed; an audit that reused those
+outcomes would have opened an `infra-drift` issue weekly, and a label that fires every run
+stops meaning anything. `apply` compares first now, but these tests still pin that the audit
+compares content itself, and that it cannot write even if someone later wishes it did.
 """
 
 from __future__ import annotations
@@ -106,7 +106,7 @@ def test_a_missing_rule_and_an_extra_rule_are_both_reported() -> None:
 
 
 def test_a_phase_that_matches_reports_ok_not_updated() -> None:
-    """The whole reason this module exists. `apply` says `updated` here, every run."""
+    """The whole reason this module exists: a phase that matches is `ok`, never `updated`."""
     phase = apply_module.WRITTEN_PHASES[0]
     committed = apply_module.load_desired(f"rulesets/{phase}.json")["rules"]
     zone = FakeZone(
@@ -142,8 +142,7 @@ def test_real_drift_is_not_ok() -> None:
 
 
 def test_tiered_cache_is_read_rather_than_written() -> None:
-    """`apply` PATCHes it unconditionally and always reports `updated`; the audit has to
-    look at the value instead."""
+    """The audit looks at the value itself rather than borrowing `apply`'s outcome."""
     zone = FakeZone({"tiered_cache_smart_topology_enable": response({"value": "on"})})
     report = AuditReport()
     audit.audit_tiered_cache(zone, report)  # type: ignore[arg-type]
