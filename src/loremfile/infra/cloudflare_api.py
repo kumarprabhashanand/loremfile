@@ -40,6 +40,11 @@ BACKOFF_SECONDS = 2.0
 #: Methods that change state. Every one of them goes through the scoping assertion.
 WRITE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
+#: Phases whose entry point is never written whole (ADR-030). Incident rules go into
+#: `http_request_firewall_custom` from the dashboard (docs/11 §7.4), and a PUT of an entry
+#: point removes every rule the request does not carry. Its rules are written one at a time.
+NEVER_PUT_PHASES = frozenset({"http_request_firewall_custom"})
+
 
 class CloudflareError(RuntimeError):
     """An API call failed, or a safety precondition was not met."""
@@ -53,6 +58,10 @@ class ReadOnlyError(CloudflareError):
     read correctly. This makes it a property of the client instead: an audit that grew a
     write would raise here rather than quietly converge the drift it was sent to report.
     """
+
+
+class PhaseWriteRefused(CloudflareError):
+    """A whole-phase PUT on a phase that also holds rules written elsewhere (ADR-030)."""
 
 
 class ZoneScopeError(CloudflareError):
@@ -152,6 +161,12 @@ class Client:
     def _assert_scoped(self, method: str, path: str) -> None:
         if method not in WRITE_METHODS:
             return
+        refused = [p for p in NEVER_PUT_PHASES if f"/rulesets/phases/{p}/" in f"{path}/"]
+        if method == "PUT" and refused:
+            raise PhaseWriteRefused(
+                f"PUT {path} would replace every rule in {refused[0]}, including incident "
+                "rules added in the dashboard. Its rules are written one at a time (ADR-030)."
+            )
         if self.verified_hostname is None:
             raise ZoneScopeError(
                 f"{method} {path} attempted before verify_zone(). The zone identity must "
@@ -226,6 +241,9 @@ class Client:
 
     def post(self, path: str, payload: dict[str, Any]) -> Response:
         return self.request("POST", path, payload)
+
+    def delete(self, path: str) -> Response:
+        return self.request("DELETE", path)
 
     def paginate(self, path: str, *, per_page: int = 100) -> list[dict[str, Any]]:
         """Every page of a list endpoint, or a clear failure."""

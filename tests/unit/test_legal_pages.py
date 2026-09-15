@@ -22,6 +22,7 @@ AI_TOKENS = {
     "GPTBot",
     "OAI-SearchBot",
     "ChatGPT-User",
+    "OAI-AdsBot",
     "ClaudeBot",
     "Claude-User",
     "Claude-SearchBot",
@@ -37,6 +38,14 @@ def ruleset(name: str) -> list[dict[str, Any]]:
 
 def rule(ref: str) -> dict[str, Any]:
     return next(r for r in ruleset("http_response_headers_transform") if r["ref"] == ref)
+
+
+def ai_agent_rule() -> dict[str, Any]:
+    return next(
+        r
+        for r in ruleset("http_request_firewall_custom")
+        if r["ref"] == "loremfile_legal_pages_ai_agents"
+    )
 
 
 # --- the edge header rule -----------------------------------------------------
@@ -121,6 +130,22 @@ def test_the_ai_group_names_exactly_the_verified_tokens_and_blocks_only_the_lega
     assert agents == AI_TOKENS
     assert {value for key, value in rules if key == "disallow"} == LEGAL_PAGES
     assert not [value for key, value in rules if key == "allow"]
+
+
+# --- the WAF rule that refuses what robots.txt only asks (ADR-030) -------------------
+
+
+def test_the_waf_rule_refuses_the_robots_tokens_except_google_extended() -> None:
+    """One list, two enforcements. `Google-Extended` sends no requests of its own, so a
+    clause for it could never fire; every other token is refused on the two pages."""
+    expression = ai_agent_rule()["expression"]
+    tokens = re.findall(r'http\.user_agent contains "([^"]+)"', expression)
+    assert tokens, "empty-set control: the pattern must find the rule's tokens"
+    assert set(tokens) == AI_TOKENS - {"Google-Extended"}
+    assert "Google-Extended" not in expression
+    assert set(re.findall(r'http\.request\.uri\.path eq "([^"]+)"', expression)) == LEGAL_PAGES
+    assert "lower(" not in expression, "tokens are matched in the vendor's casing (ADR-030)"
+    assert ai_agent_rule()["action"] == "block"
 
 
 # --- placeholders -----------------------------------------------------------------

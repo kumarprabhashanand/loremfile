@@ -123,7 +123,11 @@ before treating it as a fault.
 
 1. Read the `cost` issue (it lists Class B reads per day and the top paths and status codes from zone analytics). Cloudflare Analytics → Traffic and Security → Analytics show the ASNs, countries and whether requests hit existing objects or 404s.
 2. If the pattern is unique non-existent paths: Security → WAF → Custom rules (5 free) → block requests whose path does not start with a known prefix, e.g. `not (starts_with(http.request.uri.path, "/pdf/") or starts_with(http.request.uri.path, "/png/") or … or http.request.uri.path eq "/" or starts_with(http.request.uri.path, "/docs/") …)` — `loremfile infra allowlist-rule` prints the full expression from the catalog. Port it into `infra/` via PR if it stays.
-3. If a single ASN/IP range: custom rule blocking `ip.src.asnum` or `ip.src in {…}`.
+3. If a single ASN/IP range: custom rule blocking `ip.src.asnum` or `ip.src in {…}`. **Custom rules added in the dashboard are never touched by `apply`** (ADR-030):
+   - `infra apply` leaves them in place and reports each as a `warning`;
+   - `infra audit` warns about them, and opens no drift issue.
+
+   Free has 5 custom rules and `infra/` uses 1, so 4 are available. If a rule should stay, port it into `infra/rulesets/http_request_firewall_custom.json` with a `ref` starting `loremfile_`, then delete the dashboard copy once the apply has added it.
 4. If volumetric: Security → Settings → Under Attack Mode for a few hours (this challenges all clients, including agents — use only as a last resort).
 5. R2: the free tier is 10 M reads/month; overage is USD 0.36 per million — a spike of 100 M reads costs USD 32 (90 M billable). If spend is escalating and the above doesn't stop it, temporarily disable the custom domain (R2 → bucket → Settings → Custom Domains → Disable). This is the "big red button": the site goes dark with TLS/connection errors (no maintenance page is possible with HSTS-preloaded `.dev`), new R2 reads stop, and already-cached objects keep serving until they expire.
 6. Post-mortem: open an issue with timeline, cost, and whether the default rate limit should change.

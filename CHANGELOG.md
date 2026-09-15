@@ -56,6 +56,23 @@ An audit that inherited this would open an `infra-drift` issue every run, and a 
 fires every run stops meaning anything — the failure already avoided for `fonts`/
 `speed_brain` and for `expected_drift`.
 
+### Added — a WAF custom rule refuses AI agents on the legal pages, written rule by rule (ADR-030)
+
+- **`loremfile_legal_pages_ai_agents`** (`infra/rulesets/http_request_firewall_custom.json`)
+  blocks `GPTBot`, `OAI-SearchBot`, `ChatGPT-User`, `OAI-AdsBot`, `ClaudeBot`, `Claude-User` and
+  `Claude-SearchBot` on `/legal/imprint` and `/legal/privacy`, matched with `contains` in each vendor's
+  casing. `Google-Extended` stays in robots.txt only. `OAI-AdsBot` joins robots.txt too, with
+  OpenAI's description quoted in `docs/04` §6 and `docs/08` §5.7.
+- **An exception to ADR-008, because the phase is shared with incident rules.**
+  - `infra apply` adds, changes or deletes only rules whose `ref` starts with `loremfile_`, one at
+    a time with `POST`/`PATCH`/`DELETE`, and only when `compare_rules` finds a difference.
+  - Every other rule is a `warning`, in apply and in the audit, and is never deleted.
+  - `cloudflare_api` refuses a `PUT` of `http_request_firewall_custom` before it is sent.
+- **[VERIFY] `http.user_agent` on Free is still open.** Cloudflare's documentation neither restricts
+  nor confirms it. The first apply decides, and the probe's new `legal-pages-ai-agents` check
+  confirms behaviour: every token gets `403`, a browser does not.
+- `docs/11` §7.4: dashboard custom rules survive every apply; 4 of 5 remain for incidents.
+
 ### Fixed — the zone is serialised, and `apply` compares before it writes
 
 **#58 was a race.** Audit run `34905539807` read `http_response_headers_transform` at

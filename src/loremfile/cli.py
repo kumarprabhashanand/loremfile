@@ -446,7 +446,7 @@ def infra_apply(dry_run: bool, as_json: bool) -> None:
             "dry_run": dry_run,
             **{
                 state: sum(1 for o in report.outcomes if o.state == state)
-                for state in ("unchanged", "updated", "skipped", "manual", "failed")
+                for state in ("unchanged", "updated", "skipped", "manual", "warning", "failed")
             },
         }
         errors = [f"{o.resource}: {o.detail}" for o in report.outcomes if o.state == "failed"]
@@ -871,6 +871,7 @@ def infra_audit(as_json: bool) -> None:
             "checked": len(report.findings),
             "drift": len(report.drifted),
             "unreadable": len(report.unreadable),
+            "warnings": len(report.warnings),
         }
         items = [
             {"path": f.resource, "status": f.state, "detail": f.detail} for f in report.findings

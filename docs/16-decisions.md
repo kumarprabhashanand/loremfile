@@ -41,6 +41,7 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
 - **Context**: one zone, ~10 rules, a no-ops owner; Terraform adds state storage and provider churn.
 - **Decision**: `infra/*.json` + `apply.py`/`audit.py` using full-`PUT` semantics on phase entry points and `PATCH` on settings.
 - **Consequences**: no state file; drift is detected weekly; Terraform remains a drop-in alternative if a future maintainer prefers it.
+- **Exception (ADR-030, 2026-09-15)**: `http_request_firewall_custom` is shared with incident rules, so it is written one rule at a time and never `PUT`.
 
 ## ADR-009 Reproducible generation in a digest-pinned container with hash-pinned dependencies
 - **Context**: fixtures must be regenerable for audits and restores; supply-chain risk.
@@ -173,3 +174,26 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
 - **Leftover risk, stated rather than assumed away.** At most one run can be *pending* in the group; a third arrival cancels it. A pending deploy replaced by a newer deploy is benign — the newer run deploys a later `main`. A pending `infra.yml` apply that is replaced is visible to whoever dispatched it. **A pending scheduled audit that is replaced opens no issue** — the passes-on-absence shape. `11` §7.2 tells the operator to confirm the Monday audit *completed*, and to dispatch it if it shows *cancelled*.
 - **What would reopen this**: actionlint accepting `queue` (or the key otherwise verified to validate and behave as documented) — then add `queue: max` to all three and delete the §7.2 instruction.
 
+## ADR-030 WAF custom rules are written rule by rule — an exception to ADR-008 (2026-09-15)
+
+- **Context**: ADR-008 writes each ruleset phase with a full `PUT` of its entry point, which is safe only in a phase nothing else writes.
+  - `http_request_firewall_custom` is the phase the runbook uses during an incident: `11` §7.4 adds custom rules in the dashboard. Cloudflare on a `PUT` of an entry point: "This API method requires that you include in the request all rules you want to keep in the ruleset, or else they will be removed." Under ADR-008 the next apply after an incident would delete the incident's rule.
+  - ADR-028 wants one rule here: refuse self-identifying AI agents on `/legal/imprint` and `/legal/privacy`. robots.txt only asks, and OpenAI says of `ChatGPT-User` that "robots.txt rules may not apply".
+- **Decision**:
+  - **A rule is ours when its `ref` starts with `loremfile_`.** Every committed rule carries the prefix.
+  - **Per-rule endpoints, compare first.**
+    - `infra apply` adds with `POST …/rulesets/{ruleset_id}/rules`, changes with `PATCH …/rules/{rule_id}` (the whole rule), and removes a rule of ours no longer committed with `DELETE …/rules/{rule_id}`.
+    - Each write happens only when `apply.compare_rules` finds a difference.
+    - With no entry point, `POST /zones/{id}/rulesets` creates one carrying our rules.
+  - **Never `PUT` this phase.** `cloudflare_api.NEVER_PUT_PHASES` refuses the request before it is sent, dry run included.
+  - **Any rule without the prefix is a `warning` and is never deleted**, in `apply` and in `infra audit`. The audit opens no drift issue for it.
+  - **The writer stays serialised.** The writer is `infra apply`, which runs only in `deploy.yml` and `infra.yml`, both in the `loremfile-zone` group (ADR-029). `tests/unit/test_zone_concurrency.py` pins every `infra apply` invocation to that group.
+  - **`contains` with the vendor's casing, not `lower()`.** Cloudflare: "All string operators are case-sensitive unless explicitly stated as case-insensitive". Each vendor documents its token's casing.
+  - **The tokens** are the `04` §6 AI group minus `Google-Extended`, which "doesn't have a separate HTTP request user agent string". `OAI-AdsBot` is added to both, quoted from OpenAI: "OAI-AdsBot only visits pages submitted as ads, and the data collected by OAI-AdsBot is not used to train generative AI foundation models."
+- **[VERIFY] `http.user_agent` on Free, still open.** Cloudflare's custom-rules table gives Free 5 rules, no regex and no field restriction. The field reference states no plan availability. User Agent Blocking "recommends that you use custom rules instead" with an `http.user_agent` example. That is documentation, not the zone accepting the rule. The first apply after this lands decides it: a refusal is a `failed` apply with Cloudflare's error, recorded in `08` §5.7. `infra.yml` → `probe` → `legal-pages-ai-agents` then checks behaviour — every token refused with `403`, a browser User-Agent not.
+- **Consequences**:
+  - 1 of 5 custom rules is used.
+  - Rule order in the phase is not managed.
+  - An incident rule survives every apply, and shows as a warning until it is ported into `infra/` or removed.
+  - The Anthropic tokens are matched without a vendor-published header string (`08` §5.7).
+- **What would reopen this**: Cloudflare offering a whole-phase write that preserves rules it was not given; incident rules moving to a phase nothing else writes; or a vendor publishing header strings that do not contain its robots.txt token.
