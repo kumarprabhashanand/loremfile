@@ -423,6 +423,16 @@ A further guard covers the whole set: a unit test asserts `audit.CHECKS` covers 
   A patch release usually adds no fixtures, so its archive is empty and no part is attached. The output directory must start empty, because every file in it is attached.
 - **Rehearse before the first tag.** Dispatch `release.yml` on `main` before tagging `v1.0.0` (M5.5). It fetches and verifies every published fixture, assembles the snapshot, and publishes nothing.
 
+**The first rehearsal failed, and what it found (2026-09-15).** Run `34982012684` (`d1c4f751c8`) stopped before any download: `git tag --merged HEAD failed: fatal: detected dubious ownership in repository at '/__w/loremfile/loremfile'`.
+- **Cause.** `actions/checkout` marks the repository safe only in a temporary global git config for its own step. Its log says "Temporarily overriding HOME='/__w/_temp/…' before making global git config changes", while later steps run with `HOME=/github/home`. In a job container the checkout belongs to the runner's uid and git runs as root, so git refuses the repository.
+  - The `release` job had the same gap, so the `v1.0.0` tag run would have failed identically.
+  - The unit tests could not catch it, because their scratch repositories belong to the user running them.
+- **Why `deploy.yml`'s `infra changed` worked: by accident.** Its `manifest check` step calls `build.merge_base_manifest`, which runs `git config --global --add safe.directory` as a side effect, three steps before `infra changed` needs git.
+- **Fix.** Every containerised job now trusts the checkout explicitly with `git config --global --add safe.directory "$GITHUB_WORKSPACE"`, before its first step that runs git. That covers both `release.yml` jobs, `deploy.yml`, and `ci.yml`'s lint job (`tools/check_lock.sh`).
+  - `tests/unit/test_workflow_git.py` pins the rule for every containerised step that runs git — directly, or through `infra changed`, `release archive`, `build --new`, `manifest check`/`update`/`adopt` or `check_lock.sh`.
+  - It also checks that command list against the code in `src/` and `tools/` that actually runs git.
+- **Next:** re-dispatch the rehearsal. Expect a snapshot of `v1.0.0` with 161 members and 414,208,239 bytes in one part, and the notes missing.
+
 ### 3.6 `toolchain.yml` — on changes under `tools/`
 
 Triggered by a push touching `tools/Dockerfile`, `tools/apt-versions.txt`, `tools/requirements.lock`, `tools/smoke.sh` or the workflow itself, and by `workflow_dispatch`. Permissions are per job and least-privilege: the `build` job takes `contents: read, packages: write`; only `propose-digest-bump` takes `contents: write, pull-requests: write`.

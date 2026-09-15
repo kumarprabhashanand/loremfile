@@ -56,6 +56,21 @@ An audit that inherited this would open an `infra-drift` issue every run, and a 
 fires every run stops meaning anything — the failure already avoided for `fonts`/
 `speed_brain` and for `expected_drift`.
 
+### Fixed — container jobs let git read the checkout explicitly; the release rehearsal can run
+
+- **The first `release.yml` rehearsal failed before downloading anything.** Run `34982012684` stopped
+  with `git tag --merged HEAD failed: fatal: detected dubious ownership`. `actions/checkout` adds
+  `safe.directory` only to a temporary global config for its own step. The tag-run `release` job had
+  the same gap.
+- **`deploy.yml`'s `infra changed` worked only by accident.** `manifest check` calls
+  `build.merge_base_manifest`, which writes `safe.directory` as a side effect three steps earlier.
+- **Fix.** An explicit `git config --global --add safe.directory "$GITHUB_WORKSPACE"` step before
+  the first git-running step, in both `release.yml` jobs, in `deploy.yml`, and in `ci.yml`'s lint job.
+  - `tests/unit/test_workflow_git.py` requires it for every containerised step that runs git, with
+    negative controls.
+  - It checks its list of git-running commands against the code in `src/` and `tools/`.
+- `docs/09` §3.5 records the failure, the cause and the fix.
+
 ### Verified — Free accepts `http.user_agent`; the AI-agent probe checks its path scope
 
 - **[VERIFY] resolved, 2026-09-15.**
