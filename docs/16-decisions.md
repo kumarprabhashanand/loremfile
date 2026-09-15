@@ -192,7 +192,12 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
   - **The writer stays serialised.** The writer is `infra apply`, which runs only in `deploy.yml` and `infra.yml`, both in the `loremfile-zone` group (ADR-029). `tests/unit/test_zone_concurrency.py` pins every `infra apply` invocation to that group.
   - **`contains` with the vendor's casing, not `lower()`.** Cloudflare: "All string operators are case-sensitive unless explicitly stated as case-insensitive". Each vendor documents its token's casing.
   - **The tokens** are the `04` §6 AI group minus `Google-Extended`, which "doesn't have a separate HTTP request user agent string". `OAI-AdsBot` is added to both, quoted from OpenAI: "OAI-AdsBot only visits pages submitted as ads, and the data collected by OAI-AdsBot is not used to train generative AI foundation models."
-- **[VERIFY] `http.user_agent` on Free, still open.** Cloudflare's custom-rules table gives Free 5 rules, no regex and no field restriction. The field reference states no plan availability. User Agent Blocking "recommends that you use custom rules instead" with an `http.user_agent` example. That is documentation, not the zone accepting the rule. The first apply after this lands decides it: a refusal is a `failed` apply with Cloudflare's error, recorded in `08` §5.7. `infra.yml` → `probe` → `legal-pages-ai-agents` then checks behaviour — every token refused with `403`, a browser User-Agent not.
+- **[VERIFY] `http.user_agent` on Free — resolved 2026-09-15: accepted.** Cloudflare's documentation neither restricted nor confirmed it, so the first write decided.
+  - **The write:** push deploy run `34940201386` (`99334dd9e2`) reported `loremfile_legal_pages_ai_agents` `updated — added, creating the entry point`, with `failed=0`. T1's permission to write the phase is confirmed by that same write.
+  - **The behaviour:** probe run `34941018789` passed `legal-pages-ai-agents` (7 tokens refused on 2 pages, a browser not).
+  - **The path scope:** a hand check from colo TXL found `GPTBot` refused on both legal pages, but not on `/pdf/minimal.pdf` or `/robots.txt`.
+
+  The evidence is in `08` §5.7. Still unverified: the Anthropic header strings (below).
 - **Consequences**:
   - 1 of 5 custom rules is used.
   - Rule order in the phase is not managed.

@@ -56,6 +56,27 @@ An audit that inherited this would open an `infra-drift` issue every run, and a 
 fires every run stops meaning anything — the failure already avoided for `fonts`/
 `speed_brain` and for `expected_drift`.
 
+### Verified — Free accepts `http.user_agent`; the AI-agent probe checks its path scope
+
+- **[VERIFY] resolved, 2026-09-15.**
+  - Push deploy run `34940201386` created the entry point and `loremfile_legal_pages_ai_agents`
+    (`updated`, `failed=0`, `warning=0`, every other phase `unchanged`). That write also confirms
+    T1's permission for the phase.
+  - Probe run `34941018789` passed `legal-pages-ai-agents`, with 14 checks and 0 failed.
+  - A hand check from colo TXL found `GPTBot` refused on both legal pages but not on
+    `/pdf/minimal.pdf` or `/robots.txt`.
+
+  Recorded in `docs/08` §5.7, §6 row 5b and ADR-030. The Anthropic header strings stay
+  unverified.
+- **`legal-pages-ai-agents` gains a path-scope control.** No agent token may be refused on
+  `/robots.txt`; the browser control alone could not show the 403 comes from the rule's path
+  scope. The check also settles on the first refusal (`docs/11` §7.2b), so a probe straight
+  after an apply reports "never appeared" rather than a wrong rule. That makes a site answering
+  404 everywhere a precondition failure, so the check rejoins the probe's 404 sweep.
+- **M4.1 plan:** the `IMPRINT_*` values render into exactly `legal/imprint` and `legal/privacy`,
+  with no twin key and no excerpt elsewhere. A count-only check in the production job enforces
+  this and prints no value.
+
 ### Added — `release.yml` and `loremfile release archive` (M4.4)
 
 - **Release assets come from the bytes production serves.** Each is fetched from
