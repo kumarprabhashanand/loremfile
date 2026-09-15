@@ -758,6 +758,9 @@ def check_404s_are_cached() -> str:
 AI_AGENT_RULE_REF = "loremfile_legal_pages_ai_agents"
 PATH_EQUALS = re.compile(r'http\.request\.uri\.path eq "([^"]+)"')
 USER_AGENT_CONTAINS = re.compile(r'http\.user_agent contains "([^"]+)"')
+#: A path the rule does not name. No agent may be refused here: the browser control shows
+#: the rule does not refuse everyone, and only this shows the 403 comes from its path scope.
+OFF_PATH_CONTROL = "/robots.txt"
 #: A desktop browser: the request the rule must not refuse.
 BROWSER_USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -774,18 +777,39 @@ def ai_agent_rule_terms() -> tuple[list[str], list[str]]:
     return PATH_EQUALS.findall(expression), USER_AGENT_CONTAINS.findall(expression)
 
 
-def check_legal_pages_refuse_ai_agents() -> str:
-    """Self-identifying AI agents get 403 on the two legal pages; a browser does not.
+def agent_request(path: str, token: str) -> Fetched:
+    """A request that identifies itself by `token` — our rule's matching, not any vendor's
+    header string (docs/08 §5.7)."""
+    return fetch(path, extra_headers={"User-Agent": f"Mozilla/5.0 (compatible; {token}/1.0)"})
 
-    The browser request is the negative control: a rule that refused everyone would pass
-    every agent request. The pages need not exist — the edge answers before R2 does, so an
-    agent gets 403 and a browser gets whatever the path is (a 404 until M4.1 publishes it).
-    Each agent sends `compatible; <token>/1.0`: this checks our rule's matching, not any
-    vendor's header string (docs/08 §5.7).
+
+def check_legal_pages_refuse_ai_agents() -> str:
+    """Self-identifying AI agents get 403 on the two legal pages, and nowhere else.
+
+    **Settles first** (runbook §7.2b): `infra.yml apply` returns before a new rule reaches
+    every edge, so the first agent request on the first page is polled until it is refused.
+    That predicate is a single refusal. Every token on both pages and both controls are
+    asserted afterwards, once each, so the wait cannot mask a wrong rule — and a rule that
+    never arrives is reported as "never appeared", not as a wrong answer.
+
+    Two negative controls, because each rules out a different wrong rule. A browser must not
+    be refused: a rule refusing everyone passes every agent request. No agent may be refused
+    on `OFF_PATH_CONTROL`: a rule refusing these agents on every path passes the browser
+    control. The pages need not exist — the edge answers before R2 does.
     """
     paths, tokens = ai_agent_rule_terms()
     require(bool(paths), f"{AI_AGENT_RULE_REF} names no path, so there is nothing to request")
     require(bool(tokens), f"{AI_AGENT_RULE_REF} names no User-Agent token")
+    require(
+        OFF_PATH_CONTROL not in paths,
+        f"{AI_AGENT_RULE_REF} names {OFF_PATH_CONTROL}; the path-scope control needs a path "
+        "the rule does not name",
+    )
+    settle(
+        f"a 403 for {tokens[0]} on {paths[0]}",
+        lambda: agent_request(paths[0], tokens[0]),
+        lambda response: response.status == HTTP_FORBIDDEN,
+    )
     for path in paths:
         browser = fetch(path, extra_headers={"User-Agent": BROWSER_USER_AGENT})
         check(
@@ -793,15 +817,23 @@ def check_legal_pages_refuse_ai_agents() -> str:
             f"{path} refused a browser with 403: the rule is not scoped to AI agents",
         )
         for token in tokens:
-            agent = fetch(
-                path, extra_headers={"User-Agent": f"Mozilla/5.0 (compatible; {token}/1.0)"}
-            )
+            agent = agent_request(path, token)
             check(
                 agent.status == HTTP_FORBIDDEN,
-                f"{path} answered {agent.status} to {token}, not 403: the rule is not deployed, "
-                "or Free did not accept http.user_agent, or it does not match",
+                f"{path} answered {agent.status} to {token}, not 403: the rule does not match "
+                "that token",
             )
-    return f"{len(tokens)} agent tokens refused on {len(paths)} pages; a browser was not"
+    for token in tokens:
+        off_path = agent_request(OFF_PATH_CONTROL, token)
+        check(
+            off_path.status != HTTP_FORBIDDEN,
+            f"{OFF_PATH_CONTROL} refused {token} with 403: the refusal is not scoped to the "
+            "legal pages",
+        )
+    return (
+        f"{len(tokens)} agent tokens refused on {len(paths)} pages; a browser was not, and "
+        f"no agent was refused on {OFF_PATH_CONTROL}"
+    )
 
 
 #: Every check the probe runs against the live site.

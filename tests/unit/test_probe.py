@@ -70,12 +70,10 @@ def everything_ok(path: str, **_: Any) -> Fetched:
 
 #: Every check that reads the edge. Each must refuse to evaluate against a 404.
 #: `404-caching` is excluded: a 404 is its *subject*, not a missing precondition,
-#: so driving it against one tests nothing. So is `legal-pages-ai-agents`: a 404 to a
-#: browser is expected until M4.1 publishes the pages, and a 404 to an agent is its
-#: finding (the rule did not fire), tested below. Every other edge check must refuse.
+#: so driving it against one tests nothing. Every other edge check must refuse —
+#: `legal-pages-ai-agents` included, because it settles on a refusal that never appears.
 EDGE_CHECKS = sorted(
-    set(probe.SITE_CHECKS)
-    - {"www-redirect", "404-caching", "legal-pages-ai-agents", "rate-limit", "rate-limit-rule"}
+    set(probe.SITE_CHECKS) - {"www-redirect", "404-caching", "rate-limit", "rate-limit-rule"}
 )
 
 
@@ -606,10 +604,13 @@ def test_a_rate_outside_the_band_is_a_precondition_failure(
 # --- legal-pages-ai-agents (ADR-030) -------------------------------------------------
 
 
-def _refuses(tokens: list[str]) -> Any:
-    def answer(_path: str, **kwargs: Any) -> Fetched:
+def _refuses(tokens: list[str], paths: set[str]) -> Any:
+    """The edge as the rule describes it: 403 for these tokens on these paths, and only there."""
+
+    def answer(path: str, **kwargs: Any) -> Fetched:
         agent = (kwargs.get("extra_headers") or {}).get("User-Agent", "")
-        return Fetched(status=403 if any(t in agent for t in tokens) else 404, headers={}, body=b"")
+        refused = path in paths and any(token in agent for token in tokens)
+        return Fetched(status=403 if refused else 404, headers={}, body=b"")
 
     return answer
 
@@ -624,47 +625,88 @@ def test_the_legal_pages_check_reads_paths_and_tokens_from_the_committed_rule() 
     assert set(paths) == {"/legal/imprint", "/legal/privacy"}
     assert "OAI-AdsBot" in tokens
     assert "Google-Extended" not in tokens
+    assert probe.OFF_PATH_CONTROL not in paths
 
 
-def test_the_legal_pages_check_passes_when_only_agents_are_refused(
+def test_the_check_passes_when_agents_are_refused_on_those_pages_only(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    _paths, tokens = probe.ai_agent_rule_terms()
-    responder(monkeypatch, _refuses(tokens))
+    paths, tokens = probe.ai_agent_rule_terms()
+    responder(monkeypatch, _refuses(tokens, set(paths)))
     report = _legal_check()
     assert report.ok, report.render()
 
 
-def test_the_legal_pages_check_fails_when_a_browser_is_refused_too(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """The negative control the check exists for: a rule that blocks everyone."""
+def test_the_check_fails_when_a_browser_is_refused_too(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The first negative control: a rule that refuses everyone."""
     responder(monkeypatch, Fetched(status=403, headers={}, body=b""))
     report = _legal_check()
     assert not report.ok
     assert "browser" in report.results[0].detail
 
 
-def test_the_legal_pages_check_fails_when_one_token_is_not_refused(
+def test_the_check_fails_when_agents_are_refused_on_every_path(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    _paths, tokens = probe.ai_agent_rule_terms()
-    responder(monkeypatch, _refuses(tokens[1:]))
+    """The second: a rule refusing these agents everywhere passes the browser control, so
+    only a request off the legal pages shows the 403 comes from the path scope."""
+    paths, tokens = probe.ai_agent_rule_terms()
+    responder(monkeypatch, _refuses(tokens, {*paths, probe.OFF_PATH_CONTROL}))
     report = _legal_check()
     assert not report.ok
-    assert tokens[0] in report.results[0].detail
+    detail = report.results[0].detail
+    assert probe.OFF_PATH_CONTROL in detail
+    assert "not scoped to the legal pages" in detail
 
 
-def test_the_legal_pages_check_asks_every_token_on_every_page(
+def test_the_check_fails_when_one_token_is_not_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The last token, so the settle (on the first) completes and the assertion fires — a
+    wrong rule must be reported as one, not as propagation."""
+    paths, tokens = probe.ai_agent_rule_terms()
+    responder(monkeypatch, _refuses(tokens[:-1], set(paths)))
+    detail = _legal_check().results[0].detail
+    assert tokens[-1] in detail
+    assert "precondition unmet" not in detail
+
+
+def test_the_check_waits_for_a_rule_that_is_still_propagating(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Runbook §7.2b: a probe straight after an apply sees the old edge for a while."""
+    paths, tokens = probe.ai_agent_rule_terms()
+    live = _refuses(tokens, set(paths))
+    stale = {"left": 3}
+
+    def answer(path: str, **kwargs: Any) -> Fetched:
+        if stale["left"]:
+            stale["left"] -= 1
+            return Fetched(status=404, headers={}, body=b"")
+        return live(path, **kwargs)
+
+    responder(monkeypatch, answer)
+    report = _legal_check()
+    assert report.ok, report.render()
+    assert stale["left"] == 0, "control: the first answers really were the old edge"
+
+
+def test_a_rule_that_never_appears_is_reported_as_such(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Negative control for the test above: the wait is bounded, and says what expired."""
+    responder(monkeypatch, everything_404)
+    detail = _legal_check().results[0].detail
+    assert "precondition unmet" in detail
+    assert "never appeared" in detail
+
+
+def test_the_check_asks_every_token_on_both_pages_and_off_them(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     paths, tokens = probe.ai_agent_rule_terms()
+    live = _refuses(tokens, set(paths))
     asked: set[tuple[str, str]] = set()
 
     def answer(path: str, **kwargs: Any) -> Fetched:
-        agent = (kwargs.get("extra_headers") or {}).get("User-Agent", "")
-        asked.add((path, agent))
-        return _refuses(tokens)(path, **kwargs)
+        asked.add((path, (kwargs.get("extra_headers") or {}).get("User-Agent", "")))
+        return live(path, **kwargs)
 
     responder(monkeypatch, answer)
     assert _legal_check().ok
@@ -672,14 +714,7 @@ def test_the_legal_pages_check_asks_every_token_on_every_page(
         assert (path, probe.BROWSER_USER_AGENT) in asked
         for token in tokens:
             assert any(p == path and f"{token}/" in agent for p, agent in asked), (path, token)
-
-
-def test_the_legal_pages_check_fails_against_a_site_that_answers_404_to_everyone(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Why it sits outside the 404 sweep, and what it does instead: a 404 to an agent is
-    the finding, so the check fails and names what was not refused."""
-    responder(monkeypatch, everything_404)
-    report = _legal_check()
-    assert not report.ok
-    assert "not 403" in report.results[0].detail
+    for token in tokens:
+        assert any(p == probe.OFF_PATH_CONTROL and f"{token}/" in agent for p, agent in asked), (
+            token
+        )
