@@ -57,6 +57,13 @@ jobs:
       - name: Type check
         run: mypy src/
 
+      # actions/checkout marks the repository safe only in a temporary global git config it
+      # creates for its own step, so git in a later step of this container is refused as
+      # "dubious ownership" (docs/09 §3.5). check_lock.sh trusts its own `$(pwd)` too; this
+      # makes the job's trust explicit, as tests/unit/test_workflow_git.py requires.
+      - name: Let git read the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Dependency lock is consistent
         # Fails if tools/requirements.in changed without the lock and the digest
         # changing too. Needs the full history fetched above.
