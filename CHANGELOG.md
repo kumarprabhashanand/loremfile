@@ -56,6 +56,26 @@ An audit that inherited this would open an `infra-drift` issue every run, and a 
 fires every run stops meaning anything — the failure already avoided for `fonts`/
 `speed_brain` and for `expected_drift`.
 
+### Added — `release.yml` and `loremfile release archive` (M4.4)
+
+- **Release assets come from the bytes production serves.** Each is fetched from
+  `https://loremfile.dev` and verified against the manifest hash before it enters the archive.
+  The assets are the `.tar` part(s), `parts.txt`, the tag's `manifest.json`, `sha256sums.txt`
+  and `notes.md`, the CHANGELOG section for the version.
+- **Which archive.** A snapshot for the first release and for every minor version that is a
+  multiple of ten; otherwise a delta against the highest earlier `vX.Y.Z` tag reachable from the
+  tagged commit, with versions compared as numbers. Not `git describe`, whose exit 128 means both
+  "no tag" and "broken".
+- **Two jobs, no environment and no secret.**
+  - `release` runs on a pushed tag only, and is the only job with `contents: write`.
+  - `rehearse` runs on dispatch, assembles and verifies the whole archive, and publishes nothing,
+    so the first fetch of every published byte is not also the first public release.
+- A tag run fails before downloading anything if CHANGELOG.md has no `## [X.Y.Z]` section.
+- Tests use a scratch git repository for the tag lookup: an unreachable higher tag, pre-release
+  and non-release tags, `v1.9.0` against `v1.10.0`, and no tags at all.
+- `Manifest.from_document`, so an earlier release's manifest is read from `git show`.
+- Still to come: `upload --restore`, `release redact` and `infra.yml`'s `restore`/`redact` modes.
+
 ### Added — a WAF custom rule refuses AI agents on the legal pages, written rule by rule (ADR-030)
 
 - **`loremfile_legal_pages_ai_agents`** (`infra/rulesets/http_request_firewall_custom.json`)
