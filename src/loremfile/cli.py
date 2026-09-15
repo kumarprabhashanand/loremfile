@@ -34,6 +34,7 @@ from loremfile.infra import locks
 from loremfile.infra import probe as probe_module
 from loremfile.infra import purge as purge_module
 from loremfile.infra import r2 as r2_module
+from loremfile.infra import redact as redact_module
 from loremfile.infra import release as release_module
 from loremfile.infra import restore as restore_module
 from loremfile.infra import tokens as tokens_module
@@ -509,6 +510,7 @@ def _restore(
             click.echo(plan.render(), err=True)
             written: list[str] = []
             refused: list[str] = []
+            refused_keys: set[str] = set()
             if plan.ok and not dry_run:
                 for step in plan.steps:
                     if step.action is restore_module.Action.SKIP:
@@ -525,6 +527,7 @@ def _restore(
                     if refusal is None:
                         written.append(step.key)
                     else:
+                        refused_keys.add(step.key)
                         refused.append(
                             f"{step.key}: R2 refused the write ({refusal}). Under a bucket lock "
                             "that is expected: lift the prefix's lock rule first (docs/11 §7.8), "
@@ -544,8 +547,13 @@ def _restore(
             "dry_run": dry_run,
             "only": len(only),
         }
+        done = {**dict.fromkeys(written, "written"), **dict.fromkeys(refused_keys, "refused")}
         items = [
-            {"path": step.key, "status": step.action.value, "detail": step.reason}
+            {
+                "path": step.key,
+                "status": done.get(step.key, step.action.value),
+                "detail": step.reason,
+            }
             for step in plan.steps
         ]
         errors = [*plan.blockers, *refused, *errors]
@@ -836,6 +844,9 @@ def verify_live_command(
             if hash_it:
                 body = verify_live_module.fetch(f"/{entry['path']}", method="GET")
                 report.findings.append(verify_live_module.check_fixture_bytes(entry, body))
+        if mode in {"daily", "full"} and not only:
+            # Nothing else on this account warns before the domain or certificate lapses.
+            report.findings += verify_live_module.expiry_findings()
         if inject_failure:
             # REQ-27: the issue automation is a control, and a control nobody has seen
             # fire is one nobody can trust. This makes it fire on demand.
@@ -1228,6 +1239,57 @@ def release_archive(
     sys.exit(
         _emit(
             "release archive",
+            ok=not errors,
+            summary=summary,
+            items=items,
+            errors=errors,
+            as_json=as_json,
+        )
+    )
+
+
+@release.command("redact")
+@click.option("--path", "path", required=True, help="A tombstoned fixture path to remove.")
+@click.option("--dry-run", "dry_run", is_flag=True, help="Name the releases; write nothing.")
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def release_redact(path: str, dry_run: bool, as_json: bool) -> None:
+    """Remove a taken-down fixture from the GitHub Release archives (docs/09 §10, ADR-031)."""
+    errors: list[str] = []
+    summary: dict[str, Any] = {}
+    items: list[Item] = []
+    try:
+        repository = os.environ.get("GITHUB_REPOSITORY") or f"{config.OWNER}/loremfile"
+        with tempfile.TemporaryDirectory(prefix="loremfile-redact-") as scratch:
+            report = redact_module.redact(
+                path,
+                repository=repository,
+                manifest=Manifest.load(),
+                cwd=config.repo_root(),
+                work=Path(scratch),
+                dry_run=dry_run,
+                today=dt.date.today().isoformat(),
+            )
+        click.echo(report.render(), err=True)
+        summary = {
+            "setting": report.setting,
+            "releases": report.scanned,
+            "changed": len(report.changed),
+            "dry_run": dry_run,
+        }
+        state = "planned" if dry_run else "redacted"
+        items = [{"path": tag, "status": state, "detail": path} for tag in report.changed]
+        errors = report.errors
+    except (
+        redact_module.RedactError,
+        release_module.ReleaseError,
+        ManifestError,
+        OSError,
+        ValueError,
+    ) as exc:
+        errors.append(str(exc))
+    sys.exit(
+        _emit(
+            "release redact",
             ok=not errors,
             summary=summary,
             items=items,

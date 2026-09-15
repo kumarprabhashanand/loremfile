@@ -17,7 +17,7 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 
 > **Licences**
 > **Files.** Every file served under a format path (for example `/pdf/…`, `/bin/…`, `/edge/…`) is dedicated to the public domain under the [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) deed. You may copy, modify, distribute and use them for any purpose, commercially or not, without asking permission or giving credit.
-> **Code.** The generators, site and tooling are open source under the MIT licence at https://github.com/<OWNER>/loremfile.
+> **Code.** The generators, site and tooling are open source under the MIT licence at https://github.com/kumarprabhashanand/loremfile.
 > **This website's text and graphics** are licensed CC BY 4.0; attribute "loremfile.dev".
 > **Trademarks and third parties.** Format names (PDF, MP4, …) belong to their owners and are used descriptively. No third-party media is redistributed; see THIRD_PARTY.md in the repository for the tools used to generate files.
 
@@ -29,7 +29,7 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 > 3. Please keep automated traffic below 30 requests per second per client. We may rate-limit, block or otherwise restrict clients that degrade the service for others.
 > 4. Do not use this service to distribute content you do not own, to test attacks against third parties, or in any way that violates law. The service hosts no user content and offers no upload.
 > 5. We may add files at any time. We remove files only for legal reasons; removed URLs are documented in the manifest.
-> 6. Contact: hello@loremfile.dev · https://github.com/<OWNER>/loremfile
+> 6. Contact: hello@loremfile.dev · https://github.com/kumarprabhashanand/loremfile
 
 ## 3. Privacy notice (`/legal/privacy`) — full text
 

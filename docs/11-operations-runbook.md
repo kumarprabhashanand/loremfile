@@ -7,7 +7,7 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 | Need | Location |
 |---|---|
 | Production | https://loremfile.dev |
-| Source, issues, CI | https://github.com/<OWNER>/loremfile |
+| Source, issues, CI | https://github.com/kumarprabhashanand/loremfile |
 | Health status | Open issues labelled `health` (none = healthy) |
 | Cloudflare zone analytics | Cloudflare dashboard → Websites → loremfile.dev → Analytics & Logs |
 | R2 usage | Cloudflare dashboard → R2 → loremfile-public → Metrics; and R2 → Overview (account usage) |
@@ -20,7 +20,7 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 
 1. **Triage issues** labelled `health`, `infra-drift`, `determinism`, `security`, `fixture-request`. For each: read the latest comment; follow the matching procedure in §7.
 2. **Merge Dependabot PRs** that are green. For Python or Docker updates the PR must include the regenerated lock and new digest (CI enforces). If determinism tests fail on a toolchain bump, open a `determinism` issue and do not merge.
-3. **Look at usage** (2 minutes, A): read the latest line of `ops-log.md` on the `ops-log` branch (`https://github.com/<OWNER>/loremfile/blob/ops-log/ops-log.md`), written automatically every Monday by `health.yml` (requests/day, bandwidth, cache hit ratio, R2 Class B month-to-date, top paths). Target hit ratio ≥ 95 % zone-wide; R2 Class B < 5 M/month. If the line is missing, `health.yml` is not running — check Actions.
+3. **Look at usage** (2 minutes, A): read the latest line of `ops-log.md` on the `ops-log` branch (`https://github.com/kumarprabhashanand/loremfile/blob/ops-log/ops-log.md`), written automatically every Monday by `health.yml` (requests/day, bandwidth, cache hit ratio, R2 Class B month-to-date, top paths). Target hit ratio ≥ 95 % zone-wide; R2 Class B < 5 M/month. If the line is missing, `health.yml` is not running — check Actions.
 4. **Check spend** (O, monthly is enough): Billing → current usage should be USD 0.00 apart from the domain. The agent cannot see billing; the `cost` issue from `health.yml` is the automated proxy.
 5. **Fixture requests**: label, reply with the naming grammar, or implement if small.
 6. **Close the session** by noting anything unusual in the `notes` column of the latest `ops-log.md` line (push to the `ops-log` branch).
@@ -72,7 +72,7 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 3. `missing_object` → the key is absent in R2. Run `deploy.yml` manually (`workflow_dispatch`); `build --missing-in-bucket` regenerates and uploads the missing fixtures (never overwrites). If `manifest check` fails there with a hash diff, the toolchain has drifted for that fixture: run `infra.yml` in `restore` mode with the latest release archive instead. If objects keep disappearing, rotate T2 and read the R2 audit log — with bucket locks in place this should be impossible.
 4. `hash_mismatch` or `content_length_mismatch` on a fixture → treat as an incident (`10` §6): run `infra.yml` in `audit` mode plus `verify-live --mode full` (any machine, no credentials needed) to list all affected paths; restore them by running `infra.yml` in `restore` mode with the latest release archive URL and the affected paths (`upload --restore` writes only where the live hash differs from the manifest); rotate T2.
 5. `header_missing` → run `infra.yml` in `audit` mode; if drift, run it in `apply` mode.
-6. `rdap_expiry` < 45 days → Domain Registration → check auto-renew and card; renew manually if needed.
+6. `rdap_expiry` < 45 days → Domain Registration → check auto-renew and card; renew manually if needed. `tls_expiry` < 14 days → SSL/TLS → Edge Certificates: the certificate should have renewed; open a Cloudflare support ticket if it has not.
 7. `security_txt_expiry` → trigger a deploy.
 8. Comment on the issue with what you did; the next green run closes it.
 
@@ -149,9 +149,9 @@ Honest recovery targets: **content and a mirror hostname within one working day*
 1. From GitHub Releases download every archive since the first release (delta tarballs) or the latest snapshot plus later deltas; if a fixture was redacted, its tombstone is in `sha256sums.txt`.
 2. Extract into one directory; run `sha256sum -c sha256sums.txt --ignore-missing` (all OK).
 3. Missing fixtures (if any archive was lost) can be regenerated with `loremfile build --all --only <paths>` in the toolchain image of the release (`toolchain_image` in that manifest); verify hashes.
-4. New Cloudflare account (or the recovered one): repeat `08` §2 (domain if recoverable, otherwise a fallback hostname; bucket; custom domain; CORS; tokens; **apply the lock rules only after the restore upload**, or the restore cannot write), then run `infra.yml` in `restore-dry-run` mode with the archive part URL(s) and read the plan, then in `restore` mode (or, if GitHub is also gone, `loremfile upload --from-dir <dir> --dry-run` and then without `--dry-run`, from a machine that holds temporary tokens created for the occasion; `--from-dir` is its own mode, so the site follows separately with `upload --site` once it is built), then `apply` mode, then `verify-live --mode full`. Step 4's unknowns (apex attach, CORS, locks, tokens, `infra apply` on a fresh zone) are exactly the steps rehearsed in M0.4 and M2 — record their durations then; a full rehearsal on a throwaway zone is optional (≈ USD 10 for a domain).
+4. New Cloudflare account (or the recovered one), in this order: (a) `08` §2 setup except the lock rules (domain if recoverable, otherwise a fallback hostname; bucket; custom domain; CORS; tokens); (b) `infra.yml` `apply` — it writes no R2 objects and no lock rules; (c) `infra.yml` `restore-dry-run` with the archive part URL(s), and read the plan; (d) `restore`, which verifies the paths it wrote; (e) the site upload; (f) the lock rules; (g) `verify-live --mode full`. If GitHub is also gone, (c)–(d) are `loremfile upload --from-dir <dir> --dry-run` and then without `--dry-run`, from a machine holding temporary tokens. Record the durations; a rehearsal on a throwaway zone is optional (≈ USD 10 for a domain).
 5. If the domain is lost for good, publish the new host in the README and on the mirror's home page; nothing else can be done at this budget.
-Practise steps 1–3 before launch (M5.5) and record the time taken.
+Practise steps 1–3 before launch (M5.5) and record the time taken. At M5.5 also run `infra.yml` `restore-dry-run` against the `v1.0.0` archive part: expect `skip=161, upload=0, replace=0`.
 
 ### 7.7 Deploy failed
 
@@ -164,7 +164,7 @@ Read the failing step. `manifest check` hash diff → a generator drifted for a 
 3. Open a PR that sets `status: removed` with `removed: {reason, removed_at}` on the catalog entry, deletes its `generator_params` (and the generator branch if the code itself embodies the problem), runs `loremfile manifest update` (the entry becomes a tombstone, `04` §1.5), and adds a CHANGELOG line.
 4. Merge: `deploy.yml` runs `upload --apply-removals`, which deletes the object and purges its URL; the site shows the tombstone.
 5. Owner re-adds the lock rule (`npx wrangler r2 bucket lock set loremfile-public --file infra/r2-locks.json` restores the full set).
-6. Run `infra.yml` in `redact` mode with the path (`09` §10) so the bytes leave the GitHub Release assets.
+6. Run `infra.yml` in `redact-dry-run` and then `redact` mode with the path (`09` §10, ADR-031) so the bytes leave the GitHub Release assets.
 7. Reply to the requester.
 
 ### 7.9 Add a fixture (normal change)

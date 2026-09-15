@@ -2,9 +2,8 @@
 # (docs/09 §3.2b, ADR-022). The tokens live in the `production` environment and are only
 # ever read by a job running here.
 #
-# M2.2 adds `apply-dry-run` and `apply`, M2.4 `probe`, and M4.4 `restore-dry-run` and
-# `restore`. `redact` arrives with `loremfile release redact`; a mode that does not exist
-# yet is not offered, so the workflow can never look like it did something it did not.
+# M2.2 adds `apply-dry-run` and `apply`, M2.4 `probe`, M4.4 the restore and redact modes.
+# A mode that does not exist yet is not offered.
 #
 # `apply-dry-run` exists as its own mode rather than a flag on `apply` because the point
 # of it is to be run first and read: it resolves and prints the target zone id and
@@ -27,6 +26,8 @@ on:
           - probe
           - restore-dry-run
           - restore
+          - redact-dry-run
+          - redact
       restore_archive_url:
         description: >-
           restore modes only: space-separated release archive parts of this repository,
@@ -37,6 +38,11 @@ on:
         description: >-
           restore modes only: space-separated fixture paths; empty restores every fixture
           the archives hold
+        type: string
+        default: ""
+      redact_path:
+        description: >-
+          redact modes only: the tombstoned fixture path to remove from the release archives
         type: string
         default: ""
 
@@ -254,8 +260,56 @@ jobs:
 
       - name: Restore
         if: inputs.mode == 'restore'
-        run: loremfile upload ${{ steps.flags.outputs.flags }}
+        run: |
+          status=0
+          loremfile upload ${{ steps.flags.outputs.flags }} --json > restore.json || status=$?
+          cat restore.json
+          exit "$status"
 
-      - name: Verify every published fixture
-        if: inputs.mode == 'restore'
-        run: loremfile verify-live --mode full
+      # Only the paths this run wrote: a fresh account gets its lock rules and site after the
+      # restore (docs/11 §7.6), so a full check would fail a restore that succeeded.
+      - name: Verify the restored fixtures
+        if: ${{ !cancelled() && inputs.mode == 'restore' }}
+        run: |
+          paths=$(python -c 'import json; print(" ".join("--only " + i["path"] for i in json.load(open("restore.json"))["items"] if i["status"] == "written"))')
+          if [ -z "$paths" ]; then echo "nothing was written; nothing to verify"; exit 0; fi
+          loremfile verify-live --mode full $paths
+
+  # docs/09 §10, ADR-031. `redact-dry-run` names the releases that would change and shows
+  # whether this token can read the immutable-releases setting; `redact` rewrites them.
+  redact:
+    needs: setup
+    if: inputs.mode == 'redact-dry-run' || inputs.mode == 'redact'
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REDACT_PATH: ${{ inputs.redact_path }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      - name: Let git read the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Check the input
+        run: |
+          case "$REDACT_PATH" in
+            ""|*[!A-Za-z0-9._/-]*|*..*|/*) echo "refusing '$REDACT_PATH': not a fixture path" >&2; exit 1 ;;
+          esac
+
+      - name: Plan the redaction (writes nothing)
+        if: inputs.mode == 'redact-dry-run'
+        run: loremfile release redact --path "$REDACT_PATH" --dry-run
+
+      - name: Redact
+        if: inputs.mode == 'redact'
+        run: loremfile release redact --path "$REDACT_PATH"

@@ -6,7 +6,7 @@
 # Build context is the repository root:
 #   docker build -f tools/Dockerfile -t loremfile-toolchain .
 #
-# Built and pushed to ghcr.io/<OWNER>/loremfile-toolchain by .github/workflows/toolchain.yml;
+# Built and pushed to ghcr.io/kumarprabhashanand/loremfile-toolchain by .github/workflows/toolchain.yml;
 # every other workflow references it by the digest in tools/TOOLCHAIN_DIGEST.
 
 # python 3.12.14, Debian 12.15 "bookworm". Pinned by the multi-arch index digest;

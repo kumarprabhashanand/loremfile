@@ -204,3 +204,10 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
   - An incident rule survives every apply, and shows as a warning until it is ported into `infra/` or removed.
   - The Anthropic tokens are matched without a vendor-published header string (`08` §5.7).
 - **What would reopen this**: Cloudflare offering a whole-phase write that preserves rules it was not given; incident rules moving to a phase nothing else writes; or a vendor publishing header strings that do not contain its robots.txt token.
+
+## ADR-031 Release assets stay mutable; release tags are protected by a ruleset (2026-09-15)
+
+- **Context**: A takedown must also leave the release archives (`09` §10). GitHub on immutable releases: "Release assets cannot be modified or deleted"; the tag "cannot be deleted while the release exists"; "If you delete the immutable release, you can delete the tag, but you cannot reuse the same tag name."
+- **Decision**: immutable releases stay **off**. `release redact` rebuilds affected parts in place and refuses an immutable release, naming the cost: deleting the whole release, losing the restore archive for every other fixture in it, and burning the tag name. It reads `GET /repos/{owner}/{repo}/immutable-releases` first and fails if the setting is on.
+- **Integrity instead**: manifest hashes in git and `parts.txt`; a tag ruleset on `refs/tags/v*` blocks deletion and updates.
+- **Reopen if**: GitHub allows replacing a single asset of an immutable release.

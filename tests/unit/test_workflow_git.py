@@ -34,6 +34,7 @@ COMMENT = re.compile(r"#.*$", re.MULTILINE)
 GIT_COMMANDS = (
     "loremfile infra changed",  # infra/changed.py
     "loremfile release archive",  # infra/release.py
+    "loremfile release redact",  # release.manifest_at, via infra/redact.py
     "loremfile build --new",  # build.merge_base_manifest
     "loremfile manifest check",  # build.merge_base_manifest
     "loremfile manifest update",  # build.merge_base_manifest
@@ -104,6 +105,7 @@ def test_the_scan_finds_the_steps_known_to_run_git() -> None:
         "health.yml check: Weekly ops-log commit",
         "ci.yml build-and-validate: Generate the fixtures this pull request adds",
         "ci.yml lint-and-test: Dependency lock is consistent",
+        "infra.yml redact: Redact",
     ):
         assert expected in found, expected
 
@@ -219,12 +221,15 @@ def cli_commands_using(names: set[str]) -> set[str]:
 
 
 def test_every_cli_command_that_reaches_git_is_listed() -> None:
-    reaching = cli_commands_using({"merge_base_manifest", "changed_infra", "release_module"})
+    reaching = cli_commands_using(
+        {"merge_base_manifest", "changed_infra", "release_module", "redact_module"}
+    )
     assert reaching == {
         "loremfile manifest check",
         "loremfile manifest update",
         "loremfile manifest adopt",
         "loremfile infra changed",
         "loremfile release archive",
+        "loremfile release redact",
     }, "empty-set control, and a change here means GIT_COMMANDS needs one too"
     assert reaching <= set(GIT_COMMANDS)

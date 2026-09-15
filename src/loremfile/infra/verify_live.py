@@ -16,10 +16,15 @@ automation is a control, and a control nobody has seen fire is one nobody can tr
 
 from __future__ import annotations
 
+import datetime as dt
 import hashlib
+import json
+import socket
+import ssl
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
@@ -38,6 +43,8 @@ class Status(StrEnum):
     HEADER_VALUE = "header_value"
     STATUS = "status"
     TIMEOUT = "timeout"
+    RDAP_EXPIRY = "rdap_expiry"
+    TLS_EXPIRY = "tls_expiry"
 
 
 #: Our own rate limit answering. Retried, unlike in the probe (see the module docstring).
@@ -227,3 +234,79 @@ def smallest_per_format(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
         fmt = entry["path"].split("/", 1)[0]
         chosen.setdefault(fmt, entry)
     return [chosen[fmt] for fmt in sorted(chosen)]
+
+
+# --- expiry (daily and full) ----------------------------------------------------------
+
+#: IANA's RDAP bootstrap (data.iana.org/rdap/dns.json) names this server for `.dev`.
+RDAP_URL = f"https://pubapi.registry.google/rdap/domain/{SITE_HOST}"
+#: docs/11 §7.1 and RISK-05. Nothing else on this account warns before the domain lapses.
+RDAP_WARN_DAYS = 45
+#: Cloudflare renews edge certificates well before this; a closer date means renewal failed.
+TLS_WARN_DAYS = 14
+
+
+def registration_expiry(url: str = RDAP_URL) -> dt.datetime:
+    """The domain's `expiration` event from the registry's RDAP record."""
+    request = urllib.request.Request(url, headers={"Accept": "application/rdap+json"})  # noqa: S310
+    with urllib.request.urlopen(request, timeout=30) as raw:  # noqa: S310 - fixed https URL
+        document = json.loads(raw.read())
+    for event in document.get("events") or []:
+        if event.get("eventAction") == "expiration":
+            return dt.datetime.fromisoformat(str(event["eventDate"]).replace("Z", "+00:00"))
+    raise ValueError("the RDAP record has no expiration event")
+
+
+def parse_not_after(value: str) -> dt.datetime:
+    """`notAfter` as `ssl.getpeercert` reports it, e.g. `Dec  7 06:23:04 2026 GMT`."""
+    return dt.datetime.fromtimestamp(ssl.cert_time_to_seconds(value), tz=dt.UTC)
+
+
+def certificate_expiry(host: str = SITE_HOST) -> dt.datetime:
+    context = ssl.create_default_context()
+    with (
+        socket.create_connection((host, 443), timeout=30) as sock,
+        context.wrap_socket(sock, server_hostname=host) as tls,
+    ):
+        certificate = tls.getpeercert()
+    return parse_not_after(str((certificate or {})["notAfter"]))
+
+
+def check_expiry(
+    name: str,
+    status: Status,
+    read: Callable[[], dt.datetime],
+    *,
+    warn_days: int,
+    now: dt.datetime,
+) -> Finding:
+    """A date that cannot be read is a finding too: it is the only warning there is."""
+    try:
+        expires = read()
+    except (OSError, ValueError, KeyError) as exc:
+        return Finding(name, status, f"could not read the expiry: {exc}")
+    days = (expires - now).days
+    shown = f"expires {expires:%Y-%m-%d}, in {days} days"
+    if days < warn_days:
+        return Finding(name, status, f"{shown} (warns under {warn_days})")
+    return Finding(name, Status.OK, shown)
+
+
+def expiry_findings(now: dt.datetime | None = None) -> list[Finding]:
+    moment = now or dt.datetime.now(dt.UTC)
+    return [
+        check_expiry(
+            f"domain:{SITE_HOST}",
+            Status.RDAP_EXPIRY,
+            registration_expiry,
+            warn_days=RDAP_WARN_DAYS,
+            now=moment,
+        ),
+        check_expiry(
+            f"tls:{SITE_HOST}",
+            Status.TLS_EXPIRY,
+            certificate_expiry,
+            warn_days=TLS_WARN_DAYS,
+            now=moment,
+        ),
+    ]
