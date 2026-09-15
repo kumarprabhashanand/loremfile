@@ -34,6 +34,7 @@ from loremfile.infra import locks
 from loremfile.infra import probe as probe_module
 from loremfile.infra import purge as purge_module
 from loremfile.infra import r2 as r2_module
+from loremfile.infra import release as release_module
 from loremfile.infra import restore as restore_module
 from loremfile.infra import tokens as tokens_module
 from loremfile.infra import upload as upload_module
@@ -1127,6 +1128,112 @@ def probe_command(up: bool, down: bool, skip_rate_limit: bool, as_json: bool) ->
         errors.append(str(exc))
     sys.exit(
         _emit("probe", ok=not errors, summary=summary, items=items, errors=errors, as_json=as_json)
+    )
+
+
+# --- release ---------------------------------------------------------------
+
+
+@main.group()
+def release() -> None:
+    """Release archives for GitHub Releases (docs/09 §3.5)."""
+
+
+@release.command("archive")
+@click.option(
+    "--tag",
+    default=None,
+    help="The tag being released, vMAJOR.MINOR.PATCH. Must match manifest.json "
+    "catalog_version; defaults to v<catalog_version>.",
+)
+@click.option(
+    "--since", default=None, help="A delta against this earlier tag, instead of deciding."
+)
+@click.option("--snapshot", is_flag=True, help="Every active fixture, instead of deciding.")
+@click.option(
+    "--out",
+    "out_dir",
+    type=click.Path(path_type=Path),
+    default=Path("build/release"),
+    show_default=True,
+    help="An empty directory for the assets; release.yml attaches everything in it.",
+)
+@click.option(
+    "--rehearsal",
+    is_flag=True,
+    help="Proceed without the CHANGELOG section. Nothing is published either way.",
+)
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def release_archive(
+    tag: str | None,
+    since: str | None,
+    snapshot: bool,
+    out_dir: Path,
+    rehearsal: bool,
+    as_json: bool,
+) -> None:
+    """Assemble a release's assets from the bytes production serves (docs/09 §3.5).
+
+    Never publishes: release.yml attaches the assets with `gh release create`. With neither
+    --since nor --snapshot, the previous release tag decides — a snapshot for the first
+    release and for every 10th minor, otherwise a delta.
+    """
+    if since and snapshot:
+        raise click.UsageError("--since and --snapshot are exclusive")
+    errors: list[str] = []
+    summary: dict[str, Any] = {}
+    items: list[Item] = []
+    try:
+        root = config.repo_root()
+        current = Manifest.load(config.manifest_path())
+        tag = tag or f"v{current.catalog_version}"
+        release_module.check_tag(tag, current.catalog_version)
+        if snapshot:
+            plan = release_module.Plan(tag=tag, since=None)
+        elif since:
+            if release_module.version_of(since) >= release_module.version_of(tag):
+                raise release_module.ReleaseError(f"--since {since} is not earlier than {tag}")
+            plan = release_module.Plan(tag=tag, since=since)
+        else:
+            # HEAD is the tagged commit on a tag push and the dispatched commit in a
+            # rehearsal; the tag being released is excluded by version, not by `HEAD^`.
+            previous = release_module.previous_tag("HEAD", tag, cwd=root)
+            plan = release_module.plan_release(tag, previous)
+        click.echo(
+            f"{plan.mode} {plan.tag}" + (f" since {plan.since}" if plan.since else ""), err=True
+        )
+        entries = release_module.members(plan, current, cwd=root)
+        assets = release_module.assemble(
+            plan,
+            current,
+            entries,
+            manifest_file=config.manifest_path(),
+            changelog=(root / "CHANGELOG.md").read_text(encoding="utf-8"),
+            out_dir=out_dir,
+            rehearsal=rehearsal,
+        )
+        click.echo(assets.archive.render(), err=True)
+        summary = {
+            "tag": plan.tag,
+            "mode": plan.mode,
+            "since": plan.since or "",
+            "members": assets.archive.members,
+            "bytes": assets.archive.total_bytes,
+            "parts": len(assets.archive.parts),
+            "notes": "written" if assets.notes else "missing (rehearsal)",
+        }
+        items = [{"path": str(path), "status": "written", "detail": ""} for path in assets.files]
+    except (release_module.ReleaseError, ManifestError, OSError) as exc:
+        errors.append(str(exc))
+    sys.exit(
+        _emit(
+            "release archive",
+            ok=not errors,
+            summary=summary,
+            items=items,
+            errors=errors,
+            as_json=as_json,
+        )
     )
 
 

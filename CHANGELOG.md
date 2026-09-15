@@ -70,7 +70,48 @@ fires every run stops meaning anything — the failure already avoided for `font
 - **Written URLs are purged,** so a cached 404 or the old bytes cannot shadow the restore.
 - **`infra.yml` gains `restore-dry-run` and `restore`.** Inputs pass through `env` and are checked for
   shape, and the tests run that guard itself. A real restore ends with `verify-live --mode full`.
-- `redact` follows with `loremfile release redact`, once #62's asset layout is on `main`.
+- `redact` follows with `loremfile release redact`, now that #62's asset layout is on `main`.
+
+### Verified — Free accepts `http.user_agent`; the AI-agent probe checks its path scope
+
+- **[VERIFY] resolved, 2026-09-15.**
+  - Push deploy run `34940201386` created the entry point and `loremfile_legal_pages_ai_agents`
+    (`updated`, `failed=0`, `warning=0`, every other phase `unchanged`). That write also confirms
+    T1's permission for the phase.
+  - Probe run `34941018789` passed `legal-pages-ai-agents`, with 14 checks and 0 failed.
+  - A hand check from colo TXL found `GPTBot` refused on both legal pages but not on
+    `/pdf/minimal.pdf` or `/robots.txt`.
+
+  Recorded in `docs/08` §5.7, §6 row 5b and ADR-030. The Anthropic header strings stay
+  unverified.
+- **`legal-pages-ai-agents` gains a path-scope control.** No agent token may be refused on
+  `/robots.txt`; the browser control alone could not show the 403 comes from the rule's path
+  scope. The check also settles on the first refusal (`docs/11` §7.2b), so a probe straight
+  after an apply reports "never appeared" rather than a wrong rule. That makes a site answering
+  404 everywhere a precondition failure, so the check rejoins the probe's 404 sweep.
+- **M4.1 plan:** the `IMPRINT_*` values render into exactly `legal/imprint` and `legal/privacy`,
+  with no twin key and no excerpt elsewhere. A count-only check in the production job enforces
+  this and prints no value.
+
+### Added — `release.yml` and `loremfile release archive` (M4.4)
+
+- **Release assets come from the bytes production serves.** Each is fetched from
+  `https://loremfile.dev` and verified against the manifest hash before it enters the archive.
+  The assets are the `.tar` part(s), `parts.txt`, the tag's `manifest.json`, `sha256sums.txt`
+  and `notes.md`, the CHANGELOG section for the version.
+- **Which archive.** A snapshot for the first release and for every minor version that is a
+  multiple of ten; otherwise a delta against the highest earlier `vX.Y.Z` tag reachable from the
+  tagged commit, with versions compared as numbers. Not `git describe`, whose exit 128 means both
+  "no tag" and "broken".
+- **Two jobs, no environment and no secret.**
+  - `release` runs on a pushed tag only, and is the only job with `contents: write`.
+  - `rehearse` runs on dispatch, assembles and verifies the whole archive, and publishes nothing,
+    so the first fetch of every published byte is not also the first public release.
+- A tag run fails before downloading anything if CHANGELOG.md has no `## [X.Y.Z]` section.
+- Tests use a scratch git repository for the tag lookup: an unreachable higher tag, pre-release
+  and non-release tags, `v1.9.0` against `v1.10.0`, and no tags at all.
+- `Manifest.from_document`, so an earlier release's manifest is read from `git show`.
+- Still to come: `upload --restore`, `release redact` and `infra.yml`'s `restore`/`redact` modes.
 
 ### Added — a WAF custom rule refuses AI agents on the legal pages, written rule by rule (ADR-030)
 

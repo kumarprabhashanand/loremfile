@@ -287,22 +287,27 @@ So `apply.py` **confirms the managed ruleset is deployed and stops** — a perma
 - **Anthropic** names `ClaudeBot`, `Claude-User` and `Claude-SearchBot` as robots.txt user agents but publishes **no header strings**. Matching them assumes the header carries the token in that casing, and that stays unverified until a request from one is seen.
 - **`Google-Extended` never.** Google: "Google-Extended doesn't have a separate HTTP request user agent string." A clause for it could not fire.
 
-**[VERIFY] `http.user_agent` on Free — still open, and the first write decides it.**
+**Resolved 2026-09-15: Free accepts `http.user_agent` in a custom rule.** Cloudflare's documentation said nothing either way. The custom-rules availability table names no field restriction, the field reference states no plan availability, and User Agent Blocking recommends custom rules with an `http.user_agent eq` example. So the first write decided it:
 
-What Cloudflare's documentation says:
-- The custom-rules availability table gives Free 5 rules, "All except Log" actions and no regex support, and names no field restriction.
-- The `http.user_agent` field reference states no plan availability at all.
-- User Agent Blocking (10 rules on Free) says "Cloudflare recommends that you use custom rules instead of user agent rules to block specific user agents", with an `http.user_agent eq` example.
+- **The write.** Push deploy run `34940201386` (`99334dd9e2`, #61's merge): `Apply infra` reported `http_request_firewall_custom:loremfile_legal_pages_ai_agents updated — added, creating the entry point`, with `failed=0` and `warning=0`; every other phase `unchanged`. T1 made that write, which also confirms its permission for this phase (§6, row 5b).
+- **The behaviour.** Probe run `34941018789`: `legal-pages-ai-agents` passed ("7 agent tokens refused on 2 pages; a browser was not"). 14 checks, 0 failed; the rate limit answered 429 after 288 requests at 259/s (colo ORD); `uploaded=5`, `deleted=5`.
+- **The path scope, by hand.** The owner, at 07:11:42 UTC from colo TXL:
+  - a `GPTBot` User-Agent got `403` on `/legal/imprint` and `/legal/privacy`;
+  - a browser got `404` on both, because the pages are not published yet;
+  - `GPTBot` got `200` on `/pdf/minimal.pdf` and `404` on `/robots.txt` (not published yet).
 
-**None of that is the zone accepting the rule.**
+  The refusal is scoped to the two paths.
 
-**What the first apply shows.** The first apply after this lands is the test. If the zone refuses the field, that apply reports `failed` with Cloudflare's error, the deploy is red, and this section records the error.
+**Still unverified:** Anthropic publishes no header strings, so matching `ClaudeBot`, `Claude-User` and `Claude-SearchBot` assumes each request's header carries its token in that casing.
 
-**What the probe checks.** Once the rule is written, `infra.yml` → `probe` runs `legal-pages-ai-agents`:
-- every token gets a `403` on both pages (a block is "`403` (most security features)");
-- a browser User-Agent does not, which is the negative control.
+**What the probe checks.** `infra.yml` → `probe` runs `legal-pages-ai-agents`.
+1. **It settles first**, as the other post-apply checks do (`11` §7.2b). The first agent request on the first page is polled until it is refused, for up to 180 s. A settle that expires reports "never appeared" — the rule has not propagated or was never applied — which is a different finding from a wrong rule.
+2. **Then, once each and unretried:**
+   - every token gets `403` on both pages (a block is "`403` (most security features)");
+   - a browser User-Agent does not;
+   - no token is refused on `/robots.txt`, a path the rule does not name.
 
-The pages need not be published for this, because the edge answers before R2 does.
+The browser control shows the rule does not refuse everyone; the off-path control shows the `403` comes from the rule's path scope. The pages need not be published for this, because the edge answers before R2 does.
 
 **Budget.** 1 of 5 custom rules, leaving 4 for incidents (`11` §7.4).
 
@@ -353,7 +358,7 @@ Endpoints, expected token permissions and the fallback when the API answers 403 
 | 5 | `…/http_request_cache_settings` | Cache Rules: Edit | Caching → Cache Rules |
 | 5 | `…/http_ratelimit` | Zone WAF: Edit | Security → WAF |
 | 5 | `…/http_request_firewall_managed` | **none — never written** (**resolved 2026-09-09**: no zone entry point exists; Cloudflare deploys the managed ruleset itself, verified zone-scoped via `GET /zones/{id}/rulesets`) | n/a |
-| 5b | `…/phases/http_request_firewall_custom/entrypoint` (read); `…/rulesets/{ruleset_id}/rules[/{rule_id}]` (`POST`/`PATCH`/`DELETE`); `POST /zones/{id}/rulesets` (create) — **never `PUT`** | Zone WAF: Edit, as for `http_ratelimit` **[VERIFY at the first write]** | Security → WAF → Custom rules |
+| 5b | `…/phases/http_request_firewall_custom/entrypoint` (read); `…/rulesets/{ruleset_id}/rules[/{rule_id}]` (`POST`/`PATCH`/`DELETE`); `POST /zones/{id}/rulesets` (create) — **never `PUT`** | Zone WAF: Edit, as for `http_ratelimit` (**resolved 2026-09-15**: T1's first write created the entry point and the rule — push deploy run `34940201386`, §5.7) | Security → WAF → Custom rules |
 | 6 | `/zones/{id}/cache/tiered_cache_smart_topology_enable` | Cache Settings: Edit (endpoint verified) | Caching → Tiered Cache |
 | 7 | `/zones/{id}/url_normalization` (read; write only if off) | Zone Settings: Edit **[VERIFY endpoint]** | Rules → Settings → Normalize incoming URLs |
 | health | GraphQL Analytics `r2OperationsAdaptiveGroups` (T4) | Account → Account Analytics: Read **[VERIFY in M0.4 when T4 is created]** | Read R2 usage in the dashboard |
