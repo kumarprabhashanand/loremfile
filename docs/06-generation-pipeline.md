@@ -300,7 +300,7 @@ WORKDIR /work
 | `loremfile manifest update|check` | §7 |
 | `loremfile site build` | Render site to `build/site/` (see `07-website.md`) |
 | `loremfile site serve [--port 8080]` | Preview `build/site/` with production-like routing (extensionless keys as `text/html`, `/` → `index.html`, trailing slash → `index.html`) |
-| `loremfile upload [--fixtures] [--site] [--dry-run] [--force-site] [--from-dir <dir>] [--restore <archive> [--only path…]]` | See `09-ci-cd.md` §5. `--from-dir` uploads a prepared directory (restore drill); `--restore` uploads from a release archive only where the live object is missing or its hash differs from the manifest |
+| `loremfile upload [--fixtures] [--site] [--dry-run] [--force-site] [--from-dir <dir>] [--restore <release part URL or .tar>…] [--only path…]` | See `09-ci-cd.md` §5. `--from-dir` uploads a prepared directory (restore drill); `--restore` uploads from a release archive only where the live object is missing or its hash differs from the manifest |
 | `loremfile upload --apply-removals` | Deletes objects whose manifest entry is `status: removed` and purges their URLs; the only delete path in the tool besides `probe --down` (takedown flow, `11` §7.8; the owner must have lifted the prefix's bucket lock first) |
 | `loremfile probe (--up \| --check \| --down)` | Uploads the M2.4 probe objects under `_probe/`, runs the behavioural checks, deletes them; deletes are restricted to the `_probe/` prefix. `--check` also writes `_locktest/probe` once (a locked prefix, `08` §7b) and verifies that overwriting and deleting it are refused |
 | `loremfile purge --site` | Purge site/discovery URLs from the Cloudflare cache |

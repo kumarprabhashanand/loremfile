@@ -290,6 +290,11 @@ jobs:
 
 This is how M2.3 (`apply`), M2.4 (`probe`), rotation checks (`audit`) and restores run: tokens never leave GitHub. The probe mode uploads `_probe/index.html`, `_probe/ok.txt`, `_probe/page.html`, `_probe/dir/index.html` and `_probe/missing-404-check` is a GET of a non-existent key; it asserts `/`, `/_probe/`, headers (files, markup, page), CORS preflight, `www` redirect, 404 cache TTL (`cf-cache-status` and `age` on a repeated 404), and the rate limit (400 requests in 10 s → at least one 429, then 200 after 10 s); then deletes `_probe/*`. Deletion is limited to that prefix in code.
 
+**As implemented (restore, M4.4):**
+- **Restore is two modes.** `restore-dry-run` downloads, verifies and prints the plan, and writes nothing. `restore` writes, purges what it wrote, and then runs `verify-live --mode full`.
+- **The inputs** `restore_archive_url` and `restore_only` are space-separated. They reach the shell only through `env`, and are checked for shape before anything runs.
+- **`redact` is not offered yet.** It arrives with `loremfile release redact`.
+
 ### 3.3 `health.yml` — daily
 
 ```yaml
@@ -485,6 +490,22 @@ Python updates change `requirements.in`; the PR must also regenerate `requiremen
 - **Removals** (`--apply-removals`): for each manifest entry with `status: removed` whose key still exists, `DeleteObject` and purge the URL. This is the only delete in the tool besides `probe --down` (prefix `_probe/`); the code refuses any other key.
 - **Site** (`--site`): upload every file under `build/site/` with the content-type table (`html`→`text/html; charset=utf-8`, extensionless→`text/html; charset=utf-8`, `json`→`application/json`, `txt`→`text/plain; charset=utf-8`, `xml`→`application/xml`, `css`→`text/css; charset=utf-8`, `js`→`text/javascript; charset=utf-8`, `svg`→`image/svg+xml`, `png`→`image/png`, `schema/*.json`→`application/schema+json`) and cache-control per `02` §4. Skip unchanged (compare sha256 metadata) unless `--force-site`.
 - **Restore** (`--restore <archive> [--only …]`, `--from-dir <dir>`): `--restore` accepts only URLs under `https://github.com/<OWNER>/loremfile/releases/download/` (or a local file); read fixtures from the release archive or directory, verify each against the manifest, upload where the live object is missing; where a live object exists with a different hash the overwrite is attempted and, under a bucket lock, refused by R2 — the tool reports each refusal explicitly and the owner must lift that prefix's lock rule first (same ceremony as a takedown, `11` §7.8). A hash-differing object under an intact lock should never exist.
+
+  **As implemented (M4.4, 2026-09-15).**
+  - **Sources.**
+    - `--restore` is repeatable. Each value is a release archive part: `https://github.com/<repository>/releases/download/<tag>/<name>.tar` (the repository is `$GITHUB_REPOSITORY`), or a local `.tar`. Anything else from the network is refused before it is requested.
+    - github.com answers an asset with a `302` to its asset host, which is followed.
+    - `--from-dir` reads fixtures at their manifest paths, and refuses a path that resolves outside the directory.
+  - **What is taken.** Only members that are **active** manifest paths whose bytes match the manifest's hash and length.
+    - A mismatching member stops the restore.
+    - A **tombstone is never restored**, even from an older archive that still holds it.
+    - Other members are listed and ignored.
+    - Members are written to numbered scratch files, so a member's name cannot choose where it lands.
+  - **What is written.** A missing object is uploaded and a matching one is skipped. An object whose hash differs, or that has no `sha256` metadata, is **replaced** — attempted through `r2.try_put_fixture`, with every refusal reported and the lock to lift named.
+    - Restore has its own actions (`upload`, `replace`, `skip`); a deploy's plan still has no overwrite.
+    - No lock gate applies, because a fresh account applies its lock rules after the restore (`11` §7.6 step 4).
+  - **After writing,** every written URL is purged (`purge_restored_urls`), so neither a cached 404 nor the replaced bytes shadow it.
+  - **Refused outright:** an `--only` path that the sources do not hold verified, and sources that hold nothing restorable.
 - `--dry-run` prints the plan without writing; every mode prints counts: uploaded/skipped/removed/failed and total bytes.
 
 ## 6. Cache purge (`loremfile purge --site`)

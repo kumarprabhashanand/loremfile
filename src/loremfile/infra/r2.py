@@ -10,9 +10,11 @@ ETags but not user metadata, and an ETag is an MD5 (or a multipart digest), not 
 needs a HEAD. The listing still comes first so that only keys that actually exist are
 HEADed: on a first deploy that is zero requests, and thereafter one per published fixture.
 
-**Nothing here overwrites a fixture.** `put_fixture` is only ever called for a key the
-plan marked `UPLOAD`, which by construction is a key the listing did not contain. The
-bucket lock rules are the enforcement; this is the layer that does not even try.
+**A deploy never overwrites a fixture.** It calls `put_fixture` only for a key the plan
+marked `UPLOAD`, which by construction is a key the listing did not contain. The bucket lock
+rules are the enforcement; this is the layer that does not even try. The one exception is
+`upload --restore` (docs/09 §5), which *attempts* to replace an object whose bytes the
+manifest disowns through `try_put_fixture` — and under a lock, R2 refuses it.
 """
 
 from __future__ import annotations
@@ -131,6 +133,31 @@ def put_fixture(s3: Any, bucket: str, key: str, source: Path, *, mime: str, sha2
         },
         Config=_transfer_config(),
     )
+
+
+def try_put_fixture(
+    s3: Any,  # noqa: ANN401 - boto3 exposes no client type to annotate
+    bucket: str,
+    key: str,
+    source: Path,
+    *,
+    mime: str,
+    sha256: str,
+) -> str | None:
+    """`put_fixture`, returning R2's refusal instead of raising it.
+
+    Restore reports every refusal rather than stopping at the first (docs/09 §5): under a
+    bucket lock a replacement is *expected* to be refused, and the operator needs the whole
+    list to know which prefixes' locks to lift.
+    """
+    from boto3.exceptions import S3UploadFailedError  # noqa: PLC0415 - see client()
+    from botocore.exceptions import ClientError  # noqa: PLC0415
+
+    try:
+        put_fixture(s3, bucket, key, source, mime=mime, sha256=sha256)
+    except (S3UploadFailedError, ClientError) as exc:
+        return str(exc)
+    return None
 
 
 def put_site(s3: Any, bucket: str, key: str, source: Path, *, mime: str, sha256: str) -> None:  # noqa: ANN401

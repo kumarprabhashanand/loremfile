@@ -56,6 +56,22 @@ An audit that inherited this would open an `infra-drift` issue every run, and a 
 fires every run stops meaning anything — the failure already avoided for `fonts`/
 `speed_brain` and for `expected_drift`.
 
+### Added — `upload --restore`, `upload --from-dir`, and `infra.yml`'s restore modes (M4.4)
+
+- **Sources.** A restore reads release archive parts: `https://github.com/<repository>/releases/download/<tag>/<name>.tar`,
+  or a local `.tar`; `--from-dir` reads a directory. Any other URL is refused before it is requested.
+- **Only active fixtures whose bytes match the manifest are written.**
+  - A mismatch stops the restore.
+  - A tombstone is never brought back from an older archive.
+  - A member's name cannot choose where it lands.
+- **Missing objects are uploaded; matching ones are skipped.** A live object whose bytes the manifest
+  disowns is *replaced* — attempted, as `docs/09` §5 specifies — and every refusal under a bucket lock
+  is reported with the lock to lift. A deploy's plan still has no overwrite action.
+- **Written URLs are purged,** so a cached 404 or the old bytes cannot shadow the restore.
+- **`infra.yml` gains `restore-dry-run` and `restore`.** Inputs pass through `env` and are checked for
+  shape, and the tests run that guard itself. A real restore ends with `verify-live --mode full`.
+- `redact` follows with `loremfile release redact`, now that #62's asset layout is on `main`.
+
 ### Fixed — container jobs let git read the checkout explicitly; the release rehearsal can run
 
 - **The first `release.yml` rehearsal failed before downloading anything.** Run `34982012684` stopped
