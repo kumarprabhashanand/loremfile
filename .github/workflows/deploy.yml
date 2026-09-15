@@ -113,6 +113,15 @@ jobs:
       - name: Install the package
         run: pip install -e . --no-deps
 
+      # actions/checkout marks the repository safe only in a temporary global git config it
+      # creates for its own step, so git in any later step of this container is refused as
+      # "dubious ownership" (docs/09 §3.5). `manifest check` and `infra changed` both run git.
+      # Until 2026-09-15 this job worked by accident: `manifest check` calls
+      # `build.merge_base_manifest`, which writes `safe.directory` into the container's global
+      # config as a side effect. tests/unit/test_workflow_git.py pins the explicit step.
+      - name: Let git read the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       # The bytes of `expected_drift` fixtures, from the CI run that built them and wrote
       # the manifest entries describing them. Resolved through the pull request that
       # produced this commit, because a squash merge gives the merge commit a SHA no CI
