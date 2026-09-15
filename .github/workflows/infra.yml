@@ -275,8 +275,8 @@ jobs:
           if [ -z "$paths" ]; then echo "nothing was written; nothing to verify"; exit 0; fi
           loremfile verify-live --mode full $paths
 
-  # docs/09 §10, ADR-031. `redact-dry-run` names the releases that would change and shows
-  # whether this token can read the immutable-releases setting; `redact` rewrites them.
+  # docs/09 §10, ADR-031. `redact-dry-run` names the releases that would change; `redact`
+  # rewrites them. Each release's own `isImmutable` decides whether it can be rewritten.
   redact:
     needs: setup
     if: inputs.mode == 'redact-dry-run' || inputs.mode == 'redact'

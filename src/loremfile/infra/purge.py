@@ -30,13 +30,24 @@ SITE_PREFIXES = (
 SITE_FILES = (
     "",
     "index.html",
+    "formats",
+    "changelog",
+    "status",
+    "docs",
+    "docs/",
+    "legal",
+    "legal/",
     "manifest.json",
     "sha256sums.txt",
     "formats.json",
+    "search-index.json",
     "llms.txt",
-    "robots.txt",
+    "llms-full.txt",
     "sitemap.xml",
-    "security.txt",
+    "robots.txt",
+    ".well-known/security.txt",
+    "favicon.ico",
+    "apple-touch-icon.png",
 )
 
 #: Never purged, and the reason is not tidiness: these bytes are immutable, so an entry
@@ -67,14 +78,16 @@ class PurgeReport:
 def site_targets(formats: list[str]) -> tuple[list[str], list[str]]:
     """(prefixes, absolute URLs) for `purge --site`.
 
-    Format landing pages are purged in both their forms, because ADR-006 stores them as
-    two keys (`/pdf` and `/pdf/index.html`) and a stale copy of either is a stale page.
+    Every URL that reaches a format page or index is purged: `/pdf` and `/pdf/` share one key,
+    and `/pdf/index.json` is rewritten to `_formats/pdf.json` (ADR-032). Which URL a cache
+    entry is filed under is not documented, so both forms go.
     """
     files = [f"https://{SITE_HOST}/{name}" for name in SITE_FILES]
     for fmt in sorted(formats):
         files.append(f"https://{SITE_HOST}/{fmt}")
         files.append(f"https://{SITE_HOST}/{fmt}/")
         files.append(f"https://{SITE_HOST}/{fmt}/index.json")
+        files.append(f"https://{SITE_HOST}/_formats/{fmt}.json")
     return list(SITE_PREFIXES), files
 
 

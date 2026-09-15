@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any
 
 import click
+from jinja2 import TemplateError
 
 from loremfile import __version__, config, validators
 from loremfile import build as build_module
@@ -50,6 +51,11 @@ from loremfile.manifest import (
     render_formats_json,
     render_sha256sums,
 )
+from loremfile.site import build as site_build_module
+from loremfile.site import checks as site_checks
+from loremfile.site import legal as legal_module
+from loremfile.site import routes as site_routes
+from loremfile.site import serve as site_serve_module
 
 Item = dict[str, str]
 
@@ -573,6 +579,62 @@ def _restore(
     )
 
 
+def _publish_site(*, force: bool, dry_run: bool, as_json: bool) -> int:
+    """`upload --site` (docs/09 §5): every file of build/site/, unchanged ones skipped."""
+    errors: list[str] = []
+    summary: dict[str, Any] = {}
+    items: list[Item] = []
+    try:
+        site_dir = config.repo_root() / config.BUILD_DIR / "site"
+        files = upload_module.site_files(site_dir)
+        if not files:
+            raise UploadUnavailable(
+                f"{site_dir} is empty or absent: run `loremfile site build` first. Publishing "
+                "nothing would read as a published site."
+            )
+        blockers = upload_module.site_gates(site_dir, files, lock_rules=locks.committed_rules())
+        bucket = r2_module.bucket_name()
+        s3 = r2_module.client()
+        plan = upload_module.plan_site(
+            files, r2_module.live_hashes(s3, bucket, sorted(files)), force=force
+        )
+        plan.blockers += blockers
+        click.echo(plan.render(), err=True)
+        written = 0
+        if plan.ok and not dry_run:
+            for step in plan.by_action(upload_module.Action.UPLOAD):
+                r2_module.put_site(
+                    s3,
+                    bucket,
+                    step.key,
+                    Path(step.source),
+                    mime=site_routes.content_type(step.key),
+                    cache_control=site_routes.cache_control(step.key),
+                    sha256=files[step.key][1],
+                )
+                written += 1
+        uploads = plan.by_action(upload_module.Action.UPLOAD)
+        summary = {
+            "mode": "site",
+            "uploaded": len(uploads),
+            "skipped": len(plan.by_action(upload_module.Action.SKIP)),
+            "bytes": sum(step.size for step in uploads),
+            "written": written,
+            "dry_run": dry_run,
+            "force": force,
+        }
+        items = [
+            {"path": step.key, "status": step.action.value, "detail": step.reason}
+            for step in uploads
+        ]
+        errors = list(plan.blockers)
+    except (UploadUnavailable, r2_module.R2Error, OSError, ValueError) as exc:
+        errors.append(str(exc))
+    return _emit(
+        "upload", ok=not errors, summary=summary, items=items, errors=errors, as_json=as_json
+    )
+
+
 @main.command("upload")
 @click.option("--fixtures", "fixtures", is_flag=True, help="Publish missing manifest entries.")
 @click.option(
@@ -581,7 +643,13 @@ def _restore(
     is_flag=True,
     help="Delete objects whose manifest entry is status: removed (takedown flow).",
 )
-@click.option("--site", "site", is_flag=True, help="Publish build/site/ (M4.1).")
+@click.option("--site", "site", is_flag=True, help="Publish build/site/.")
+@click.option(
+    "--force-site",
+    "force_site",
+    is_flag=True,
+    help="With --site: upload every site file, even unchanged ones.",
+)
 @click.option(
     "--carry-forward",
     "carry_forward",
@@ -615,6 +683,7 @@ def upload_command(
     fixtures: bool,
     removals: bool,
     site: bool,
+    force_site: bool,
     carry_forward: Path | None,
     only: tuple[str, ...],
     restore_sources: tuple[str, ...],
@@ -657,14 +726,9 @@ def upload_command(
         )
     if restore_sources or from_dir is not None:
         sys.exit(_restore(restore_sources, from_dir, only, dry_run=dry_run, as_json=as_json))
+    if site:
+        sys.exit(_publish_site(force=force_site, dry_run=dry_run, as_json=as_json))
     try:
-        if site:
-            raise UploadUnavailable(
-                "--site needs `loremfile site build`, which arrives with M4.1. Publishing "
-                "an empty build/site/ would report success for a site that does not "
-                "exist. `--force-site` arrives with it, for the same reason: an option "
-                "that changes nothing is worse than an absent one."
-            )
         manifest = Manifest.load()
         bucket = r2_module.bucket_name()
         s3 = r2_module.client()
@@ -820,9 +884,28 @@ def purge_command(site: bool, url: str | None, as_json: bool) -> None:
     metavar="PATH",
     help="Check only these manifest paths, whatever --mode says.",
 )
+@click.option(
+    "--site-dir",
+    "site_dir",
+    type=click.Path(path_type=Path, file_okay=False),
+    help="Compare every site key with this build of the deployed commit (docs/09 §3.3).",
+)
+@click.option(
+    "--site-retry-seconds",
+    "site_retry",
+    type=int,
+    default=0,
+    show_default=True,
+    help="Wait this long, then re-check failing site keys once.",
+)
 @click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
 def verify_live_command(
-    mode: str, inject_failure: str | None, only: tuple[str, ...], as_json: bool
+    mode: str,
+    inject_failure: str | None,
+    only: tuple[str, ...],
+    site_dir: Path | None,
+    site_retry: int,
+    as_json: bool,
 ) -> None:
     """Check production against the manifest (docs/12 §4). Needs no credentials."""
     errors: list[str] = []
@@ -844,6 +927,8 @@ def verify_live_command(
             if hash_it:
                 body = verify_live_module.fetch(f"/{entry['path']}", method="GET")
                 report.findings.append(verify_live_module.check_fixture_bytes(entry, body))
+        if site_dir is not None:
+            report.findings += verify_live_module.site_findings(site_dir, retry_after=site_retry)
         if mode in {"daily", "full"} and not only:
             # Nothing else on this account warns before the domain or certificate lapses.
             report.findings += verify_live_module.expiry_findings()
@@ -1271,7 +1356,6 @@ def release_redact(path: str, dry_run: bool, as_json: bool) -> None:
             )
         click.echo(report.render(), err=True)
         summary = {
-            "setting": report.setting,
             "releases": report.scanned,
             "changed": len(report.changed),
             "dry_run": dry_run,
@@ -1297,6 +1381,89 @@ def release_redact(path: str, dry_run: bool, as_json: bool) -> None:
             as_json=as_json,
         )
     )
+
+
+# --- site -------------------------------------------------------------------
+
+
+@main.group()
+def site() -> None:
+    """Build and preview the website (docs/07)."""
+
+
+@site.command("build")
+@click.option(
+    "--out",
+    "out",
+    type=click.Path(path_type=Path, file_okay=False),
+    help="Output directory. Default: build/site.",
+)
+@click.option(
+    "--legal-values-from-env",
+    "legal_env",
+    is_flag=True,
+    help="Fill the legal pages from IMPRINT_* (production jobs only, docs/13 §3b).",
+)
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def site_build(out: Path | None, legal_env: bool, as_json: bool) -> None:
+    """Render the site and check it (docs/07 §4). Reports counts, never a legal page."""
+    errors: list[str] = []
+    summary: dict[str, Any] = {}
+    root = config.repo_root()
+    target = out or root / config.BUILD_DIR / "site"
+    try:
+        committed = site_build_module.committed_at(root)
+        report = site_build_module.build(target, root=root, committed=committed)
+        click.echo(report.render(), err=True)
+        summary = {"keys": report.keys, "pages": report.pages, "bytes": report.bytes}
+        summary["legal"] = "placeholders"
+        if legal_env:
+            values = legal_module.values_from(os.environ)
+            replaced = legal_module.fill(target, values)
+            audit = legal_module.audit(
+                target, values, in_git=lambda value: legal_module.in_repository(value, cwd=root)
+            )
+            audit.replaced = replaced
+            click.echo(audit.render(), err=True)
+            errors += audit.problems
+            summary["legal"] = "filled"
+        fixtures = {entry["path"] for entry in Manifest.load().entries}
+        errors += site_checks.all_problems(target, fixtures)
+    except (
+        site_build_module.SiteError,
+        legal_module.LegalError,
+        TemplateError,
+        ManifestError,
+        CatalogError,
+        OSError,
+        ValueError,
+    ) as exc:
+        errors.append(str(exc))
+    sys.exit(
+        _emit(
+            "site build", ok=not errors, summary=summary, items=[], errors=errors, as_json=as_json
+        )
+    )
+
+
+@site.command("serve")
+@click.option("--port", type=int, default=8080, show_default=True, help="Port on 127.0.0.1.")
+@click.option(
+    "--dir",
+    "site_dir",
+    type=click.Path(path_type=Path, file_okay=False),
+    help="Built site. Default: build/site.",
+)
+def site_serve_command(port: int, site_dir: Path | None) -> None:
+    """Preview a built site with the edge's routing (docs/06 §10)."""
+    target = site_dir or config.repo_root() / config.BUILD_DIR / "site"
+    if not target.is_dir():
+        message = f"{target} does not exist: run `loremfile site build` first"
+        sys.exit(
+            _emit("site serve", ok=False, summary={}, items=[], errors=[message], as_json=False)
+        )
+    click.echo(f"serving {target} at http://127.0.0.1:{port}/", err=True)
+    site_serve_module.serve(target, port=port)
 
 
 # --- manifest --------------------------------------------------------------

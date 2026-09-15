@@ -137,7 +137,7 @@ Two spaces between hash and path, LF line endings, UTF-8, no BOM, trailing newli
 
 ## 4. `{format}/index.json`
 
-Same shape as `manifest.json` but `fixtures` filtered to one format (active only), `count` and `total_bytes` are the **per-format** values, and there is no top-level `formats` array.
+Same shape as `manifest.json` but `fixtures` filtered to one format (active only), `count` and `total_bytes` are the **per-format** values, and there is no top-level `formats` array. Stored as `_formats/{format}.json` and served at this URL by a rewrite, because `{format}/` is a locked prefix (ADR-032).
 
 ## 5. `llms.txt` and `llms-full.txt`
 

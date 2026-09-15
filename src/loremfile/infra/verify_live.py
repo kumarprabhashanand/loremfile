@@ -19,6 +19,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
+import re
 import socket
 import ssl
 import time
@@ -27,9 +28,11 @@ import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
+from pathlib import Path
 from typing import Any
 
 from loremfile.config import FIXTURE_CACHE_CONTROL, SITE_HOST
+from loremfile.site import routes
 
 
 #: docs/06 §10 fixes this vocabulary; the issue automation keys off it.
@@ -45,6 +48,7 @@ class Status(StrEnum):
     TIMEOUT = "timeout"
     RDAP_EXPIRY = "rdap_expiry"
     TLS_EXPIRY = "tls_expiry"
+    SECURITY_TXT_EXPIRY = "security_txt_expiry"
 
 
 #: Our own rate limit answering. Retried, unlike in the probe (see the module docstring).
@@ -309,4 +313,144 @@ def expiry_findings(now: dt.datetime | None = None) -> list[Finding]:
             warn_days=TLS_WARN_DAYS,
             now=moment,
         ),
+        check_expiry(
+            "/.well-known/security.txt",
+            Status.SECURITY_TXT_EXPIRY,
+            security_txt_expiry,
+            warn_days=SECURITY_TXT_WARN_DAYS,
+            now=moment,
+        ),
     ]
+
+
+# --- the site (docs/09 §3.3) ------------------------------------------------------------
+
+SECURITY_TXT_WARN_DAYS = 30
+#: docs/03 §4.3, as the `site_pages_headers` rule (H3) sets them on every page.
+EXPECTED_PAGE_HEADERS: dict[str, str] = {
+    "content-security-policy": routes.SITE_CSP,
+    "x-frame-options": "DENY",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-content-type-options": "nosniff",
+    "permissions-policy": "camera=(), microphone=(), geolocation=()",
+}
+#: Set only by the fixture rule (H1). On a page they mean its `/index.html` exclusion or its
+#: extension test no longer holds (docs/09 §3.2).
+FIXTURE_ONLY_HEADERS = ("cross-origin-resource-policy", "timing-allow-origin")
+LEGAL_META = f'<meta name="robots" content="{routes.LEGAL_ROBOTS}">'.encode()
+
+
+def security_txt_expiry() -> dt.datetime:
+    response = fetch("/.well-known/security.txt", method="GET")
+    if response.status != 200:  # noqa: PLR2004
+        raise ValueError(f"/.well-known/security.txt answered {response.status}")
+    match = re.search(rb"^Expires: (\S+?)\r?$", response.body, re.M)
+    if match is None:
+        raise ValueError("security.txt has no Expires field")
+    return dt.datetime.fromisoformat(match.group(1).decode().replace("Z", "+00:00"))
+
+
+def site_hashes(site_dir: Path) -> dict[str, str]:
+    return {
+        key: hashlib.sha256(path.read_bytes()).hexdigest()
+        for key, path in routes.site_files(site_dir).items()
+    }
+
+
+def check_site_key(key: str, digest: str, response: Response) -> list[Finding]:
+    """One site key against the rebuild: the defacement check."""
+    path = routes.public_path(key)
+    if response.status == 0:
+        return [Finding(path, Status.TIMEOUT, "no response")]
+    if response.status == 404:  # noqa: PLR2004
+        return [Finding(path, Status.MISSING_OBJECT, "404")]
+    if response.status != 200:  # noqa: PLR2004
+        return [Finding(path, Status.STATUS, str(response.status))]
+    findings: list[Finding] = []
+    served_type, wanted = response.header("content-type"), routes.content_type(key)
+    if served_type != wanted:
+        findings.append(
+            Finding(path, Status.CONTENT_TYPE_MISMATCH, f"{served_type!r} != {wanted!r}")
+        )
+    served = hashlib.sha256(response.body).hexdigest()
+    if served != digest:
+        findings.append(
+            Finding(path, Status.HASH_MISMATCH, f"served {served[:12]} != built {digest[:12]}")
+        )
+    return findings or [Finding(path, Status.OK)]
+
+
+def check_page_headers(path: str, response: Response, *, legal: bool) -> list[Finding]:
+    if response.status != 200:  # noqa: PLR2004 - the byte check reports it
+        return []
+    findings: list[Finding] = []
+    for name, expected in EXPECTED_PAGE_HEADERS.items():
+        served = response.header(name)
+        if served != expected:
+            status = Status.HEADER_VALUE if served else Status.HEADER_MISSING
+            findings.append(Finding(path, status, f"{name}: {served!r} != {expected!r}"))
+    stray = [name for name in FIXTURE_ONLY_HEADERS if response.header(name)]
+    if stray:
+        findings.append(Finding(path, Status.HEADER_VALUE, f"fixture headers on a page: {stray}"))
+    robots = response.header("x-robots-tag")
+    wanted = routes.LEGAL_ROBOTS if legal else ""
+    if robots != wanted:
+        findings.append(
+            Finding(path, Status.HEADER_VALUE, f"x-robots-tag: {robots!r} != {wanted!r}")
+        )
+    if legal and LEGAL_META not in response.body:
+        findings.append(Finding(path, Status.HEADER_MISSING, "robots meta tag (ADR-028)"))
+    return findings or [Finding(path, Status.OK)]
+
+
+def header_branch_findings(hashes: dict[str, str], responses: dict[str, Response]) -> list[Finding]:
+    """The header rules' branches on real pages: `/`, a format page with and without its
+    slash, the legal pages, and a per-format index (docs/09 §3.2, ADR-032)."""
+    prefix = f"{routes.FORMAT_INDEX_DIR}/"
+    formats = sorted(key[len(prefix) : -len(".json")] for key in hashes if key.startswith(prefix))
+    findings: list[Finding] = []
+    for key in ("index.html", *formats[:1], *routes.LEGAL_KEYS):
+        if key in responses:
+            findings += check_page_headers(
+                routes.public_path(key), responses[key], legal=key in routes.LEGAL_KEYS
+            )
+    for key in (*formats[:1], "docs"):
+        if key not in hashes:
+            continue
+        alias = f"/{key}/"
+        response = fetch(alias, method="GET")
+        if response.status != 200:  # noqa: PLR2004
+            findings.append(Finding(alias, Status.STATUS, f"{response.status} (ADR-032 rewrite)"))
+            continue
+        findings += check_page_headers(alias, response, legal=False)
+        if hashlib.sha256(response.body).hexdigest() != hashes[key]:
+            findings.append(
+                Finding(alias, Status.HASH_MISMATCH, f"is not the {key} page (ADR-032)")
+            )
+    index = responses.get(routes.format_index_key(formats[0])) if formats else None
+    if index is not None and index.status == 200:  # noqa: PLR2004
+        path = routes.public_path(routes.format_index_key(formats[0]))
+        if index.header("x-robots-tag") != "noindex" or index.header("content-security-policy"):
+            findings.append(Finding(path, Status.HEADER_VALUE, "not served with the file headers"))
+    return findings
+
+
+def site_findings(
+    site_dir: Path, *, retry_after: int = 0, sleep: Callable[[float], None] = time.sleep
+) -> list[Finding]:
+    """Every site key against this job's rebuild, never against the bucket (docs/09 §3.3)."""
+    hashes = site_hashes(site_dir)
+    if not hashes:
+        return [Finding(str(site_dir), Status.MISSING_OBJECT, "no built site; nothing compared")]
+    responses = {key: fetch(routes.public_path(key), method="GET") for key in hashes}
+    results = {key: check_site_key(key, hashes[key], responses[key]) for key in hashes}
+    failing = [
+        key for key, found in results.items() if any(f.status is not Status.OK for f in found)
+    ]
+    if failing and retry_after:
+        sleep(retry_after)  # a merge's deploy may still be publishing
+        for key in failing:
+            responses[key] = fetch(routes.public_path(key), method="GET")
+            results[key] = check_site_key(key, hashes[key], responses[key])
+    findings = [finding for key in sorted(results) for finding in results[key]]
+    return findings + header_branch_findings(hashes, responses)

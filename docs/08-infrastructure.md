@@ -148,16 +148,24 @@ Each file is the complete desired list of rules for one phase's zone entry-point
 ] }
 ```
 
-### 5.2 `http_request_transform.json` (URL rewrites; 2 of the 10 free transform rules)
+### 5.2 `http_request_transform.json` (URL rewrites; 4 of the 10 free transform rules)
+
+Pages are stored once, as extensionless keys, and never under a locked format prefix (ADR-032). Every rule in a phase reads the original path, so the expressions are mutually exclusive.
 
 ```json
 { "rules": [
   { "ref": "root_index", "description": "/ → /index.html", "enabled": true,
     "expression": "(http.request.uri.path eq \"/\")",
     "action": "rewrite", "action_parameters": { "uri": { "path": { "value": "/index.html" } } } },
-  { "ref": "dir_index", "description": "trailing slash → index.html", "enabled": true,
-    "expression": "(ends_with(http.request.uri.path, \"/\") and http.request.uri.path ne \"/\")",
-    "action": "rewrite", "action_parameters": { "uri": { "path": { "expression": "concat(http.request.uri.path, \"index.html\")" } } } }
+  { "ref": "dir_index", "description": "probe directories: trailing slash → index.html", "enabled": true,
+    "expression": "(ends_with(http.request.uri.path, \"/\") and starts_with(http.request.uri.path, \"/_probe/\"))",
+    "action": "rewrite", "action_parameters": { "uri": { "path": { "expression": "concat(http.request.uri.path, \"index.html\")" } } } },
+  { "ref": "page_slash", "description": "site pages: trailing slash → the extensionless key (ADR-032)", "enabled": true,
+    "expression": "(ends_with(http.request.uri.path, \"/\") and http.request.uri.path ne \"/\" and not starts_with(http.request.uri.path, \"/_probe/\"))",
+    "action": "rewrite", "action_parameters": { "uri": { "path": { "expression": "substring(http.request.uri.path, 0, -1)" } } } },
+  { "ref": "format_index_json", "description": "/{format}/index.json → /_formats/{format}.json (ADR-032)", "enabled": true,
+    "expression": "(ends_with(http.request.uri.path, \"/index.json\") and not starts_with(http.request.uri.path, \"/_\"))",
+    "action": "rewrite", "action_parameters": { "uri": { "path": { "expression": "concat(\"/_formats\", substring(http.request.uri.path, 0, -11), \".json\")" } } } }
 ] }
 ```
 
@@ -191,7 +199,7 @@ Each file is the complete desired list of rules for one phase's zone entry-point
 ] }
 ```
 
-Notes: the `site_pages_headers` expression groups `(not A) or B` explicitly; the Rules language would evaluate it the same way without the parentheses (documented precedence: `not` first, then `and`, `xor`, `or`), but a security-relevant rule should not depend on a reader knowing that. `http.request.uri.path` in this phase reflects the URL-rewrite result, so `/` and `/pdf/` are seen as `/index.html` and `/pdf/index.html` and get site headers. `assets/site.<hash>.css` gets file headers (harmless). The sandbox CSP also lands on `sitemap.xml` and RSS/Atom fixtures, which is harmless for non-document consumers and desirable when opened in a browser.
+Notes: the `site_pages_headers` expression groups `(not A) or B` explicitly; the Rules language would evaluate it the same way without the parentheses (documented precedence: `not` first, then `and`, `xor`, `or`), but a security-relevant rule should not depend on a reader knowing that. `http.request.uri.path` in this phase reflects the URL-rewrite result, so `/` is seen as `/index.html` and `/pdf/` as `/pdf`, and both get site headers. `assets/site.<hash>.css` gets file headers (harmless). The sandbox CSP also lands on `sitemap.xml` and RSS/Atom fixtures, which is harmless for non-document consumers and desirable when opened in a browser.
 
 These suffix tests rely on Cloudflare's **URL normalization** (Rules → Settings → Normalize incoming URLs, on by default) so that `/html/basic%2Ehtml` is evaluated as `/html/basic.html`; the setting is part of the desired state and audit probes request encoded paths. As belt-and-braces, a fifth header rule keyed on the response type is added if the field is available on the Free plan (**[VERIFY]** in M2.3; the `http.response.content_type` field is documented for response-phase rules):
 
@@ -204,7 +212,7 @@ These suffix tests rely on Cloudflare's **URL normalization** (Rules → Setting
 
 **`legal_pages_noindex`** (added 2026-09-15, ADR-028) sets only `X-Robots-Tag` on the two legal pages that name the operator. Both paths are extensionless, so `site_pages_headers` matches them too; it sets no `X-Robots-Tag`, so the two rules never set the same header. The expression uses `eq`, already proven on this zone by the request transform, rather than a set literal. Verified against the published pages when M4.1 first publishes them (`15` M4.1).
 
-Transform rules now: **2 URL rewrites + 4 header rules = 6 of the 10**; 7 if the optional content-type rule is ever added.
+Transform rules now: **4 URL rewrites + 4 header rules = 8 of the 10**; 9 if the optional content-type rule is ever added.
 
 **Self-identifying AI agents are refused on the two legal pages by a WAF custom rule**, in §5.7 (ADR-030). robots.txt only asks (`04` §6).
 

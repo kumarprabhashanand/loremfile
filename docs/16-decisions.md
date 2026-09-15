@@ -31,6 +31,7 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
 - **Context**: R2 serves keys literally; `/pdf` and `/pdf/` must both work without a Worker; Free plan rules cannot use regex.
 - **Decision**: uploader writes both keys; a `concat()`-based rewrite handles the slash form; canonical URL is `/pdf`.
 - **Consequences**: trivial extra storage; a unit test ensures both copies are identical.
+- **Superseded** by ADR-032: `{format}/index.html` sits under a locked prefix.
 
 ## ADR-007 Binaries are not in git; the manifest is the lock; GitHub Releases archive bytes
 - **Context**: ~1 GB of fixtures; git/LFS unsuitable; reproducibility across toolchain drift is imperfect.
@@ -208,6 +209,14 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
 ## ADR-031 Release assets stay mutable; release tags are protected by a ruleset (2026-09-15)
 
 - **Context**: A takedown must also leave the release archives (`09` §10). GitHub on immutable releases: "Release assets cannot be modified or deleted"; the tag "cannot be deleted while the release exists"; "If you delete the immutable release, you can delete the tag, but you cannot reuse the same tag name."
-- **Decision**: immutable releases stay **off**. `release redact` rebuilds affected parts in place and refuses an immutable release, naming the cost: deleting the whole release, losing the restore archive for every other fixture in it, and burning the tag name. It reads `GET /repos/{owner}/{repo}/immutable-releases` first and fails if the setting is on.
+- **Decision**: immutable releases stay **off**. `release redact` rebuilds affected parts in place and refuses an immutable release, naming the cost: deleting the whole release, losing the restore archive for every other fixture in it, and burning the tag name.
 - **Integrity instead**: manifest hashes in git and `parts.txt`; a tag ruleset on `refs/tags/v*` blocks deletion and updates.
+- **[VERIFY] 2026-09-15, run `34989880279`:** `GITHUB_TOKEN` cannot read the repository setting (HTTP 403), so redact does not read it; each release's `isImmutable` is the guard.
 - **Reopen if**: GitHub allows replacing a single asset of an immutable release.
+
+## ADR-032 No site key under a locked prefix; each page is stored once (2026-09-15, supersedes ADR-006)
+
+- **Context**: every `{format}/` prefix carries an indefinite R2 bucket lock, which refuses overwrites. `{format}/index.html` (ADR-006) and `{format}/index.json` would be frozen by their first upload, though both change whenever a fixture is added.
+- **Decision**: each page is one extensionless key (`pdf`, `docs/faq`). URL rewrites map `/x/` to `/x` (except `_probe/`, whose probe checks `index.html`) and `/{format}/index.json` to `_formats/{format}.json`. Public URLs are unchanged. `upload --site` refuses any key under an enabled lock prefix.
+- **[VERIFY]**: `substring()` and `starts_with()` in Free-plan URL rewrites. The first deploy's `infra apply` and `verify-live --site-dir` decide.
+- **Consequences**: 4 URL rewrites + 4 header rules = 8 of the 10 transform rules.

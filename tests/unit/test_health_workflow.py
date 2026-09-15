@@ -67,4 +67,16 @@ def test_the_daily_health_check_runs_full_mode_within_its_bound() -> None:
     verify = next(s for s in steps() if s.get("id") == "verify")
     assert "--mode full" in verify["run"]
     assert "--mode daily" not in verify["run"]
-    assert verify["timeout-minutes"] == 10
+    # 10 minutes for the checks, plus the one 600-second wait for a deploy still publishing.
+    assert "--site-retry-seconds 600" in verify["run"]
+    assert verify["timeout-minutes"] == 20
+
+
+def test_the_defacement_check_compares_with_a_rebuild_that_has_the_legal_values() -> None:
+    order = names()
+    build = next(s for s in steps() if s.get("name") == "Build the site")
+    assert order.index("Build the site") < order.index("verify")
+    assert "--legal-values-from-env" in build["run"]
+    assert set(build["env"]) == {"IMPRINT_NAME", "IMPRINT_STREET", "IMPRINT_POSTAL_CITY"}
+    verify = next(s for s in steps() if s.get("id") == "verify")
+    assert "--site-dir build/site" in verify["run"]

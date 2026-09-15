@@ -1,0 +1,122 @@
+:root {
+  --bg: #ffffff;
+  --fg: #0f172a;
+  --muted: #475569;
+  --line: #e2e8f0;
+  --panel: #f8fafc;
+  --accent: #1d4ed8;
+  --code-bg: #f1f5f9;
+  --focus: #b45309;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1120;
+    --fg: #e2e8f0;
+    --muted: #94a3b8;
+    --line: #1e293b;
+    --panel: #111827;
+    --accent: #93c5fd;
+    --code-bg: #1e293b;
+    --focus: #fbbf24;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 1rem/1.6 var(--sans);
+  overflow-wrap: break-word;
+}
+
+a { color: var(--accent); text-underline-offset: 0.15em; }
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+code, pre { font-family: var(--mono); font-size: 0.92em; }
+code { background: var(--code-bg); padding: 0.05em 0.3em; border-radius: 4px; }
+pre { background: var(--code-bg); padding: 0.75rem 1rem; border-radius: 6px; overflow-x: auto; }
+pre code { background: none; padding: 0; }
+
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: 1rem; top: 1rem; background: var(--bg); padding: 0.5rem; z-index: 1; }
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+.site-header, main, .site-footer { max-width: 72rem; margin: 0 auto; padding: 0 1rem; }
+
+.site-header {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 0.5rem 1.5rem; padding-top: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line);
+}
+.brand {
+  display: inline-flex; align-items: center; gap: 0.5rem; color: var(--fg);
+  font: 700 1.25rem var(--mono); text-decoration: none;
+}
+.mark { width: 1.75rem; height: 1.75rem; }
+.site-header ul, .site-footer ul, .crumbs ol {
+  display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin: 0; padding: 0; list-style: none;
+}
+
+main { padding-top: 1.5rem; padding-bottom: 3rem; }
+h1 { font-size: clamp(1.6rem, 4vw, 2.3rem); line-height: 1.2; margin: 0.5rem 0 1rem; }
+h2 { margin-top: 2.5rem; font-size: 1.4rem; }
+h3 { font-size: 1.1rem; }
+
+.crumbs { font-size: 0.9rem; color: var(--muted); }
+.crumbs li + li::before { content: "/"; margin-right: 1rem; color: var(--muted); }
+
+.prose { max-width: 48rem; }
+.pitch { font-size: 1.1rem; max-width: 48rem; }
+.meta { color: var(--muted); }
+
+.search-box label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+.search-box input {
+  width: 100%; max-width: 36rem; padding: 0.6rem 0.75rem; font: inherit;
+  color: var(--fg); background: var(--panel); border: 1px solid var(--muted); border-radius: 6px;
+}
+.results { padding-left: 1.2rem; }
+
+.families {
+  display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+}
+.family { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 0 1rem 0.5rem; }
+.family ul { padding: 0; list-style: none; }
+.count, .size { color: var(--muted); font-size: 0.9rem; }
+
+.popular { padding: 0; list-style: none; }
+.popular li { padding: 0.5rem 0; border-bottom: 1px solid var(--line); }
+.popular p { margin: 0.25rem 0 0; color: var(--muted); }
+
+.table-wrap { overflow-x: auto; max-width: 100%; }
+table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+caption { text-align: left; font-weight: 600; padding: 0.5rem 0; }
+th, td { text-align: left; vertical-align: top; padding: 0.5rem; border-bottom: 1px solid var(--line); }
+thead th { border-bottom: 2px solid var(--muted); white-space: nowrap; }
+tbody th { font-weight: 400; white-space: nowrap; }
+details { margin-top: 0.4rem; }
+summary { cursor: pointer; color: var(--accent); }
+
+button.copy {
+  margin-left: 0.4rem; padding: 0.1rem 0.5rem; font: 0.8rem var(--sans); cursor: pointer;
+  color: var(--fg); background: var(--panel); border: 1px solid var(--muted); border-radius: 4px;
+}
+
+.index li, .related li, .removed li { margin: 0.4rem 0; }
+
+.site-footer {
+  padding-top: 1.5rem; padding-bottom: 2rem; border-top: 1px solid var(--line);
+  color: var(--muted); font-size: 0.9rem;
+}

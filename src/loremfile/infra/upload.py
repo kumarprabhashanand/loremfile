@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Any
 
 from loremfile.catalog import Catalog
+from loremfile.site import legal, routes
 
 #: What `live` carries for an object that exists but has no `sha256` metadata to compare
 #: with. Kept as a named value rather than an empty string so the failure says which of
@@ -292,6 +293,39 @@ def plan_removals(entries: list[dict[str, Any]], live: dict[str, str]) -> Plan:
         if key in live:
             plan.steps.append(Step(key, Action.REMOVE, entry.get("reason", "tombstoned")))
     return plan
+
+
+def site_files(site_dir: Path) -> dict[str, tuple[Path, str]]:
+    """Key -> (file, sha256) for a built site; pages are `{key}.html` on disk (ADR-032)."""
+    if not site_dir.is_dir():
+        return {}
+    return {key: (path, sha256_of(path)[0]) for key, path in routes.site_files(site_dir).items()}
+
+
+def site_gates(
+    site_dir: Path, files: dict[str, tuple[Path, str]], *, lock_rules: list[dict[str, Any]]
+) -> list[str]:
+    """What must stop a site upload before any key is written."""
+    blockers: list[str] = []
+    locked = {str(rule.get("prefix", "")) for rule in lock_rules if rule.get("enabled") is True}
+    under = sorted(
+        key for key in files if any(key.startswith(prefix) for prefix in locked if prefix)
+    )
+    if under:
+        blockers.append(
+            f"{len(under)} site key(s) sit under a locked prefix and could never be updated "
+            f"(ADR-032): {', '.join(under[:5])}"
+        )
+    left = legal.leftover_placeholders(site_dir)
+    if left:
+        blockers.append(
+            f"{', '.join(left)} still carry %%IMPRINT_ placeholders: a production build fills "
+            "them with --legal-values-from-env (docs/13 §3b)"
+        )
+    twins = sorted(set(files) & set(routes.LEGAL_TWINS))
+    if twins:
+        blockers.append(f"twin keys of the legal pages exist: {', '.join(twins)} (docs/15 M4.1)")
+    return blockers
 
 
 def plan_site(

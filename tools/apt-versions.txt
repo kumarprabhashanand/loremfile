@@ -24,6 +24,6 @@ bzip2=1.0.8-5+b1
 sqlite3=3.40.1-2+deb12u2
 fonts-dejavu-core=2.37-6
 
-# GitHub CLI apt repository (https://cli.github.com/packages)
-# This repository keeps only recent versions, so it goes stale faster than Debian's.
-gh=2.100.0
+# gh is not an apt package here: tools/Dockerfile installs its release tarball, pinned by
+# version (ARG GH_VERSION) and SHA-256, because GitHub's apt repository keeps only recent
+# versions. tools/smoke.sh checks the installed version against that ARG.

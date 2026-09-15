@@ -12,6 +12,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added — the website (M4.1, M4.2)
+
+- Pages: a home page with search, a page for each of the 50 published formats, all formats, documentation, legal pages, the changelog and status.
+- Discovery files: `llms.txt`, `llms-full.txt`, `sitemap.xml`, `robots.txt`, `.well-known/security.txt`, `search-index.json`, and a list per format at `/{format}/index.json`.
+
 ### Added
 
 - The specification (`docs/00`–`19`) and its three review passes (`review/`).
@@ -59,6 +64,7 @@ fires every run stops meaning anything — the failure already avoided for `font
 ### Internal
 
 - M4.4 complete: `release redact`, restore verifies only what it wrote, and `verify-live` checks domain and TLS expiry.
+- The toolchain image installs `gh` from its SHA-256-pinned release tarball; redact no longer reads the repository setting (ADR-031).
 
 ### Added — `upload --restore`, `upload --from-dir`, and `infra.yml`'s restore modes (M4.4)
 

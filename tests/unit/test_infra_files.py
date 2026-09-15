@@ -153,7 +153,9 @@ def test_every_format_prefix_has_a_lock_rule() -> None:
 def test_site_keys_are_outside_every_locked_prefix() -> None:
     """The site is rewritten on every deploy; locking it would break deployment."""
     prefixes = {rule["prefix"] for rule in load("r2-locks.json")["rules"]}
-    for key in ("index.html", "docs/", "legal/", "assets/", "manifest.json", "_probe/"):
+    keys = ("index.html", "docs/", "legal/", "assets/", "manifest.json", "_probe/", "_formats/")
+    # `pdf` is the format page and `pdf/` the locked prefix: ADR-032 keeps them apart.
+    for key in (*keys, ".well-known/", "schema/", "formats", "pdf"):
         assert not any(key.startswith(prefix) for prefix in prefixes), key
 
 
