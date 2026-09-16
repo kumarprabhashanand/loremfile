@@ -72,10 +72,11 @@ audit.
 
 ## 5. Hardening checklist (completed in M5.4, re-checked quarterly)
 
-- [ ] Cloudflare: 2FA hardware key + backup method; recovery codes stored offline; no other members; API tokens listed match the inventory; Registrar transfer lock on; auto-renew on; DNSSEC active.
+- [x] Cloudflare: 2FA hardware key + backup method; recovery codes stored offline (owner-confirmed 2026-09-16); no other members; Registrar transfer lock on; auto-renew on; DNSSEC active.
+- [ ] Cloudflare API tokens match the inventory. **Dashboard only, by eye:** Cloudflare refuses `/accounts/{id}/tokens` and `/user/tokens` to every read token available here, so nothing can automate this one. It sat among the automatable items and so looked covered; it is read in the dashboard at M5.4 and quarterly.
 - [ ] GitHub: 2FA; ruleset on `main` active; `production` environment restricted to `main`; Actions permissions restricted; secret scanning + push protection; Dependabot enabled; private vulnerability reporting enabled.
 - [ ] Zone: all "must be off" features off (`infra audit` green); TLS 1.2+; HSTS by TLD; `always_use_https`.
-- [ ] Bucket: public access only via the custom domain (r2.dev public URL **disabled**); CORS policy as specified; bucket lock rules present for every format prefix; no lifecycle rules; no other custom domains.
+- [ ] Bucket: public access only via the custom domain (r2.dev public URL **disabled**); CORS policy as specified; bucket lock rules present for every format prefix (`infra audit`'s `audit_bucket_locks` compares applied against committed); **no lifecycle rule that deletes or transitions objects** — Cloudflare's default multipart-abort rule (incomplete uploads dropped after 7 days, no object deleted) is expected and is not a finding; no other custom domains. **Owner-verified 2026-09-16 against the Cloudflare API:** r2.dev managed domain disabled; exactly one custom domain, SSL and ownership active, min TLS 1.2; CORS identical to `infra/r2-cors.json`.
 - [ ] Rules → Settings → Normalize incoming URLs: on.
 - [ ] Mail: SPF via Email Routing; DMARC `p=reject`; no DKIM needed (no sending).
 - [ ] Repo: no secrets in history (`gitleaks` run once in M1); `SECURITY.md` present; `security.txt` deployed.
