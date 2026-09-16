@@ -1,6 +1,14 @@
 {
   "rules": [
     {
+      "id": "lock-7z",
+      "enabled": true,
+      "prefix": "7z/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
       "id": "lock-aac",
       "enabled": true,
       "prefix": "aac/",
@@ -65,6 +73,14 @@
       }
     },
     {
+      "id": "lock-bz2",
+      "enabled": true,
+      "prefix": "bz2/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
       "id": "lock-csv",
       "enabled": true,
       "prefix": "csv/",
@@ -116,6 +132,14 @@
       "id": "lock-gpx",
       "enabled": true,
       "prefix": "gpx/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-gz",
+      "enabled": true,
+      "prefix": "gz/",
       "condition": {
         "type": "Indefinite"
       }
@@ -329,6 +353,14 @@
       }
     },
     {
+      "id": "lock-tar",
+      "enabled": true,
+      "prefix": "tar/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
       "id": "lock-tiff",
       "enabled": true,
       "prefix": "tiff/",
@@ -409,9 +441,33 @@
       }
     },
     {
+      "id": "lock-xz",
+      "enabled": true,
+      "prefix": "xz/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
       "id": "lock-yaml",
       "enabled": true,
       "prefix": "yaml/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-zip",
+      "enabled": true,
+      "prefix": "zip/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-zst",
+      "enabled": true,
+      "prefix": "zst/",
       "condition": {
         "type": "Indefinite"
       }

@@ -169,6 +169,10 @@ PROVING_FIXTURES = [
     "pptx/1slide.pptx",
     "mp3/with-id3v2-tags-3s.mp3",
     "mp4/360p-5s.mp4",
+    # M3.7: the AES salt comes from Cryptodome, which the guard now patches too.
+    "zip/aes256-password-loremfile.zip",
+    # M3.7: 7z stores a timestamp per entry; the generator stages files at the epoch.
+    "7z/3-text-files.7z",
 ]
 
 DETERMINISM_TABLE_HEADER = "| Library | Claim | Proving fixture | Verified |"

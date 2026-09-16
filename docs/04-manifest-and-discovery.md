@@ -55,7 +55,7 @@ Field rules:
 
 | Field | Type | Rule |
 |---|---|---|
-| `path` | string | Unique. Matches URL grammar in `03-http-contract.md` §1. Never changes. |
+| `path` | string | Unique. Matches URL grammar in `03-http-contract.md` §1. Does not change. |
 | `url` | string | `base_url + path`. |
 | `format` | string | First path segment. |
 | `ext` | string | Everything after the first dot of the **last path segment** (`tar.gz`, not `gz`; `m3u8` for `hls/720p-10s/index.m3u8`). |

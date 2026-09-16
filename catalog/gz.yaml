@@ -1,0 +1,34 @@
+# Single-stream gzip compression (docs/05 §3.8). Launch-set rows only.
+format: gz
+family: archives
+mime: application/gzip
+description: >-
+  A single gzip stream, the shape `gzip` produces when it compresses one file rather
+  than an archive. No container, no entry list: one payload in, one stream out.
+seo_title: "Sample GZIP files for testing decompression — free, CC0"
+related: [tar, zip]
+fixtures:
+  - name: lorem-1mb.txt.gz
+    phase: 1
+    generator: archive.compressed_text
+    params: { size: 1000000, kind: gz }
+    description: "Exactly 1,000,000 bytes of Lorem Ipsum compressed as a single gzip stream, so the compression ratio is that of ordinary text."
+    tags: [archive, text]
+    expect: { compression: gz, uncompressed_bytes: 1000000 }
+    size_class: free
+  - name: noise-1mb.bin.gz
+    phase: 1
+    generator: archive.compressed_noise
+    params: { size: 1000000, kind: gz }
+    description: "One megabyte of incompressible seeded noise gzipped: the file barely shrinks, which is the point."
+    tags: [archive, binary]
+    expect: { compression: gz, uncompressed_bytes: 1000000 }
+    size_class: free
+  - name: multi-member-3.gz
+    phase: 1
+    generator: archive.gzip_multi_member
+    params: { members: 3 }
+    description: "Three gzip members concatenated into one file, which a reader must decompress to the end to read in full."
+    tags: [archive, text]
+    expect: { compression: gz, members: 3 }
+    size_class: free

@@ -192,11 +192,11 @@ LAUNCH_SET = 228
 #: derived from the repository, so the test turns "someone added fixtures without
 #: thinking about the launch scope" into a failing build rather than a slow drift.
 #:
-#: Today it is `228 - 166`, not an independent count of what `05` §9 still lists — that
+#: Today it is `228 - 199`, not an independent count of what `05` §9 still lists — that
 #: list contains wildcards ("all seven `zero-byte.*`", "all 23 P1 rows of §3.10") which
 #: cannot be counted mechanically. M3.7 and M3.8 confirm it by decrementing it to zero;
 #: if they cannot, the discrepancy is a `05` §9 finding rather than a test to adjust.
-REMAINING_M37_M38 = 62
+REMAINING_M37_M38 = 29  # M3.7 archives catalogued 33 rows (zip, tar, gz, bz2, xz, zst, 7z)
 
 
 def test_the_launch_set_still_adds_up() -> None:

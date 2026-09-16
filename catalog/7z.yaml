@@ -1,0 +1,27 @@
+# 7z archives (docs/05 §3.8). Launch-set rows only.
+format: 7z
+family: archives
+mime: application/x-7z-compressed
+description: >-
+  7z archives written by py7zr with LZMA2, the default the format is known for. Entry
+  timestamps are set to the project epoch, so the bytes never move.
+seo_title: "Sample 7z archives for testing extractors — free, CC0"
+related: [zip, tar]
+fixtures:
+  - name: 3-text-files.7z
+    phase: 1
+    generator: archive.sevenzip
+    params: { count: 3 }
+    description: "Three small Lorem Ipsum text files in a 7z archive with LZMA2 compression."
+    tags: [archive, text]
+    expect: { entries: 3, encrypted: false }
+    size_class: free
+  - name: lzma2-1mb.7z
+    phase: 1
+    generator: archive.sevenzip
+    params: { size: 990000 }
+    description: "About 1MB of incompressible seeded noise compressed with LZMA2, so the archive size follows the payload."
+    tags: [archive, sized, binary]
+    expect: { entries: 1 }
+    size_class: approx
+    nominal_bytes: 1000000

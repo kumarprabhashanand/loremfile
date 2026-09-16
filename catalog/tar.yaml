@@ -1,0 +1,93 @@
+# Tar archives (docs/05 §3.8). Launch-set rows only; the rest are P1b.
+format: tar
+family: archives
+mime: application/x-tar
+description: >-
+  Tar archives with fixed timestamps, ownership and permissions: plain, compressed four
+  ways, nested, with relative symlinks, and with names too long for the ustar header.
+seo_title: "Sample TAR archives for testing — free, CC0, hotlinkable"
+related: [zip, gz, 7z]
+fixtures:
+  - name: 3-text-files.tar
+    phase: 1
+    generator: archive.tar_text_files
+    params: { count: 3 }
+    description: "Three small Lorem Ipsum text files in an uncompressed tar, every entry owned by uid 0 with a fixed timestamp."
+    tags: [archive, text]
+    expect: { entries: 3, tar_format: pax, compression: "" }
+    size_class: free
+  - name: 3-text-files.tar.gz
+    phase: 1
+    generator: archive.tar_text_files
+    params: { count: 3, compression: gz }
+    description: "The same three text files, gzip-compressed: the .tar.gz that most tooling means by 'a tarball'."
+    tags: [archive, text]
+    mime: application/gzip
+    expect: { entries: 3, compression: gz }
+    size_class: free
+  - name: 3-text-files.tar.bz2
+    phase: 1
+    generator: archive.tar_text_files
+    params: { count: 3, compression: bz2 }
+    description: "The same three text files, bzip2-compressed."
+    tags: [archive, text]
+    mime: application/x-bzip2
+    expect: { entries: 3, compression: bz2 }
+    size_class: free
+  - name: 3-text-files.tar.xz
+    phase: 1
+    generator: archive.tar_text_files
+    params: { count: 3, compression: xz }
+    description: "The same three text files, xz-compressed."
+    tags: [archive, text]
+    mime: application/x-xz
+    expect: { entries: 3, compression: xz }
+    size_class: free
+  - name: 3-text-files.tar.zst
+    phase: 1
+    generator: archive.tar_text_files
+    params: { count: 3, compression: zst }
+    description: "The same three text files, zstd-compressed, written without a content checksum so the frame depends only on the payload."
+    tags: [archive, text]
+    mime: application/zstd
+    expect: { entries: 3, compression: zst }
+    size_class: free
+  - name: nested-directories.tar
+    phase: 1
+    generator: archive.tar_nested
+    description: "Four entries in a three-level directory tree."
+    tags: [archive, text]
+    expect: { entries: 4 }
+    size_class: free
+  - name: with-symlinks.tar
+    phase: 1
+    generator: archive.tar_symlinks
+    description: "Two files and two relative symlinks. Nothing points outside the archive, so extraction cannot escape its directory."
+    tags: [archive, text]
+    expect: { entries: 4, symlinks: 2 }
+    size_class: free
+  - name: long-names-pax.tar
+    phase: 1
+    generator: archive.tar_long_names
+    description: "An entry name well beyond the 100-byte ustar limit, stored as a PAX extended header."
+    tags: [archive, text]
+    expect: { entries: 2, tar_format: pax }
+    size_class: free
+  - name: 1000-files.tar
+    phase: 1
+    generator: archive.tar_text_files
+    params: { count: 1000 }
+    description: "One thousand small text files in one uncompressed tar."
+    tags: [archive, text]
+    expect: { entries: 1000 }
+    size_class: free
+  - name: 10mb.tar.gz
+    phase: 1
+    generator: archive.tar_sized
+    params: { size: 9900000, compression: gz }
+    description: "About 10MB: one incompressible seeded-noise member in a gzip-compressed tar, so the size is honest."
+    tags: [archive, sized, binary, large]
+    mime: application/gzip
+    expect: { entries: 1, compression: gz }
+    size_class: approx
+    nominal_bytes: 10000000

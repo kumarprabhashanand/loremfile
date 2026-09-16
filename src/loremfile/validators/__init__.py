@@ -119,6 +119,7 @@ VALIDATOR_MODULES = (
     "pdf",
     "office",
     "media",
+    "archive",
 )
 
 

@@ -33,7 +33,7 @@ simply follows from it.
 HLS is the one nested case: `hls/{variant}/index.m3u8` and its numbered segments beside it,
 such as `hls/720p-10s/seg-000.ts`.
 
-## Names never change
+## Names stay put
 
-A published name keeps its bytes forever. A fix is a new name; the old entry stays and points
-to its replacement.
+The bytes at a published name do not change. A fix is a new name, and the old entry points to
+its replacement. In rare cases a file can be withdrawn; see the [terms of use](/legal/terms).

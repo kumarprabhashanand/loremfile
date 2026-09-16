@@ -6,7 +6,7 @@ classic shape of tracking pixels and spacer images, and a good edge case for thu
 image validators that assume a minimum size.
 
 `gif/animated-10frames-256x256.gif` is a 256x256 animation of ten frames at 100 milliseconds
-each, looping forever. Use it to check that an upload pipeline keeps every frame instead of
+each, looping continuously. Use it to check that an upload pipeline keeps every frame instead of
 flattening the image to its first one, that a resize step preserves the animation, and that a
 preview shows motion. GIF images use a palette of at most 256 colours, so the file also
 reveals colour quantisation problems in converters.

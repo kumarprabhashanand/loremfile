@@ -12,6 +12,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed — what the site promises (owner decision, 2026-09-16)
+
+- The terms of use now say what a free, non-commercial service can keep: no promise of
+  availability, the bytes at a published path do not change, a file may be withdrawn in
+  rare cases, and the service may be discontinued with notice where that is possible. They
+  add the standard German liability split and a note that some files are deliberately
+  malformed.
+- Site copy drops permanence and availability claims; the detail lives in the terms.
+
 ### Added — the website (M4.1, M4.2)
 
 - Pages: a home page with search, a page for each of the 50 published formats, all formats, documentation, legal pages, the changelog and status.

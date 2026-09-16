@@ -39,6 +39,7 @@ GENERATOR_MODULES = (
     "media_audio",
     "media_video",
     "hls",
+    "archive",
 )
 
 #: Format groups for `--group`, used to split the CI matrix (docs/06 §5).

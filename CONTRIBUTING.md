@@ -2,7 +2,7 @@
 
 Thanks for helping. This project has one rule that outranks everything else:
 
-> **A published URL never changes.** The bytes, `sha256`, byte count and MIME type at a
+> **A published URL is not rewritten.** The bytes, `sha256`, byte count and MIME type at a
 > path are frozen the moment they are deployed. A fix is a **new path**; the old entry
 > gets `supersededBy`. CI and the R2 bucket lock rules both enforce this — a pull request
 > that modifies an existing `manifest.json` entry cannot merge.
@@ -95,7 +95,7 @@ pull request. `tools/check_lock.sh` fails the build otherwise.
 
 Python 3.12, type hints everywhere, `ruff` for lint and format, `mypy --strict` on `src/`.
 Generators are pure functions of `(ctx, params)` with no global state, and their docstrings
-state the exact output properties they guarantee.
+state the exact output properties they produce.
 
 ## Where to start
 
