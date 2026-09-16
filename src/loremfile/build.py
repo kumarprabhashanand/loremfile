@@ -41,6 +41,7 @@ GENERATOR_MODULES = (
     "hls",
     "archive",
     "font",
+    "mail",
 )
 
 #: Format groups for `--group`, used to split the CI matrix (docs/06 §5).

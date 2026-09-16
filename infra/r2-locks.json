@@ -97,6 +97,14 @@
       }
     },
     {
+      "id": "lock-eml",
+      "enabled": true,
+      "prefix": "eml/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
       "id": "lock-epub",
       "enabled": true,
       "prefix": "epub/",
@@ -212,6 +220,14 @@
       "id": "lock-m4a",
       "enabled": true,
       "prefix": "m4a/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-mbox",
+      "enabled": true,
+      "prefix": "mbox/",
       "condition": {
         "type": "Indefinite"
       }

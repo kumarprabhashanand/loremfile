@@ -121,6 +121,7 @@ VALIDATOR_MODULES = (
     "media",
     "archive",
     "font",
+    "mail",
 )
 
 

@@ -9,9 +9,9 @@ real mailbox.
 
 from __future__ import annotations
 
-import base64
-from email.message import EmailMessage
+from email.message import EmailMessage, MIMEPart
 from email.policy import SMTP
+from typing import cast
 
 from loremfile.generators.base import GeneratorContext, generator
 from loremfile.util import lorem
@@ -95,9 +95,11 @@ def inline_image(ctx: GeneratorContext, *, image: str) -> bytes:
         f'<html><body><p>{lorem.sentence(ctx.rng)}</p><img src="cid:{cid}" alt=""></body></html>',
         subtype="html",
     )
-    message.get_payload()[1].add_related(
-        ctx.dependency(image), maintype="image", subtype="png", cid=f"<{cid}>"
-    )
+    # The HTML alternative, which the image is related to. `get_payload` is typed as a
+    # union of everything a payload can be, so the part is named here rather than indexed
+    # blindly into.
+    parts = cast("list[MIMEPart]", message.get_payload())
+    parts[1].add_related(ctx.dependency(image), maintype="image", subtype="png", cid=f"<{cid}>")
     message.set_boundary(_boundary(ctx))
     return message.as_bytes(policy=SMTP)
 
@@ -131,15 +133,3 @@ def mbox(ctx: GeneratorContext, *, count: int = 3) -> bytes:
         body = message.as_bytes(policy=SMTP).replace(b"\r\n", b"\n")
         parts.append(b"From alex@" + DOMAIN.encode() + b" Wed Jan  1 00:00:00 2020\n" + body)
     return b"\n".join(parts) + b"\n"
-
-
-@generator()
-def base64_note(ctx: GeneratorContext) -> bytes:
-    """A message whose body is base64-encoded, for readers that must decode it."""
-    message = EmailMessage()
-    _headers(message, ctx, "A base64 body")
-    message.set_content(lorem.text(ctx.rng, 1), cte="base64")
-    encoded = base64.b64decode(message.get_payload().encode())
-    if not encoded:  # pragma: no cover - the payload is never empty
-        raise ValueError("the base64 body decoded to nothing")
-    return message.as_bytes(policy=SMTP)
