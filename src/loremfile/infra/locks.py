@@ -71,9 +71,10 @@ def committed_rules() -> list[dict[str, Any]]:
 
     The deploy's lock gate reads these rather than the rules R2 actually holds: reading
     the applied set needs an account-scoped R2 permission the deploy's token does not
-    have and must not be given (`docs/08` §6). `infra audit` compares committed against
-    applied; this file is the deploy's view, and the gate's message says so rather than
-    implying it verified the bucket.
+    have and must not be given (`docs/08` §6). `infra audit`'s `audit_bucket_locks` reads
+    the applied rules with `R2_READ_TOKEN` and compares them with this file; this file
+    alone is the deploy's view, and the gate's message says so rather than implying it
+    verified the bucket.
     """
     target = locks_path()
     if not target.is_file():

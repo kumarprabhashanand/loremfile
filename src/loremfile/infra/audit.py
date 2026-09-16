@@ -30,10 +30,12 @@ because *our* fields are what moved.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+import os
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from loremfile.config import SITE_HOST
+from loremfile.infra import locks
 from loremfile.infra.apply import (
     CUSTOM_PHASE,
     CUSTOM_REF_PREFIX,
@@ -52,6 +54,7 @@ from loremfile.infra.apply import (
     no_entry_point,
 )
 from loremfile.infra.cloudflare_api import Client, CloudflareError, Response
+from loremfile.infra.r2 import bucket_name
 
 #: One outcome per resource. `drift` is the only one that opens an issue.
 OK = "ok"
@@ -279,6 +282,65 @@ def audit_url_normalization(client: Client, report: AuditReport) -> None:
         report.add("url-normalization", DRIFT, json.dumps(found, sort_keys=True))
 
 
+def audit_bucket_locks(client: Client, report: AuditReport) -> None:
+    """Compare the lock rules R2 actually holds with `infra/r2-locks.json`.
+
+    Until now nothing read the applied rules: the deploy gate reads the committed file,
+    while four places — two docstrings, `08` §2 and the deploy's gate comment — described
+    a comparison that did not exist. The bucket is the storage-layer
+    half of immutability (ADR-023), so a rule silently removed, disabled or narrowed is
+    drift, not a warning — a published prefix would be overwritable by a leaked T2 with
+    nothing anywhere saying so.
+
+    Needs an account-scoped R2 read, which the zone token does not have and must not be
+    given (`08` §6), so it uses `R2_READ_TOKEN`. No token, or a token the API refuses, is
+    **unreadable** — never `ok`: an audit that could not look has learned nothing, and
+    reporting that as clean is the failure this check was added to prevent.
+    """
+    token = os.environ.get("R2_READ_TOKEN", "")
+    if not token:
+        report.add("bucket-locks", UNREADABLE, FALLBACKS["bucket-locks"])
+        return
+
+    reader = replace(client, token=token, read_only=True)
+    current = reader.get(f"/accounts/{client.account_id}/r2/buckets/{bucket_name()}/lock")
+    if _unreadable(current) or not current.ok:
+        report.add("bucket-locks", UNREADABLE, f"{FALLBACKS['bucket-locks']}: {current.errors}")
+        return
+
+    applied = {
+        str(rule.get("prefix", "")): rule for rule in (current.result or {}).get("rules", [])
+    }
+    committed = {str(rule["prefix"]): rule for rule in locks.committed_rules()}
+
+    differences = [
+        *(
+            f"{prefix}: applied to the bucket, not committed"
+            for prefix in sorted(set(applied) - set(committed))
+        ),
+        *(
+            f"{prefix}: committed, not applied to the bucket"
+            for prefix in sorted(set(committed) - set(applied))
+        ),
+    ]
+    for prefix in sorted(set(applied) & set(committed)):
+        live, want = applied[prefix], committed[prefix]
+        if live.get("enabled") is not want.get("enabled"):
+            differences.append(
+                f"{prefix}: enabled={live.get('enabled')}, committed {want.get('enabled')}"
+            )
+        live_type = (live.get("condition") or {}).get("type")
+        want_type = (want.get("condition") or {}).get("type")
+        if live_type != want_type:
+            differences.append(f"{prefix}: condition {live_type!r}, committed {want_type!r}")
+
+    detail = f"{len(applied)} applied, {len(committed)} committed"
+    if differences:
+        report.add("bucket-locks", DRIFT, f"{detail}; " + "; ".join(differences))
+    else:
+        report.add("bucket-locks", OK, f"all {len(committed)} rules match")
+
+
 CHECKS = (
     audit_zone_settings,
     audit_bot_management,
@@ -288,6 +350,7 @@ CHECKS = (
     audit_custom_rules,
     audit_tiered_cache,
     audit_url_normalization,
+    audit_bucket_locks,
 )
 
 
