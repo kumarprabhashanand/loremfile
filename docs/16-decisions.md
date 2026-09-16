@@ -218,5 +218,5 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
 
 - **Context**: every `{format}/` prefix carries an indefinite R2 bucket lock, which refuses overwrites. `{format}/index.html` (ADR-006) and `{format}/index.json` would be frozen by their first upload, though both change whenever a fixture is added.
 - **Decision**: each page is one extensionless key (`pdf`, `docs/faq`). URL rewrites map `/x/` to `/x` (except `_probe/`, whose probe checks `index.html`) and `/{format}/index.json` to `_formats/{format}.json`. Public URLs are unchanged. `upload --site` refuses any key under an enabled lock prefix.
-- **[VERIFY]**: `substring()` and `starts_with()` in Free-plan URL rewrites. The first deploy's `infra apply` and `verify-live --site-dir` decide.
-- **Consequences**: 4 URL rewrites + 4 header rules = 8 of the 10 transform rules.
+- **[VERIFY] resolved 2026-09-16, deploy run `35056944994` (`a7d5c19`):** Free accepts `substring()` and `starts_with()` in URL rewrites — `infra apply` reported `updated=1, failed=0` for `http_request_transform`, the only changed phase, and `verify-live --mode smoke --site-dir` then passed `checked=189, failing=0` over the published site.
+- **Consequences**: 4 URL rewrites + 4 header rules = 8 of the 10 transform rules. Because `/legal/imprint/` now reaches the page, `legal_pages_noindex` and `loremfile_legal_pages_ai_agents` each name both forms, so neither depends on whether a later phase sees the rewritten path (`08` §5.3).

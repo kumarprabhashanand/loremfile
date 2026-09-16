@@ -25,7 +25,7 @@ import secrets
 import time
 import uuid
 from collections.abc import Iterator
-from typing import Self
+from typing import Any, Self
 from unittest import mock
 
 from loremfile.config import SOURCE_DATE_EPOCH
@@ -98,6 +98,32 @@ class _FixedDatetime(_datetime.datetime):
         return cls._at_epoch(None)
 
 
+def _cryptodome_patches(stream: SeededByteStream) -> list[Any]:
+    """Patches for pycryptodomex's own RNG, which never reaches the patched `os.urandom`.
+
+    pyzipper takes an AES zip's salt from `Cryptodome.Random.new().read()`, and that RNG
+    reads OS randomness in C. Until M3.7 spiked it, docs/06 §4 claimed the patched
+    `os.urandom` covered it and the archive was reproducible; three builds gave three
+    different files. Absent library, no patches: the guard must work without it.
+    """
+    try:
+        from Cryptodome import Random as cryptodome_random  # noqa: PLC0415 - optional
+    except ImportError:
+        return []
+
+    class _SeededRandom:
+        def read(self, size: int) -> bytes:
+            return stream.read(size)
+
+        def close(self) -> None:
+            return None
+
+    return [
+        mock.patch.object(cryptodome_random, "new", lambda *_a, **_k: _SeededRandom()),
+        mock.patch.object(cryptodome_random, "get_random_bytes", stream.read),
+    ]
+
+
 @contextlib.contextmanager
 def deterministic(seed: bytes) -> Iterator[SeededByteStream]:
     """Patch clocks, randomness and locale for the duration of the block.
@@ -131,6 +157,8 @@ def deterministic(seed: bytes) -> Iterator[SeededByteStream]:
         enter(mock.patch("secrets.token_hex", lambda n=32: stream.read(n).hex()))
         enter(mock.patch.object(secrets, "SystemRandom", lambda: module_random))
         enter(mock.patch("uuid.uuid4", fake_uuid4))
+        for patch in _cryptodome_patches(stream):
+            enter(patch)
         enter(mock.patch("time.time", fake_time))
         enter(mock.patch("time.time_ns", fake_time_ns))
         enter(mock.patch.object(_datetime, "datetime", _FixedDatetime))

@@ -1,16 +1,17 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.0.0",
-  "generated_at": "2026-09-09T10:15:56Z",
+  "catalog_version": "1.1.0",
+  "generated_at": "2026-09-16T14:25:05Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:3ba29bb905b96fcb019b82f3f0e05f9b6472749af252fbff3f879460e0ef327c",
-  "count": 161,
-  "total_bytes": 414208239,
+  "count": 223,
+  "total_bytes": 526137760,
   "formats": [
+    "7z",
     "aac",
     "aiff",
     "arrow",
@@ -19,22 +20,34 @@
     "avro",
     "bin",
     "bmp",
+    "bz2",
+    "css",
     "csv",
+    "der",
     "docx",
+    "edge",
+    "eml",
     "epub",
     "flac",
     "geojson",
     "gif",
     "gpx",
+    "gz",
+    "har",
     "hls",
+    "html",
     "ico",
+    "ics",
     "ini",
+    "ipynb",
     "jpg",
+    "js",
     "json",
     "kml",
     "kmz",
     "log",
     "m4a",
+    "mbox",
     "md",
     "mkv",
     "mov",
@@ -43,26 +56,71 @@
     "ndjson",
     "ogg",
     "ogv",
+    "otf",
     "parquet",
     "pdf",
+    "pem",
     "png",
     "pptx",
     "rtf",
     "sql",
     "sqlite",
+    "srt",
     "svg",
+    "tar",
     "tiff",
     "toml",
     "ts",
     "tsv",
+    "ttf",
     "txt",
+    "vcf",
+    "vtt",
+    "wasm",
     "wav",
+    "webmanifest",
     "webp",
+    "woff",
+    "woff2",
     "xlsx",
     "xml",
-    "yaml"
+    "xz",
+    "yaml",
+    "zip",
+    "zst"
   ],
   "fixtures": [
+    {
+      "path": "7z/3-text-files.7z",
+      "url": "https://loremfile.dev/7z/3-text-files.7z",
+      "format": "7z",
+      "ext": "7z",
+      "mime": "application/x-7z-compressed",
+      "bytes": 1356,
+      "sha256": "096f365bcb768719ba75f2059c07085f29275cbdbda5c762b56e54bb329dc17d",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three small Lorem Ipsum text files in a 7z archive with LZMA2 compression.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 3,
+        "directories": 0,
+        "encrypted": false,
+        "uncompressed_bytes": 3323
+      },
+      "generator": "archive.sevenzip",
+      "generator_params": {
+        "count": 3
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
     {
       "path": "aac/adts-30s.aac",
       "url": "https://loremfile.dev/aac/adts-30s.aac",
@@ -992,6 +1050,65 @@
       "supersededBy": null
     },
     {
+      "path": "bz2/lorem-1mb.txt.bz2",
+      "url": "https://loremfile.dev/bz2/lorem-1mb.txt.bz2",
+      "format": "bz2",
+      "ext": "txt.bz2",
+      "mime": "application/x-bzip2",
+      "bytes": 151824,
+      "sha256": "dd76e4d5e02c249359f9f9a89b97f9e0f9faba7a9f071785f33b80f6df22d4cd",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Exactly 1,000,000 bytes of Lorem Ipsum compressed as a single bzip2 stream, so the compression ratio is that of ordinary text.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "compression": "bz2",
+        "members": 1,
+        "uncompressed_bytes": 1000000
+      },
+      "generator": "archive.compressed_text",
+      "generator_params": {
+        "size": 1000000,
+        "kind": "bz2"
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "css/basic.css",
+      "url": "https://loremfile.dev/css/basic.css",
+      "format": "css",
+      "ext": "css",
+      "mime": "text/css; charset=utf-8",
+      "bytes": 579,
+      "sha256": "8473e4d88c5f179f138ee8d35c711dbe5f3f0eb77714eb442f921d37d2242972",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A small stylesheet with custom properties, a grid layout, a media query for dark mode and a feature query.",
+      "tags": [
+        "web",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "rules": 10,
+        "at_rules": 2,
+        "custom_properties": 9
+      },
+      "generator": "web.css_basic",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "csv/10mb.csv",
       "url": "https://loremfile.dev/csv/10mb.csv",
       "format": "csv",
@@ -1294,6 +1411,42 @@
       "supersededBy": null
     },
     {
+      "path": "der/self-signed-ed25519-cert.der",
+      "url": "https://loremfile.dev/der/self-signed-ed25519-cert.der",
+      "format": "der",
+      "ext": "der",
+      "mime": "application/pkix-cert",
+      "bytes": 359,
+      "sha256": "6a8241d991bef7242d2dce1dcb55bf4509a1949ddb4c107ad8424d5c1a18c551",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The self-signed Ed25519 certificate for fixture.example in binary DER encoding, byte for byte the same certificate as the PEM fixture.",
+      "tags": [
+        "binary"
+      ],
+      "edge_case": false,
+      "props": {
+        "kind": "certificate",
+        "subject_cn": "fixture.example",
+        "issuer_cn": "fixture.example",
+        "self_signed": true,
+        "algorithm": "ed25519",
+        "serial": 1409983142208024964197,
+        "dns_names": [
+          "fixture.example"
+        ],
+        "has_private_key": false
+      },
+      "generator": "cert.self_signed_certificate",
+      "generator_params": {
+        "encoding": "der"
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "docx/10mb.docx",
       "url": "https://loremfile.dev/docx/10mb.docx",
       "format": "docx",
@@ -1455,6 +1608,638 @@
         "rows": 10
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/csv-ragged-rows.csv",
+      "url": "https://loremfile.dev/edge/csv-ragged-rows.csv",
+      "format": "edge",
+      "ext": "csv",
+      "mime": "text/csv; charset=utf-8",
+      "bytes": 65,
+      "sha256": "9244d4cbab1ecaa017abf973bd9c84af96c2173f3641ac20c41e09dc01d28a99",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A CSV whose rows carry different field counts: one short, one long.",
+      "tags": [
+        "data",
+        "invalid"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "invalid-syntax",
+        "intended_format": "csv",
+        "bytes": 65
+      },
+      "generator": "edge.csv_ragged_rows",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/jpg-truncated-50pct.jpg",
+      "url": "https://loremfile.dev/edge/jpg-truncated-50pct.jpg",
+      "format": "edge",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 7496,
+      "sha256": "cc4e1314fe88d3d09fafad05845ea00b152a916962939a5673423a8cdcbf293e",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The first half of jpg/640x480.jpg: scan data ends with no end-of-image marker.",
+      "tags": [
+        "image",
+        "truncated"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "truncated",
+        "intended_format": "jpg",
+        "bytes": 7496,
+        "fraction": 0.5
+      },
+      "generator": "edge.truncated",
+      "generator_params": {
+        "source": "jpg/640x480.jpg",
+        "fraction": 0.5
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/json-bom.json",
+      "url": "https://loremfile.dev/edge/json-bom.json",
+      "format": "edge",
+      "ext": "json",
+      "mime": "application/json; charset=utf-8",
+      "bytes": 80,
+      "sha256": "f5f8c80d2a1ae06f3688cee56c6ee09eed3586e9c41b17c5af272d0411ca9b6a",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Valid JSON preceded by a UTF-8 byte-order mark, which RFC 8259 does not allow.",
+      "tags": [
+        "data",
+        "encoding"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "bom",
+        "intended_format": "json",
+        "bytes": 80
+      },
+      "generator": "edge.json_bom",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/json-trailing-comma.json",
+      "url": "https://loremfile.dev/edge/json-trailing-comma.json",
+      "format": "edge",
+      "ext": "json",
+      "mime": "application/json; charset=utf-8",
+      "bytes": 64,
+      "sha256": "1530058a5dcb98221617a8ecfcecaf43a488bd4fb740d39a5a5fbc26a7c5f042",
+      "size_class": "free",
+      "phase": 1,
+      "description": "JSON with a trailing comma in an array and an object: valid JavaScript, invalid JSON.",
+      "tags": [
+        "data",
+        "invalid"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "invalid-syntax",
+        "intended_format": "json",
+        "bytes": 64
+      },
+      "generator": "edge.json_trailing_comma",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/mp4-truncated-50pct.mp4",
+      "url": "https://loremfile.dev/edge/mp4-truncated-50pct.mp4",
+      "format": "edge",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 987287,
+      "sha256": "5e7ce6d14210ed3d2c9d85d00b3274b26616f65aac7f636ab34ee62c9d3d8e7c",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The first half of mp4/720p-5s.mp4: a partial media stream inside a box that claims more.",
+      "tags": [
+        "video",
+        "truncated"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "truncated",
+        "intended_format": "mp4",
+        "bytes": 987287,
+        "fraction": 0.5
+      },
+      "generator": "edge.truncated",
+      "generator_params": {
+        "source": "mp4/720p-5s.mp4",
+        "fraction": 0.5
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/pdf-truncated-60pct.pdf",
+      "url": "https://loremfile.dev/edge/pdf-truncated-60pct.pdf",
+      "format": "edge",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 2610,
+      "sha256": "6fe887efddee486a18728ba1af3ed693cc04b28eca383d682e7a365f7c7fd0f2",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The first 60% of pdf/a4-3pages.pdf: the header reads, then the file stops mid-object.",
+      "tags": [
+        "document",
+        "truncated"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "truncated",
+        "intended_format": "pdf",
+        "bytes": 2610,
+        "fraction": 0.6
+      },
+      "generator": "edge.truncated",
+      "generator_params": {
+        "source": "pdf/a4-3pages.pdf",
+        "fraction": 0.6
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/pdf-with-png-extension.png",
+      "url": "https://loremfile.dev/edge/pdf-with-png-extension.png",
+      "format": "edge",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 1795,
+      "sha256": "0c547013439f2cf2c21e675485907ce0809da702dd75921afcc81a5fb46721e9",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The bytes of pdf/a4-1page.pdf under a .png name, served as image/png.",
+      "tags": [
+        "document",
+        "mismatched"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "mismatched-extension",
+        "intended_format": "pdf",
+        "bytes": 1795
+      },
+      "generator": "edge.copied",
+      "generator_params": {
+        "source": "pdf/a4-1page.pdf"
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/png-with-pdf-extension.pdf",
+      "url": "https://loremfile.dev/edge/png-with-pdf-extension.pdf",
+      "format": "edge",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 1387,
+      "sha256": "aad08c4f806eefeccf9bcec1430b4fe2a55ee176ff154c3999541f971b178b56",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The bytes of png/100x100.png under a .pdf name, served as application/pdf.",
+      "tags": [
+        "image",
+        "mismatched"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "mismatched-extension",
+        "intended_format": "png",
+        "bytes": 1387
+      },
+      "generator": "edge.copied",
+      "generator_params": {
+        "source": "png/100x100.png"
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/utf8-invalid-bytes.txt",
+      "url": "https://loremfile.dev/edge/utf8-invalid-bytes.txt",
+      "format": "edge",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 143,
+      "sha256": "a8ae0f5961fb30c7e39edeaa5647a459b6fbfad242da392b4ea18ffdfe4aea1b",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Text served as UTF-8 that contains byte sequences UTF-8 does not allow.",
+      "tags": [
+        "text",
+        "encoding"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "invalid-encoding",
+        "intended_format": "txt",
+        "bytes": 143
+      },
+      "generator": "edge.utf8_invalid_bytes",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/xml-unclosed-tag.xml",
+      "url": "https://loremfile.dev/edge/xml-unclosed-tag.xml",
+      "format": "edge",
+      "ext": "xml",
+      "mime": "application/xml; charset=utf-8",
+      "bytes": 122,
+      "sha256": "34ecd6048dd18aaa5ef43b0fa2644896e6bf7a90a0713fe3022c996c782ae5cb",
+      "size_class": "free",
+      "phase": 1,
+      "description": "XML with an element that is never closed, so it is not well-formed.",
+      "tags": [
+        "data",
+        "invalid"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "invalid-syntax",
+        "intended_format": "xml",
+        "bytes": 122
+      },
+      "generator": "edge.xml_unclosed_tag",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/zero-byte.csv",
+      "url": "https://loremfile.dev/edge/zero-byte.csv",
+      "format": "edge",
+      "ext": "csv",
+      "mime": "text/csv; charset=utf-8",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An empty file served as text/csv, with no header row.",
+      "tags": [
+        "data",
+        "invalid"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "zero-byte",
+        "intended_format": "csv",
+        "bytes": 0
+      },
+      "generator": "edge.zero_byte",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/zero-byte.json",
+      "url": "https://loremfile.dev/edge/zero-byte.json",
+      "format": "edge",
+      "ext": "json",
+      "mime": "application/json; charset=utf-8",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An empty file served as application/json, where a parser expects at least a value.",
+      "tags": [
+        "data",
+        "invalid"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "zero-byte",
+        "intended_format": "json",
+        "bytes": 0
+      },
+      "generator": "edge.zero_byte",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/zero-byte.mp4",
+      "url": "https://loremfile.dev/edge/zero-byte.mp4",
+      "format": "edge",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An empty file served as video/mp4.",
+      "tags": [
+        "video",
+        "invalid"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "zero-byte",
+        "intended_format": "mp4",
+        "bytes": 0
+      },
+      "generator": "edge.zero_byte",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/zero-byte.pdf",
+      "url": "https://loremfile.dev/edge/zero-byte.pdf",
+      "format": "edge",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An empty file served as application/pdf.",
+      "tags": [
+        "document",
+        "invalid"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "zero-byte",
+        "intended_format": "pdf",
+        "bytes": 0
+      },
+      "generator": "edge.zero_byte",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/zero-byte.png",
+      "url": "https://loremfile.dev/edge/zero-byte.png",
+      "format": "edge",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An empty file served as image/png.",
+      "tags": [
+        "image",
+        "invalid"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "zero-byte",
+        "intended_format": "png",
+        "bytes": 0
+      },
+      "generator": "edge.zero_byte",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/zero-byte.txt",
+      "url": "https://loremfile.dev/edge/zero-byte.txt",
+      "format": "edge",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An empty file served as text/plain.",
+      "tags": [
+        "text",
+        "invalid"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "zero-byte",
+        "intended_format": "txt",
+        "bytes": 0
+      },
+      "generator": "edge.zero_byte",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/zero-byte.zip",
+      "url": "https://loremfile.dev/edge/zero-byte.zip",
+      "format": "edge",
+      "ext": "zip",
+      "mime": "application/zip",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An empty file served as application/zip, with not even an end-of-central-directory record.",
+      "tags": [
+        "archive",
+        "invalid"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "zero-byte",
+        "intended_format": "zip",
+        "bytes": 0
+      },
+      "generator": "edge.zero_byte",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/zip-directory-traversal-name.zip",
+      "url": "https://loremfile.dev/edge/zip-directory-traversal-name.zip",
+      "format": "edge",
+      "ext": "zip",
+      "mime": "application/zip",
+      "bytes": 782,
+      "sha256": "d59046db73a6587cf4cd27b313a7a3c9e6217425c22400c73c129277423eacee",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A readable zip holding an entry named ../evil.txt. An extractor that joins entry names to a destination without sanitising them writes outside that directory.",
+      "tags": [
+        "archive",
+        "invalid"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "hostile-name",
+        "intended_format": "zip",
+        "bytes": 782,
+        "hostile_entries": [
+          "../evil.txt"
+        ]
+      },
+      "generator": "edge.zip_traversal_name",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/zip-truncated-50pct.zip",
+      "url": "https://loremfile.dev/edge/zip-truncated-50pct.zip",
+      "format": "edge",
+      "ext": "zip",
+      "mime": "application/zip",
+      "bytes": 911,
+      "sha256": "2589429530f531890bb47b74077884cd27ca3c85665fe522ea399ae6d757bbc4",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The first half of zip/3-text-files.zip: local headers survive, the central directory does not.",
+      "tags": [
+        "archive",
+        "truncated"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "truncated",
+        "intended_format": "zip",
+        "bytes": 911,
+        "fraction": 0.5
+      },
+      "generator": "edge.truncated",
+      "generator_params": {
+        "source": "zip/3-text-files.zip",
+        "fraction": 0.5
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "eml/plain-text.eml",
+      "url": "https://loremfile.dev/eml/plain-text.eml",
+      "format": "eml",
+      "ext": "eml",
+      "mime": "message/rfc822",
+      "bytes": 1531,
+      "sha256": "3e56b059b9255395a67a74d341fab5b72a6e5b3e5682e9d3e9fc71c021ad44f8",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A single text/plain message: the simplest thing a mail parser has to read, with a fixed date and Message-ID.",
+      "tags": [
+        "mail",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "parts": 1,
+        "content_types": [
+          "text/plain"
+        ],
+        "attachments": 0,
+        "multipart": false,
+        "date": "Wed, 01 Jan 2020 00:00:00 +0000",
+        "has_message_id": true,
+        "subject": "A plain text message"
+      },
+      "generator": "mail.plain_text",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "eml/with-attachments.eml",
+      "url": "https://loremfile.dev/eml/with-attachments.eml",
+      "format": "eml",
+      "ext": "eml",
+      "mime": "message/rfc822",
+      "bytes": 4089,
+      "sha256": "8c8972bbe8b0b4e1a28c0627bb0607ac23ced5cb96e2ea2fd1fb228bffdc2853",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A message carrying two published fixtures as attachments, a PDF and a PNG, read from the bytes that were published.",
+      "tags": [
+        "mail",
+        "document",
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "parts": 4,
+        "content_types": [
+          "application/pdf",
+          "image/png",
+          "multipart/mixed",
+          "text/plain"
+        ],
+        "attachments": 2,
+        "multipart": true,
+        "date": "Wed, 01 Jan 2020 00:00:00 +0000",
+        "has_message_id": true,
+        "subject": "A message with attachments"
+      },
+      "generator": "mail.with_attachments",
+      "generator_params": {
+        "attachments": [
+          "pdf/minimal.pdf",
+          "png/100x100.png"
+        ]
+      },
+      "added_in": "1.1.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -1673,6 +2458,96 @@
         "points": 100
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "gz/lorem-1mb.txt.gz",
+      "url": "https://loremfile.dev/gz/lorem-1mb.txt.gz",
+      "format": "gz",
+      "ext": "txt.gz",
+      "mime": "application/gzip",
+      "bytes": 252288,
+      "sha256": "c14dfc81ae69d4bd665228536358a3630ed8b8d58dccf8f79dc6dbc712c9eb6d",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Exactly 1,000,000 bytes of Lorem Ipsum compressed as a single gzip stream, so the compression ratio is that of ordinary text.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "compression": "gz",
+        "members": 1,
+        "uncompressed_bytes": 1000000
+      },
+      "generator": "archive.compressed_text",
+      "generator_params": {
+        "size": 1000000,
+        "kind": "gz"
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "gz/multi-member-3.gz",
+      "url": "https://loremfile.dev/gz/multi-member-3.gz",
+      "format": "gz",
+      "ext": "gz",
+      "mime": "application/gzip",
+      "bytes": 839,
+      "sha256": "2d2e7dbef7362d34a0c8c7369b836e509a4dda12bdcc838a79131251001faa39",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three gzip members concatenated into one file, which a reader must decompress to the end to read in full.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "compression": "gz",
+        "members": 3,
+        "uncompressed_bytes": 1440
+      },
+      "generator": "archive.gzip_multi_member",
+      "generator_params": {
+        "members": 3
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "har/simple-3-requests.har",
+      "url": "https://loremfile.dev/har/simple-3-requests.har",
+      "format": "har",
+      "ext": "har",
+      "mime": "application/json; charset=utf-8",
+      "bytes": 3636,
+      "sha256": "7cc7125995effea6924dc1002299b710e8b1b0b09ac93619ecdc6cbb6bb7da38",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One page and three requests — a document, a stylesheet and an image — with fixed start times and timings.",
+      "tags": [
+        "web",
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 3,
+        "version": "1.2",
+        "pages": 1,
+        "started": "2020-01-01T00:00:00Z"
+      },
+      "generator": "web.har",
+      "generator_params": {},
+      "added_in": "1.1.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -1922,6 +2797,134 @@
       "supersededBy": null
     },
     {
+      "path": "html/all-elements.html",
+      "url": "https://loremfile.dev/html/all-elements.html",
+      "format": "html",
+      "ext": "html",
+      "mime": "text/html; charset=utf-8",
+      "bytes": 2609,
+      "sha256": "b58484daa1c7316038715dcecbca9ec324d5ce456bcc7825fe78a1f207e47901",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Semantic sections, a table with a caption and header cells, a form with no action, lists, a figure, and media elements pointing at published fixtures.",
+      "tags": [
+        "web",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "markup": "html",
+        "elements": 74,
+        "lang": "en",
+        "dir": "",
+        "inline_style": false,
+        "inline_script": false,
+        "tables": 1
+      },
+      "generator": "web.html_all_elements",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "html/basic.html",
+      "url": "https://loremfile.dev/html/basic.html",
+      "format": "html",
+      "ext": "html",
+      "mime": "text/html; charset=utf-8",
+      "bytes": 779,
+      "sha256": "9eb16facba002d05f5e891e6e537a9a0e12e108862eaaecbc492a91227f3a543",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A minimal, valid HTML5 document: a doctype, a declared charset, a heading and two paragraphs.",
+      "tags": [
+        "web",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "markup": "html",
+        "elements": 8,
+        "lang": "en",
+        "dir": "",
+        "inline_style": false,
+        "inline_script": false,
+        "tables": 0
+      },
+      "generator": "web.html_basic",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "html/with-inline-css.html",
+      "url": "https://loremfile.dev/html/with-inline-css.html",
+      "format": "html",
+      "ext": "html",
+      "mime": "text/html; charset=utf-8",
+      "bytes": 696,
+      "sha256": "025f933b4f2d4219651eebea1ef6ccc6fff9221c8e8b4285b27b2a570cd85fc2",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A document whose styles live in a style block rather than an external sheet.",
+      "tags": [
+        "web",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "markup": "html",
+        "elements": 9,
+        "lang": "en",
+        "dir": "",
+        "inline_style": true,
+        "inline_script": false,
+        "tables": 0
+      },
+      "generator": "web.html_inline_css",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "html/with-inline-js.html",
+      "url": "https://loremfile.dev/html/with-inline-js.html",
+      "format": "html",
+      "ext": "html",
+      "mime": "text/html; charset=utf-8",
+      "bytes": 947,
+      "sha256": "d23612abb8d09e0cab9d8063eee4eec986fa7aeef70832f85ab5c502038bb0cd",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A document with one inline script that logs a line and does nothing else. The edge serves it with a sandbox CSP, so a browser runs nothing.",
+      "tags": [
+        "web",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "markup": "html",
+        "elements": 8,
+        "lang": "en",
+        "dir": "",
+        "inline_style": false,
+        "inline_script": true,
+        "tables": 0
+      },
+      "generator": "web.html_inline_js",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "ico/favicon-16-32-48.ico",
       "url": "https://loremfile.dev/ico/favicon-16-32-48.ico",
       "format": "ico",
@@ -1964,6 +2967,68 @@
       "supersededBy": null
     },
     {
+      "path": "ics/recurring-weekly-rrule.ics",
+      "url": "https://loremfile.dev/ics/recurring-weekly-rrule.ics",
+      "format": "ics",
+      "ext": "ics",
+      "mime": "text/calendar; charset=utf-8",
+      "bytes": 318,
+      "sha256": "e4a3d58c558f217d01d599c488bd1d8c39e82c47dfbc922f0e7323e3cf6ebb67",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A weekly series of ten occurrences expressed as one event plus an RRULE, the form a client must expand itself.",
+      "tags": [
+        "calendar",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "events": 1,
+        "timezones": 0,
+        "recurring": true,
+        "all_day": false,
+        "timezone_ids": []
+      },
+      "generator": "calendar.ics_recurring",
+      "generator_params": {
+        "count": 10
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "ics/single-event.ics",
+      "url": "https://loremfile.dev/ics/single-event.ics",
+      "format": "ics",
+      "ext": "ics",
+      "mime": "text/calendar; charset=utf-8",
+      "bytes": 403,
+      "sha256": "ea484fff8efeef8be380a84184b91f991c6ba1a9773f1480d7ddf7ec85fad1bc",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One timed event of an hour with a summary, description and location, in UTC.",
+      "tags": [
+        "calendar",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "events": 1,
+        "timezones": 0,
+        "recurring": false,
+        "all_day": false,
+        "timezone_ids": []
+      },
+      "generator": "calendar.ics_single_event",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "ini/config.ini",
       "url": "https://loremfile.dev/ini/config.ini",
       "format": "ini",
@@ -1989,6 +3054,35 @@
       "generator": "text.ini_config",
       "generator_params": {},
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "ipynb/simple-with-outputs.ipynb",
+      "url": "https://loremfile.dev/ipynb/simple-with-outputs.ipynb",
+      "format": "ipynb",
+      "ext": "ipynb",
+      "mime": "application/x-ipynb+json",
+      "bytes": 1094,
+      "sha256": "2233f68dec9e15f341bb94aede12648220f599641702e8bcf18206382d69aa58",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three cells — one Markdown, two code — with an execution result and a stdout stream already stored in the file.",
+      "tags": [
+        "web",
+        "data",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "cells": 3,
+        "code_cells": 2,
+        "outputs": 2
+      },
+      "generator": "web.ipynb",
+      "generator_params": {},
+      "added_in": "1.1.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -2314,6 +3408,33 @@
         "progressive": true
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "js/hello-console.js",
+      "url": "https://loremfile.dev/js/hello-console.js",
+      "format": "js",
+      "ext": "js",
+      "mime": "text/javascript; charset=utf-8",
+      "bytes": 158,
+      "sha256": "65a874537624bd682428f5c53d2acca15c29e078fec691147ec4aec069bbd943",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A function and a console.log call. The whole file, so what it can do is obvious at a glance.",
+      "tags": [
+        "web",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "lines": 6,
+        "logs": 1
+      },
+      "generator": "web.js_hello",
+      "generator_params": {},
+      "added_in": "1.1.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -2698,6 +3819,72 @@
         "container": "ipod"
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mbox/3-messages.mbox",
+      "url": "https://loremfile.dev/mbox/3-messages.mbox",
+      "format": "mbox",
+      "ext": "mbox",
+      "mime": "application/mbox",
+      "bytes": 2922,
+      "sha256": "176774b9f6720f5d2bac78e752513644e1764e1cd5d3460c06e704ff65495d48",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three plain-text messages separated by `From ` lines, each with a fixed date and Message-ID.",
+      "tags": [
+        "mail",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "messages": 3,
+        "subjects": [
+          "Message 1 of 3",
+          "Message 2 of 3",
+          "Message 3 of 3"
+        ],
+        "content_types": [
+          "text/plain"
+        ]
+      },
+      "generator": "mail.mbox",
+      "generator_params": {
+        "count": 3
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "md/all-elements.md",
+      "url": "https://loremfile.dev/md/all-elements.md",
+      "format": "md",
+      "ext": "md",
+      "mime": "text/markdown; charset=utf-8",
+      "bytes": 920,
+      "sha256": "2ca6240ea3aceb259413b32bf6d60994567e897c8520660048e43011f6ba5221",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Markdown exercising every common element: headings, emphasis, ordered and nested lists, a table, fenced code blocks with languages, a blockquote, a link, an image, a footnote and a raw HTML block.",
+      "tags": [
+        "text",
+        "document"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 50,
+        "max_line_bytes": 171
+      },
+      "generator": "text.markdown_all_elements",
+      "generator_params": {},
+      "added_in": "1.1.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -3427,6 +4614,39 @@
       "supersededBy": null
     },
     {
+      "path": "otf/loremfile-sans.otf",
+      "url": "https://loremfile.dev/otf/loremfile-sans.otf",
+      "format": "otf",
+      "ext": "otf",
+      "mime": "font/otf",
+      "bytes": 4268,
+      "sha256": "c127a5370fe65f0041381d1b77ec63cafb4718b3d6df0c8f70e6046805979ab6",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The Loremfile Sans family as OpenType with CFF outlines: 95 printable ASCII glyphs drawn as rectangles of varying width, with fixed head timestamps and an unrestricted embedding permission.",
+      "tags": [
+        "font"
+      ],
+      "edge_case": false,
+      "props": {
+        "glyphs": 96,
+        "cmap_entries": 95,
+        "units_per_em": 1000,
+        "family": "Loremfile Sans",
+        "outlines": "cff",
+        "flavor": "",
+        "embeddable": true
+      },
+      "generator": "font.family",
+      "generator_params": {
+        "cff": true
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "parquet/people-1000.parquet",
       "url": "https://loremfile.dev/parquet/people-1000.parquet",
       "format": "parquet",
@@ -3932,6 +5152,43 @@
       "generator": "pdf.minimal",
       "generator_params": {},
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pem/self-signed-ed25519-cert.pem",
+      "url": "https://loremfile.dev/pem/self-signed-ed25519-cert.pem",
+      "format": "pem",
+      "ext": "pem",
+      "mime": "application/x-pem-file",
+      "bytes": 542,
+      "sha256": "cbefdc05c831c5f36240181c08344b1387a112507f50f92b90c6bab8920faeb2",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A self-signed Ed25519 certificate for fixture.example, valid from 2020 to 2120, with a fixed serial. Ed25519 signs deterministically, so the bytes never move.",
+      "tags": [
+        "text",
+        "binary"
+      ],
+      "edge_case": false,
+      "props": {
+        "kind": "certificate",
+        "subject_cn": "fixture.example",
+        "issuer_cn": "fixture.example",
+        "self_signed": true,
+        "algorithm": "ed25519",
+        "serial": 1409983142208024964197,
+        "dns_names": [
+          "fixture.example"
+        ],
+        "has_private_key": false
+      },
+      "generator": "cert.self_signed_certificate",
+      "generator_params": {
+        "encoding": "pem"
+      },
+      "added_in": "1.1.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -4472,6 +5729,35 @@
       "supersededBy": null
     },
     {
+      "path": "srt/3-cues.srt",
+      "url": "https://loremfile.dev/srt/3-cues.srt",
+      "format": "srt",
+      "ext": "srt",
+      "mime": "application/x-subrip",
+      "bytes": 268,
+      "sha256": "5bb48da561bdf662a782954640db67350200ac1fb8607ba612b8958678cdf21b",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three consecutive cues of three seconds each, the smallest useful subtitle file.",
+      "tags": [
+        "text",
+        "web"
+      ],
+      "edge_case": false,
+      "props": {
+        "cues": 3,
+        "encoding": "utf-8"
+      },
+      "generator": "web.srt",
+      "generator_params": {
+        "count": 3
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "svg/simple-shapes.svg",
       "url": "https://loremfile.dev/svg/simple-shapes.svg",
       "format": "svg",
@@ -4545,6 +5831,119 @@
         "height": 200
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "tar/3-text-files.tar",
+      "url": "https://loremfile.dev/tar/3-text-files.tar",
+      "format": "tar",
+      "ext": "tar",
+      "mime": "application/x-tar",
+      "bytes": 10240,
+      "sha256": "151c9747df1ec4e3aca336c53827db51359bf906b58d5605f9973bcc51229ca6",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three small Lorem Ipsum text files in an uncompressed tar, every entry owned by uid 0 with a fixed timestamp.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 3,
+        "directories": 0,
+        "symlinks": 0,
+        "tar_format": "pax",
+        "compression": "",
+        "max_name_bytes": 12,
+        "mtimes": [
+          0
+        ],
+        "uncompressed_bytes": 2812
+      },
+      "generator": "archive.tar_text_files",
+      "generator_params": {
+        "count": 3
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "tar/3-text-files.tar.gz",
+      "url": "https://loremfile.dev/tar/3-text-files.tar.gz",
+      "format": "tar",
+      "ext": "tar.gz",
+      "mime": "application/gzip",
+      "bytes": 1152,
+      "sha256": "1c202077fc9ef67d96a3028942ef8d3caa0acfe2e8ab14421ed94d6723676ff7",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The same three text files, gzip-compressed: the .tar.gz that most tooling means by 'a tarball'.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 3,
+        "directories": 0,
+        "symlinks": 0,
+        "tar_format": "pax",
+        "compression": "gz",
+        "max_name_bytes": 12,
+        "mtimes": [
+          0
+        ],
+        "uncompressed_bytes": 2705
+      },
+      "generator": "archive.tar_text_files",
+      "generator_params": {
+        "count": 3,
+        "compression": "gz"
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "tar/3-text-files.tar.xz",
+      "url": "https://loremfile.dev/tar/3-text-files.tar.xz",
+      "format": "tar",
+      "ext": "tar.xz",
+      "mime": "application/x-xz",
+      "bytes": 1268,
+      "sha256": "223207bb0929a4bada3cc0d3d95e2e1637c5f2dc11ec3655790c24fa492bda4f",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The same three text files, xz-compressed.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 3,
+        "directories": 0,
+        "symlinks": 0,
+        "tar_format": "pax",
+        "compression": "xz",
+        "max_name_bytes": 12,
+        "mtimes": [
+          0
+        ],
+        "uncompressed_bytes": 2905
+      },
+      "generator": "archive.tar_text_files",
+      "generator_params": {
+        "count": 3,
+        "compression": "xz"
+      },
+      "added_in": "1.1.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -4699,6 +6098,37 @@
         "delimiter": "\t"
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "ttf/loremfile-sans.ttf",
+      "url": "https://loremfile.dev/ttf/loremfile-sans.ttf",
+      "format": "ttf",
+      "ext": "ttf",
+      "mime": "font/ttf",
+      "bytes": 5616,
+      "sha256": "3dcec7f2c8f0e8150e04260b6ccf1b5219553fc74ed27e8c8fd785f3e34118f9",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The Loremfile Sans family as TrueType: 95 printable ASCII glyphs drawn as rectangles of varying width, with fixed head timestamps and an unrestricted embedding permission.",
+      "tags": [
+        "font"
+      ],
+      "edge_case": false,
+      "props": {
+        "glyphs": 96,
+        "cmap_entries": 95,
+        "units_per_em": 1000,
+        "family": "Loremfile Sans",
+        "outlines": "glyf",
+        "flavor": "",
+        "embeddable": true
+      },
+      "generator": "font.family",
+      "generator_params": {},
+      "added_in": "1.1.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -5224,6 +6654,136 @@
       "supersededBy": null
     },
     {
+      "path": "vcf/vcard3-single.vcf",
+      "url": "https://loremfile.dev/vcf/vcard3-single.vcf",
+      "format": "vcf",
+      "ext": "vcf",
+      "mime": "text/vcard; charset=utf-8",
+      "bytes": 421,
+      "sha256": "380e8c50fe347faed00c463a51238a69b2473f28edba41851c8f9c0095115c2b",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A vCard 3.0 contact with a name, organisation, email, telephone, URL and note.",
+      "tags": [
+        "mail",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "cards": 1,
+        "version": "3.0",
+        "has_photo": false,
+        "fn": "Alex Fixture"
+      },
+      "generator": "calendar.vcard3",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "vcf/vcard4-single.vcf",
+      "url": "https://loremfile.dev/vcf/vcard4-single.vcf",
+      "format": "vcf",
+      "ext": "vcf",
+      "mime": "text/vcard; charset=utf-8",
+      "bytes": 384,
+      "sha256": "d4445f47c2ac0d2c516d78d09ff92b535e594734635db953f28453dad93a8540",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A vCard 4.0 contact using the typed, URI-shaped properties RFC 6350 introduced.",
+      "tags": [
+        "mail",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "cards": 1,
+        "version": "4.0",
+        "has_photo": false,
+        "fn": "Alex Sample"
+      },
+      "generator": "calendar.vcard4",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "vtt/3-cues.vtt",
+      "url": "https://loremfile.dev/vtt/3-cues.vtt",
+      "format": "vtt",
+      "ext": "vtt",
+      "mime": "text/vtt; charset=utf-8",
+      "bytes": 251,
+      "sha256": "84b2f43d1df647e43c765e2010812ff80a2a17a0bfcae2f6f03174d64bcf489d",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The WEBVTT signature and three plain cues: what a track element needs and nothing more.",
+      "tags": [
+        "text",
+        "web"
+      ],
+      "edge_case": false,
+      "props": {
+        "cues": 3,
+        "has_style": false,
+        "has_region": false
+      },
+      "generator": "web.vtt",
+      "generator_params": {
+        "count": 3
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "wasm/minimal-add.wasm",
+      "url": "https://loremfile.dev/wasm/minimal-add.wasm",
+      "format": "wasm",
+      "ext": "wasm",
+      "mime": "application/wasm",
+      "bytes": 41,
+      "sha256": "f61fd62f57c41269c3c23f360eeaf1090b1db9c38651106674d48bc65dba88ba",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A minimal module exporting add(i32, i32) -> i32: enough for a host to instantiate it and call the export, and nothing more.",
+      "tags": [
+        "binary",
+        "web"
+      ],
+      "edge_case": false,
+      "props": {
+        "exports": [
+          "add"
+        ],
+        "types": 1,
+        "params": [
+          "i32",
+          "i32"
+        ],
+        "results": [
+          "i32"
+        ],
+        "sections": [
+          1,
+          3,
+          7,
+          10
+        ]
+      },
+      "generator": "wasm.minimal_add",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "wav/10mb.wav",
       "url": "https://loremfile.dev/wav/10mb.wav",
       "format": "wav",
@@ -5298,6 +6858,46 @@
       "supersededBy": null
     },
     {
+      "path": "webmanifest/site.webmanifest",
+      "url": "https://loremfile.dev/webmanifest/site.webmanifest",
+      "format": "webmanifest",
+      "ext": "webmanifest",
+      "mime": "application/manifest+json",
+      "bytes": 542,
+      "sha256": "1a837bca38e88fd1f578c324856f16ba89b2ab5efd0ac8bb3d1a85cc18b3381f",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A manifest with a name, short name, start URL, scope, display mode, colours and two icons that point at published PNG fixtures.",
+      "tags": [
+        "web",
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "icons": 2,
+        "display": "standalone",
+        "keys": [
+          "background_color",
+          "description",
+          "dir",
+          "display",
+          "icons",
+          "lang",
+          "name",
+          "scope",
+          "short_name",
+          "start_url",
+          "theme_color"
+        ]
+      },
+      "generator": "web.site_webmanifest",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "webp/alpha-256x256.webp",
       "url": "https://loremfile.dev/webp/alpha-256x256.webp",
       "format": "webp",
@@ -5367,6 +6967,72 @@
         "quality": 80
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "woff/loremfile-sans.woff",
+      "url": "https://loremfile.dev/woff/loremfile-sans.woff",
+      "format": "woff",
+      "ext": "woff",
+      "mime": "font/woff",
+      "bytes": 1848,
+      "sha256": "51cd2c5b916f39ada8fa67f08bca44ef0bb38bab913781f89bde5c86bcbd6fd1",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The Loremfile Sans family as WOFF, the web font wrapper: 95 printable ASCII glyphs drawn as rectangles of varying width, with fixed head timestamps and an unrestricted embedding permission.",
+      "tags": [
+        "font"
+      ],
+      "edge_case": false,
+      "props": {
+        "glyphs": 96,
+        "cmap_entries": 95,
+        "units_per_em": 1000,
+        "family": "Loremfile Sans",
+        "outlines": "glyf",
+        "flavor": "woff",
+        "embeddable": true
+      },
+      "generator": "font.family",
+      "generator_params": {
+        "flavor": "woff"
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "woff2/loremfile-sans.woff2",
+      "url": "https://loremfile.dev/woff2/loremfile-sans.woff2",
+      "format": "woff2",
+      "ext": "woff2",
+      "mime": "font/woff2",
+      "bytes": 1072,
+      "sha256": "d04f107117857f18fb5a722f5437fb4e93a6f41f433aafc9d1ad35d1f4f5bcc9",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The Loremfile Sans family as WOFF2, the Brotli-compressed web font: 95 printable ASCII glyphs drawn as rectangles of varying width, with fixed head timestamps and an unrestricted embedding permission.",
+      "tags": [
+        "font"
+      ],
+      "edge_case": false,
+      "props": {
+        "glyphs": 96,
+        "cmap_entries": 95,
+        "units_per_em": 1000,
+        "family": "Loremfile Sans",
+        "outlines": "glyf",
+        "flavor": "woff2",
+        "embeddable": true
+      },
+      "generator": "font.family",
+      "generator_params": {
+        "flavor": "woff2"
+      },
+      "added_in": "1.1.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -5679,6 +7345,37 @@
       "supersededBy": null
     },
     {
+      "path": "xz/lorem-1mb.txt.xz",
+      "url": "https://loremfile.dev/xz/lorem-1mb.txt.xz",
+      "format": "xz",
+      "ext": "txt.xz",
+      "mime": "application/x-xz",
+      "bytes": 198972,
+      "sha256": "f9b04cc3558784637ad05dc07407eaa7c4196c4657599f48917f0d353d999c32",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Exactly 1,000,000 bytes of Lorem Ipsum compressed as a single xz stream, so the compression ratio is that of ordinary text.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "compression": "xz",
+        "members": 1,
+        "uncompressed_bytes": 1000000
+      },
+      "generator": "archive.compressed_text",
+      "generator_params": {
+        "size": 1000000,
+        "kind": "xz"
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "yaml/config-all-types.yaml",
       "url": "https://loremfile.dev/yaml/config-all-types.yaml",
       "format": "yaml",
@@ -5713,6 +7410,326 @@
       "generator": "data.yaml_config",
       "generator_params": {},
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "zip/100mb.zip",
+      "url": "https://loremfile.dev/zip/100mb.zip",
+      "format": "zip",
+      "ext": "zip",
+      "mime": "application/zip",
+      "bytes": 99030316,
+      "sha256": "6116ab9af1bab756b7ebe6905d6a2fcbdce0c309528cc1e362661997f9e9bd02",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 100MB of incompressible seeded noise in one member, the largest archive in the launch set.",
+      "tags": [
+        "archive",
+        "sized",
+        "binary",
+        "large"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 1,
+        "directories": 0,
+        "method": "deflate",
+        "encrypted": false,
+        "zip64": false,
+        "comment": false,
+        "utf8_names": false,
+        "uncompressed_bytes": 99000000
+      },
+      "generator": "archive.zip_sized",
+      "generator_params": {
+        "size": 99000000
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "zip/10mb.zip",
+      "url": "https://loremfile.dev/zip/10mb.zip",
+      "format": "zip",
+      "ext": "zip",
+      "mime": "application/zip",
+      "bytes": 9993166,
+      "sha256": "5d0ba27090921a6e6beceb934ceba27cfe12c65d2be77ec54896755f70185dfe",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 10MB of incompressible seeded noise in one member.",
+      "tags": [
+        "archive",
+        "sized",
+        "binary",
+        "large"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 1,
+        "directories": 0,
+        "method": "deflate",
+        "encrypted": false,
+        "zip64": false,
+        "comment": false,
+        "utf8_names": false,
+        "uncompressed_bytes": 9990000
+      },
+      "generator": "archive.zip_sized",
+      "generator_params": {
+        "size": 9990000
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "zip/1mb.zip",
+      "url": "https://loremfile.dev/zip/1mb.zip",
+      "format": "zip",
+      "ext": "zip",
+      "mime": "application/zip",
+      "bytes": 999421,
+      "sha256": "0dfea23d5400bf6ad72d11d4e2af10a1069dfa52869a94fbee1dd07ef9b2c089",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 1MB: one incompressible seeded-noise member, so the archive's size is honest rather than padded.",
+      "tags": [
+        "archive",
+        "sized",
+        "binary"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 1,
+        "directories": 0,
+        "method": "deflate",
+        "encrypted": false,
+        "zip64": false,
+        "comment": false,
+        "utf8_names": false,
+        "uncompressed_bytes": 999000
+      },
+      "generator": "archive.zip_sized",
+      "generator_params": {
+        "size": 999000
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "zip/3-text-files.zip",
+      "url": "https://loremfile.dev/zip/3-text-files.zip",
+      "format": "zip",
+      "ext": "zip",
+      "mime": "application/zip",
+      "bytes": 1822,
+      "sha256": "3dd88cad3dab2fae753611bb216040def2b92d63fcd430c00a616f52f11971c0",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three small Lorem Ipsum text files, deflated, with fixed timestamps and permissions.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 3,
+        "directories": 0,
+        "method": "deflate",
+        "encrypted": false,
+        "zip64": false,
+        "comment": false,
+        "utf8_names": false,
+        "uncompressed_bytes": 3228
+      },
+      "generator": "archive.zip_text_files",
+      "generator_params": {
+        "count": 3
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "zip/aes256-password-loremfile.zip",
+      "url": "https://loremfile.dev/zip/aes256-password-loremfile.zip",
+      "format": "zip",
+      "ext": "zip",
+      "mime": "application/zip",
+      "bytes": 2064,
+      "sha256": "fabe5baeff21419ab2a9365facfbf5dcf921af58089f0926b02f70b80e876e77",
+      "size_class": "free",
+      "phase": 1,
+      "description": "AES-256 encrypted with the password 'loremfile', published here on purpose because an encrypted fixture nobody can open would be useless.",
+      "tags": [
+        "archive",
+        "encrypted",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 3,
+        "directories": 0,
+        "method": "other",
+        "encrypted": true,
+        "zip64": false,
+        "comment": false,
+        "utf8_names": false,
+        "uncompressed_bytes": 3548
+      },
+      "generator": "archive.zip_aes",
+      "generator_params": {
+        "password": "loremfile",
+        "count": 3
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "zip/empty.zip",
+      "url": "https://loremfile.dev/zip/empty.zip",
+      "format": "zip",
+      "ext": "zip",
+      "mime": "application/zip",
+      "bytes": 22,
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "The empty zip: a 22-byte end-of-central-directory record and nothing else. Valid, and rejected by plenty of readers.",
+      "tags": [
+        "archive"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 0,
+        "directories": 0,
+        "method": "store",
+        "encrypted": false,
+        "zip64": false,
+        "comment": false,
+        "utf8_names": false,
+        "uncompressed_bytes": 0
+      },
+      "generator": "archive.zip_empty",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "zip/mixed-fixtures.zip",
+      "url": "https://loremfile.dev/zip/mixed-fixtures.zip",
+      "format": "zip",
+      "ext": "zip",
+      "mime": "application/zip",
+      "bytes": 5175,
+      "sha256": "21972b7a7ed8ddd68d8d2a63f3d6725365847f42131daa524e251392ca8a3cd0",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Four published fixtures in one archive: a PDF, a PNG, a CSV and a JSON file, read from the bytes that were published.",
+      "tags": [
+        "archive",
+        "document",
+        "image",
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 4,
+        "directories": 0,
+        "method": "deflate",
+        "encrypted": false,
+        "zip64": false,
+        "comment": false,
+        "utf8_names": false,
+        "uncompressed_bytes": 9838
+      },
+      "generator": "archive.zip_of_fixtures",
+      "generator_params": {
+        "paths": [
+          "pdf/minimal.pdf",
+          "png/100x100.png",
+          "csv/people-10.csv",
+          "json/people-10.json"
+        ]
+      },
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "zip/nested-directories.zip",
+      "url": "https://loremfile.dev/zip/nested-directories.zip",
+      "format": "zip",
+      "ext": "zip",
+      "mime": "application/zip",
+      "bytes": 1215,
+      "sha256": "c97215fee7ecb63e33b1bfb31d2022738cf8dca6dc77da6ef919bf967741884f",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Four entries in a three-level directory tree, for extractors that must create directories.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 4,
+        "directories": 0,
+        "method": "deflate",
+        "encrypted": false,
+        "zip64": false,
+        "comment": false,
+        "utf8_names": false,
+        "uncompressed_bytes": 1368
+      },
+      "generator": "archive.zip_nested",
+      "generator_params": {},
+      "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "zst/lorem-1mb.txt.zst",
+      "url": "https://loremfile.dev/zst/lorem-1mb.txt.zst",
+      "format": "zst",
+      "ext": "txt.zst",
+      "mime": "application/zstd",
+      "bytes": 239346,
+      "sha256": "19e0696f0e0b1ab431963d5097e826671da026a6eacec1b883b378f5304e1c3b",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Exactly 1,000,000 bytes of Lorem Ipsum compressed as a single zstd stream, so the compression ratio is that of ordinary text.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "compression": "zst",
+        "members": 1,
+        "uncompressed_bytes": 1000000
+      },
+      "generator": "archive.compressed_text",
+      "generator_params": {
+        "size": 1000000,
+        "kind": "zst"
+      },
+      "added_in": "1.1.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null

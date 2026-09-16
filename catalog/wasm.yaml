@@ -1,0 +1,18 @@
+# WebAssembly (docs/05 §3.12). Launch-set rows only.
+format: wasm
+family: binary
+mime: application/wasm
+description: >-
+  A hand-assembled WebAssembly module exporting one function, `add(i32, i32) -> i32`. It
+  is written byte by byte rather than compiled, so it carries no toolchain version or
+  build path and stays small enough to read in a hex dump.
+seo_title: "Sample WebAssembly file for testing loaders — free, CC0"
+related: [bin]
+fixtures:
+  - name: minimal-add.wasm
+    phase: 1
+    generator: wasm.minimal_add
+    description: "A minimal module exporting add(i32, i32) -> i32: enough for a host to instantiate it and call the export, and nothing more."
+    tags: [binary, web]
+    expect: { exports: ["add"], types: 1, params: ["i32", "i32"], results: ["i32"] }
+    size_class: free

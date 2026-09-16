@@ -1,0 +1,18 @@
+# Single-stream bzip2 compression (docs/05 §3.8). Launch-set rows only.
+format: bz2
+family: archives
+mime: application/x-bzip2
+description: >-
+  A single bzip2 stream, the shape `bzip2` produces when it compresses one file rather
+  than an archive. No container, no entry list: one payload in, one stream out.
+seo_title: "Sample BZIP2 files for testing decompression — free, CC0"
+related: [tar, zip]
+fixtures:
+  - name: lorem-1mb.txt.bz2
+    phase: 1
+    generator: archive.compressed_text
+    params: { size: 1000000, kind: bz2 }
+    description: "Exactly 1,000,000 bytes of Lorem Ipsum compressed as a single bzip2 stream, so the compression ratio is that of ordinary text."
+    tags: [archive, text]
+    expect: { compression: bz2, uncompressed_bytes: 1000000 }
+    size_class: free

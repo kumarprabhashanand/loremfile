@@ -1,0 +1,28 @@
+# RFC 822 messages (docs/05 §3.11). Launch-set rows only.
+format: eml
+family: calendar-mail
+mime: message/rfc822
+description: >-
+  Email messages as a mail client saves them: plain text, an HTML alternative, file
+  attachments, an inline image referenced by Content-ID, and non-ASCII in the headers.
+  The date, Message-ID and MIME boundaries are fixed, and every address is at the
+  reserved example.com domain.
+seo_title: "Sample EML email files for testing parsers and clients — free, CC0"
+related: [mbox, txt]
+fixtures:
+  - name: plain-text.eml
+    phase: 1
+    generator: mail.plain_text
+    description: "A single text/plain message: the simplest thing a mail parser has to read, with a fixed date and Message-ID."
+    tags: [mail, text]
+    expect: { multipart: false, attachments: 0 }
+    size_class: free
+  - name: with-attachments.eml
+    phase: 1
+    generator: mail.with_attachments
+    params: { attachments: ["pdf/minimal.pdf", "png/100x100.png"] }
+    description: "A message carrying two published fixtures as attachments, a PDF and a PNG, read from the bytes that were published."
+    tags: [mail, document, image]
+    expect: { multipart: true, attachments: 2 }
+    size_class: free
+    depends_on: ["pdf/minimal.pdf", "png/100x100.png"]

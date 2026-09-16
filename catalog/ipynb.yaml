@@ -1,0 +1,17 @@
+# Jupyter notebooks (docs/05 §3.6). Launch-set rows only.
+format: ipynb
+family: web
+mime: application/x-ipynb+json
+description: >-
+  A Jupyter notebook in nbformat 4 with its outputs already stored, so a renderer has
+  something to show without executing anything. No cell records a run time.
+seo_title: "Sample Jupyter notebook for testing renderers — free, CC0"
+related: [json, md]
+fixtures:
+  - name: simple-with-outputs.ipynb
+    phase: 1
+    generator: web.ipynb
+    description: "Three cells — one Markdown, two code — with an execution result and a stdout stream already stored in the file."
+    tags: [web, data, text]
+    expect: { cells: 3, code_cells: 2, outputs: 2 }
+    size_class: free

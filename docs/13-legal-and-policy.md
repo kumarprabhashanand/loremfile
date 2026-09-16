@@ -24,12 +24,16 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 ## 2. Terms of use (`/legal/terms`) — full text
 
 > **loremfile.dev terms of use**
-> 1. The files on this site are released under CC0 1.0. You may use them for anything, without attribution.
-> 2. The service is provided "as is", without warranty of any kind. We aim to keep every published URL working with identical bytes indefinitely, but we make no guarantee of availability or continuity.
-> 3. Please keep automated traffic below 30 requests per second per client. We may rate-limit, block or otherwise restrict clients that degrade the service for others.
-> 4. Do not use this service to distribute content you do not own, to test attacks against third parties, or in any way that violates law. The service hosts no user content and offers no upload.
-> 5. We may add files at any time. We remove files only for legal reasons; removed URLs are documented in the manifest.
-> 6. Contact: hello@loremfile.dev · https://github.com/kumarprabhashanand/loremfile
+> 1. **Who provides this service.** loremfile.dev is operated by a private individual and provided free of charge and non-commercially. The operator is named in the Impressum.
+> 2. **Licence.** Every file is released under CC0 1.0. You may use the files for any purpose, without attribution.
+> 3. **No warranty.** The service is provided "as is", without warranty of any kind and without any promise of availability. The bytes at a published path do not change; in rare cases a file may be withdrawn, and the manifest then records the removal.
+> 4. **Liability.** We are liable without limitation for intent and gross negligence, and under mandatory statutory liability, including for injury to life, body or health and under the Produkthaftungsgesetz. For slight negligence we are liable only for the breach of an essential contractual obligation — an obligation whose fulfilment makes the proper performance of this service possible in the first place and on whose observance you may regularly rely — and then only for the foreseeable damage typical of this kind of service. We are not liable for loss of data, for lost profits, or for damage arising from the use of the files in production systems.
+> 5. **What the files are.** The files are synthetic test data. Some are deliberately malformed and may crash or hang software that reads them. Use them only against systems you are authorised to test.
+> 6. **Acceptable use.** Please keep automated traffic below 30 requests per second per client. We may rate-limit, block or otherwise restrict clients that degrade the service for others. Do not use this service to distribute content you do not own, to test attacks against third parties, or in any way that violates the law. The service hosts no user content and offers no upload.
+> 7. **Discontinuation.** We may discontinue the service at any time; where reasonably possible we announce it in advance on the site and in the repository. Every file is CC0, and the release archives and `manifest.json` let anyone mirror the collection.
+> 8. **Contact.** hello@loremfile.dev · https://github.com/kumarprabhashanand/loremfile
+
+**What changed, and why (owner decision, 2026-09-16).** The earlier text promised to keep every URL working "indefinitely" and carried no liability clause. A free, non-commercial service run by a private individual should promise what it can keep: the bytes at a published path do not change, a file may be withdrawn in rare cases, and the service may be discontinued with notice where that is possible. The liability clause is the standard German split — unlimited for intent, gross negligence and mandatory statutory liability; for slight negligence only essential contractual obligations, capped at the foreseeable typical damage. No jurisdiction or choice-of-law clause is claimed.
 
 ## 3. Privacy notice (`/legal/privacy`) — full text
 

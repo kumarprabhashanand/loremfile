@@ -1,0 +1,27 @@
+# Calendars (docs/05 §3.11). Launch-set rows only.
+format: ics
+family: calendar-mail
+mime: text/calendar
+description: >-
+  iCalendar files covering what a client has to get right: a timed event, an all-day
+  event whose DTSTART is a date rather than a datetime, a weekly series expressed as an
+  RRULE, an event in a named zone with the VTIMEZONE that defines it, and a hundred-event
+  export. Every UID and DTSTAMP is fixed.
+seo_title: "Sample ICS calendar files for testing — free, CC0"
+related: [vcf, txt]
+fixtures:
+  - name: single-event.ics
+    phase: 1
+    generator: calendar.ics_single_event
+    description: "One timed event of an hour with a summary, description and location, in UTC."
+    tags: [calendar, text]
+    expect: { events: 1, timezones: 0, recurring: false, all_day: false }
+    size_class: free
+  - name: recurring-weekly-rrule.ics
+    phase: 1
+    generator: calendar.ics_recurring
+    params: { count: 10 }
+    description: "A weekly series of ten occurrences expressed as one event plus an RRULE, the form a client must expand itself."
+    tags: [calendar, text]
+    expect: { events: 1, recurring: true }
+    size_class: free

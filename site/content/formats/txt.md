@@ -1,4 +1,4 @@
-Plain text is never as plain as it looks. These files cover exact sizes, both common line
+Plain text is rarely as plain as it looks. These files cover exact sizes, both common line
 endings, and the character encodings a parser is likely to meet.
 
 Sizes: `txt/lorem-1kb.txt`, `txt/lorem-100kb.txt`, `txt/lorem-1mb.txt` and

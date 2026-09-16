@@ -217,3 +217,55 @@ list = alpha, beta, gamma
 unicode = café-naïve-Ω
 """
     return body.encode("utf-8")
+
+
+#: Sample text for a Markdown code fence. Named so it reads as the literal it is:
+#: inlined, a linter takes a string starting with SELECT for a constructed query.
+SQL_FENCE_SAMPLE = "SELECT id, name FROM people ORDER BY id;"
+
+
+@generator()
+def markdown_all_elements(ctx: GeneratorContext) -> bytes:
+    """Markdown exercising every element docs/05 §3.6 lists for this fixture.
+
+    The image points at a published fixture by site path rather than embedding it, so
+    this file has no dependency and a renderer still has something real to fetch.
+    """
+    rng = ctx.rng
+    words = lorem.words(rng, 12)
+    return (
+        "# " + words[0].capitalize() + "\n\n"
+        f"A paragraph with *emphasis*, **strong emphasis**, `inline code` and a "
+        f"[link](https://loremfile.com/). {lorem.sentence(rng)}\n\n"
+        "## Lists\n\n"
+        f"- {words[1]}\n"
+        f"- {words[2]}\n"
+        f"  - nested {words[3]}\n"
+        f"    - nested deeper {words[4]}\n"
+        f"1. first {words[5]}\n"
+        f"2. second {words[6]}\n\n"
+        "## Table\n\n"
+        "| Column | Type | Note |\n"
+        "|---|---|---|\n"
+        f"| {words[7]} | text | {words[8]} |\n"
+        f"| {words[9]} | number | {words[10]} |\n\n"
+        "## Code\n\n"
+        "```python\n"
+        'print("hello from a fenced block")\n'
+        "```\n\n"
+        "```sql\n"
+        f"{SQL_FENCE_SAMPLE}\n"
+        "```\n\n"
+        "## Quote\n\n"
+        f"> {lorem.sentence(rng)}\n"
+        f"> — {words[11]}\n\n"
+        "## Image\n\n"
+        "![A 640x480 test image](/png/640x480.png)\n\n"
+        "## Footnote\n\n"
+        "Markdown supports footnotes in most dialects.[^1]\n\n"
+        "[^1]: The footnote body, rendered at the end of the document.\n\n"
+        "## HTML block\n\n"
+        '<div class="note">\n'
+        "  <p>A raw HTML block, which Markdown passes through untouched.</p>\n"
+        "</div>\n"
+    ).encode()

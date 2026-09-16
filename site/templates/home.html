@@ -63,7 +63,7 @@ with urllib.request.urlopen("https://loremfile.dev/csv/people-1000.csv") as resp
 <section aria-labelledby="rules-heading">
   <h2 id="rules-heading">Rules</h2>
   <ul>
-    <li><strong>Immutable.</strong> A published URL keeps its bytes forever; a fix is a new path.</li>
+    <li><strong>Stable URLs.</strong> The bytes at a published path do not change; a fix is a new path.</li>
     <li><strong>Rate limit.</strong> Stay under 30 requests per second per IP. In CI, download once and cache.</li>
     <li><strong>Licence.</strong> Every file is CC0 1.0: use it for anything, no credit needed.</li>
     <li><strong>Host.</strong> If this host is ever unavailable, the <a href="{{ site.source }}">repository README</a> states the current canonical host.</li>

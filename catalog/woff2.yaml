@@ -1,0 +1,19 @@
+# The generated font family (docs/05 §3.9, ADR-018). Launch-set rows only.
+format: woff2
+family: fonts
+mime: font/woff2
+description: >-
+  "Loremfile Sans" as WOFF2, the Brotli-compressed web font. Every glyph is a rectangle computed from its codepoint, so
+  the family is generated rather than derived from any typeface, and text set in it
+  renders as visible blocks.
+seo_title: "Sample WOFF2 font for testing renderers and loaders — free, CC0"
+related: [ttf, otf, woff]
+fixtures:
+  - name: loremfile-sans.woff2
+    phase: 1
+    generator: font.family
+    params: { flavor: woff2 }
+    description: "The Loremfile Sans family as WOFF2, the Brotli-compressed web font: 95 printable ASCII glyphs drawn as rectangles of varying width, with fixed head timestamps and an unrestricted embedding permission."
+    tags: [font]
+    expect: { glyphs: 96, cmap_entries: 95, units_per_em: 1000, family: "Loremfile Sans" }
+    size_class: free

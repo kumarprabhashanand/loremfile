@@ -1,0 +1,17 @@
+# HTTP Archives (docs/05 §3.6). Launch-set rows only.
+format: har
+family: web
+mime: application/json
+description: >-
+  An HTTP Archive: the JSON a browser's network panel exports. Every timestamp is fixed,
+  so the file is the same on every build rather than a record of when it was made.
+seo_title: "Sample HAR file for testing network tools — free, CC0"
+related: [json, webmanifest]
+fixtures:
+  - name: simple-3-requests.har
+    phase: 1
+    generator: web.har
+    description: "One page and three requests — a document, a stylesheet and an image — with fixed start times and timings."
+    tags: [web, data]
+    expect: { entries: 3, pages: 1, version: "1.2" }
+    size_class: free

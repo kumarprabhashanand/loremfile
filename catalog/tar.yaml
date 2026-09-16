@@ -1,0 +1,36 @@
+# Tar archives (docs/05 §3.8). Launch-set rows only; the rest are P1b.
+format: tar
+family: archives
+mime: application/x-tar
+description: >-
+  Tar archives with fixed timestamps, ownership and permissions: plain, compressed four
+  ways, nested, with relative symlinks, and with names too long for the ustar header.
+seo_title: "Sample TAR archives for testing — free, CC0, hotlinkable"
+related: [zip, gz, 7z]
+fixtures:
+  - name: 3-text-files.tar
+    phase: 1
+    generator: archive.tar_text_files
+    params: { count: 3 }
+    description: "Three small Lorem Ipsum text files in an uncompressed tar, every entry owned by uid 0 with a fixed timestamp."
+    tags: [archive, text]
+    expect: { entries: 3, tar_format: pax, compression: "" }
+    size_class: free
+  - name: 3-text-files.tar.gz
+    phase: 1
+    generator: archive.tar_text_files
+    params: { count: 3, compression: gz }
+    description: "The same three text files, gzip-compressed: the .tar.gz that most tooling means by 'a tarball'."
+    tags: [archive, text]
+    mime: application/gzip
+    expect: { entries: 3, compression: gz }
+    size_class: free
+  - name: 3-text-files.tar.xz
+    phase: 1
+    generator: archive.tar_text_files
+    params: { count: 3, compression: xz }
+    description: "The same three text files, xz-compressed."
+    tags: [archive, text]
+    mime: application/x-xz
+    expect: { entries: 3, compression: xz }
+    size_class: free

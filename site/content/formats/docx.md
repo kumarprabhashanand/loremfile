@@ -1,5 +1,5 @@
 DOCX is Microsoft Word's format: a ZIP archive of XML parts. These documents were written by
-python-docx and then normalised, so their bytes never change between builds and the hash in
+python-docx and then normalised, so their bytes do not move between builds and the hash in
 the manifest stays true.
 
 `docx/1page.docx` is a heading and three paragraphs of Lorem Ipsum in Word's default styles.

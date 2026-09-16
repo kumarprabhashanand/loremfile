@@ -11,7 +11,7 @@ description: >-
   Raw byte blobs at exact sizes, for upload limits, range requests and checksum
   plumbing. High-entropy, all-zero, all-ones and incrementing patterns.
 seo_title: "Sample binary files for testing uploads and size limits — free, CC0"
-related: [txt]  # edge joins this list when M3.8 adds catalog/edge.yaml
+related: [txt, edge]
 fixtures:
   - name: 1-byte.bin
     phase: 1

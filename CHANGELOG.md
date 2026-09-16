@@ -12,6 +12,25 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added — the launch set is complete (M3.7, M3.8)
+
+- 62 fixtures: archives, fonts (`ttf`, `otf`, `woff`, `woff2`), mail (`eml`, `mbox`),
+  calendar and contacts (`ics`, `vcf`), certificates (`pem`, `der`), WebAssembly, and the
+  remaining web and text formats. Every file `docs/05` §9 lists for launch day now exists.
+- A new `edge/` family: 19 files that are wrong on purpose — empty, truncated, mislabelled,
+  malformed, and one archive whose entry name escapes the extraction directory. Each is
+  served as the type its extension claims, so they test what your code does with input it
+  should refuse rather than input it can read.
+
+### Changed — what the site promises (owner decision, 2026-09-16)
+
+- The terms of use now say what a free, non-commercial service can keep: no promise of
+  availability, the bytes at a published path do not change, a file may be withdrawn in
+  rare cases, and the service may be discontinued with notice where that is possible. They
+  add the standard German liability split and a note that some files are deliberately
+  malformed.
+- Site copy drops permanence and availability claims; the detail lives in the terms.
+
 ### Added — the website (M4.1, M4.2)
 
 - Pages: a home page with search, a page for each of the 50 published formats, all formats, documentation, legal pages, the changelog and status.

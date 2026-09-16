@@ -119,6 +119,14 @@ VALIDATOR_MODULES = (
     "pdf",
     "office",
     "media",
+    "archive",
+    "font",
+    "mail",
+    "calendar",
+    "cert",
+    "wasm",
+    "web",
+    "edge",
 )
 
 
@@ -142,6 +150,15 @@ def register(fmt: str) -> Callable[[ValidatorFunc], ValidatorFunc]:
 
 def has_validator(fmt: str) -> bool:
     return fmt in _REGISTRY
+
+
+def validator_for(fmt: str) -> ValidatorFunc:
+    """The registered validator for a format.
+
+    Public because validators/edge.py runs another format's validator as a negative
+    control: a fixture that claims to be a truncated PDF has to fail the PDF validator.
+    """
+    return _REGISTRY[fmt]
 
 
 def charset_of(mime: str) -> str | None:

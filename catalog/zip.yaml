@@ -1,0 +1,79 @@
+# Zip archives (docs/05 §3.8). Launch-set rows only; the rest are P1b.
+format: zip
+family: archives
+mime: application/zip
+description: >-
+  Zip archives covering what extractors actually have to handle: nested directories,
+  stored and deflated entries, non-ASCII names, empty directories, an archive comment,
+  an AES-encrypted archive whose password is published, and one large enough to need
+  ZIP64.
+seo_title: "Sample ZIP files for testing extractors and uploads — free, CC0"
+related: [tar, gz, 7z]
+fixtures:
+  - name: 3-text-files.zip
+    phase: 1
+    generator: archive.zip_text_files
+    params: { count: 3 }
+    description: "Three small Lorem Ipsum text files, deflated, with fixed timestamps and permissions."
+    tags: [archive, text]
+    expect: { entries: 3, method: deflate, encrypted: false }
+    size_class: free
+  - name: nested-directories.zip
+    phase: 1
+    generator: archive.zip_nested
+    description: "Four entries in a three-level directory tree, for extractors that must create directories."
+    tags: [archive, text]
+    expect: { entries: 4 }
+    size_class: free
+  - name: empty.zip
+    phase: 1
+    generator: archive.zip_empty
+    description: "The empty zip: a 22-byte end-of-central-directory record and nothing else. Valid, and rejected by plenty of readers."
+    tags: [archive]
+    expect: { entries: 0 }
+    size_class: exact
+    nominal_bytes: 22
+  - name: mixed-fixtures.zip
+    phase: 1
+    generator: archive.zip_of_fixtures
+    params: { paths: ["pdf/minimal.pdf", "png/100x100.png", "csv/people-10.csv", "json/people-10.json"] }
+    description: "Four published fixtures in one archive: a PDF, a PNG, a CSV and a JSON file, read from the bytes that were published."
+    tags: [archive, document, image, data]
+    expect: { entries: 4 }
+    size_class: free
+    depends_on: ["pdf/minimal.pdf", "png/100x100.png", "csv/people-10.csv", "json/people-10.json"]
+  - name: aes256-password-loremfile.zip
+    phase: 1
+    generator: archive.zip_aes
+    params: { password: loremfile, count: 3 }
+    description: "AES-256 encrypted with the password 'loremfile', published here on purpose because an encrypted fixture nobody can open would be useless."
+    tags: [archive, encrypted, text]
+    expect: { entries: 3, encrypted: true }
+    size_class: free
+  - name: 1mb.zip
+    phase: 1
+    generator: archive.zip_sized
+    params: { size: 999000 }
+    description: "About 1MB: one incompressible seeded-noise member, so the archive's size is honest rather than padded."
+    tags: [archive, sized, binary]
+    expect: { entries: 1 }
+    size_class: approx
+    nominal_bytes: 1000000
+  - name: 10mb.zip
+    phase: 1
+    generator: archive.zip_sized
+    params: { size: 9990000 }
+    description: "About 10MB of incompressible seeded noise in one member."
+    tags: [archive, sized, binary, large]
+    expect: { entries: 1 }
+    size_class: approx
+    nominal_bytes: 10000000
+  - name: 100mb.zip
+    phase: 1
+    generator: archive.zip_sized
+    params: { size: 99000000 }
+    description: "About 100MB of incompressible seeded noise in one member, the largest archive in the launch set."
+    tags: [archive, sized, binary, large]
+    expect: { entries: 1 }
+    size_class: approx
+    nominal_bytes: 100000000

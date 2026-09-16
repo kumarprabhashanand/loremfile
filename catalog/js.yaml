@@ -1,0 +1,17 @@
+# JavaScript (docs/05 §3.6). Launch-set rows only.
+format: js
+family: web
+mime: text/javascript
+description: >-
+  One script, and deliberately only one: it defines a function and logs a line. Nothing
+  in this catalog reaches the network, touches the DOM or evaluates a string.
+seo_title: "Sample JavaScript file for testing — free, CC0"
+related: [html, css]
+fixtures:
+  - name: hello-console.js
+    phase: 1
+    generator: web.js_hello
+    description: "A function and a console.log call. The whole file, so what it can do is obvious at a glance."
+    tags: [web, text]
+    expect: { logs: 1 }
+    size_class: free

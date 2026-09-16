@@ -12,7 +12,7 @@ https://loremfile.dev/{format}/{name}
 - `name`: `^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+)+$` — lowercase kebab-case descriptor followed by one or more extensions. Examples: `a4-3pages.pdf`, `3-text-files.tar.gz`, `people-1000.parquet`.
 - HLS is the one nested case and has its own grammar: `hls/{variant}/(index|master)\.m3u8` and `hls/{variant}/seg-[0-9]{3}\.ts` where `variant` matches the descriptor grammar (`720p-10s`, `multi-bitrate`). The catalog validator applies this exception; `filename` in `Content-Disposition` and `ext` in the manifest are derived from the last path segment.
 - No uppercase, no spaces, no underscores, no query parameters needed. Query strings are ignored by the origin and excluded from the edge cache key, so `?v=1` is harmless (ADR-013).
-- Names are permanent. A fixture is never renamed or deleted (except for a legal takedown, see `13-legal-and-policy.md` §7; even then the manifest keeps a tombstone).
+- Names stay put. A fixture is not renamed, and is removed only for a legal takedown (`13-legal-and-policy.md` §7); the manifest then keeps a tombstone.
 
 ### Descriptor grammar
 
@@ -62,7 +62,7 @@ Descriptors are ordered tokens separated by `-`:
 | Header | Value | Source |
 |---|---|---|
 | `Content-Type` | Exact MIME from the catalog, e.g. `application/pdf`, `text/csv; charset=utf-8`, `application/vnd.apache.parquet` | Object metadata set at upload |
-| `Content-Length` | Exact byte count (matches `manifest.bytes`). Guaranteed because `no-transform` disables edge compression for fixtures. | R2 |
+| `Content-Length` | Exact byte count (matches `manifest.bytes`), because `no-transform` disables edge compression for fixtures. | R2 |
 | `Cache-Control` | `public, max-age=31536000, immutable, no-transform` | Object metadata |
 | `Content-Disposition` | `inline; filename="{last path segment}"` | Object metadata |
 | `Accept-Ranges` | `bytes` | R2 |
@@ -88,7 +88,7 @@ The sandbox CSP is deliberately **not** applied to PDFs or media: browsers' buil
 
 `Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Content-Type-Options: nosniff`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`.
 
-**Additionally on `/legal/imprint` and `/legal/privacy`**: `X-Robots-Tag: noindex, nofollow, nosnippet` (header rule `legal_pages_noindex`, `08` §5.3), and the same directive as `<meta name="robots">` in the HTML (ADR-016 amendment, ADR-028). No other site page carries an `X-Robots-Tag`.
+**Additionally on `/legal/imprint` and `/legal/privacy`, and on their trailing-slash forms**: `X-Robots-Tag: noindex, nofollow, nosnippet` (header rule `legal_pages_noindex`, `08` §5.3), and the same directive as `<meta name="robots">` in the HTML (ADR-016 amendment, ADR-028). No other site page carries an `X-Robots-Tag`.
 
 ## 5. CORS (stable)
 
@@ -112,14 +112,14 @@ Consequences: `fetch()` from any origin works; `<video>`, `<audio>`, `<img cross
 
 - Fixtures are immutable: clients and intermediaries may cache for a year. Bust nothing; the URL is the version.
 - Site and discovery files: 5-minute TTL. Deploys purge them explicitly.
-- **Query strings**: the cache rule excludes the query string from the cache key (`08` §5.4), so `?v=1` and `?v=2` share one cache entry and cost no extra R2 read. Query strings never change behaviour.
+- **Query strings**: the cache rule excludes the query string from the cache key (`08` §5.4), so `?v=1` and `?v=2` share one cache entry and cost no extra R2 read. Query strings do not change behaviour.
 - **`Origin` header**: Cloudflare's default cache key also includes the request's `Origin` header, so a fixture fetched from three different web origins occupies three cache entries and costs three R2 reads on first use. This is normal CORS behaviour and is accounted for in the cost model (`19` §2).
 - `Vary`: not used.
 - Compression: fixtures are served byte-exact (`no-transform`). Site HTML/CSS/JS may be gzip/brotli-encoded by the edge; their `Content-Length` may then differ from the stored size.
 
 ## 7. Immutability policy (stable)
 
-1. A **fixture** path, once published to R2, is permanent. The rule is about fixtures and nothing else: `probe --down` deletes everything under `_probe/`, `upload --site` overwrites the site keys on every deploy, and `_locktest/probe` exists precisely to be written once and then refused. None of those is a fixture, none is covered by this promise, and the bucket lock rules draw the same line at the storage layer — every format prefix is locked, `_probe/` and the site keys are not. Entry into `manifest.json` on `main` is not the boundary either — the promise ADR-005 makes is to embedded URLs and to hashed fixtures in other people's tests, and both require the bytes to have been *served*. An entry that never reached the bucket has no consumer and breaks no promise, so it may be removed outright rather than tombstoned; a tombstone means "was published, now removed" and would be a lie on the format page. **This is not a relaxation**: R2 bucket locks already implement exactly this boundary at the storage layer (ADR-023), and the wording above claimed something stricter than the system has ever enforced. Amended in M3.6, when five entries described bytes that had never been published and could not be regenerated.
+1. A **fixture** path, once published to R2, is not rewritten or reused. The rule is about fixtures and nothing else: `probe --down` deletes everything under `_probe/`, `upload --site` overwrites the site keys on every deploy, and `_locktest/probe` exists precisely to be written once and then refused. None of those is a fixture, none is covered by this promise, and the bucket lock rules draw the same line at the storage layer — every format prefix is locked, `_probe/` and the site keys are not. Entry into `manifest.json` on `main` is not the boundary either — the promise ADR-005 makes is to embedded URLs and to hashed fixtures in other people's tests, and both require the bytes to have been *served*. An entry that never reached the bucket has no consumer and breaks no promise, so it may be removed outright rather than tombstoned; a tombstone means "was published, now removed" and would be a lie on the format page. **This is not a relaxation**: R2 bucket locks already implement exactly this boundary at the storage layer (ADR-023), and the wording above claimed something stricter than the system has ever enforced. Amended in M3.6, when five entries described bytes that had never been published and could not be regenerated.
 2. Its bytes, `sha256`, `bytes`, `mime` are frozen from publication onward. CI enforces the manifest half (lock check); R2 bucket locks enforce the storage half.
 3. To fix a defective fixture, add a new fixture (e.g. `a4-3pages-v2.pdf`), set `supersededBy` on the old entry, mark it `deprecated: true`, keep serving it.
 4. Only a legal takedown may remove an object; the manifest entry then becomes `{"status": "removed", "reason": "…", "removed_at": …}` and the site marks it.

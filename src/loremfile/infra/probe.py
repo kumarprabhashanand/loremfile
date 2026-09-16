@@ -16,6 +16,7 @@ by `probe --down` and `_locktest/probe` is written once and then deliberately re
 from __future__ import annotations
 
 import itertools
+import json
 import os
 import re
 import threading
@@ -27,7 +28,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from loremfile.config import SITE_HOST
-from loremfile.infra.apply import CUSTOM_PHASE, custom_rules_desired
+from loremfile.infra.apply import CUSTOM_PHASE, custom_rules_desired, infra_dir
 
 BASE = f"https://{SITE_HOST}"
 
@@ -836,6 +837,74 @@ def check_legal_pages_refuse_ai_agents() -> str:
     )
 
 
+#: The response-header phase, read for the directive `legal_pages_noindex` must set.
+HEADERS_PHASE = "http_response_headers_transform"
+NOINDEX_RULE_REF = "legal_pages_noindex"
+#: A site page the noindex rule does not name: without it, a rule setting the directive
+#: everywhere would pass every assertion below.
+NOINDEX_CONTROL = "/formats"
+
+
+def desired_rules(phase: str) -> list[dict[str, Any]]:
+    document = json.loads((infra_dir() / "rulesets" / f"{phase}.json").read_text(encoding="utf-8"))
+    return list(document["rules"])
+
+
+def legal_noindex_terms() -> tuple[list[str], str]:
+    """The paths the committed noindex rule names, and the directive it sets."""
+    rule = next((r for r in desired_rules(HEADERS_PHASE) if r["ref"] == NOINDEX_RULE_REF), None)
+    if rule is None:
+        raise PreconditionUnmet(f"infra/rulesets/{HEADERS_PHASE}.json has no {NOINDEX_RULE_REF}")
+    directive = str(rule["action_parameters"]["headers"]["X-Robots-Tag"]["value"])
+    return PATH_EQUALS.findall(str(rule["expression"])), directive
+
+
+def check_legal_pages_are_noindex() -> str:
+    """Every form of the two legal pages carries the noindex directive; other pages do not.
+
+    The trailing-slash form is the reason this check exists: ADR-032 rewrites
+    `/legal/imprint/` to the page, so the same bytes answer at a path neither rule saw
+    before. Whether the header phase reads the rewritten path is undocumented, so both
+    forms are named in the rule and both are requested here.
+    """
+    paths, directive = legal_noindex_terms()
+    require(bool(paths), f"{NOINDEX_RULE_REF} names no path, so there is nothing to request")
+    require(
+        any(path.endswith("/") for path in paths),
+        f"{NOINDEX_RULE_REF} names no trailing-slash path, which ADR-032 makes reachable",
+    )
+    require(
+        NOINDEX_CONTROL not in paths,
+        f"{NOINDEX_RULE_REF} names {NOINDEX_CONTROL}; the scope control needs a path it does not",
+    )
+    settle(
+        f"x-robots-tag {directive!r} on {paths[0]}",
+        lambda: fetch(paths[0]),
+        lambda response: response.header("x-robots-tag") == directive,
+    )
+    for path in paths:
+        response = fetch(path)
+        require(
+            response.status == HTTP_OK,
+            f"GET {path} returned {response.status}; there was nothing to carry a header",
+        )
+        check(
+            response.header("x-robots-tag") == directive,
+            f"{path} answered x-robots-tag {response.header('x-robots-tag')!r}, not {directive!r}",
+        )
+    control = fetch(NOINDEX_CONTROL)
+    require(
+        control.status == HTTP_OK,
+        f"GET {NOINDEX_CONTROL} returned {control.status}; the scope control needs a real page",
+    )
+    check(
+        control.header("x-robots-tag") == "",
+        f"{NOINDEX_CONTROL} carries x-robots-tag {control.header('x-robots-tag')!r}: the rule is "
+        "not scoped to the legal pages",
+    )
+    return f"{len(paths)} legal paths carry {directive!r}; {NOINDEX_CONTROL} carries none"
+
+
 #: Every check the probe runs against the live site.
 SITE_CHECKS: dict[str, Check] = {
     "url-normalization": check_url_normalization_is_on,
@@ -848,6 +917,7 @@ SITE_CHECKS: dict[str, Check] = {
     "dir-key-coexistence": check_key_named_dir_coexists_with_its_index,
     "404-caching": check_404s_are_cached,
     "legal-pages-ai-agents": check_legal_pages_refuse_ai_agents,
+    "legal-pages-noindex": check_legal_pages_are_noindex,
     "rate-limit-rule": check_rate_limit_rule_is_deployed,
     "rate-limit": check_rate_limit_blocks_a_burst,
 }

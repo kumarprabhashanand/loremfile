@@ -6,7 +6,7 @@ themselves EPUB are renamed ZIP archives that some readers tolerate and validato
 navigation document with a table of contents, and a stylesheet. The `mimetype` entry comes
 first and is stored uncompressed, as the container specification requires, so tools that
 sniff the first bytes recognise the file. The identifier and modification date are fixed, so
-the bytes never change.
+the bytes do not move between builds.
 
 Use it to test e-reader apps, format sniffers, EPUB validators, converters to PDF or HTML,
 and upload forms that accept books. Related formats: [PDF](/pdf), [DOCX](/docx) and

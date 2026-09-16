@@ -1,0 +1,19 @@
+# Unix mbox (docs/05 §3.11). Launch-set rows only.
+format: mbox
+family: calendar-mail
+mime: application/mbox
+description: >-
+  A Unix mbox: several messages in one file, each introduced by a `From ` separator
+  line. The format mail archives and exports still use, and the one where splitting on
+  the wrong line loses a message.
+seo_title: "Sample mbox file for testing mail importers — free, CC0"
+related: [eml]
+fixtures:
+  - name: 3-messages.mbox
+    phase: 1
+    generator: mail.mbox
+    params: { count: 3 }
+    description: "Three plain-text messages separated by `From ` lines, each with a fixed date and Message-ID."
+    tags: [mail, text]
+    expect: { messages: 3 }
+    size_class: free

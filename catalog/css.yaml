@@ -1,0 +1,17 @@
+# Stylesheets (docs/05 §3.6). Launch-set rows only.
+format: css
+family: web
+mime: text/css
+description: >-
+  Stylesheets for parsers and build tools: a small one using custom properties, media
+  queries and feature queries, and a large one for measuring. Neither imports anything.
+seo_title: "Sample CSS files for testing parsers and build tools — free, CC0"
+related: [html, js]
+fixtures:
+  - name: basic.css
+    phase: 1
+    generator: web.css_basic
+    description: "A small stylesheet with custom properties, a grid layout, a media query for dark mode and a feature query."
+    tags: [web, text]
+    expect: { at_rules: 2 }
+    size_class: free

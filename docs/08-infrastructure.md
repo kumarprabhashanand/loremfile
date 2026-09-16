@@ -193,7 +193,7 @@ Pages are stored once, as extensionless keys, and never under a locked format pr
       "X-Content-Type-Options": { "operation": "set", "value": "nosniff" },
       "Permissions-Policy": { "operation": "set", "value": "camera=(), microphone=(), geolocation=()" } } } },
   { "ref": "legal_pages_noindex", "description": "keep the pages that name the operator out of search (ADR-028)", "enabled": true,
-    "expression": "(http.request.uri.path eq \"/legal/imprint\" or http.request.uri.path eq \"/legal/privacy\")",
+    "expression": "(http.request.uri.path eq \"/legal/imprint\" or http.request.uri.path eq \"/legal/imprint/\" or http.request.uri.path eq \"/legal/privacy\" or http.request.uri.path eq \"/legal/privacy/\")",
     "action": "rewrite", "action_parameters": { "headers": {
       "X-Robots-Tag": { "operation": "set", "value": "noindex, nofollow, nosnippet" } } } }
 ] }
@@ -210,7 +210,7 @@ These suffix tests rely on Cloudflare's **URL normalization** (Rules → Setting
       "Content-Security-Policy": { "operation": "set", "value": "sandbox; default-src 'none'; img-src https://loremfile.dev data:; media-src https://loremfile.dev; style-src 'unsafe-inline'; font-src https://loremfile.dev" } } } }
 ```
 
-**`legal_pages_noindex`** (added 2026-09-15, ADR-028) sets only `X-Robots-Tag` on the two legal pages that name the operator. Both paths are extensionless, so `site_pages_headers` matches them too; it sets no `X-Robots-Tag`, so the two rules never set the same header. The expression uses `eq`, already proven on this zone by the request transform, rather than a set literal. Verified against the published pages when M4.1 first publishes them (`15` M4.1).
+**`legal_pages_noindex`** (added 2026-09-15, ADR-028) sets only `X-Robots-Tag` on the two legal pages that name the operator, in both their forms: ADR-032 rewrites `/legal/imprint/` to the page, and whether a later phase sees the rewritten path or the requested one is undocumented, so each rule names both and does not depend on the answer. Both paths are extensionless, so `site_pages_headers` matches them too; it sets no `X-Robots-Tag`, so the two rules never set the same header. The expression uses `eq`, already proven on this zone by the request transform, rather than a set literal. Verified against the published pages when M4.1 first publishes them (`15` M4.1).
 
 Transform rules now: **4 URL rewrites + 4 header rules = 8 of the 10**; 9 if the optional content-type rule is ever added.
 
@@ -272,7 +272,7 @@ So `apply.py` **confirms the managed ruleset is deployed and stops** — a perma
 ```json
 { "rules": [
   { "ref": "loremfile_legal_pages_ai_agents", "description": "block self-identifying AI agents on the two legal pages that name the operator (ADR-028, ADR-030)", "enabled": true,
-    "expression": "(http.request.uri.path eq \"/legal/imprint\" or http.request.uri.path eq \"/legal/privacy\") and (http.user_agent contains \"GPTBot\" or http.user_agent contains \"OAI-SearchBot\" or http.user_agent contains \"ChatGPT-User\" or http.user_agent contains \"OAI-AdsBot\" or http.user_agent contains \"ClaudeBot\" or http.user_agent contains \"Claude-User\" or http.user_agent contains \"Claude-SearchBot\")",
+    "expression": "(http.request.uri.path eq \"/legal/imprint\" or http.request.uri.path eq \"/legal/imprint/\" or http.request.uri.path eq \"/legal/privacy\" or http.request.uri.path eq \"/legal/privacy/\") and (http.user_agent contains \"GPTBot\" or http.user_agent contains \"OAI-SearchBot\" or http.user_agent contains \"ChatGPT-User\" or http.user_agent contains \"OAI-AdsBot\" or http.user_agent contains \"ClaudeBot\" or http.user_agent contains \"Claude-User\" or http.user_agent contains \"Claude-SearchBot\")",
     "action": "block" }
 ] }
 ```
@@ -289,7 +289,7 @@ So `apply.py` **confirms the managed ruleset is deployed and stops** — a perma
 - **The phase is never `PUT`.** `cloudflare_api` refuses such a request before sending it, dry run included (`PhaseWriteRefused`).
 - **Rule order in this phase is neither compared nor changed.**
 
-**The rule.** It is scoped to the two paths with `eq`, as `legal_pages_noindex` is (§5.3), and matches `http.user_agent contains` each token in its vendor's casing. Cloudflare: "All string operators are case-sensitive unless explicitly stated as case-insensitive". The tokens are exactly the `04` §6 AI group minus `Google-Extended`, which `tests/unit/test_legal_pages.py` keeps true:
+**The rule.** It is scoped with `eq` to the two paths and their trailing-slash forms, as `legal_pages_noindex` is (§5.3), and matches `http.user_agent contains` each token in its vendor's casing. Cloudflare: "All string operators are case-sensitive unless explicitly stated as case-insensitive". The tokens are exactly the `04` §6 AI group minus `Google-Extended`, which `tests/unit/test_legal_pages.py` keeps true:
 
 - **OpenAI** publishes a full header string containing each of its four tokens. On `ChatGPT-User` it says "robots.txt rules may not apply", which is why this rule exists. On `OAI-AdsBot`: "OAI-AdsBot is used to validate the safety of web pages submitted as ads on ChatGPT. When you submit an ad, OpenAI may visit the landing page to ensure it complies with our policies. We may also use content from the landing page to determine when it's most relevant to show the ad to users. OAI-AdsBot only visits pages submitted as ads, and the data collected by OAI-AdsBot is not used to train generative AI foundation models." Its header is `Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; OAI-AdsBot/1.0; +https://openai.com/adsbot`.
 - **Anthropic** names `ClaudeBot`, `Claude-User` and `Claude-SearchBot` as robots.txt user agents but publishes **no header strings**. Matching them assumes the header carries the token in that casing, and that stays unverified until a request from one is seen.
