@@ -269,14 +269,14 @@ The report has **two sections**. A fixture whose catalog entry sets `expected_dr
 FROM python:3.12-slim-bookworm@sha256:782412e8…  # pinned by index digest; Dependabot bumps it
 ENV DEBIAN_FRONTEND=noninteractive TZ=UTC LANG=C.UTF-8 LC_ALL=C.UTF-8 PYTHONHASHSEED=0 SOURCE_DATE_EPOCH=1577836800
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      git=<ver> gh=<ver> ca-certificates=<ver> curl=<ver> \
+      git=<ver> ca-certificates=<ver> curl=<ver> \
       ffmpeg=<ver> qpdf=<ver> libavif-bin=<ver> zstd=<ver> xz-utils=<ver> bzip2=<ver> sqlite3=<ver> fonts-dejavu-core=<ver> \
     && rm -rf /var/lib/apt/lists/*
 # Every apt package is pinned to the exact version recorded in tools/apt-versions.txt (first build: install unpinned, run `dpkg -l`, then pin). Recorded in M1.2 — that file is the single source of truth; the real Dockerfile carries the literal versions.
 # Pinned versions disappear from the Debian mirrors after point releases; when that happens, point the sources at snapshot.debian.org for the recorded date.
 # git and gh are required because every workflow job runs inside this image: actions/checkout needs git for a real clone,
 # `build --new` reads origin/main:manifest.json, check_lock.sh diffs against the merge-base, gh_issue.py and release.py call gh.
-# gh comes from GitHub's apt repository (https://cli.github.com/packages) — add its key and source before apt-get, pinned to a version.
+# gh comes from its GitHub release tarball, pinned by version and SHA-256 per architecture: GitHub's apt repository keeps only recent versions.
 COPY tools/requirements.lock /tmp/requirements.lock
 RUN pip install --no-cache-dir --require-hashes -r /tmp/requirements.lock
 WORKDIR /work
@@ -299,7 +299,7 @@ WORKDIR /work
 | `loremfile validate [--only path…] [--format fmt…]` | Run validators on `build/fixtures/` |
 | `loremfile manifest update|check` | §7 |
 | `loremfile site build` | Render site to `build/site/` (see `07-website.md`) |
-| `loremfile site serve [--port 8080]` | Preview `build/site/` with production-like routing (extensionless keys as `text/html`, `/` → `index.html`, trailing slash → `index.html`) |
+| `loremfile site serve [--port 8080]` | Preview `build/site/` with production-like routing (the edge's routing: `/` → `index.html`, a trailing slash → the extensionless key, `/{format}/index.json` → `_formats/{format}.json`; ADR-032) |
 | `loremfile upload [--fixtures] [--site] [--dry-run] [--force-site] [--from-dir <dir>] [--restore <release part URL or .tar>…] [--only path…]` | See `09-ci-cd.md` §5. `--from-dir` uploads a prepared directory (restore drill); `--restore` uploads from a release archive only where the live object is missing or its hash differs from the manifest |
 | `loremfile upload --apply-removals` | Deletes objects whose manifest entry is `status: removed` and purges their URLs; the only delete path in the tool besides `probe --down` (takedown flow, `11` §7.8; the owner must have lifted the prefix's bucket lock first) |
 | `loremfile probe (--up \| --check \| --down)` | Uploads the M2.4 probe objects under `_probe/`, runs the behavioural checks, deletes them; deletes are restricted to the `_probe/` prefix. `--check` also writes `_locktest/probe` once (a locked prefix, `08` §7b) and verifies that overwriting and deleting it are refused |

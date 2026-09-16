@@ -205,7 +205,7 @@ Ordering rationale: fixtures first (immutable, safe to be early), removals next 
 
 | Deferred | Why | Returns with |
 |---|---|---|
-| `loremfile site build`, `upload --site`, `purge --site` | `site build` does not exist. Uploading an empty `build/site/` would report success for a site that is not there | M4.1 |
+| ~~`loremfile site build`, `upload --site`, `purge --site`~~ | — | ✅ **M4.1**: built with the legal values, published, purged, then `verify-live --site-dir build/site` |
 | `loremfile infra audit` | Only `apply.py` landed in M2.2; `audit.py` was never written | `audit.yml`, M4.4 second half |
 | `-j 4` on the build | `-j` is not implemented and the measurement in `06` §11 says it need not be yet | M7 |
 | ~~`push: branches: [main]`~~ | **A judgement, not a missing command** — see below | ✅ **enabled 2026-09-10** |
@@ -249,7 +249,7 @@ They are chosen for the branches they cross, not for coverage of the catalog: a 
 | H2, inert CSP for markup | `(.html and not ends_with("/index.html")) or .htm or .xhtml or .svg or .xml` | **only the `.svg` and `.xml` disjuncts verified.** The `.html` conjunct — the fiddly half, because it is the one carrying the exclusion — has nothing to test against until **M3.7** adds an `.html` fixture |
 | H3, site CSP on pages | `(not contains ".") or ends_with("/index.html")` | **entirely unverified**; the first extensionless key and the first `index.html` arrive with **M4.1** |
 
-Both rules that carry the `/index.html` exclusion have that exclusion untested, and for the same reason: it only fires on an object M4.1 creates. **Verify each branch against its first published object, and record the result here** — a green SVG does not make "the markup rules" verified.
+Both rules that carry the `/index.html` exclusion have that exclusion untested, and for the same reason: it only fires on an object M4.1 creates. **Verify each branch against its first published object, and record the result here** — a green SVG does not make "the markup rules" verified. **M4.1 (ADR-032):** the deploy's `verify-live --site-dir` checks H3 on `/`, on a format page with and without its slash and on both legal pages, H1's `/index.html` exclusion (no fixture headers on `/`), and H1 on a per-format index; the first passing run is recorded here.
 
 **Where the bytes come from.** `--carry-forward <dir>` is the second gate's other half. The deploy resolves the pull request that produced the merge commit, finds that pull request's successful `ci.yml` run, and downloads its `carry-forward-fixtures` artifact. **That lookup does not have to be trusted**: `upload --fixtures` hashes every byte it is about to publish against the manifest and refuses anything that does not match, so an artifact from the wrong run cannot pass and provenance is established by content rather than by a run id. A missing artifact is likewise not an error in that step — most merges carry no `expected_drift` fixture, and the gate, which knows which paths need one, is what decides whether the absence matters.
 
@@ -293,7 +293,7 @@ This is how M2.3 (`apply`), M2.4 (`probe`), rotation checks (`audit`) and restor
 **As implemented (restore, M4.4):**
 - **Restore is two modes.** `restore-dry-run` downloads, verifies and prints the plan, and writes nothing. `restore` writes, purges what it wrote, and verifies only those paths (`11` §7.6 applies lock rules and the site later).
 - **The inputs** `restore_archive_url` and `restore_only` are space-separated. They reach the shell only through `env`, and are checked for shape before anything runs.
-- **Redact is two modes:** `redact-dry-run` names the releases that would change and reads the immutable-releases setting; `redact` rewrites them (§10, ADR-031).
+- **Redact is two modes:** `redact-dry-run` names the releases that would change; `redact` rewrites them (§10, ADR-031).
 
 ### 3.3 `health.yml` — daily
 
@@ -351,10 +351,10 @@ jobs:
 
 | Deferred | Why | Returns with |
 |---|---|---|
-| `loremfile site build` | the command does not exist | **M4.1** |
-| the site-key half of `verify-live` (the **defacement** check) | hashing an empty `build/site/` would report a *clean* defacement check for a site that does not exist — the worst possible shape for this particular check, because its whole job is to notice when site bytes are not ours | **M4.1** |
+| ~~`loremfile site build`~~ | — | ✅ **M4.1**, with the legal values |
+| ~~the site-key half of `verify-live` (the **defacement** check)~~ | — | ✅ **M4.1**: `--site-dir build/site --site-retry-seconds 600`; an empty build is a finding, not a clean check |
 
-Until then the daily run performs no defacement check at all, which is stated here rather than left to be inferred from a green summary. `15` M4.1 carries it as a DoD line.
+Since M4.1 the daily run rebuilds the checked-out commit and compares every site key; a mismatch is re-checked once after 10 minutes, so a deploy still publishing is not a finding.
 
 **Incident, 2026-09-11 → 09-14: the alerting path failed silently for four days.** Every scheduled run of this workflow — four of four — and the first run of `audit.yml` failed, and **no issue was opened**. `verify-live` passed each time; the next step, `gh_issue`, died on `gh issue list` with `fatal: detected dubious ownership in repository at '/__w/loremfile/loremfile'`. Without `--repo`, `gh` infers the repository from the git checkout, and inside a job container git refuses a checkout owned by the runner's uid. With the default implicit `success()`, every later step was then skipped: **the cost check, the rotation reminder and the ops-log keep-alive did not run once.** It was found by reading the run history. **The project's own alert is the issue, and none was opened** — which is the failure this machinery exists to prevent. (GitHub may also email a failure notice for scheduled runs to whoever last changed the schedule; that is outside the repository, is not verifiable from here, and is not something this project relies on.) What changed:
 
@@ -488,7 +488,7 @@ Python updates change `requirements.in`; the PR must also regenerate `requiremen
 - S3 client: `boto3`, `endpoint_url=https://<ACCOUNT_ID>.r2.cloudflarestorage.com`, `region_name="auto"`. If uploads fail with a checksum-related error on a newer boto3, set `AWS_REQUEST_CHECKSUM_CALCULATION=when_required` and `AWS_RESPONSE_CHECKSUM_VALIDATION=when_required` (R2 now supports CRC64NVME full-object checksums, so this should not be needed; the flag is documented here in case).
 - **Fixtures** (`--fixtures`): for each manifest entry with `status: active`, `HEAD` the key. Missing → the bytes must exist in `build/fixtures/` (produced by `build --missing-in-bucket`) or the job fails; upload with `ContentType`, `CacheControl` (fixture value), `ContentDisposition: inline; filename="<last path segment>"`, `Metadata: {sha256, catalog-version}`; multipart (16 MiB parts, 8 threads) for objects > 16 MiB. Present → compare the stored `sha256` metadata with the manifest; equal → skip; different → **fail the job** (immutability).
 - **Removals** (`--apply-removals`): for each manifest entry with `status: removed` whose key still exists, `DeleteObject` and purge the URL. This is the only delete in the tool besides `probe --down` (prefix `_probe/`); the code refuses any other key.
-- **Site** (`--site`): upload every file under `build/site/` with the content-type table (`html`→`text/html; charset=utf-8`, extensionless→`text/html; charset=utf-8`, `json`→`application/json`, `txt`→`text/plain; charset=utf-8`, `xml`→`application/xml`, `css`→`text/css; charset=utf-8`, `js`→`text/javascript; charset=utf-8`, `svg`→`image/svg+xml`, `png`→`image/png`, `schema/*.json`→`application/schema+json`) and cache-control per `02` §4. Skip unchanged (compare sha256 metadata) unless `--force-site`.
+- **Site** (`--site`): upload every file under `build/site/` with the content-type table (`html`→`text/html; charset=utf-8`, extensionless→`text/html; charset=utf-8`, `json`→`application/json`, `txt`→`text/plain; charset=utf-8`, `xml`→`application/xml`, `css`→`text/css; charset=utf-8`, `js`→`text/javascript; charset=utf-8`, `svg`→`image/svg+xml`, `png`→`image/png`, `schema/*.json`→`application/schema+json`) and cache-control per `02` §4. Skip unchanged (compare sha256 metadata) unless `--force-site`. **As implemented (M4.1):** pages are `{key}.html` under `build/site/`, because a page key is also a prefix (`docs`, `docs/faq`); `site.routes` holds the type and cache tables; the upload refuses any key under a lock prefix (ADR-032) and any leftover `%%IMPRINT_*%%` placeholder (`13` §3b).
 - **Restore** (`--restore <archive> [--only …]`, `--from-dir <dir>`): `--restore` accepts only URLs under `https://github.com/kumarprabhashanand/loremfile/releases/download/` (or a local file); read fixtures from the release archive or directory, verify each against the manifest, upload where the live object is missing; where a live object exists with a different hash the overwrite is attempted and, under a bucket lock, refused by R2 — the tool reports each refusal explicitly and the owner must lift that prefix's lock rule first (same ceremony as a takedown, `11` §7.8). A hash-differing object under an intact lock should never exist.
 
   **As implemented (M4.4, 2026-09-15).**
@@ -510,7 +510,7 @@ Python updates change `requirements.in`; the PR must also regenerate `requiremen
 
 ## 6. Cache purge (`loremfile purge --site`)
 
-`POST /zones/{zone_id}/purge_cache` with `{"prefixes": ["loremfile.dev/docs/", "loremfile.dev/legal/", "loremfile.dev/assets/"]}` plus `{"files": [ ...absolute URLs... ]}` for the root, format pages (both `/pdf` and `/pdf/`), discovery files and per-format `index.json`, in batches of 100 operations (the Free-plan per-request maximum; purge by prefix, hostname and tag are available on all plans). Fixtures and `schema/` are never purged (immutable) except in the takedown flow, which purges the removed URL.
+`POST /zones/{zone_id}/purge_cache` with `{"prefixes": ["loremfile.dev/docs/", "loremfile.dev/legal/", "loremfile.dev/assets/"]}` plus `{"files": [ ...absolute URLs... ]}` for the root, format pages (both `/pdf` and `/pdf/`), discovery files and per-format `index.json`, in batches of 100 operations (the Free-plan per-request maximum; purge by prefix, hostname and tag are available on all plans). Fixtures and `schema/` are never purged (immutable) except in the takedown flow, which purges the removed URL. **As implemented (ADR-032):** the files also cover `/formats`, `/changelog`, `/status`, `/docs` and `/legal` with and without the slash, `llms-full.txt`, `search-index.json`, the icons, `.well-known/security.txt`, and `/_formats/{format}.json` beside `/{format}/index.json`.
 
 ## 7. Release and versioning
 

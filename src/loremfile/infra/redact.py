@@ -46,20 +46,6 @@ def _gh(args: list[str]) -> str:
     return done.stdout
 
 
-def immutable_setting(repository: str) -> str:
-    """`on`, `off`, or `unreadable (…)`. GITHUB_TOKEN has no administration scope, so a
-    refusal to read it is expected; each release's own `isImmutable` still decides."""
-    done = _run(["api", f"repos/{repository}/immutable-releases"])
-    if done.returncode == 0:
-        try:
-            return "on" if json.loads(done.stdout or "{}").get("enabled") else "off"
-        except ValueError:
-            return f"unreadable ({done.stdout.strip()[:80]})"
-    if "404" in done.stderr:
-        return "off"
-    return f"unreadable ({done.stderr.strip() or f'exit {done.returncode}'})"
-
-
 @dataclass(frozen=True)
 class Archive:
     tag: str
@@ -196,23 +182,16 @@ def publish(
 
 @dataclass
 class Report:
-    setting: str = ""
     scanned: int = 0
     changed: list[str] = field(default_factory=list)
     problems: list[str] = field(default_factory=list)
 
     @property
     def errors(self) -> list[str]:
-        if self.setting == "on":
-            return [
-                *self.problems,
-                "immutable releases are enabled for this repository; they must stay off (ADR-031)",
-            ]
         return list(self.problems)
 
     def render(self) -> str:
         lines = [
-            f"  immutable-releases setting: {self.setting}",
             f"  releases with an archive: {self.scanned}",
             f"  containing the path: {', '.join(self.changed) or 'none'}",
         ]
@@ -229,7 +208,7 @@ def redact(
     dry_run: bool,
     today: str,
 ) -> Report:
-    report = Report(setting=immutable_setting(repository))
+    report = Report()
     entry = manifest.by_path.get(path)
     if entry is None or entry.get("status") != "removed":
         report.problems.append(

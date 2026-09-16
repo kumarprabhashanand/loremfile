@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="prose intro">{{ intro }}</div>
+<p class="meta">{{ rows|length }} file{{ "" if rows|length == 1 else "s" }}. The same list as JSON: <a href="{{ index_url }}"><code>{{ index_url }}</code></a></p>
+
+<div class="table-wrap">
+<table class="files">
+  <caption>{{ label }} files</caption>
+  <thead>
+    <tr><th scope="col">File</th><th scope="col">Size</th><th scope="col">Properties</th><th scope="col">Description</th></tr>
+  </thead>
+  <tbody>
+{% for row in rows %}
+    <tr>
+      <th scope="row"><a href="/{{ row.path }}"><code>{{ row.name }}</code></a>
+        <button type="button" class="copy" data-copy="{{ row.url }}" hidden>Copy URL</button></th>
+      <td><span title="{{ row.exact }}">{{ row.size }}</span></td>
+      <td>{{ row.props }}</td>
+      <td>{{ row.description }}
+        <details><summary>Snippets</summary>
+          <pre><code>{{ row.curl }}</code></pre>
+          <pre><code>{{ row.embed }}</code></pre>
+        </details></td>
+    </tr>
+{% endfor %}
+  </tbody>
+</table>
+</div>
+{% if removed %}
+
+<h2 id="removed">Removed</h2>
+<ul class="removed">
+{% for entry in removed %}
+  <li><code>{{ entry.path }}</code>, removed {{ entry.removed_at }}: {{ entry.reason }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% if related %}
+
+<h2 id="related">Related formats</h2>
+<ul class="related">
+{% for item in related %}
+  <li><a href="/{{ item.format }}">{{ item.label }}</a></li>
+{% endfor %}
+</ul>
+{% endif %}
+
+<p>File names follow the <a href="/docs/naming">naming grammar</a>. Verify a download against <a href="/sha256sums.txt">sha256sums.txt</a>.</p>
+{% endblock %}

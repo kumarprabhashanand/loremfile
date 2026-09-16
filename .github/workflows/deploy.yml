@@ -13,10 +13,8 @@
 #   2. No regeneration of an `expected_drift` path. Those bytes come from the artifact or
 #      the deploy fails; it never substitutes a rebuild.
 #
-# NOT HERE YET, and deliberately not stubbed. `docs/09` §3.2 lists four steps this
-# workflow does not carry, each because its command does not exist:
-#   * `loremfile site build`, `upload --site`, `purge --site` — the site is M4.1. A step
-#     uploading an empty `build/site/` would report success for a site that does not exist.
+# NOT HERE YET, and deliberately not stubbed. `docs/09` §3.2 lists a step this workflow
+# does not carry:
 #   * `loremfile infra audit` — only `apply.py` landed in M2.2; the audit arrives with
 #     `audit.yml` in the second half of M4.4.
 # Each is added by the milestone that implements it, rather than standing here as a
@@ -57,6 +55,10 @@ on:
         default: ""
       apply_infra:
         description: Apply infra/ even when it has not changed
+        type: boolean
+        default: false
+      force_site:
+        description: Upload every site file, even unchanged ones
         type: boolean
         default: false
 
@@ -213,6 +215,25 @@ jobs:
             ${{ steps.only.outputs.flags }} \
             ${{ env.MODE == 'dry-run' && '--dry-run' || '' }}
 
+      # Built here, in the production environment, because only here do the legal pages get
+      # their values (docs/13 §3b). Nothing in these steps prints a page; never add `set -x`.
+      - name: Build the site
+        env:
+          IMPRINT_NAME: ${{ secrets.IMPRINT_NAME }}
+          IMPRINT_STREET: ${{ secrets.IMPRINT_STREET }}
+          IMPRINT_POSTAL_CITY: ${{ secrets.IMPRINT_POSTAL_CITY }}
+        run: loremfile site build --legal-values-from-env
+
+      - name: Publish the site
+        run: |
+          loremfile upload --site \
+            ${{ inputs.force_site && '--force-site' || '' }} \
+            ${{ env.MODE == 'dry-run' && '--dry-run' || '' }}
+
+      - name: Purge the site from the cache
+        if: env.MODE == 'deploy'
+        run: loremfile purge --site
+
       # Changed since the zone last converged: the head of the most recent successful push
       # run of this workflow on main, other than this run (ADR-029). Not HEAD~1 — a pending
       # deploy replaced in the concurrency group never runs, so an infra/ change in its commit
@@ -254,4 +275,4 @@ jobs:
       - name: Verify what was published
         if: env.MODE == 'deploy'
         run: |
-          loremfile verify-live --mode smoke ${{ steps.only.outputs.flags }}
+          loremfile verify-live --mode smoke --site-dir build/site ${{ steps.only.outputs.flags }}

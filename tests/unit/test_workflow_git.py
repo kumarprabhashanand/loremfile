@@ -35,6 +35,7 @@ GIT_COMMANDS = (
     "loremfile infra changed",  # infra/changed.py
     "loremfile release archive",  # infra/release.py
     "loremfile release redact",  # release.manifest_at, via infra/redact.py
+    "loremfile site build",  # site/build.py (commit date), site/legal.py (git grep)
     "loremfile build --new",  # build.merge_base_manifest
     "loremfile manifest check",  # build.merge_base_manifest
     "loremfile manifest update",  # build.merge_base_manifest
@@ -106,6 +107,9 @@ def test_the_scan_finds_the_steps_known_to_run_git() -> None:
         "ci.yml build-and-validate: Generate the fixtures this pull request adds",
         "ci.yml lint-and-test: Dependency lock is consistent",
         "infra.yml redact: Redact",
+        "ci.yml build-and-validate: Build the site",
+        "deploy.yml deploy: Build the site",
+        "health.yml check: Build the site",
     ):
         assert expected in found, expected
 
@@ -179,6 +183,8 @@ def test_the_modules_that_run_git_are_the_ones_listed() -> None:
         "src/loremfile/build.py",
         "src/loremfile/infra/changed.py",
         "src/loremfile/infra/release.py",
+        "src/loremfile/site/build.py",
+        "src/loremfile/site/legal.py",
     ]
     scripts = sorted(
         path.name
@@ -222,7 +228,13 @@ def cli_commands_using(names: set[str]) -> set[str]:
 
 def test_every_cli_command_that_reaches_git_is_listed() -> None:
     reaching = cli_commands_using(
-        {"merge_base_manifest", "changed_infra", "release_module", "redact_module"}
+        {
+            "merge_base_manifest",
+            "changed_infra",
+            "release_module",
+            "redact_module",
+            "site_build_module",
+        }
     )
     assert reaching == {
         "loremfile manifest check",
@@ -231,5 +243,6 @@ def test_every_cli_command_that_reaches_git_is_listed() -> None:
         "loremfile infra changed",
         "loremfile release archive",
         "loremfile release redact",
+        "loremfile site build",
     }, "empty-set control, and a change here means GIT_COMMANDS needs one too"
     assert reaching <= set(GIT_COMMANDS)

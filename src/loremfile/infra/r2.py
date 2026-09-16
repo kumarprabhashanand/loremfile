@@ -24,11 +24,9 @@ from pathlib import Path
 from typing import Any
 
 from loremfile.config import (
-    ASSET_CACHE_CONTROL,
     BUCKET,
     CATALOG_VERSION,
     FIXTURE_CACHE_CONTROL,
-    SITE_CACHE_CONTROL,
 )
 from loremfile.infra.upload import (
     MULTIPART_CHUNK,
@@ -160,22 +158,24 @@ def try_put_fixture(
     return None
 
 
-def put_site(s3: Any, bucket: str, key: str, source: Path, *, mime: str, sha256: str) -> None:  # noqa: ANN401
-    """Publish one site object. Site keys are mutable; fixtures are not.
-
-    **No caller until M4.1.** `loremfile site build` does not exist yet, so nothing in
-    this repository has ever run this function against a bucket. Its unit coverage proves
-    the arguments it passes, not that a site object was ever written — the same caveat
-    `release.py` carries, and for the same reason.
-    """
-    cache = ASSET_CACHE_CONTROL if key.startswith("assets/") else SITE_CACHE_CONTROL
+def put_site(
+    s3: Any,  # noqa: ANN401
+    bucket: str,
+    key: str,
+    source: Path,
+    *,
+    mime: str,
+    cache_control: str,
+    sha256: str,
+) -> None:
+    """Publish one site object. Site keys are mutable; fixtures are not (ADR-032)."""
     s3.upload_file(
         Filename=str(source),
         Bucket=bucket,
         Key=key,
         ExtraArgs={
             "ContentType": mime,
-            "CacheControl": cache,
+            "CacheControl": cache_control,
             "Metadata": {"sha256": sha256, "catalog-version": CATALOG_VERSION},
         },
         Config=_transfer_config(),
