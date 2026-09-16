@@ -12,16 +12,6 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-### Added — the launch set is complete (M3.7, M3.8)
-
-- 62 fixtures: archives, fonts (`ttf`, `otf`, `woff`, `woff2`), mail (`eml`, `mbox`),
-  calendar and contacts (`ics`, `vcf`), certificates (`pem`, `der`), WebAssembly, and the
-  remaining web and text formats. Every file `docs/05` §9 lists for launch day now exists.
-- A new `edge/` family: 19 files that are wrong on purpose — empty, truncated, mislabelled,
-  malformed, and one archive whose entry name escapes the extraction directory. Each is
-  served as the type its extension claims, so they test what your code does with input it
-  should refuse rather than input it can read.
-
 ### Changed — what the site promises (owner decision, 2026-09-16)
 
 - The terms of use now say what a free, non-commercial service can keep: no promise of
@@ -1316,3 +1306,46 @@ this fail for a reason other than the thing it names?*
   and the absence of a zstd mode in Python 3.12's `tarfile`.
 - `THIRD_PARTY.md`: the Python-libraries table filled in from installed package metadata,
   with a note on the three copyleft dependencies.
+
+## [1.1.0] - 2026-09-16
+
+### Added — the launch set is complete (M3.7, M3.8)
+
+- 62 fixtures: archives, fonts (`ttf`, `otf`, `woff`, `woff2`), mail (`eml`, `mbox`),
+  calendar and contacts (`ics`, `vcf`), certificates (`pem`, `der`), WebAssembly, and the
+  remaining web and text formats. Every file `docs/05` §9 lists for launch day now exists.
+- A new `edge/` family: 19 files that are wrong on purpose — empty, truncated, mislabelled,
+  malformed, and one archive whose entry name escapes the extraction directory. Each is
+  served as the type its extension claims, so they test what your code does with input it
+  should refuse rather than input it can read.
+
+Every path added in this version, by format:
+
+- **7z:** `7z/3-text-files.7z`
+- **bz2:** `bz2/lorem-1mb.txt.bz2`
+- **css:** `css/basic.css`
+- **der:** `der/self-signed-ed25519-cert.der`
+- **edge:** `edge/csv-ragged-rows.csv`, `edge/jpg-truncated-50pct.jpg`, `edge/json-bom.json`, `edge/json-trailing-comma.json`, `edge/mp4-truncated-50pct.mp4`, `edge/pdf-truncated-60pct.pdf`, `edge/pdf-with-png-extension.png`, `edge/png-with-pdf-extension.pdf`, `edge/utf8-invalid-bytes.txt`, `edge/xml-unclosed-tag.xml`, `edge/zero-byte.csv`, `edge/zero-byte.json`, `edge/zero-byte.mp4`, `edge/zero-byte.pdf`, `edge/zero-byte.png`, `edge/zero-byte.txt`, `edge/zero-byte.zip`, `edge/zip-directory-traversal-name.zip`, `edge/zip-truncated-50pct.zip`
+- **eml:** `eml/plain-text.eml`, `eml/with-attachments.eml`
+- **gz:** `gz/lorem-1mb.txt.gz`, `gz/multi-member-3.gz`
+- **har:** `har/simple-3-requests.har`
+- **html:** `html/all-elements.html`, `html/basic.html`, `html/with-inline-css.html`, `html/with-inline-js.html`
+- **ics:** `ics/recurring-weekly-rrule.ics`, `ics/single-event.ics`
+- **ipynb:** `ipynb/simple-with-outputs.ipynb`
+- **js:** `js/hello-console.js`
+- **mbox:** `mbox/3-messages.mbox`
+- **md:** `md/all-elements.md`
+- **otf:** `otf/loremfile-sans.otf`
+- **pem:** `pem/self-signed-ed25519-cert.pem`
+- **srt:** `srt/3-cues.srt`
+- **tar:** `tar/3-text-files.tar`, `tar/3-text-files.tar.gz`, `tar/3-text-files.tar.xz`
+- **ttf:** `ttf/loremfile-sans.ttf`
+- **vcf:** `vcf/vcard3-single.vcf`, `vcf/vcard4-single.vcf`
+- **vtt:** `vtt/3-cues.vtt`
+- **wasm:** `wasm/minimal-add.wasm`
+- **webmanifest:** `webmanifest/site.webmanifest`
+- **woff:** `woff/loremfile-sans.woff`
+- **woff2:** `woff2/loremfile-sans.woff2`
+- **xz:** `xz/lorem-1mb.txt.xz`
+- **zip:** `zip/100mb.zip`, `zip/10mb.zip`, `zip/1mb.zip`, `zip/3-text-files.zip`, `zip/aes256-password-loremfile.zip`, `zip/empty.zip`, `zip/mixed-fixtures.zip`, `zip/nested-directories.zip`
+- **zst:** `zst/lorem-1mb.txt.zst`
