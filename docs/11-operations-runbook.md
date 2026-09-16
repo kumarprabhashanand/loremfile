@@ -151,7 +151,7 @@ Honest recovery targets: **content and a mirror hostname within one working day*
 3. Missing fixtures (if any archive was lost) can be regenerated with `loremfile build --all --only <paths>` in the toolchain image of the release (`toolchain_image` in that manifest); verify hashes.
 4. New Cloudflare account (or the recovered one), in this order: (a) `08` §2 setup except the lock rules (domain if recoverable, otherwise a fallback hostname; bucket; custom domain; CORS; tokens); (b) `infra.yml` `apply` — it writes no R2 objects and no lock rules; (c) `infra.yml` `restore-dry-run` with the archive part URL(s), and read the plan; (d) `restore`, which verifies the paths it wrote; (e) the site upload; (f) the lock rules; (g) `verify-live --mode full`. If GitHub is also gone, (c)–(d) are `loremfile upload --from-dir <dir> --dry-run` and then without `--dry-run`, from a machine holding temporary tokens. Record the durations; a rehearsal on a throwaway zone is optional (≈ USD 10 for a domain).
 5. If the domain is lost for good, publish the new host in the README and on the mirror's home page; nothing else can be done at this budget.
-Practise steps 1–3 before launch (M5.5) and record the time taken. At M5.5 also run `infra.yml` `restore-dry-run` against the `v1.0.0` archive part: expect `skip=161, upload=0, replace=0`.
+Practise steps 1–3 before launch (M5.5) and record the time taken. At M5.5 also run `infra.yml` `restore-dry-run` against the `v1.1.0` archive part: expect `skip=223, upload=0, replace=0`.
 
 ### 7.7 Deploy failed
 

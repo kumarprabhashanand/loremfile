@@ -58,7 +58,7 @@ A fresh-context review by a "junior implementer" reader produced 28 questions. E
 | 8 | Are `props` frozen? | Yes; `description`, `tags`, `notes`, deprecation fields are not | `06` §7, `09` §7 |
 | 9 | When is `build-and-validate` required and what are the check names? | Job names; `lint-and-test` from M1.5, `build-and-validate` from M3.1 | `09` §1 |
 | 10 | Variable scope? | Repository variables; secrets in the `production` environment | `09` §1–2 |
-| 11 | First release snapshot? previous tag? | `v1.0.0` is a full snapshot; `git describe --tags --abbrev=0 <tag>^` | `09` §3.5 |
+| 11 | First release snapshot? previous tag? | `v1.1.0`, the first tag, is a full snapshot; `git describe --tags --abbrev=0 <tag>^` | `09` §3.5 |
 | 12 | Third-party libraries and the determinism guard? | Guards patch (not raise) `os.urandom`, `random`, clocks, `uuid4`; per-library notes given | `06` §4 |
 | 13 | Certificate details? | Fixed serial, subject, validity 2020–2120, Ed25519 from a public seed | `06` §4 |
 | 14 | Default charset and overrides? | `utf-8` appended by the loader; the full override list | `05` §1 rule 7 |

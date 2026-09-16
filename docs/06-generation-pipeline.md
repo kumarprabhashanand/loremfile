@@ -353,12 +353,12 @@ git push                              # green
 
 | Step | Budget (GitHub-hosted ubuntu runner, 4 vCPU) |
 |---|---|
-| Full phase-1 generation (≈ 416 files, ≈ 0.96 GB; the 228-file launch set is ≈ 515 MB of it) | ≤ 25 min (video ≈ 12 min, audio ≈ 3 min, data ≈ 4 min, rest ≈ 3 min) |
+| Full phase-1 generation (≈ 416 files, ≈ 0.96 GB; the 228-file launch set is 595,170,670 bytes of it) | ≤ 25 min (video ≈ 12 min, audio ≈ 3 min, data ≈ 4 min, rest ≈ 3 min) |
 | **Measured, M3.6:** the launch media set — 36 fixtures, the expensive fraction — **253 s sequentially** on a CI runner (AMD EPYC 9V74), with no `-j` | Budget above assumes `-j 4`; sequential is comfortably inside it for the launch set |
 | Validation | ≤ 5 min |
 | Incremental PR build (typical: < 10 new fixtures) | ≤ 5 min |
 | Site build | ≤ 30 s |
-| Upload (≈ 515 MB launch set, first time) | ≤ 10 min (multipart, 16 MiB parts, 8 threads) |
+| Upload (≈ 595 MB launch set, first time) | ≤ 10 min (multipart, 16 MiB parts, 8 threads) |
 
 If the full build exceeds budget, split video generation into a matrix job (see `09` §3.1) before trimming scope.
 
