@@ -414,7 +414,7 @@ def header_branch_findings(hashes: dict[str, str], responses: dict[str, Response
             findings += check_page_headers(
                 routes.public_path(key), responses[key], legal=key in routes.LEGAL_KEYS
             )
-    for key in (*formats[:1], "docs"):
+    for key in (*formats[:1], "docs", *routes.LEGAL_KEYS):
         if key not in hashes:
             continue
         alias = f"/{key}/"
@@ -422,7 +422,7 @@ def header_branch_findings(hashes: dict[str, str], responses: dict[str, Response
         if response.status != 200:  # noqa: PLR2004
             findings.append(Finding(alias, Status.STATUS, f"{response.status} (ADR-032 rewrite)"))
             continue
-        findings += check_page_headers(alias, response, legal=False)
+        findings += check_page_headers(alias, response, legal=key in routes.LEGAL_KEYS)
         if hashlib.sha256(response.body).hexdigest() != hashes[key]:
             findings.append(
                 Finding(alias, Status.HASH_MISMATCH, f"is not the {key} page (ADR-032)")

@@ -88,7 +88,7 @@ The sandbox CSP is deliberately **not** applied to PDFs or media: browsers' buil
 
 `Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Content-Type-Options: nosniff`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`.
 
-**Additionally on `/legal/imprint` and `/legal/privacy`**: `X-Robots-Tag: noindex, nofollow, nosnippet` (header rule `legal_pages_noindex`, `08` §5.3), and the same directive as `<meta name="robots">` in the HTML (ADR-016 amendment, ADR-028). No other site page carries an `X-Robots-Tag`.
+**Additionally on `/legal/imprint` and `/legal/privacy`, and on their trailing-slash forms**: `X-Robots-Tag: noindex, nofollow, nosnippet` (header rule `legal_pages_noindex`, `08` §5.3), and the same directive as `<meta name="robots">` in the HTML (ADR-016 amendment, ADR-028). No other site page carries an `X-Robots-Tag`.
 
 ## 5. CORS (stable)
 

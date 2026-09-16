@@ -622,7 +622,8 @@ def _legal_check() -> probe.ProbeReport:
 def test_the_legal_pages_check_reads_paths_and_tokens_from_the_committed_rule() -> None:
     """Empty-set control: every assertion below iterates these lists."""
     paths, tokens = probe.ai_agent_rule_terms()
-    assert set(paths) == {"/legal/imprint", "/legal/privacy"}
+    # Both forms: ADR-032 rewrites `/legal/imprint/` to the page, so the rule names both.
+    assert set(paths) == {"/legal/imprint", "/legal/imprint/", "/legal/privacy", "/legal/privacy/"}
     assert "OAI-AdsBot" in tokens
     assert "Google-Extended" not in tokens
     assert probe.OFF_PATH_CONTROL not in paths

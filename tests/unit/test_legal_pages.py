@@ -15,6 +15,8 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 LEGAL_PAGES = {"/legal/imprint", "/legal/privacy"}
+#: ADR-032 rewrites `/legal/imprint/` to the page, so each rule names both forms.
+RULE_PATHS = LEGAL_PAGES | {f"{page}/" for page in LEGAL_PAGES}
 DIRECTIVE = "noindex, nofollow, nosnippet"
 #: Each checked against its vendor's own documentation (docs/04 §6). Adding one means
 #: checking that vendor's documentation first.
@@ -51,9 +53,9 @@ def ai_agent_rule() -> dict[str, Any]:
 # --- the edge header rule -----------------------------------------------------
 
 
-def test_the_legal_rule_targets_exactly_the_two_pages() -> None:
+def test_the_legal_rule_targets_exactly_the_two_pages_in_both_forms() -> None:
     expression = rule("legal_pages_noindex")["expression"]
-    assert set(re.findall(r'http\.request\.uri\.path eq "([^"]+)"', expression)) == LEGAL_PAGES
+    assert set(re.findall(r'http\.request\.uri\.path eq "([^"]+)"', expression)) == RULE_PATHS
     # Negative control: the other legal pages stay indexable (ADR-016).
     assert "/legal/license" not in expression
     assert "/legal/terms" not in expression
@@ -143,7 +145,7 @@ def test_the_waf_rule_refuses_the_robots_tokens_except_google_extended() -> None
     assert tokens, "empty-set control: the pattern must find the rule's tokens"
     assert set(tokens) == AI_TOKENS - {"Google-Extended"}
     assert "Google-Extended" not in expression
-    assert set(re.findall(r'http\.request\.uri\.path eq "([^"]+)"', expression)) == LEGAL_PAGES
+    assert set(re.findall(r'http\.request\.uri\.path eq "([^"]+)"', expression)) == RULE_PATHS
     assert "lower(" not in expression, "tokens are matched in the vendor's casing (ADR-030)"
     assert ai_agent_rule()["action"] == "block"
 

@@ -30,6 +30,8 @@ class Edge:
     def __init__(self) -> None:
         self.bodies = {routes.public_path(key): body for key, body in FILES.items()}
         self.bodies |= {"/pdf/": FILES["pdf"], "/docs/": FILES["docs"]}
+        # ADR-032 makes the trailing-slash form reach the same page.
+        self.bodies |= {f"/{key}/": FILES[key] for key in routes.LEGAL_KEYS}
         self.overrides: dict[str, Response] = {}
         self.calls: list[str] = []
 
@@ -131,6 +133,18 @@ def test_file_headers_on_a_page_mean_the_index_html_exclusion_broke(site: Path, 
         path == "/" and "fixture headers" in detail
         for path, _, detail in failures(verify_live.site_findings(site))
     )
+
+
+def test_a_legal_page_reached_with_a_trailing_slash_must_still_be_noindex(
+    site: Path, edge: Edge
+) -> None:
+    """The rewrite feeds both the header rule and the WAF rule (docs/08 §5.3, ADR-032)."""
+    headers = {"content-type": "text/html; charset=utf-8", **verify_live.EXPECTED_PAGE_HEADERS}
+    edge.overrides["/legal/imprint/"] = Response(
+        status=200, headers=headers, body=FILES["legal/imprint"]
+    )
+    found = failures(verify_live.site_findings(site))
+    assert any(path == "/legal/imprint/" and "x-robots-tag" in detail for path, _, detail in found)
 
 
 def test_a_missing_slash_rewrite_is_reported(site: Path, edge: Edge) -> None:
