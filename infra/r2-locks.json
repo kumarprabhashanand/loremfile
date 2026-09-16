@@ -289,6 +289,14 @@
       }
     },
     {
+      "id": "lock-otf",
+      "enabled": true,
+      "prefix": "otf/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
       "id": "lock-parquet",
       "enabled": true,
       "prefix": "parquet/",
@@ -393,6 +401,14 @@
       }
     },
     {
+      "id": "lock-ttf",
+      "enabled": true,
+      "prefix": "ttf/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
       "id": "lock-txt",
       "enabled": true,
       "prefix": "txt/",
@@ -420,6 +436,22 @@
       "id": "lock-webp",
       "enabled": true,
       "prefix": "webp/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-woff",
+      "enabled": true,
+      "prefix": "woff/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-woff2",
+      "enabled": true,
+      "prefix": "woff2/",
       "condition": {
         "type": "Indefinite"
       }

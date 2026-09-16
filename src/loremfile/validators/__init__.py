@@ -120,6 +120,7 @@ VALIDATOR_MODULES = (
     "office",
     "media",
     "archive",
+    "font",
 )
 
 
