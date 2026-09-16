@@ -115,6 +115,7 @@ ignore_errors = true
 #   html5lib  — ships no py.typed; `types-html5lib` is third-party and a toolchain change.
 #   pyzipper  — a zipfile fork with no py.typed and no stub package at all.
 #   fontTools — ships no py.typed; the font family and its validator use it directly.
+#   vobject   — ships no py.typed; it reads the vCards back in their validator.
 #   openpyxl  — ships no stubs; `types-openpyxl` is third-party and would be a
 #               toolchain change (see below). python-docx and python-pptx both ship
 #               py.typed and are deliberately absent from this list.
@@ -125,7 +126,7 @@ ignore_errors = true
 # stubs are wanted, batch them into a single deliberate toolchain-bump pull request at
 # the M3 -> M4 boundary, where a determinism audit runs anyway.
 [[tool.mypy.overrides]]
-module = ["lxml.*", "pyarrow.*", "fastavro.*", "openpyxl.*", "html5lib.*", "pyzipper.*", "fontTools.*"]
+module = ["lxml.*", "pyarrow.*", "fastavro.*", "openpyxl.*", "html5lib.*", "pyzipper.*", "fontTools.*", "vobject.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------

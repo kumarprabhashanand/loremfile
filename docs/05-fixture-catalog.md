@@ -303,6 +303,31 @@ M3.1, not estimated.
 | edge | edge | 38 | 30 MB |
 | **Total** | | **416** | **≈ 0.96 GB** |
 
+**Measured, the launch set only (M3.9, 2026-09-16).** The table above counts all 416
+phase-1 rows and stays an estimate until P1b is built; these are the 223 launch fixtures
+that `manifest.json` actually holds, from the manifest's own `bytes` (the 5 withheld rows
+of §9 are not counted, having no published bytes).
+
+| Family | Files | Bytes |
+|---|---|---|
+| binary | 24 | 230,715,074 |
+| archives | 17 | 110,890,486 |
+| data | 32 | 59,678,726 |
+| documents | 28 | 34,558,037 |
+| video | 17 | 27,452,934 |
+| audio | 14 | 24,232,973 |
+| text | 23 | 23,948,605 |
+| images | 27 | 13,623,370 |
+| edge | 19 | 1,002,742 |
+| fonts | 4 | 12,804 |
+| web | 9 | 11,040 |
+| calendar-mail | 7 | 10,068 |
+| certificates | 2 | 901 |
+| **Total** | **223** | **526,137,760** (0.53 GB) |
+
+The launch set comes in an order of magnitude under the 8 GB budget, so the deferral
+fallback below is not needed for launch.
+
 Many fixtures are cheap variants; the byte budget (≤ 8 GB) and the generation time budget (≤ 25 min in CI, see `06`) are the binding constraints, not the file count. If CI time is exceeded, defer `4k-5s.mp4`, `1080p-60s.mp4`, `100mb.zip`, `100mb.wav` and the 100k-row family to P2 — the implementation plan lists this fallback. M3.9 replaces the estimates above with measured values.
 
 ## 6. Sizing recipes (every size-named fixture)
@@ -347,12 +372,12 @@ P1b stays **188**: `100mib.bin` moved out of phase 1 entirely, so it left both t
 
 | Bucket | Count | |
 |---|---|---|
-| Published in `manifest.json` | 161 | live entries, uploaded by `deploy.yml` |
+| Published in `manifest.json` | 223 | live entries, uploaded by `deploy.yml` |
 | Catalogued, **awaiting publication** | 5 | `mp4/1080p-10s`, `mp4/10mb`, `mp4/50mb`, `opus/30s`, `webm/720p-5s-vp9` — `expected_drift` rows whose entries were withdrawn in M3.6 because the bytes existed nowhere reproducible (`03` §7.1). They return through the carry-forward path, not through a rebuild |
-| Still to catalogue: **M3.7 + M3.8** | 62 | archives, fonts, mail, calendar, cert, wasm, web, and the edge cases |
+| Still to catalogue | 0 | M3.7 and M3.8 catalogued all 62: archives, fonts, mail, calendar, cert, wasm, web, and the edge cases |
 | **Launch set (ADR-024)** | **228** | |
 
-`tests/unit/test_deploy_path.py` asserts this arithmetic, with the 62 as a named constant that an M3.7 or M3.8 pull request has to decrement. It is the one figure that cannot be derived from the repository, so it is checked rather than remembered: fixtures added without accounting for the launch scope become a failing build instead of a slow drift away from 228.
+`tests/unit/test_deploy_path.py` asserts this arithmetic, with the outstanding rows as a named constant — now zero, so the next fixture added outside this list has to change the list itself. It is the one figure that cannot be derived from the repository, so it is checked rather than remembered: fixtures added without accounting for the launch scope become a failing build instead of a slow drift away from 228.
 
 | Family | Launch fixtures |
 |---|---|

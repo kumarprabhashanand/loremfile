@@ -1,0 +1,25 @@
+# Contacts (docs/05 §3.11). Launch-set rows only.
+format: vcf
+family: calendar-mail
+mime: text/vcard
+description: >-
+  vCards in both versions address books still exchange, one carrying an inline photo and
+  one holding a hundred contacts. Every line is folded at 75 octets and every REV is
+  fixed, so the bytes do not move between builds.
+seo_title: "Sample VCF vCard files for testing address books — free, CC0"
+related: [ics, txt]
+fixtures:
+  - name: vcard3-single.vcf
+    phase: 1
+    generator: calendar.vcard3
+    description: "A vCard 3.0 contact with a name, organisation, email, telephone, URL and note."
+    tags: [mail, text]
+    expect: { cards: 1, version: "3.0", has_photo: false }
+    size_class: free
+  - name: vcard4-single.vcf
+    phase: 1
+    generator: calendar.vcard4
+    description: "A vCard 4.0 contact using the typed, URI-shaped properties RFC 6350 introduced."
+    tags: [mail, text]
+    expect: { cards: 1, version: "4.0", has_photo: false }
+    size_class: free

@@ -16,14 +16,6 @@ fixtures:
     tags: [archive, text]
     expect: { compression: gz, uncompressed_bytes: 1000000 }
     size_class: free
-  - name: noise-1mb.bin.gz
-    phase: 1
-    generator: archive.compressed_noise
-    params: { size: 1000000, kind: gz }
-    description: "One megabyte of incompressible seeded noise gzipped: the file barely shrinks, which is the point."
-    tags: [archive, binary]
-    expect: { compression: gz, uncompressed_bytes: 1000000 }
-    size_class: free
   - name: multi-member-3.gz
     phase: 1
     generator: archive.gzip_multi_member

@@ -1,0 +1,40 @@
+# HTML documents (docs/05 §3.6). Launch-set rows only.
+format: html
+family: web
+mime: text/html
+description: >-
+  HTML documents for parsers, sanitisers and converters: a minimal page, one using every
+  common element, inline styles, one inline script that only logs, many scripts in one
+  page, a right-to-left document, the table layout mail clients need, and strict XHTML.
+  None carries an event handler or a reference to another host.
+seo_title: "Sample HTML files for testing parsers and sanitisers — free, CC0"
+related: [css, js, txt]
+fixtures:
+  - name: basic.html
+    phase: 1
+    generator: web.html_basic
+    description: "A minimal, valid HTML5 document: a doctype, a declared charset, a heading and two paragraphs."
+    tags: [web, text]
+    expect: { markup: html, lang: en, inline_script: false }
+    size_class: free
+  - name: all-elements.html
+    phase: 1
+    generator: web.html_all_elements
+    description: "Semantic sections, a table with a caption and header cells, a form with no action, lists, a figure, and media elements pointing at published fixtures."
+    tags: [web, text]
+    expect: { markup: html, tables: 1 }
+    size_class: free
+  - name: with-inline-css.html
+    phase: 1
+    generator: web.html_inline_css
+    description: "A document whose styles live in a style block rather than an external sheet."
+    tags: [web, text]
+    expect: { markup: html, inline_style: true }
+    size_class: free
+  - name: with-inline-js.html
+    phase: 1
+    generator: web.html_inline_js
+    description: "A document with one inline script that logs a line and does nothing else. The edge serves it with a sandbox CSP, so a browser runs nothing."
+    tags: [web, text]
+    expect: { markup: html, inline_script: true }
+    size_class: free

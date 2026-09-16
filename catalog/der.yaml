@@ -1,0 +1,18 @@
+# DER certificates (docs/05 §3.12). Launch-set rows only.
+format: der
+family: certificates
+mime: application/pkix-cert
+description: >-
+  The same self-signed Ed25519 certificate as the PEM fixture, in binary DER form: the
+  encoding a parser meets inside TLS handshakes and keystores, without the base64 wrapper.
+seo_title: "Sample DER certificate for testing parsers — free, CC0"
+related: [pem]
+fixtures:
+  - name: self-signed-ed25519-cert.der
+    phase: 1
+    generator: cert.self_signed_certificate
+    params: { encoding: der }
+    description: "The self-signed Ed25519 certificate for fixture.example in binary DER encoding, byte for byte the same certificate as the PEM fixture."
+    tags: [binary]
+    expect: { kind: certificate, subject_cn: fixture.example, self_signed: true, algorithm: ed25519, has_private_key: false }
+    size_class: free

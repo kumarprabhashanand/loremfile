@@ -192,11 +192,11 @@ LAUNCH_SET = 228
 #: derived from the repository, so the test turns "someone added fixtures without
 #: thinking about the launch scope" into a failing build rather than a slow drift.
 #:
-#: Today it is `228 - 209`, not an independent count of what `05` §9 still lists — that
-#: list contains wildcards ("all seven `zero-byte.*`", "all 23 P1 rows of §3.10") which
-#: cannot be counted mechanically. M3.7 and M3.8 confirm it by decrementing it to zero;
-#: if they cannot, the discrepancy is a `05` §9 finding rather than a test to adjust.
-REMAINING_M37_M38 = 19  # M3.7 so far: 33 archive, 4 font and 6 mail rows
+#: It is zero as of M3.8: every row `05` §9 names is now in the catalog. It stays here
+#: rather than being deleted, because the next fixture added outside the launch set has
+#: to make that explicit — a catalogued row with nothing to decrement means the launch
+#: set itself is changing, which is a `05` §9 and ADR-024 decision.
+REMAINING_M37_M38 = 0  # M3.7 and M3.8 are catalogued; §9 is fully enumerated
 
 
 def test_the_launch_set_still_adds_up() -> None:
@@ -210,7 +210,7 @@ def test_the_launch_set_still_adds_up() -> None:
 
 
 def test_the_five_withheld_fixtures_are_the_gap_between_catalog_and_manifest() -> None:
-    """161 published + 5 withheld + 62 to come = 228.
+    """223 published + 5 withheld = 228.
 
     The five carry `awaiting_publication`: their bytes were never published, so their
     manifest entries were withdrawn outright rather than tombstoned (docs/03 §7.1). They

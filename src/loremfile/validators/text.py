@@ -26,7 +26,10 @@ BOMS: tuple[tuple[bytes, str], ...] = (
 #: Formats whose props are exactly the text ones (docs/04 §1.3). csv, tsv, json, xml,
 #: yaml and toml are text too, but they carry extra format-specific props, so their
 #: validators live in validators/data.py and call `text_props` from here.
-TEXT_FORMATS = ("txt", "md", "log", "ini", "html", "css", "js", "srt", "vtt", "sql")
+#: Formats whose only structure is their text. The web text formats (html, css, js,
+#: srt, vtt) are *not* here: validators/web.py checks their structure and inertness,
+#: and two modules registering one format is a startup error, not a fallback.
+TEXT_FORMATS = ("txt", "md", "log", "ini", "sql")
 #: rtf is text too, and validators/office.py calls `text_props` for it — but it also
 #: has a brace structure that no text check would notice was broken.
 

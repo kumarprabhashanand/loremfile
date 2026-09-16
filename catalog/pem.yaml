@@ -1,0 +1,20 @@
+# PEM certificates (docs/05 §3.12). Launch-set rows only.
+format: pem
+family: certificates
+mime: application/x-pem-file
+description: >-
+  A self-signed Ed25519 certificate and a matching signing request, both PEM-encoded.
+  The key is derived from a published seed, so anyone can rebuild it and check the
+  signature, and the private key itself is never written to a fixture. The subject is
+  fixture.example, a name reserved for documentation.
+seo_title: "Sample PEM certificate and CSR for testing — free, CC0"
+related: [der]
+fixtures:
+  - name: self-signed-ed25519-cert.pem
+    phase: 1
+    generator: cert.self_signed_certificate
+    params: { encoding: pem }
+    description: "A self-signed Ed25519 certificate for fixture.example, valid from 2020 to 2120, with a fixed serial. Ed25519 signs deterministically, so the bytes never move."
+    tags: [text, binary]
+    expect: { kind: certificate, subject_cn: fixture.example, self_signed: true, algorithm: ed25519, has_private_key: false }
+    size_class: free

@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import email
 import tempfile
-from email.header import decode_header
 from email.message import EmailMessage
 from pathlib import Path
 
@@ -27,7 +26,7 @@ from loremfile.validators.mail import MBOX_SEPARATOR
 CATALOG = Catalog.load()
 WORKDIR = Path(tempfile.gettempdir())
 #: Built in CI, where the published bytes they embed are resolvable.
-NEEDS_PUBLISHED = {"eml/with-attachments.eml", "eml/with-inline-cid-image.eml"}
+NEEDS_PUBLISHED = {"eml/with-attachments.eml"}
 
 
 def fixture(path: str) -> Fixture:
@@ -70,7 +69,7 @@ def local_paths() -> list[str]:
 def test_the_mail_formats_are_catalogued() -> None:
     """Empty-set control: the parametrised tests below check nothing without these rows."""
     paths = {f.path for f in CATALOG.fixtures() if f.format in {"eml", "mbox"}}
-    assert len(paths) == 6
+    assert len(paths) == 3
     assert paths > NEEDS_PUBLISHED
 
 
@@ -113,28 +112,6 @@ def test_no_address_can_reach_a_real_mailbox(path: str) -> None:
     ), addresses
 
 
-def test_the_alternative_message_carries_both_parts() -> None:
-    props = check("eml/multipart-html-and-text.eml")
-    assert props["multipart"] is True
-    assert set(props["content_types"]) == {"multipart/alternative", "text/plain", "text/html"}
-
-
-def test_the_mime_boundary_is_seeded_not_random() -> None:
-    message = email.message_from_bytes(build("eml/multipart-html-and-text.eml"))
-    assert str(message.get_boundary()).startswith("loremfile-")
-
-
-def test_the_utf8_headers_decode_to_what_they_claim() -> None:
-    message = email.message_from_bytes(build("eml/utf8-encoded-subject-and-names.eml"))
-    subject = "".join(
-        part.decode(charset or "ascii") if isinstance(part, bytes) else part
-        for part, charset in decode_header(str(message["Subject"]))
-    )
-    assert "Grüße aus München" in subject
-    assert "日本語" in subject
-    assert str(message["Subject"]).isascii(), "the raw header must be encoded words, not raw UTF-8"
-
-
 def test_the_mbox_holds_three_separated_messages() -> None:
     props = check("mbox/3-messages.mbox")
     assert props["messages"] == 3
@@ -165,13 +142,6 @@ def test_a_message_id_from_the_host_is_refused() -> None:
     message["Subject"] = "From a real host"
     message.set_content("body\n")
     assert "not the seeded one" in refused("eml/plain-text.eml", message.as_bytes())
-
-
-def test_a_random_mime_boundary_is_refused() -> None:
-    data = build("eml/multipart-html-and-text.eml")
-    message = email.message_from_bytes(data)
-    message.set_boundary("===============1234567890==")
-    assert "boundary" in refused("eml/multipart-html-and-text.eml", message.as_bytes())
 
 
 def test_bytes_without_a_separator_are_not_an_mbox() -> None:

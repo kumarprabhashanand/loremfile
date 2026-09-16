@@ -16,3 +16,13 @@ fixtures:
     expect: { line_ending: lf }
     size_class: exact
     nominal_bytes: 4096
+  - name: all-elements.md
+    phase: 1
+    generator: text.markdown_all_elements
+    description: >-
+      Markdown exercising every common element: headings, emphasis, ordered and nested
+      lists, a table, fenced code blocks with languages, a blockquote, a link, an image,
+      a footnote and a raw HTML block.
+    tags: [text, document]
+    expect: { line_ending: lf }
+    size_class: free

@@ -99,55 +99,9 @@ def zip_empty(_ctx: GeneratorContext) -> bytes:
 
 
 @generator()
-def zip_stored(ctx: GeneratorContext) -> bytes:
-    """A zip that stores its entries uncompressed, for readers that assume deflate."""
-    return _zip_of(text_members(ctx, 3), stored=True)
-
-
-@generator()
-def zip_unicode_names(ctx: GeneratorContext) -> bytes:
-    """Entry names outside ASCII, so the UTF-8 name flag (bit 11) has to be honoured."""
-    rng = ctx.rng
-    members = {
-        "ascii.txt": lorem.text(rng, 1).encode("utf-8"),
-        "grüße.txt": lorem.text(rng, 1).encode("utf-8"),
-        "日本語.txt": lorem.text(rng, 1).encode("utf-8"),
-        "эмодзи-🙂.txt": lorem.text(rng, 1).encode("utf-8"),
-    }
-    return _zip_of(members)
-
-
-@generator()
-def zip_empty_directories(ctx: GeneratorContext) -> bytes:
-    """Directory entries with no files in them, which some extractors drop."""
-    members = dict(text_members(ctx, 1))
-    members["empty-one/"] = b""
-    members["empty-two/nested/"] = b""
-    return _zip_of(members)
-
-
-@generator()
 def zip_of_fixtures(ctx: GeneratorContext, *, paths: list[str]) -> bytes:
     """A zip of published fixtures, read through `ctx.dependency` and never regenerated."""
     return _zip_of({path.split("/", 1)[1]: ctx.dependency(path) for path in paths})
-
-
-@generator()
-def zip_with_comment(ctx: GeneratorContext) -> bytes:
-    """A zip carrying an archive comment, which lives after the central directory."""
-    return _zip_of(text_members(ctx, 3), comment=b"loremfile archive comment")
-
-
-@generator()
-def zip_zip64(_ctx: GeneratorContext, *, count: int = 70000) -> bytes:
-    """Enough empty entries to force ZIP64: over 65,535 of them (the 16-bit count field)."""
-    out = io.BytesIO()
-    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as archive:
-        for index in range(count):
-            info = zipfile.ZipInfo(filename=f"empty/{index:05d}.txt", date_time=ZIP_EPOCH)
-            info.compress_type = zipfile.ZIP_DEFLATED
-            archive.writestr(info, b"")
-    return out.getvalue()
 
 
 @generator(parallel_safe=False)
@@ -201,41 +155,6 @@ def tar_text_files(ctx: GeneratorContext, *, count: int = 3, compression: str = 
     return compress(_tar_of(text_members(ctx, count)), compression)
 
 
-@generator()
-def tar_nested(ctx: GeneratorContext) -> bytes:
-    """A tar whose entries are in nested directories."""
-    return _tar_of(nested_members(ctx))
-
-
-@generator()
-def tar_symlinks(ctx: GeneratorContext) -> bytes:
-    """Relative symlinks only: an extractor must not be able to escape the directory."""
-    members = text_members(ctx, 2)
-    links = {"latest.txt": "file-001.txt", "docs/copy.txt": "../file-002.txt"}
-    return _tar_of(members, symlinks=links)
-
-
-@generator()
-def tar_long_names(ctx: GeneratorContext) -> bytes:
-    """Names beyond the 100-byte ustar limit, stored as PAX headers."""
-    rng = ctx.rng
-    long_name = "/".join("very-long-directory-name-for-pax-headers" for _ in range(3))
-    members = {
-        f"{long_name}/{'x' * 120}.txt": lorem.text(rng, 1).encode("utf-8"),
-        "short.txt": lorem.text(rng, 1).encode("utf-8"),
-    }
-    return _tar_of(members)
-
-
-@generator(parallel_safe=False)
-def tar_sized(ctx: GeneratorContext, *, size: int, compression: str = "gz") -> Path:
-    """A compressed tar of about `size` bytes, from incompressible payload."""
-    body = _tar_of({"noise.bin": ctx.stream(size)})
-    target = _scratch(ctx, f"sized.tar.{compression}" if compression else "sized.tar")
-    target.write_bytes(compress(body, compression))
-    return target
-
-
 def compress(data: bytes, kind: str) -> bytes:
     """One compressed stream, with every header field that could drift pinned."""
     if not kind:
@@ -266,14 +185,6 @@ def compressed_text(ctx: GeneratorContext, *, size: int, kind: str) -> Path:
         raise TypeError("lorem_sized must return bytes")
     target = _scratch(ctx, f"payload.{kind}")
     target.write_bytes(compress(payload, kind))
-    return target
-
-
-@generator(parallel_safe=False)
-def compressed_noise(ctx: GeneratorContext, *, size: int, kind: str) -> Path:
-    """Incompressible bytes compressed on their own: the file barely shrinks, by design."""
-    target = _scratch(ctx, f"noise.{kind}")
-    target.write_bytes(compress(ctx.stream(size), kind))
     return target
 
 

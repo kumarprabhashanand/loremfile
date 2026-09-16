@@ -1,0 +1,238 @@
+# Edge-case fixtures (docs/05 §3.13). Every row declares its defect in `edge:`, and
+# validators/edge.py asserts that defect instead of the format's usual structure: these
+# files exist to be rejected, so "it parses" would be the wrong test.
+format: edge
+family: edge
+mime: application/octet-stream
+description: >-
+  Deliberately wrong files: empty, truncated, mislabelled, or malformed. Each one is
+  served as the type its extension claims, so you can test what your code does with
+  input it should refuse.
+seo_title: "Corrupt and malformed test files for error handling — free, CC0"
+related: [pdf, png, jpg, mp4, zip, json, csv, xml, txt]
+fixtures:
+  - name: zero-byte.pdf
+    phase: 1
+    generator: edge.zero_byte
+    description: "An empty file served as application/pdf."
+    tags: [document, invalid]
+    size_class: free
+    mime: application/pdf
+    edge_case: true
+    edge: { intended_format: pdf, defect: zero-byte }
+
+  - name: zero-byte.txt
+    phase: 1
+    generator: edge.zero_byte
+    description: "An empty file served as text/plain."
+    tags: [text, invalid]
+    size_class: free
+    mime: text/plain
+    edge_case: true
+    edge: { intended_format: txt, defect: zero-byte }
+
+  - name: zero-byte.json
+    phase: 1
+    generator: edge.zero_byte
+    description: "An empty file served as application/json, where a parser expects at least a value."
+    tags: [data, invalid]
+    size_class: free
+    mime: application/json
+    edge_case: true
+    edge: { intended_format: json, defect: zero-byte }
+
+  - name: zero-byte.png
+    phase: 1
+    generator: edge.zero_byte
+    description: "An empty file served as image/png."
+    tags: [image, invalid]
+    size_class: free
+    mime: image/png
+    edge_case: true
+    edge: { intended_format: png, defect: zero-byte }
+
+  - name: zero-byte.zip
+    phase: 1
+    generator: edge.zero_byte
+    description: "An empty file served as application/zip, with not even an end-of-central-directory record."
+    tags: [archive, invalid]
+    size_class: free
+    mime: application/zip
+    edge_case: true
+    edge: { intended_format: zip, defect: zero-byte }
+
+  - name: zero-byte.csv
+    phase: 1
+    generator: edge.zero_byte
+    description: "An empty file served as text/csv, with no header row."
+    tags: [data, invalid]
+    size_class: free
+    mime: text/csv
+    edge_case: true
+    edge: { intended_format: csv, defect: zero-byte }
+
+  - name: zero-byte.mp4
+    phase: 1
+    generator: edge.zero_byte
+    description: "An empty file served as video/mp4."
+    tags: [video, invalid]
+    size_class: free
+    mime: video/mp4
+    edge_case: true
+    edge: { intended_format: mp4, defect: zero-byte }
+
+  - name: pdf-truncated-60pct.pdf
+    phase: 1
+    generator: edge.truncated
+    params: { source: pdf/a4-3pages.pdf, fraction: 0.6 }
+    description: "The first 60% of pdf/a4-3pages.pdf: the header reads, then the file stops mid-object."
+    tags: [document, truncated]
+    size_class: free
+    mime: application/pdf
+    edge_case: true
+    depends_on: [pdf/a4-3pages.pdf]
+    edge:
+      intended_format: pdf
+      defect: truncated
+      source_fixture: pdf/a4-3pages.pdf
+      fraction: 0.6
+
+  - name: jpg-truncated-50pct.jpg
+    phase: 1
+    generator: edge.truncated
+    params: { source: jpg/640x480.jpg, fraction: 0.5 }
+    description: "The first half of jpg/640x480.jpg: scan data ends with no end-of-image marker."
+    tags: [image, truncated]
+    size_class: free
+    mime: image/jpeg
+    edge_case: true
+    depends_on: [jpg/640x480.jpg]
+    edge:
+      intended_format: jpg
+      defect: truncated
+      source_fixture: jpg/640x480.jpg
+      fraction: 0.5
+
+  - name: mp4-truncated-50pct.mp4
+    phase: 1
+    generator: edge.truncated
+    params: { source: mp4/720p-5s.mp4, fraction: 0.5 }
+    description: "The first half of mp4/720p-5s.mp4: a partial media stream inside a box that claims more."
+    tags: [video, truncated]
+    size_class: free
+    mime: video/mp4
+    edge_case: true
+    depends_on: [mp4/720p-5s.mp4]
+    edge:
+      intended_format: mp4
+      defect: truncated
+      source_fixture: mp4/720p-5s.mp4
+      fraction: 0.5
+
+  - name: zip-truncated-50pct.zip
+    phase: 1
+    generator: edge.truncated
+    params: { source: zip/3-text-files.zip, fraction: 0.5 }
+    description: "The first half of zip/3-text-files.zip: local headers survive, the central directory does not."
+    tags: [archive, truncated]
+    size_class: free
+    mime: application/zip
+    edge_case: true
+    depends_on: [zip/3-text-files.zip]
+    edge:
+      intended_format: zip
+      defect: truncated
+      source_fixture: zip/3-text-files.zip
+      fraction: 0.5
+
+  - name: png-with-pdf-extension.pdf
+    phase: 1
+    generator: edge.copied
+    params: { source: png/100x100.png }
+    description: "The bytes of png/100x100.png under a .pdf name, served as application/pdf."
+    tags: [image, mismatched]
+    size_class: free
+    mime: application/pdf
+    edge_case: true
+    depends_on: [png/100x100.png]
+    edge:
+      intended_format: png
+      defect: mismatched-extension
+      source_fixture: png/100x100.png
+
+  - name: pdf-with-png-extension.png
+    phase: 1
+    generator: edge.copied
+    params: { source: pdf/a4-1page.pdf }
+    description: "The bytes of pdf/a4-1page.pdf under a .png name, served as image/png."
+    tags: [document, mismatched]
+    size_class: free
+    mime: image/png
+    edge_case: true
+    depends_on: [pdf/a4-1page.pdf]
+    edge:
+      intended_format: pdf
+      defect: mismatched-extension
+      source_fixture: pdf/a4-1page.pdf
+
+  - name: json-trailing-comma.json
+    phase: 1
+    generator: edge.json_trailing_comma
+    description: "JSON with a trailing comma in an array and an object: valid JavaScript, invalid JSON."
+    tags: [data, invalid]
+    size_class: free
+    mime: application/json
+    edge_case: true
+    edge: { intended_format: json, defect: invalid-syntax }
+
+  - name: json-bom.json
+    phase: 1
+    generator: edge.json_bom
+    description: "Valid JSON preceded by a UTF-8 byte-order mark, which RFC 8259 does not allow."
+    tags: [data, encoding]
+    size_class: free
+    mime: application/json
+    edge_case: true
+    edge: { intended_format: json, defect: bom }
+
+  - name: csv-ragged-rows.csv
+    phase: 1
+    generator: edge.csv_ragged_rows
+    description: "A CSV whose rows carry different field counts: one short, one long."
+    tags: [data, invalid]
+    size_class: free
+    mime: text/csv
+    edge_case: true
+    edge: { intended_format: csv, defect: invalid-syntax }
+
+  - name: xml-unclosed-tag.xml
+    phase: 1
+    generator: edge.xml_unclosed_tag
+    description: "XML with an element that is never closed, so it is not well-formed."
+    tags: [data, invalid]
+    size_class: free
+    mime: application/xml
+    edge_case: true
+    edge: { intended_format: xml, defect: invalid-syntax }
+
+  - name: utf8-invalid-bytes.txt
+    phase: 1
+    generator: edge.utf8_invalid_bytes
+    description: "Text served as UTF-8 that contains byte sequences UTF-8 does not allow."
+    tags: [text, encoding]
+    size_class: free
+    mime: text/plain
+    edge_case: true
+    edge: { intended_format: txt, defect: invalid-encoding }
+
+  - name: zip-directory-traversal-name.zip
+    phase: 1
+    generator: edge.zip_traversal_name
+    description: >-
+      A readable zip holding an entry named ../evil.txt. An extractor that joins entry
+      names to a destination without sanitising them writes outside that directory.
+    tags: [archive, invalid]
+    size_class: free
+    mime: application/zip
+    edge_case: true
+    edge: { intended_format: zip, defect: hostile-name }

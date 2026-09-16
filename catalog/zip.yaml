@@ -25,22 +25,6 @@ fixtures:
     tags: [archive, text]
     expect: { entries: 4 }
     size_class: free
-  - name: 100-files.zip
-    phase: 1
-    generator: archive.zip_text_files
-    params: { count: 100 }
-    description: "One hundred small text files in one archive."
-    tags: [archive, text]
-    expect: { entries: 100 }
-    size_class: free
-  - name: 1000-files.zip
-    phase: 1
-    generator: archive.zip_text_files
-    params: { count: 1000 }
-    description: "One thousand small text files, for tools that list or extract entry by entry."
-    tags: [archive, text]
-    expect: { entries: 1000 }
-    size_class: free
   - name: empty.zip
     phase: 1
     generator: archive.zip_empty
@@ -49,27 +33,6 @@ fixtures:
     expect: { entries: 0 }
     size_class: exact
     nominal_bytes: 22
-  - name: stored-uncompressed.zip
-    phase: 1
-    generator: archive.zip_stored
-    description: "Three text files stored without compression, the method readers that assume deflate get wrong."
-    tags: [archive, text]
-    expect: { entries: 3, method: store }
-    size_class: free
-  - name: unicode-filenames.zip
-    phase: 1
-    generator: archive.zip_unicode_names
-    description: "Entry names in Latin, German, Japanese and Cyrillic with an emoji, so the UTF-8 name flag has to be honoured."
-    tags: [archive, unicode]
-    expect: { entries: 4, utf8_names: true }
-    size_class: free
-  - name: with-empty-directories.zip
-    phase: 1
-    generator: archive.zip_empty_directories
-    description: "Directory entries holding no files, which some extractors silently drop."
-    tags: [archive]
-    expect: { directories: 2 }
-    size_class: free
   - name: mixed-fixtures.zip
     phase: 1
     generator: archive.zip_of_fixtures
@@ -79,13 +42,6 @@ fixtures:
     expect: { entries: 4 }
     size_class: free
     depends_on: ["pdf/minimal.pdf", "png/100x100.png", "csv/people-10.csv", "json/people-10.json"]
-  - name: with-archive-comment.zip
-    phase: 1
-    generator: archive.zip_with_comment
-    description: "Three text files plus an archive comment, which lives after the central directory and is easy to lose."
-    tags: [archive, text]
-    expect: { entries: 3, comment: true }
-    size_class: free
   - name: aes256-password-loremfile.zip
     phase: 1
     generator: archive.zip_aes
@@ -93,14 +49,6 @@ fixtures:
     description: "AES-256 encrypted with the password 'loremfile', published here on purpose because an encrypted fixture nobody can open would be useless."
     tags: [archive, encrypted, text]
     expect: { entries: 3, encrypted: true }
-    size_class: free
-  - name: zip64-70000-empty-files.zip
-    phase: 1
-    generator: archive.zip_zip64
-    params: { count: 70000 }
-    description: "Seventy thousand empty entries, which is more than the 16-bit entry count can hold, so the archive must use ZIP64."
-    tags: [archive, stress]
-    expect: { entries: 70000, zip64: true }
     size_class: free
   - name: 1mb.zip
     phase: 1

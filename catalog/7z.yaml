@@ -16,12 +16,3 @@ fixtures:
     tags: [archive, text]
     expect: { entries: 3, encrypted: false }
     size_class: free
-  - name: lzma2-1mb.7z
-    phase: 1
-    generator: archive.sevenzip
-    params: { size: 990000 }
-    description: "About 1MB of incompressible seeded noise compressed with LZMA2, so the archive size follows the payload."
-    tags: [archive, sized, binary]
-    expect: { entries: 1 }
-    size_class: approx
-    nominal_bytes: 1000000

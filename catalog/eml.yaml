@@ -17,13 +17,6 @@ fixtures:
     tags: [mail, text]
     expect: { multipart: false, attachments: 0 }
     size_class: free
-  - name: multipart-html-and-text.eml
-    phase: 1
-    generator: mail.multipart_alternative
-    description: "multipart/alternative with a text/plain part and an HTML part carrying the same words, the shape most newsletters arrive in."
-    tags: [mail, text, web]
-    expect: { multipart: true }
-    size_class: free
   - name: with-attachments.eml
     phase: 1
     generator: mail.with_attachments
@@ -33,19 +26,3 @@ fixtures:
     expect: { multipart: true, attachments: 2 }
     size_class: free
     depends_on: ["pdf/minimal.pdf", "png/100x100.png"]
-  - name: with-inline-cid-image.eml
-    phase: 1
-    generator: mail.inline_image
-    params: { image: "png/100x100.png" }
-    description: "An HTML body that shows an image by cid: reference, the way mail clients embed pictures rather than attaching them."
-    tags: [mail, image, web]
-    expect: { multipart: true }
-    size_class: free
-    depends_on: ["png/100x100.png"]
-  - name: utf8-encoded-subject-and-names.eml
-    phase: 1
-    generator: mail.utf8_headers
-    description: "Non-ASCII in the subject and in both display names, so a reader has to decode RFC 2047 encoded words rather than print them raw."
-    tags: [mail, unicode, encoding]
-    expect: { multipart: false }
-    size_class: free

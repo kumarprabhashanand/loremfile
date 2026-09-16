@@ -1,0 +1,17 @@
+# Web app manifests (docs/05 §3.6). Launch-set rows only.
+format: webmanifest
+family: web
+mime: application/manifest+json
+description: >-
+  A web app manifest: the JSON a browser reads for a site's name, icons, colours and
+  display mode. Its icons point at published PNG fixtures.
+seo_title: "Sample web app manifest for testing — free, CC0"
+related: [json, html]
+fixtures:
+  - name: site.webmanifest
+    phase: 1
+    generator: web.site_webmanifest
+    description: "A manifest with a name, short name, start URL, scope, display mode, colours and two icons that point at published PNG fixtures."
+    tags: [web, data]
+    expect: { icons: 2, display: standalone }
+    size_class: free

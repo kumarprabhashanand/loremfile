@@ -9,9 +9,8 @@ real mailbox.
 
 from __future__ import annotations
 
-from email.message import EmailMessage, MIMEPart
+from email.message import EmailMessage
 from email.policy import SMTP
-from typing import cast
 
 from loremfile.generators.base import GeneratorContext, generator
 from loremfile.util import lorem
@@ -51,20 +50,6 @@ def plain_text(ctx: GeneratorContext) -> bytes:
 
 
 @generator()
-def multipart_alternative(ctx: GeneratorContext) -> bytes:
-    """text/plain with an HTML alternative, the shape most newsletters arrive in."""
-    rng = ctx.rng
-    body = lorem.text(rng, 2)
-    message = EmailMessage()
-    _headers(message, ctx, "A message in two parts")
-    message.set_content(body)
-    paragraphs = "".join(f"<p>{part}</p>" for part in body.split("\n\n") if part)
-    message.add_alternative(f"<html><body>{paragraphs}</body></html>", subtype="html")
-    message.set_boundary(_boundary(ctx))
-    return message.as_bytes(policy=SMTP)
-
-
-@generator()
 def with_attachments(ctx: GeneratorContext, *, attachments: list[str]) -> bytes:
     """A message carrying published fixtures as attachments, read through `ctx.dependency`."""
     message = EmailMessage()
@@ -81,39 +66,6 @@ def with_attachments(ctx: GeneratorContext, *, attachments: list[str]) -> bytes:
             filename=path.split("/", 1)[1],
         )
     message.set_boundary(_boundary(ctx))
-    return message.as_bytes(policy=SMTP)
-
-
-@generator()
-def inline_image(ctx: GeneratorContext, *, image: str) -> bytes:
-    """An HTML body referring to an inline image by `cid:`, as mail clients embed them."""
-    cid = f"image-{ctx.seed.hex()[:12]}@{DOMAIN}"
-    message = EmailMessage()
-    _headers(message, ctx, "A message with an inline image")
-    message.set_content("This message is best read as HTML.")
-    message.add_alternative(
-        f'<html><body><p>{lorem.sentence(ctx.rng)}</p><img src="cid:{cid}" alt=""></body></html>',
-        subtype="html",
-    )
-    # The HTML alternative, which the image is related to. `get_payload` is typed as a
-    # union of everything a payload can be, so the part is named here rather than indexed
-    # blindly into.
-    parts = cast("list[MIMEPart]", message.get_payload())
-    parts[1].add_related(ctx.dependency(image), maintype="image", subtype="png", cid=f"<{cid}>")
-    message.set_boundary(_boundary(ctx))
-    return message.as_bytes(policy=SMTP)
-
-
-@generator()
-def utf8_headers(ctx: GeneratorContext) -> bytes:
-    """Non-ASCII in the subject and in both display names, so the encoded words matter."""
-    message = EmailMessage()
-    message["Date"] = DATE
-    message["Message-ID"] = _message_id(ctx)
-    message["From"] = f"Åsa Ödegård <asa@{DOMAIN}>"
-    message["To"] = f"Jürgen Weiß <juergen@{DOMAIN}>"
-    message["Subject"] = "Grüße aus München — ここにも日本語 — Ω"
-    message.set_content("Unicode in the headers, plain ASCII here.\n")
     return message.as_bytes(policy=SMTP)
 
 

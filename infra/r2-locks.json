@@ -81,6 +81,14 @@
       }
     },
     {
+      "id": "lock-css",
+      "enabled": true,
+      "prefix": "css/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
       "id": "lock-csv",
       "enabled": true,
       "prefix": "csv/",
@@ -89,9 +97,25 @@
       }
     },
     {
+      "id": "lock-der",
+      "enabled": true,
+      "prefix": "der/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
       "id": "lock-docx",
       "enabled": true,
       "prefix": "docx/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-edge",
+      "enabled": true,
+      "prefix": "edge/",
       "condition": {
         "type": "Indefinite"
       }
@@ -153,9 +177,25 @@
       }
     },
     {
+      "id": "lock-har",
+      "enabled": true,
+      "prefix": "har/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
       "id": "lock-hls",
       "enabled": true,
       "prefix": "hls/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-html",
+      "enabled": true,
+      "prefix": "html/",
       "condition": {
         "type": "Indefinite"
       }
@@ -169,6 +209,14 @@
       }
     },
     {
+      "id": "lock-ics",
+      "enabled": true,
+      "prefix": "ics/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
       "id": "lock-ini",
       "enabled": true,
       "prefix": "ini/",
@@ -177,9 +225,25 @@
       }
     },
     {
+      "id": "lock-ipynb",
+      "enabled": true,
+      "prefix": "ipynb/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
       "id": "lock-jpg",
       "enabled": true,
       "prefix": "jpg/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-js",
+      "enabled": true,
+      "prefix": "js/",
       "condition": {
         "type": "Indefinite"
       }
@@ -329,6 +393,14 @@
       }
     },
     {
+      "id": "lock-pem",
+      "enabled": true,
+      "prefix": "pem/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
       "id": "lock-png",
       "enabled": true,
       "prefix": "png/",
@@ -364,6 +436,14 @@
       "id": "lock-sqlite",
       "enabled": true,
       "prefix": "sqlite/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-srt",
+      "enabled": true,
+      "prefix": "srt/",
       "condition": {
         "type": "Indefinite"
       }
@@ -433,6 +513,30 @@
       }
     },
     {
+      "id": "lock-vcf",
+      "enabled": true,
+      "prefix": "vcf/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-vtt",
+      "enabled": true,
+      "prefix": "vtt/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-wasm",
+      "enabled": true,
+      "prefix": "wasm/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
       "id": "lock-wav",
       "enabled": true,
       "prefix": "wav/",
@@ -444,6 +548,14 @@
       "id": "lock-webm",
       "enabled": true,
       "prefix": "webm/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
+      "id": "lock-webmanifest",
+      "enabled": true,
+      "prefix": "webmanifest/",
       "condition": {
         "type": "Indefinite"
       }
