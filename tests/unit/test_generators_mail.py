@@ -21,8 +21,8 @@ from loremfile.generators import mail as mail_generators
 from loremfile.generators.base import REGISTRY, GeneratorContext
 from loremfile.util.determinism import deterministic
 from loremfile.validators import mail as mail_validators  # noqa: F401 - registers them
-from loremfile.validators.mail import MBOX_SEPARATOR
 from loremfile.validators import validate
+from loremfile.validators.mail import MBOX_SEPARATOR
 
 CATALOG = Catalog.load()
 WORKDIR = Path(tempfile.gettempdir())
@@ -71,7 +71,7 @@ def test_the_mail_formats_are_catalogued() -> None:
     """Empty-set control: the parametrised tests below check nothing without these rows."""
     paths = {f.path for f in CATALOG.fixtures() if f.format in {"eml", "mbox"}}
     assert len(paths) == 6
-    assert NEEDS_PUBLISHED < paths
+    assert paths > NEEDS_PUBLISHED
 
 
 @pytest.mark.parametrize("path", local_paths(), ids=lambda path: path)
