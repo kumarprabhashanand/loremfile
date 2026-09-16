@@ -121,7 +121,7 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
 
 ## ADR-024 Launch with an explicit 228-fixture set; the rest of phase 1 follows in batches
 - **Context**: the full phase-1 catalog is ≈ 416 files, and building ~50 generator/validator pairs to that breadth before launch would take a quarter at the offered cadence.
-- **Decision**: `05` §9 lists the launch set (P1, 228 files, ≈ 515 MB); the remaining 188 phase-1 rows are P1b (M7). Every format family is represented at launch so the URL scheme, headers and site are complete from day one.
+- **Decision**: `05` §9 lists the launch set (P1, 228 files, 595,170,670 bytes measured at M3.9); the remaining 188 phase-1 rows are P1b (M7). Every format family is represented at launch so the URL scheme, headers and site are complete from day one.
 - **Consequences**: earlier launch and feedback; some search-demand fixtures arrive later; the immutability rules apply from the first deploy.
 
 ## ADR-025 Cost control is an automated analytics read, not a billing alert

@@ -23,7 +23,7 @@ All notable changes to this project are documented here. The format follows
 
 ### Added — the website (M4.1, M4.2)
 
-- Pages: a home page with search, a page for each of the 50 published formats, all formats, documentation, legal pages, the changelog and status.
+- Pages: a home page with search, a page for each published format (77 today, one per format in `manifest.json`), all formats, documentation, legal pages, the changelog and status.
 - Discovery files: `llms.txt`, `llms-full.txt`, `sitemap.xml`, `robots.txt`, `.well-known/security.txt`, `search-index.json`, and a list per format at `/{format}/index.json`.
 
 ### Added

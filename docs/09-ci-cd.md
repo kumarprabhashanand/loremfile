@@ -110,7 +110,7 @@ jobs:
         run: loremfile manifest check --json | python -m loremfile.ci_summary --explain >> "$GITHUB_STEP_SUMMARY"   # prints the exact entries to commit when a committed entry does not match
 ```
 
-**Fixture artifact, changed in M3.1 and again in M3.6.** The listing above uploads `build/fixtures` as a `new-fixtures` artifact on non-fork pull requests. That directory is already **243 MB** at M3.1 and would be roughly **515 MB** at launch, uploaded on every pull request against a free-tier storage quota. `build-and-validate` therefore uploads a 4 KB `fixture-inventory` — every path with its size and sha256 — which is what a reviewer actually reads.
+**Fixture artifact, changed in M3.1 and again in M3.6.** The listing above uploads `build/fixtures` as a `new-fixtures` artifact on non-fork pull requests. That directory is already **243 MB** at M3.1 and would be roughly **595 MB** at launch, uploaded on every pull request against a free-tier storage quota. `build-and-validate` therefore uploads a 4 KB `fixture-inventory` — every path with its size and sha256 — which is what a reviewer actually reads.
 
 **The listing above was wrong for two days, and it still cost something.** M3.1 replaced `new-fixtures` with `fixture-inventory` and did not update this listing in the same pull request. When M3.6 needed to know whether the bytes were being retained, the doc said they were — for 7 days — so the proposed fix was to raise that retention. There was nothing to raise: the bytes had never been stored at all, and five manifest entries were already describing bytes that existed nowhere. The listing now matches the workflow, and the CI guard in `manifest check` exists because a doc cannot be relied on to notice this for us.
 
@@ -397,12 +397,14 @@ A further guard covers the whole set: a unit test asserts `audit.CHECKS` covers 
 
 **Serialised with every job that touches the zone (ADR-029, 2026-09-15).** #58 was a race: this job read a ruleset phase at 22:44:46 while a deploy applied a fourth rule at 22:45:16, and reported drift that was a timing artefact. `deploy.yml`, `infra.yml` and this workflow's `infra` job now share the `loremfile-zone` group with `cancel-in-progress: false`; the `determinism` job and `health.yml` stay outside. GitHub's `queue` property would stop a pending run being replaced, but actionlint 1.7.12 rejects it, so it is not used and the leftover risk — a pending scheduled audit cancelled without opening an issue — is handled in `11` §7.2.
 
+**First determinism audit on a rebuilt image, 2026-09-16 (run `35135699048`).** The image moved to `1d66d83d` because #67 rebuilt it — `gh` now installs from a SHA-256-pinned release tarball instead of the apt repository — and M3.9's audit had run on `3ba29bb9`, so this was the first audit of the fixtures under the pinned image. It exited 0 and opened no `determinism` issue. **Its counts are unavailable:** `--json` sends the report to `determinism.json` and `_report_audit` suppresses its stderr block under that flag, so the log held a green tick and nothing else — an audit of 0 rows would have looked identical. The job now prints `regenerated`, `drifted` and `expected_drift`, fails when they are absent, and uploads the report; `tests/unit/test_audit_workflow.py` runs those steps rather than reading them.
+
 `build --audit` exits non-zero on **real** drift only; `expected_drift` paths are reported in their own section and exit 0, so the four fixtures known not to reproduce off this fleet do not train anyone to close the issue unread (`06` §8).
 
 ### 3.5 `release.yml` — on tag `v*`
 
 1. Checks out the tag; verifies `manifest.json.catalog_version` equals the tag.
-2. Finds the previous release tag with `git describe --tags --abbrev=0 <tag>^` (none for `v1.0.0`).
+2. Finds the previous release tag with `git describe --tags --abbrev=0 <tag>^` (none for `v1.1.0`, the first tag).
 3. `loremfile release archive --since <previous tag>` (or `--snapshot` for the first release and for every 10th minor release): downloads the fixtures added since the previous release **from production** (not regenerated), verifies each against the manifest hash, and writes `fixtures-<from>-<to>.tar` (uncompressed; contents are already compressed or incompressible) plus `manifest.json`, `sha256sums.txt` and a `CHANGELOG` excerpt. Archives are split at 1.5 GB into `…part1.tar`, `…part2.tar` with a `parts.txt` listing the parts and their SHA-256, so every asset stays under GitHub's 2 GB limit.
 4. `gh release create v<version> --notes-file …` with the assets attached (needs `permissions: contents: write`).
 
@@ -426,17 +428,17 @@ A further guard covers the whole set: a unit test asserts `audit.CHECKS` covers 
   - `notes.md`.
 
   A patch release usually adds no fixtures, so its archive is empty and no part is attached. The output directory must start empty, because every file in it is attached.
-- **Rehearse before the first tag.** Dispatch `release.yml` on `main` before tagging `v1.0.0` (M5.5). It fetches and verifies every published fixture, assembles the snapshot, and publishes nothing.
+- **Rehearse before the first tag.** Dispatch `release.yml` on `main` before tagging `v1.1.0` (M5.5). It fetches and verifies every published fixture, assembles the snapshot, and publishes nothing.
 
 **The first rehearsal failed, and what it found (2026-09-15).** Run `34982012684` (`d1c4f751c8`) stopped before any download: `git tag --merged HEAD failed: fatal: detected dubious ownership in repository at '/__w/loremfile/loremfile'`.
 - **Cause.** `actions/checkout` marks the repository safe only in a temporary global git config for its own step. Its log says "Temporarily overriding HOME='/__w/_temp/…' before making global git config changes", while later steps run with `HOME=/github/home`. In a job container the checkout belongs to the runner's uid and git runs as root, so git refuses the repository.
-  - The `release` job had the same gap, so the `v1.0.0` tag run would have failed identically.
+  - The `release` job had the same gap, so the first tag run would have failed identically.
   - The unit tests could not catch it, because their scratch repositories belong to the user running them.
 - **Why `deploy.yml`'s `infra changed` worked: by accident.** Its `manifest check` step calls `build.merge_base_manifest`, which runs `git config --global --add safe.directory` as a side effect, three steps before `infra changed` needs git.
 - **Fix.** Every containerised job now trusts the checkout explicitly with `git config --global --add safe.directory "$GITHUB_WORKSPACE"`, before its first step that runs git. That covers both `release.yml` jobs, `deploy.yml`, and `ci.yml`'s lint job (`tools/check_lock.sh`).
   - `tests/unit/test_workflow_git.py` pins the rule for every containerised step that runs git — directly, or through `infra changed`, `release archive`, `build --new`, `manifest check`/`update`/`adopt` or `check_lock.sh`.
   - It also checks that command list against the code in `src/` and `tools/` that actually runs git.
-- **Passed:** run `34985088713` (`71d32d657f`) — snapshot `v1.0.0`, 161 members, 414,208,239 bytes, one part, notes missing.
+- **Passed:** run `34985088713` (`71d32d657f`) — snapshot `v1.0.0`, 161 members, 414,208,239 bytes, one part, notes missing. That is what that run did, against the manifest of the day. **The first real tag is `v1.1.0`** (`catalog_version` 1.1.0, and `release.check_tag` requires the two to match), and the snapshot to expect from it is **223 members, 526,137,760 bytes**.
 
 ### 3.6 `toolchain.yml` — on changes under `tools/`
 

@@ -9,7 +9,7 @@ This document is the authoritative list of fixtures. It is transcribed into `cat
 3. **Safe.** No scripts in PDFs; no external entity references in XML; no executables (no MZ/ELF/Mach-O magic); no EICAR string; no decompression ratios above 1000:1 in archives (`zip64-70000-empty-files.zip` is the largest ratio and is whitelisted with its ratio recorded); no private keys; no macros (`.xlsm`, `.docm` are excluded).
 4. **Sizes.** ≤ 100,000,000 bytes per fixture. `bin/` and `txt/lorem-*` are exact; `-plus-1`/`-minus-1` are exact boundaries; other size-named fixtures are `approx` (±5 %).
 5. **Every fixture has a one-line description** written for a reader deciding whether it fits, and `tags` from the controlled vocabulary.
-6. **Phases.** Rows marked phase 1 total ≈ 416 files / ≈ 0.96 GB (§5). The **launch set (P1)** is the explicit list in §9 (228 files, ≈ 515 MB, every family represented); the remaining phase-1 rows are **P1b**, added in batches right after launch (`15` M7). Phase 2 (P2) is the roadmap. Anything not in this document needs a catalog PR that also updates this document.
+6. **Phases.** Rows marked phase 1 total ≈ 416 files / ≈ 0.96 GB (§5). The **launch set (P1)** is the explicit list in §9 (228 files, **595,170,670 bytes measured** at M3.9, every family represented); the remaining phase-1 rows are **P1b**, added in batches right after launch (`15` M7). Phase 2 (P2) is the roadmap. Anything not in this document needs a catalog PR that also updates this document.
 7. **Charsets.** Every text-like fixture's `mime` carries an explicit charset; the default appended by the catalog loader is `utf-8`. The only overrides are: `txt/utf16le-bom.txt`, `txt/utf16be-bom.txt` → `text/plain; charset=utf-16`; `txt/utf32le-bom.txt` → `text/plain; charset=utf-32`; `txt/latin1.txt` → `text/plain; charset=iso-8859-1`; `txt/windows-1252.txt` → `text/plain; charset=windows-1252`; `txt/shift-jis.txt` → `text/plain; charset=shift_jis`; `txt/gb2312.txt` → `text/plain; charset=gb2312`; `csv/people-10-latin1.csv` → `text/csv; charset=iso-8859-1`; `csv/people-10-utf16le.csv` → `text/csv; charset=utf-16`; `xml/utf16.xml` → `application/xml; charset=utf-16`; `xhtml` → `application/xhtml+xml; charset=utf-8`. Edge fixtures with `defect: invalid-encoding` keep the charset their name claims.
 8. **Sizes for `-plus-1`/`-minus-1`** exist only in `bin/`. Sizing recipes for every size-named fixture are in §6.
 
@@ -364,7 +364,7 @@ Many fixtures are cheap variants; the byte budget (≤ 8 GB) and the generation 
 
 ## 9. Launch set (P1) — the fixtures that must exist on launch day
 
-Everything else marked phase 1 in §3 (188 files) is P1b. Chosen for search demand, boundary testing and at least one representative per family: **228 files, ≈ 515 MB**.
+Everything else marked phase 1 in §3 (188 files) is P1b. Chosen for search demand, boundary testing and at least one representative per family: **228 files, 595,170,670 bytes** (measured at M3.9; 223 of them published, 526,137,760 bytes, the other 5 `awaiting_publication`).
 
 P1b stays **188**: `100mib.bin` moved out of phase 1 entirely, so it left both the phase-1 total (417 → 416) and the launch set (229 → 228), and 416 − 228 = 188. Deferring a launch row to phase 2 does not add it to P1b.
 

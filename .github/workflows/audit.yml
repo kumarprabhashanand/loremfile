@@ -71,6 +71,23 @@ jobs:
           loremfile infra audit --json > audit.json && code=0 || code=$?
           echo "code=$code" >> "$GITHUB_OUTPUT"
 
+      # The same reasoning as the determinism summary: `--json` sends everything to the
+      # file, so without this the log shows a green tick and no checks. Code 2 means the
+      # audit could not run, and then there is no report to summarise.
+      - name: Summarise the infra audit
+        if: ${{ !cancelled() && (steps.audit.outputs.code == '0' || steps.audit.outputs.code == '1') }}
+        run: |
+          python - audit.json <<'PY'
+          import json, sys
+
+          report = json.load(open(sys.argv[1]))
+          items = report.get("items")
+          if items is None:
+              sys.exit(f"{sys.argv[1]}: no items; the audit's scope is unknown")
+          failing = [item for item in items if item.get("status") not in (None, "ok")]
+          print(f"infra audit: checks={len(items)} failing={len(failing)}")
+          PY
+
       # Only when the audit actually ran. An audit that could not run has learned nothing
       # about drift, so the drift issue is left exactly as it was found — otherwise a bad
       # token would close a genuine drift issue by reporting `ok`.
@@ -135,6 +152,32 @@ jobs:
         run: |
           loremfile build --all --audit --json > determinism.json \
             || echo "drift=true" >> "$GITHUB_OUTPUT"
+
+      # A redirected stdout and a suppressed stderr block left this job reporting a
+      # green tick with no counts at all: an audit of 0 rows looked exactly like an audit
+      # of 228 (2026-09-16, run 35135699048). The scope goes in the log, and a report
+      # without counts fails the step rather than printing nothing.
+      - name: Summarise the determinism audit
+        if: steps.due.outputs.run == 'true'
+        run: |
+          python - determinism.json <<'PY'
+          import json, sys
+
+          report = json.load(open(sys.argv[1]))
+          counts = report.get("summary") or {}
+          wanted = ("regenerated", "drifted", "expected_drift")
+          missing = [key for key in wanted if key not in counts]
+          if missing:
+              sys.exit(f"{sys.argv[1]}: no {', '.join(missing)}; the audit's scope is unknown")
+          print("determinism audit: " + " ".join(f"{key}={counts[key]}" for key in wanted))
+          PY
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: steps.due.outputs.run == 'true'
+        with:
+          name: determinism-report
+          path: determinism.json
+          retention-days: 90
 
       - name: Open, update or close the determinism issue
         if: steps.due.outputs.run == 'true'
