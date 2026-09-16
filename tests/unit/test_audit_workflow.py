@@ -80,6 +80,19 @@ def test_the_determinism_summary_prints_the_three_counts(tmp_path: Path) -> None
     assert "regenerated=228" in done.stdout
     assert "drifted=0" in done.stdout
     assert "expected_drift=5" in done.stdout
+    assert "awaiting publication" not in done.stdout, "a real count needs no excuse"
+
+
+def test_a_zero_expected_drift_says_why_it_is_zero(tmp_path: Path) -> None:
+    """`expected_drift=0` is structurally unreachable while every flagged row is
+    `awaiting_publication`: absent from the manifest, so never compared. Unqualified, the
+    zero reads as evidence those five reproduced."""
+    report = {"summary": {"regenerated": 228, "drifted": 0, "expected_drift": 0}}
+    done = run("determinism", DETERMINISM, report, tmp_path, "determinism.json")
+    assert done.returncode == 0, done.stderr
+    assert "expected_drift=0" in done.stdout
+    assert "awaiting publication" in done.stdout
+    assert "none were compared" in done.stdout
 
 
 def test_a_report_without_counts_fails_the_step(tmp_path: Path) -> None:
@@ -90,12 +103,23 @@ def test_a_report_without_counts_fails_the_step(tmp_path: Path) -> None:
         assert key in done.stderr, done.stderr
 
 
-def test_the_infra_summary_counts_checks_and_failures(tmp_path: Path) -> None:
-    report = {"items": [{"status": "ok"}, {"status": "ok"}, {"status": "drifted"}]}
+def test_the_infra_summary_counts_each_state_separately(tmp_path: Path) -> None:
+    """A permission warning is not a failure: `url-normalization` is unreadable every run,
+    and printing that as `failing=1` teaches everyone that a red number means nothing."""
+    report = {
+        "items": [
+            {"status": "ok"},
+            {"status": "ok"},
+            {"status": "warning"},
+            {"status": "unreadable"},
+            {"status": "drift"},
+        ]
+    }
     done = run("infra", INFRA, report, tmp_path, "audit.json")
     assert done.returncode == 0, done.stderr
-    assert "checks=3" in done.stdout
-    assert "failing=1" in done.stdout
+    for expected in ("checks=5", "ok=2", "warning=1", "unreadable=1", "drift=1"):
+        assert expected in done.stdout, done.stdout
+    assert "failing" not in done.stdout
 
 
 def test_an_infra_report_without_items_fails_the_step(tmp_path: Path) -> None:

@@ -67,6 +67,12 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          # Account-scoped R2 read, kept separate from the zone token on purpose: T1 is
+          # zone-only and must stay so (`08` §6). Without it `audit_bucket_locks` reports
+          # `unreadable` — never `ok`, because an audit that could not look has learned
+          # nothing about the rules protecting every published prefix.
+          R2_READ_TOKEN: ${{ secrets.R2_READ_TOKEN }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
         run: |
           loremfile infra audit --json > audit.json && code=0 || code=$?
           echo "code=$code" >> "$GITHUB_OUTPUT"
@@ -80,12 +86,21 @@ jobs:
           python - audit.json <<'PY'
           import json, sys
 
+          import collections
+
           report = json.load(open(sys.argv[1]))
           items = report.get("items")
           if items is None:
               sys.exit(f"{sys.argv[1]}: no items; the audit's scope is unknown")
-          failing = [item for item in items if item.get("status") not in (None, "ok")]
-          print(f"infra audit: checks={len(items)} failing={len(failing)}")
+          # One count per state. Collapsing them printed `failing=1` every week for a
+          # permission warning (url-normalization, which T1 cannot read), which is how a
+          # clean run learns to look broken and a broken one stops standing out.
+          state = collections.Counter(item.get("status", "unknown") for item in items)
+          print(
+              f"infra audit: checks={len(items)} ok={state['ok']} "
+              f"warning={state['warning']} unreadable={state['unreadable']} "
+              f"drift={state['drift']}"
+          )
           PY
 
       # Only when the audit actually ran. An audit that could not run has learned nothing
@@ -169,7 +184,13 @@ jobs:
           missing = [key for key in wanted if key not in counts]
           if missing:
               sys.exit(f"{sys.argv[1]}: no {', '.join(missing)}; the audit's scope is unknown")
-          print("determinism audit: " + " ".join(f"{key}={counts[key]}" for key in wanted))
+          line = "determinism audit: " + " ".join(f"{key}={counts[key]}" for key in wanted)
+          if not counts["expected_drift"]:
+              # Not evidence that the flagged rows reproduced: every row carrying
+              # `expected_drift` is still `awaiting_publication`, so it is absent from
+              # manifest.json and the audit never compares it (09 §3.4).
+              line += " (flagged rows are awaiting publication, so none were compared)"
+          print(line)
           PY
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

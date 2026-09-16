@@ -71,6 +71,8 @@ FALLBACKS = {
     "http_request_firewall_custom": "Security → WAF → Custom rules",
     "tiered-cache": "Caching → Tiered Cache → Smart Tiered Cache",
     "url-normalization": "Rules → Settings → Normalize incoming URLs",
+    "bucket-locks": "R2 → loremfile-public → Settings → Bucket lock rules "
+    "(needs R2_READ_TOKEN; docs/08 §7b)",
 }
 
 #: The zone reports this name. docs/08 §5.6 had the words transposed ("Cloudflare Free

@@ -261,7 +261,7 @@ Validation failures are hard errors in CI and print a table of path → failed c
 
 `loremfile build --all --audit` regenerates **every** fixture including published ones (dependencies still come from published bytes, §4) and compares hashes with the manifest. Output: a Markdown report listing drifted paths with generator names. Run monthly by `audit.yml`; drift is a warning that opens a `determinism` issue, never a deploy blocker (published bytes are canonical; the generator gets fixed or the drift is documented in `notes`).
 
-The report has **two sections**. A fixture whose catalog entry sets `expected_drift` is known not to reproduce off the reference fleet (§4) and is listed separately; it does not fail the run. Everything else is real drift — a generator or dependency change — and does. Without the split, four media fixtures would appear in every audit that runs on a differently-provisioned runner, and an issue that reports expected behaviour every month is one nobody reads.
+The report has **two sections**. A fixture whose catalog entry sets `expected_drift` is known not to reproduce off the reference fleet (§4) and is listed separately; it does not fail the run. Everything else is real drift — a generator or dependency change — and does. Without the split, the five media fixtures that carry it would appear in every audit that runs on a differently-provisioned runner, and an issue that reports expected behaviour every month is one nobody reads.
 
 ## 9. Toolchain container (`tools/Dockerfile`)
 
@@ -347,7 +347,7 @@ git push                              # green
 
 `manifest adopt` refuses any path already published on the base branch, so this loop can only ever set the bytes of a fixture the branch is *adding*. Everything that is not media matched on every machine through M3.1–M3.6, and needs one round trip as before.
 
-**If `manifest check` fails locally on a media path that is already committed, check `expected_drift` in its catalog entry before assuming a regression** — four paths carry it today, and `build --audit` reports them separately for exactly this reason.
+**If `manifest check` fails locally on a media path that is already committed, check `expected_drift` in its catalog entry before assuming a regression** — five paths carry it today (`mp4/1080p-10s`, `mp4/10mb`, `mp4/50mb`, `opus/30s`, `webm/720p-5s-vp9`), and `build --audit` reports them separately for exactly this reason.
 
 ## 12. Performance budget
 

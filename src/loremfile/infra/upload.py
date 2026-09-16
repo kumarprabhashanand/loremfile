@@ -98,11 +98,12 @@ def prefix_of(key: str) -> str:
 def unlocked_prefixes(keys: list[str], lock_rules: list[dict[str, Any]]) -> list[str]:
     """Prefixes a write would touch that no enabled lock rule covers.
 
-    Checked against the rules the deploy can actually see. `docs/08` §6 notes that
-    reading the *applied* rules needs an account-scoped R2 read, which the deploy's
-    credentials do not have — so the caller passes the committed `infra/r2-locks.json`
-    and the report says so. `audit.py` compares committed against applied separately;
-    conflating them would let this gate claim a verification it never performed.
+    Checked against the **committed** `infra/r2-locks.json`, not against the rules R2
+    holds: reading the applied set needs an account-scoped R2 read the deploy's token does
+    not have and must not be given (`docs/08` §6). So this gate proves a rule was written
+    down for the prefix, not that the bucket enforces it. `audit.py`'s `audit_bucket_locks`
+    is what compares committed against applied, with `R2_READ_TOKEN`, and it reports drift
+    when they differ.
     """
     covered = {
         str(rule.get("prefix", "")) for rule in lock_rules if rule.get("enabled", False) is True

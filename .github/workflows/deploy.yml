@@ -7,9 +7,12 @@
 #
 # TWO BLOCKING GATES, both enforced in `loremfile upload` rather than here, so they hold
 # for a local dry run too:
-#   1. No upload to a prefix without a bucket lock rule. The M3 deferral of locks ends at
-#      the first deploy: publishing onto an unlocked prefix leaves those objects mutable
-#      by a leaked T2, which is the threat ADR-023 exists to close.
+#   1. No upload to a prefix without a **committed** bucket lock rule in
+#      `infra/r2-locks.json`. The deploy's token cannot read the rules R2 actually holds
+#      (`08` §6), so this gate proves the rule was written down, not that the bucket
+#      enforces it — `audit.yml`'s `audit_bucket_locks` compares committed with applied.
+#      The M3 deferral of locks ends at the first deploy: publishing onto an unlocked
+#      prefix leaves those objects mutable by a leaked T2, the threat ADR-023 closes.
 #   2. No regeneration of an `expected_drift` path. Those bytes come from the artifact or
 #      the deploy fails; it never substitutes a rebuild.
 #

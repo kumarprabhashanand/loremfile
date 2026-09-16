@@ -216,12 +216,20 @@ def test_no_audit_check_calls_a_write_method() -> None:
     assert offenders == [], f"audit.py calls {offenders}; the audit reports, it does not converge"
 
 
+#: Audited but never applied by `apply.py`. Bucket locks are applied by the owner with an
+#: admin token via wrangler (`08` §2, T3) — CI holds no credential that can write them —
+#: so this one check has no `apply_` counterpart. Named explicitly rather than letting the
+#: guard below soften into a subset test, which would stop catching a dropped check.
+AUDIT_ONLY = {"bucket_locks"}
+
+
 def test_the_audit_covers_every_resource_apply_writes() -> None:
     """An audit that silently skipped a resource would report a clean zone for a zone it
     never looked at — worse than reporting drift, because it looks like good news."""
     applied = {step.__name__.removeprefix("apply_") for step in apply_module.STEPS}
     audited = {check.__name__.removeprefix("audit_") for check in audit.CHECKS}
-    assert applied == audited, f"not audited: {sorted(applied - audited)}"
+    assert applied == audited - AUDIT_ONLY, f"not audited: {sorted(applied - audited)}"
+    assert audited >= AUDIT_ONLY, f"exempted but absent: {sorted(AUDIT_ONLY - audited)}"
 
 
 # --- three outcomes, not two ------------------------------------------------
@@ -299,3 +307,149 @@ def test_the_audit_reads_txt_content_the_way_apply_writes_it() -> None:
     report = AuditReport()
     audit.audit_dns(FakeZone({"dns_records?per_page=100": response([wrong, www])}), report)  # type: ignore[arg-type]
     assert [f.resource for f in report.drifted] == ["dns:TXT _dmarc"]
+
+
+# --- bucket locks: the storage half of immutability -------------------------
+
+
+def lock_rule(
+    prefix: str, *, enabled: bool = True, condition: str = "Indefinite"
+) -> dict[str, Any]:
+    return {
+        "id": f"lock-{prefix.rstrip('/')}",
+        "enabled": enabled,
+        "prefix": prefix,
+        "condition": {"type": condition},
+    }
+
+
+#: S106: no credential here — this client never opens a socket.
+ZONE_TOKEN = "zone-token"  # noqa: S105
+R2_TOKEN = "r2-read"  # noqa: S105
+
+
+#: What every request was made with. A plain `Client` rather than a subclass: the check
+#: swaps the token with `dataclasses.replace`, which rebuilds through the class's own
+#: constructor, so a subclass with a narrower `__init__` breaks on the copy rather than on
+#: anything the check does. The transport is stubbed instead, and the token it carried is
+#: recorded — that is the assertion worth making, since a zone token must never reach an
+#: account-scoped path.
+ASKED: list[tuple[str, str]] = []
+
+
+def fake_account(monkeypatch: pytest.MonkeyPatch, reply: Response) -> Client:
+    """A real `Client` whose transport is stubbed **on the class**.
+
+    `dataclasses.replace` copies fields, not instance attributes, so a stub attached to one
+    instance is absent from the copy the check builds when it swaps in the R2 token — that
+    copy would reach for the network. Patching the class covers the original and the copy,
+    and recording the token each request carried is the assertion that matters: the zone
+    token must never reach an account-scoped path.
+    """
+    ASKED.clear()
+
+    def send(self: Client, method: str, path: str, _payload: object = None) -> Response:
+        ASKED.append((self.token, f"{method} {path}"))
+        return reply
+
+    monkeypatch.setattr(Client, "_send", send)
+    return Client(token=ZONE_TOKEN, zone_id="z", account_id="acct", read_only=True)
+
+
+def locks_audit(
+    monkeypatch: pytest.MonkeyPatch,
+    reply: Response,
+    committed: list[dict[str, Any]],
+    *,
+    token: str = R2_TOKEN,
+) -> AuditReport:
+    client = fake_account(monkeypatch, reply)
+    monkeypatch.setattr(audit.locks, "committed_rules", lambda: committed)
+    monkeypatch.setenv("R2_BUCKET", "loremfile-public")
+    if token:
+        monkeypatch.setenv("R2_READ_TOKEN", token)
+    else:
+        monkeypatch.delenv("R2_READ_TOKEN", raising=False)
+    report = AuditReport(zone_id="z")
+    audit.audit_bucket_locks(client, report)
+    return report
+
+
+def finding(report: AuditReport) -> Any:
+    return next(f for f in report.findings if f.resource == "bucket-locks")
+
+
+def test_the_bucket_lock_check_is_registered() -> None:
+    """Empty-set control: every assertion below is vacuous if it never runs in an audit."""
+    assert audit.audit_bucket_locks in audit.CHECKS
+
+
+def test_matching_rules_are_ok(monkeypatch: pytest.MonkeyPatch) -> None:
+    rules = [lock_rule("pdf/"), lock_rule("edge/")]
+    report = locks_audit(monkeypatch, response({"rules": rules}), rules)
+    assert finding(report).state == OK
+    assert "2 rules match" in finding(report).detail
+
+
+def test_a_rule_missing_from_the_bucket_is_drift(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The failure this check exists for: a prefix is published but nothing protects it."""
+    report = locks_audit(
+        monkeypatch,
+        response({"rules": [lock_rule("pdf/")]}),
+        [lock_rule("pdf/"), lock_rule("edge/")],
+    )
+    assert finding(report).state == DRIFT
+    assert "edge/: committed, not applied" in finding(report).detail
+
+
+def test_a_disabled_rule_is_drift(monkeypatch: pytest.MonkeyPatch) -> None:
+    report = locks_audit(
+        monkeypatch, response({"rules": [lock_rule("pdf/", enabled=False)]}), [lock_rule("pdf/")]
+    )
+    assert finding(report).state == DRIFT
+    assert "enabled=False" in finding(report).detail
+
+
+def test_a_changed_condition_type_is_drift(monkeypatch: pytest.MonkeyPatch) -> None:
+    """`Indefinite` is the promise; an age-based condition would let objects expire."""
+    report = locks_audit(
+        monkeypatch, response({"rules": [lock_rule("pdf/", condition="Age")]}), [lock_rule("pdf/")]
+    )
+    assert finding(report).state == DRIFT
+    assert "condition 'Age'" in finding(report).detail
+
+
+def test_a_rule_on_the_bucket_that_is_not_committed_is_drift(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    report = locks_audit(
+        monkeypatch,
+        response({"rules": [lock_rule("pdf/"), lock_rule("ghost/")]}),
+        [lock_rule("pdf/")],
+    )
+    assert finding(report).state == DRIFT
+    assert "ghost/: applied to the bucket, not committed" in finding(report).detail
+
+
+def test_no_token_is_unreadable_never_ok(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An audit that could not look has learned nothing; reporting that as clean is the bug."""
+    report = locks_audit(monkeypatch, response({"rules": []}), [lock_rule("pdf/")], token="")
+    assert finding(report).state == UNREADABLE
+    assert report.ok, "unreadable is a warning, not a failure (docs/09 §3.4)"
+
+
+def test_a_refused_token_is_unreadable_not_ok(monkeypatch: pytest.MonkeyPatch) -> None:
+    report = locks_audit(monkeypatch, response(None, status=403), [lock_rule("pdf/")])
+    assert finding(report).state == UNREADABLE
+
+
+def test_the_check_reads_the_account_path_with_the_r2_token(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The zone token must not be used here: it is zone-scoped on purpose (docs/08 §6)."""
+    client = fake_account(monkeypatch, response({"rules": [lock_rule("pdf/")]}))
+    monkeypatch.setattr(audit.locks, "committed_rules", lambda: [lock_rule("pdf/")])
+    monkeypatch.setenv("R2_READ_TOKEN", R2_TOKEN)
+    monkeypatch.setenv("R2_BUCKET", "loremfile-public")
+    audit.audit_bucket_locks(client, AuditReport(zone_id="z"))
+    assert ASKED == [(R2_TOKEN, "GET /accounts/acct/r2/buckets/loremfile-public/lock")]
