@@ -30,7 +30,7 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 - (A) Review the `determinism` audit result (workflow `audit.yml`, first Monday).
 - (O, 10 minutes; the agent cannot see account settings or billing) Run the hardening checklist from `10-security.md` §5 (read-only spot check: 2FA on, tokens as inventoried, Registrar lock, auto-renew; the readable "must be off" settings via `infra audit`, the manual ones listed in `08` §8 by eye).
 - (O) Check the card on file is not expiring within 60 days.
-- (A) Verify the latest GitHub Release archive is downloadable and `sha256sum -c` passes for 3 random entries.
+- (A) Verify the latest GitHub Release archive is downloadable and `sha256sum -c` (macOS: `shasum -a 256 -c`) passes for 3 random entries.
 - (A) Add the monthly success-metric line (`00-overview.md` §6: GitHub code-search count, referrer hosts) under the automated weekly lines in `ops-log.md` on the `ops-log` branch (a direct push; the branch is unprotected by design).
 
 ## 4. Quarterly (+60 minutes)
@@ -147,7 +147,7 @@ For real drift: (a) read the diff summary; (b) if caused by a dependency update,
 Honest recovery targets: **content and a mirror hostname within one working day**; **`loremfile.dev` itself only as fast as Cloudflare support restores the account**, because the domain is registered there (ADR-020, RISK-19; Q-06 would change this). The repository README is the out-of-band channel: it always states the current canonical host, and the site's Rules page says so.
 
 1. From GitHub Releases download every archive since the first release (delta tarballs) or the latest snapshot plus later deltas; if a fixture was redacted, its tombstone is in `sha256sums.txt`.
-2. Extract into one directory; run `sha256sum -c sha256sums.txt --ignore-missing` (all OK).
+2. Extract into one directory; run `sha256sum -c sha256sums.txt --ignore-missing` (all OK) — on macOS, `shasum -a 256 -c sha256sums.txt --ignore-missing`.
 3. Missing fixtures (if any archive was lost) can be regenerated with `loremfile build --all --only <paths>` in the toolchain image of the release (`toolchain_image` in that manifest); verify hashes.
 4. New Cloudflare account (or the recovered one), in this order: (a) `08` §2 setup except the lock rules (domain if recoverable, otherwise a fallback hostname; bucket; custom domain; CORS; tokens); (b) `infra.yml` `apply` — it writes no R2 objects and no lock rules; (c) `infra.yml` `restore-dry-run` with the archive part URL(s), and read the plan; (d) `restore`, which verifies the paths it wrote; (e) the site upload; (f) the lock rules; (g) `verify-live --mode full`. If GitHub is also gone, (c)–(d) are `loremfile upload --from-dir <dir> --dry-run` and then without `--dry-run`, from a machine holding temporary tokens. Record the durations; a rehearsal on a throwaway zone is optional (≈ USD 10 for a domain).
 5. If the domain is lost for good, publish the new host in the README and on the mirror's home page; nothing else can be done at this budget.
