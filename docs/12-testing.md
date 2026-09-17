@@ -49,7 +49,7 @@ Header contract checked per fixture (REQ-03/04/05): `content-type`, `content-len
 
 ## 5. Manual QA before launch (M5.3 checklist)
 
-- [ ] Open 10 fixtures in Chrome, Firefox, Safari (PDF inline, MP4 plays with seeking, MP3 plays, PNG/WebP/AVIF render, SVG renders inert; `svg/with-embedded-png.svg` shows its embedded image; `html/with-inline-css.html` shows its styles; `html/with-inline-js.html` executes nothing).
+- [ ] Open 10 fixtures in each browser of the matrix below (PDF inline, MP4 plays with seeking, MP3 plays, PNG/WebP/AVIF render, SVG renders inert; `svg/with-embedded-png.svg` shows its embedded image; `html/with-inline-css.html` shows its styles; `html/with-inline-js.html` executes nothing).
 - [x] `GET /html/basic%2Ehtml` carries the sandbox CSP (owner-verified 2026-09-17).
 - [ ] `<video src="https://loremfile.dev/mp4/720p-5s.mp4" crossorigin>` on a page at another origin plays; `fetch()` from another origin returns bytes; `<img crossorigin>` draws to canvas without taint. **Browser-only.** The headers underneath were verified 2026-09-17: a Range request returns 206 with `content-range`, `access-control-allow-origin: *`, `cross-origin-resource-policy: cross-origin` and `timing-allow-origin: *`; what remains is whether browsers behave as those headers promise.
 - [ ] Upload-limit test: `10mib.bin` accepted and `10mib-plus-1.bin` rejected by a sample app with a 10 MiB limit.
@@ -60,6 +60,10 @@ Header contract checked per fixture (REQ-03/04/05): `content-type`, `content-len
 - [x] REQ-27: run `health.yml` with `inject_failure=pdf/a4-3pages.pdf` → issue opened; run it again without → issue closed. **Drill 3, 2026-09-17** (`11` §7.11): run `35267683488` opened #74 at 19:57:58, run `35268148973` closed it at 20:05:17, the two runs sequential.
 - [ ] Rate limit: 400 requests in 10 s from one IP → some 429s; after 10 s → 200 again.
 - [ ] Search Console: sitemap submitted; no manual actions.
+
+**Browser matrix, and what it leaves untested.** Every browser item above is checked on **Chrome and Safari on desktop, Chrome on Android, and Safari on iOS** — the two engines that reach almost all of this audience, on both form factors.
+
+**Firefox/Gecko is untested at launch.** This is a stated gap, not a passing row: no Gecko check has been run, so nothing here says the site or the fixtures behave correctly there, and no box above should be read as covering it. The risk is small but real and concentrated where engines actually differ — PDF rendering (Firefox uses its own pdf.js rather than a platform viewer), media playback and seeking, and SVG rendering. The header contract, hashes and byte correctness are engine-independent and are covered by `verify-live` for every published fixture, so what is untested is presentation, not delivery. Closing it is a post-launch item: run the same browser rows on Firefox and record the result here.
 
 ## 6. Definition of done (per fixture, per feature)
 
