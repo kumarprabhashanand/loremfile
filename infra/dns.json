@@ -9,7 +9,14 @@
     {
       "type": "TXT",
       "name": "_dmarc",
-      "content": "v=DMARC1; p=reject; adkim=s; aspf=s"
+      "content": "v=DMARC1; p=reject; adkim=s; aspf=s",
+      "exclusive": true
+    },
+    {
+      "type": "CNAME",
+      "name": "2ca55a2a310caebda76ef903b38e8649",
+      "content": "verify.bing.com",
+      "proxied": false
     }
   ],
   "expected_managed": [

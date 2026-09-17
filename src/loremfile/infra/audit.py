@@ -47,6 +47,7 @@ from loremfile.infra.apply import (
     WRITTEN_PHASES,
     compare_rules,
     custom_rules_desired,
+    dns_candidates,
     dns_content,
     is_ours,
     load_desired,
@@ -239,23 +240,25 @@ def audit_dns(client: Client, report: AuditReport) -> None:
     if not listing.ok:
         report.add("dns", UNREADABLE, listing.errors)
         return
-    existing = {(r["type"], r["name"]): r for r in (listing.result or [])}
+    existing = dns_candidates(listing.result or [])
     for record in desired:
         fqdn = (
             record["name"]
             if record["name"].endswith(SITE_HOST)
             else f"{record['name']}.{SITE_HOST}"
         )
-        found = existing.get((record["type"], fqdn))
+        candidates = existing.get((record["type"], fqdn), [])
         name = f"dns:{record['type']} {record['name']}"
-        if found is None:
-            report.add(name, DRIFT, "absent")
-        elif dns_content(record["type"], found.get("content")) != dns_content(
-            record["type"], record.get("content")
-        ):
-            report.add(name, DRIFT, f"content is {found.get('content')!r}")
-        else:
+        wanted = dns_content(record["type"], record.get("content"))
+        # Any match is a match: a TXT name holds several values, and the one we declare
+        # sitting beside somebody else's is the zone being correct, not drifting.
+        if any(dns_content(record["type"], c.get("content")) == wanted for c in candidates):
             report.add(name, OK)
+        elif not candidates:
+            report.add(name, DRIFT, "absent")
+        else:
+            found = ", ".join(repr(c.get("content")) for c in candidates)
+            report.add(name, DRIFT, f"no record matches; {len(candidates)} present: {found}")
 
 
 def audit_tiered_cache(client: Client, report: AuditReport) -> None:

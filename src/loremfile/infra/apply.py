@@ -220,6 +220,32 @@ def dns_content(record_type: str, content: object) -> str:
     return text
 
 
+#: Record types where one name may hold several values at once, so a row that matches
+#: none of them means "add another", never "overwrite one of these". TXT is the live
+#: case: the apex carries the Email Routing SPF record and a site-verification string.
+#:
+#: A row may set `"exclusive": true` to opt out, and `_dmarc` does. DMARC is single-valued
+#: by RFC 7489 — two records at one name make the policy *ignored*, not merged — so
+#: creating a sibling there would silently disable `p=reject` the first time its content
+#: was edited. Exclusive rows patch their single candidate and refuse when there are
+#: several, exactly as CNAME does.
+MULTI_VALUED_TYPES = frozenset({"TXT"})
+
+
+def dns_candidates(records: list[dict[str, Any]]) -> dict[tuple[str, str], list[dict[str, Any]]]:
+    """Every record at each `(type, name)`, not merely the last one listed.
+
+    Keyed by a dict comprehension this was `{(type, name): record}`, so a second record
+    at the same name silently replaced the first. With two TXT records on the apex that
+    is not a cosmetic bug: `apply` would compare the wrong one and PATCH the survivor,
+    rewriting SPF with a verification string and breaking mail delivery.
+    """
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for record in records:
+        grouped.setdefault((record["type"], record["name"]), []).append(record)
+    return grouped
+
+
 def apply_dns(client: Client, report: Report) -> None:
     """Ensure the records we own, **content included**. Never deletes: Email Routing owns
     MX and SPF.
@@ -234,7 +260,7 @@ def apply_dns(client: Client, report: Report) -> None:
     if not listing.ok:
         report.add("dns", "failed", listing.errors)
         return
-    existing = {(r["type"], r["name"]): r for r in (listing.result or [])}
+    existing = dns_candidates(listing.result or [])
     for record in desired:
         fqdn = (
             record["name"]
@@ -242,21 +268,36 @@ def apply_dns(client: Client, report: Report) -> None:
             else f"{record['name']}.{SITE_HOST}"
         )
         label = f"dns:{record['type']} {record['name']}"
-        found = existing.get((record["type"], fqdn))
-        if found is None:
-            response = client.post(f"/zones/{client.zone_id}/dns_records", {**record, "name": fqdn})
-            done = "created"
-        elif dns_content(record["type"], found.get("content")) == dns_content(
-            record["type"], record.get("content")
-        ):
+        candidates = existing.get((record["type"], fqdn), [])
+        wanted = dns_content(record["type"], record.get("content"))
+        if any(dns_content(record["type"], c.get("content")) == wanted for c in candidates):
             report.add(label, "unchanged")
             continue
-        elif not found.get("id"):
+        if not candidates:
+            response = client.post(f"/zones/{client.zone_id}/dns_records", {**record, "name": fqdn})
+            done = "created"
+        elif record["type"] in MULTI_VALUED_TYPES and not record.get("exclusive"):
+            # A TXT name legitimately holds several values — SPF and a site verification
+            # both live at the apex. Patching a sibling here would rewrite one service's
+            # record with another's content; the apex SPF is exactly what that would break.
+            response = client.post(f"/zones/{client.zone_id}/dns_records", {**record, "name": fqdn})
+            done = f"created alongside {len(candidates)} existing {record['type']} record(s)"
+        elif len(candidates) != 1:
+            contents = ", ".join(repr(c.get("content")) for c in candidates)
+            report.add(
+                label,
+                "failed",
+                f"{len(candidates)} {record['type']} records at {fqdn} ({contents}); "
+                "refusing to guess which one this row means",
+            )
+            continue
+        elif not candidates[0].get("id"):
             report.add(label, "failed", "record exists but the listing carries no id to update")
             continue
         else:
             # PATCH is a partial update: only the content moves; name, type, TTL and
             # proxying stay as the zone has them.
+            found = candidates[0]
             response = client.patch(
                 f"/zones/{client.zone_id}/dns_records/{found['id']}",
                 {"content": record["content"]},
