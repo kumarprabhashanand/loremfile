@@ -50,13 +50,13 @@ Header contract checked per fixture (REQ-03/04/05): `content-type`, `content-len
 ## 5. Manual QA before launch (M5.3 checklist)
 
 - [ ] Open 10 fixtures in Chrome, Firefox, Safari (PDF inline, MP4 plays with seeking, MP3 plays, PNG/WebP/AVIF render, SVG renders inert; `svg/with-embedded-png.svg` shows its embedded image; `html/with-inline-css.html` shows its styles; `html/with-inline-js.html` executes nothing).
-- [ ] `GET /html/basic%2Ehtml` carries the sandbox CSP.
-- [ ] `<video src="https://loremfile.dev/mp4/720p-5s.mp4" crossorigin>` on a page at another origin plays; `fetch()` from another origin returns bytes; `<img crossorigin>` draws to canvas without taint.
+- [x] `GET /html/basic%2Ehtml` carries the sandbox CSP (owner-verified 2026-09-17).
+- [ ] `<video src="https://loremfile.dev/mp4/720p-5s.mp4" crossorigin>` on a page at another origin plays; `fetch()` from another origin returns bytes; `<img crossorigin>` draws to canvas without taint. **Browser-only.** The headers underneath were verified 2026-09-17: a Range request returns 206 with `content-range`, `access-control-allow-origin: *`, `cross-origin-resource-policy: cross-origin` and `timing-allow-origin: *`; what remains is whether browsers behave as those headers promise.
 - [ ] Upload-limit test: `10mib.bin` accepted and `10mib-plus-1.bin` rejected by a sample app with a 10 MiB limit.
 - [ ] `sha256sum -c` workflow from the docs works verbatim.
 - [ ] Keyboard-only navigation of home and one format page; screen reader announces copy buttons; Lighthouse a11y ≥ 95.
 - [ ] Mobile: no horizontal scroll on home/format/docs pages at 360 px width.
-- [ ] `curl -A ""` and `curl -A "python-requests/2.32"` and `curl -A "ClaudeBot/1.0"` all get 200 (no challenge).
+- [x] `curl -A ""`, `curl -A "python-requests/2.32"`, `curl -A "ClaudeBot/1.0"` and a plain `curl` all get 200 with no challenge (owner-verified 2026-09-17).
 - [ ] REQ-27: run `health.yml` with `inject_failure=pdf/a4-3pages.pdf` → issue opened; run it again without → issue closed.
 - [ ] Rate limit: 400 requests in 10 s from one IP → some 429s; after 10 s → 200 again.
 - [ ] Search Console: sitemap submitted; no manual actions.
