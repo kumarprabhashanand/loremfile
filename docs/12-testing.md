@@ -57,7 +57,7 @@ Header contract checked per fixture (REQ-03/04/05): `content-type`, `content-len
 - [ ] Keyboard-only navigation of home and one format page; screen reader announces copy buttons; Lighthouse a11y ≥ 95.
 - [ ] Mobile: no horizontal scroll on home/format/docs pages at 360 px width.
 - [x] `curl -A ""`, `curl -A "python-requests/2.32"`, `curl -A "ClaudeBot/1.0"` and a plain `curl` all get 200 with no challenge (owner-verified 2026-09-17).
-- [ ] REQ-27: run `health.yml` with `inject_failure=pdf/a4-3pages.pdf` → issue opened; run it again without → issue closed.
+- [x] REQ-27: run `health.yml` with `inject_failure=pdf/a4-3pages.pdf` → issue opened; run it again without → issue closed. **Drill 3, 2026-09-17** (`11` §7.11): run `35267683488` opened #74 at 19:57:58, run `35268148973` closed it at 20:05:17, the two runs sequential.
 - [ ] Rate limit: 400 requests in 10 s from one IP → some 429s; after 10 s → 200 again.
 - [ ] Search Console: sitemap submitted; no manual actions.
 
