@@ -49,16 +49,16 @@ Header contract checked per fixture (REQ-03/04/05): `content-type`, `content-len
 
 ## 5. Manual QA before launch (M5.3 checklist)
 
-- [ ] Open 10 fixtures in each browser of the matrix below (PDF inline, MP4 plays with seeking, MP3 plays, PNG/WebP/AVIF render, SVG renders inert; `svg/with-embedded-png.svg` shows its embedded image; `html/with-inline-css.html` shows its styles; `html/with-inline-js.html` executes nothing).
+- [x] Open 10 fixtures in each browser of the matrix below (owner, 2026-09-17: PASS on all four — PDF inline, MP4 plays and seeks, MP3 plays, PNG/WebP/AVIF render, SVG renders, the embedded-PNG SVG shows its image, inline CSS styled; and `html/with-inline-js.html` executed nothing, Chrome logging the sandbox CSP refusal — **that log line is the rule working, not an error**) (PDF inline, MP4 plays with seeking, MP3 plays, PNG/WebP/AVIF render, SVG renders inert; `svg/with-embedded-png.svg` shows its embedded image; `html/with-inline-css.html` shows its styles; `html/with-inline-js.html` executes nothing).
 - [x] `GET /html/basic%2Ehtml` carries the sandbox CSP (owner-verified 2026-09-17).
-- [ ] `<video src="https://loremfile.dev/mp4/720p-5s.mp4" crossorigin>` on a page at another origin plays; `fetch()` from another origin returns bytes; `<img crossorigin>` draws to canvas without taint. **Browser-only.** The headers underneath were verified 2026-09-17: a Range request returns 206 with `content-range`, `access-control-allow-origin: *`, `cross-origin-resource-policy: cross-origin` and `timing-allow-origin: *`; what remains is whether browsers behave as those headers promise.
+- [x] (owner, 2026-09-17: PASS — the video played and the canvas drew untainted, "canvas OK") `<video src="https://loremfile.dev/mp4/720p-5s.mp4" crossorigin>` on a page at another origin plays; `fetch()` from another origin returns bytes; `<img crossorigin>` draws to canvas without taint. **Browser-only.** The headers underneath were verified 2026-09-17: a Range request returns 206 with `content-range`, `access-control-allow-origin: *`, `cross-origin-resource-policy: cross-origin` and `timing-allow-origin: *`; what remains is whether browsers behave as those headers promise.
 - [ ] Upload-limit test: `10mib.bin` accepted and `10mib-plus-1.bin` rejected by a sample app with a 10 MiB limit.
-- [ ] `sha256sum -c` workflow from the docs works verbatim.
-- [ ] Keyboard-only navigation of home and one format page; screen reader announces copy buttons; Lighthouse a11y ≥ 95.
-- [ ] Mobile: no horizontal scroll on home/format/docs pages at 360 px width.
+- [x] `sha256sum -c` workflow from the docs works verbatim. **PASS (owner, 2026-09-17)** with `shasum -a 256 -c sha256sums.txt --ignore-missing`, 3/3 OK — which is why the docs and the site now give the macOS form beside the coreutils one.
+- [x] Keyboard-only navigation of home and one format page; screen reader announces copy buttons; Lighthouse a11y ≥ 95. **PASS (owner, 2026-09-17):** keyboard navigation and VoiceOver announcements correct; **accessibility 100 on `/` and 100 on `/pdf/`**, against a bar of 95.
+- [x] Mobile: no horizontal scroll on home/format/docs pages at 360 px width. **PASS (owner, 2026-09-17)** on both real devices, Android Chrome and iPhone Safari.
 - [x] `curl -A ""`, `curl -A "python-requests/2.32"`, `curl -A "ClaudeBot/1.0"` and a plain `curl` all get 200 with no challenge (owner-verified 2026-09-17).
 - [x] REQ-27: run `health.yml` with `inject_failure=pdf/a4-3pages.pdf` → issue opened; run it again without → issue closed. **Drill 3, 2026-09-17** (`11` §7.11): run `35267683488` opened #74 at 19:57:58, run `35268148973` closed it at 20:05:17, the two runs sequential.
-- [ ] Rate limit: 400 requests in 10 s from one IP → some 429s; after 10 s → 200 again.
+- [x] Rate limit: 400 requests in 10 s from one IP → some 429s; after 10 s → 200 again. **Probe run `34941018789`:** 429 after 288 requests at 259/s, then normal service.
 - [ ] Search Console: sitemap submitted; no manual actions.
 
 **Browser matrix, and what it leaves untested.** Every browser item above is checked on **Chrome and Safari on desktop, Chrome on Android, and Safari on iOS** — the two engines that reach almost all of this audience, on both form factors.

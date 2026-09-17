@@ -29,7 +29,10 @@ Every active file is listed with its SHA-256 hash in
 [sha256sums.txt](/sha256sums.txt), in the format `sha256sum` reads:
 
 ```bash
+# Linux (coreutils)
 curl -fsSL https://loremfile.dev/sha256sums.txt | sha256sum -c --ignore-missing
+# macOS ships no sha256sum; shasum is preinstalled
+curl -fsSL https://loremfile.dev/sha256sums.txt | shasum -a 256 -c --ignore-missing
 ```
 
 ## Find files without a browser

@@ -127,7 +127,7 @@ Consequences: `fetch()` from any origin works; `<video>`, `<audio>`, `<img cross
 
 ## 8. Client guidance (published on the site)
 
-- Verify downloads with `sha256sum -c sha256sums.txt --ignore-missing`.
+- Verify downloads with `sha256sum -c sha256sums.txt --ignore-missing`, or `shasum -a 256 -c sha256sums.txt --ignore-missing` on macOS, which ships no `sha256sum`.
 - Prefer HEAD for size checks (`Content-Length` equals `manifest.bytes`).
 - Do not rely on `ETag` equalling MD5.
 - Query strings are ignored; they neither bust the cache nor change the response.
