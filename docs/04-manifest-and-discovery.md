@@ -200,6 +200,24 @@ AI crawlers are deliberately allowed (the audience includes agents). Raw fixture
 
 ## 7. `sitemap.xml`
 
+**Every discovery file carries `X-Robots-Tag: noindex`, and that is not a bug to fix.**
+The `files_headers` rule matches any path containing a dot, so `sitemap.xml`,
+`robots.txt`, `llms.txt`, `manifest.json`, `search-index.json`, `sha256sums.txt`,
+`formats.json` and `security.txt` all receive it alongside the fixtures. It looks alarming
+next to a Search Console error and it is the wrong suspect: Google's own sitemap
+troubleshooting lists robots.txt blocking, manual actions, 404s, server errors and low
+crawl demand as the causes of "Couldn't fetch" — `noindex` is not among them, and a
+`noindex` sitemap is still fetched and read.
+
+**The observation that prompted this (2026-09-17).** A Search Console submission reported
+"Couldn't fetch" on a property verified minutes earlier, while the file served 200 to
+Googlebot with 92 URLs. **Decision: no header change**; re-check after a few days, because
+a just-verified property commonly reports that and resolves itself. This is written down
+so the rule is not "fixed" later on a theory the documentation does not support — changing
+`files_headers` to carve out the discovery files would alter the headers on every fixture
+path, which is a real risk taken against an imagined cause.
+
+
 Lists the home page, every format page, docs pages, legal pages **except `/legal/imprint` and `/legal/privacy`**, and the changelog. Does not list raw fixtures. `lastmod` = the committer date of the built commit (`07` §4), never the clock. Under 50 MB / 50,000 URLs, so a single file suffices.
 
 ## 8. `.well-known/security.txt` (RFC 9116)

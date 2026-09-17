@@ -296,16 +296,22 @@ def test_the_audit_reads_txt_content_the_way_apply_writes_it() -> None:
         r for r in apply_module.load_desired("dns.json")["records"] if r["name"] == "_dmarc"
     )
     www = {"type": "CNAME", "name": "www.loremfile.dev", "content": "loremfile.dev"}
+    bing = next(
+        r
+        for r in apply_module.load_desired("dns.json")["records"]
+        if r["content"] == "verify.bing.com"
+    )
+    bing = {"type": "CNAME", "name": f"{bing['name']}.loremfile.dev", "content": bing["content"]}
     quoted = {"type": "TXT", "name": "_dmarc.loremfile.dev", "content": f'"{dmarc["content"]}"'}
 
     report = AuditReport()
-    audit.audit_dns(FakeZone({"dns_records?per_page=100": response([quoted, www])}), report)  # type: ignore[arg-type]
+    audit.audit_dns(FakeZone({"dns_records?per_page=100": response([quoted, www, bing])}), report)  # type: ignore[arg-type]
     assert report.drifted == []
 
     # Negative control: a real difference in the text is still drift.
     wrong = {**quoted, "content": '"v=DMARC1; p=none"'}
     report = AuditReport()
-    audit.audit_dns(FakeZone({"dns_records?per_page=100": response([wrong, www])}), report)  # type: ignore[arg-type]
+    audit.audit_dns(FakeZone({"dns_records?per_page=100": response([wrong, www, bing])}), report)  # type: ignore[arg-type]
     assert [f.resource for f in report.drifted] == ["dns:TXT _dmarc"]
 
 
@@ -453,3 +459,47 @@ def test_the_check_reads_the_account_path_with_the_r2_token(
     monkeypatch.setenv("R2_BUCKET", "loremfile-public")
     audit.audit_bucket_locks(client, AuditReport(zone_id="z"))
     assert ASKED == [(R2_TOKEN, "GET /accounts/acct/r2/buckets/loremfile-public/lock")]
+
+
+# --- a name that holds more than one record ---------------------------------
+
+
+def dns_audit(
+    monkeypatch: pytest.MonkeyPatch, listed: list[dict[str, Any]], desired: list[dict[str, Any]]
+) -> AuditReport:
+    monkeypatch.setattr(audit, "load_desired", lambda _name: {"records": desired})
+    client = FakeZone({"dns_records?per_page=100": response(listed)})
+    report = AuditReport(zone_id="z")
+    audit.audit_dns(client, report)  # type: ignore[arg-type]
+    return report
+
+
+def test_a_txt_record_beside_someone_elses_is_ok_not_drift(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The apex holds SPF and a site-verification string. Ours sitting beside theirs is
+    the zone being correct; before the fix only the last-listed record was compared."""
+    listed = [
+        {"type": "TXT", "name": "loremfile.dev", "content": "v=spf1 include:x ~all"},
+        {"type": "TXT", "name": "loremfile.dev", "content": "google-site-verification=abc"},
+    ]
+    report = dns_audit(
+        monkeypatch,
+        listed,
+        [{"type": "TXT", "name": "loremfile.dev", "content": "v=spf1 include:x ~all"}],
+    )
+    assert report.findings[0].state == OK
+
+
+def test_drift_only_when_no_candidate_matches(monkeypatch: pytest.MonkeyPatch) -> None:
+    listed = [
+        {"type": "TXT", "name": "loremfile.dev", "content": "v=spf1 include:x ~all"},
+        {"type": "TXT", "name": "loremfile.dev", "content": "google-site-verification=abc"},
+    ]
+    report = dns_audit(
+        monkeypatch,
+        listed,
+        [{"type": "TXT", "name": "loremfile.dev", "content": "v=spf1 include:different ~all"}],
+    )
+    assert report.findings[0].state == DRIFT
+    assert "2 present" in report.findings[0].detail

@@ -249,6 +249,7 @@ def test_dns_never_deletes_and_only_adds_what_is_missing() -> None:
     existing = [
         {"id": "d1", "type": "TXT", "name": "_dmarc.loremfile.dev", "content": _dmarc()["content"]},
         {"id": "m1", "type": "MX", "name": "loremfile.dev", "content": "route1.mx.cloudflare.net"},
+        _bing(),
     ]
     client = FakeClient({f"GET /zones/{OUR_ZONE}/dns_records": ok(existing)})
     client.verify_zone()
@@ -273,6 +274,25 @@ def _www() -> dict[str, Any]:
     return {"id": "w1", "type": "CNAME", "name": "www.loremfile.dev", "content": "loremfile.dev"}
 
 
+def _bing() -> dict[str, Any]:
+    """The Bing site-verification CNAME, as the zone holds it once applied.
+
+    Present in these listings so each test below asserts about the record it is named
+    for: without it every one of them would also show the Bing row being created.
+    """
+    row = next(
+        r
+        for r in apply_module.load_desired("dns.json")["records"]
+        if r["content"] == "verify.bing.com"
+    )
+    return {
+        "id": "b1",
+        "type": "CNAME",
+        "name": f"{row['name']}.loremfile.dev",
+        **{"content": row["content"]},
+    }
+
+
 def _dns_client(records: list[dict[str, Any]], **answers: Response) -> FakeClient:
     table = {f"GET /zones/{OUR_ZONE}/dns_records": ok(records), **answers}
     client = FakeClient(table)
@@ -289,7 +309,7 @@ def test_a_record_whose_content_changed_is_patched_in_place() -> None:
         "name": "_dmarc.loremfile.dev",
         "content": "v=DMARC1; p=reject; rua=mailto:reports@example.invalid; adkim=s; aspf=s",
     }
-    client = _dns_client([stale, _www()])
+    client = _dns_client([stale, _www(), _bing()])
     report = apply_module.Report()
     apply_module.apply_dns(client, report)
 
@@ -312,7 +332,7 @@ def test_a_txt_value_differing_only_by_surrounding_quotes_is_left_alone() -> Non
         "name": "_dmarc.loremfile.dev",
         "content": f'"{_dmarc()["content"]}"',
     }
-    client = _dns_client([quoted, _www()])
+    client = _dns_client([quoted, _www(), _bing()])
     report = apply_module.Report()
     apply_module.apply_dns(client, report)
     assert client.writes == []
@@ -332,7 +352,9 @@ def test_a_refused_record_update_is_manual_not_failed() -> None:
         "content": "v=DMARC1; p=none",
     }
     refused = Response(403, {"success": False, "errors": [{"code": 10000, "message": "no"}]})
-    client = _dns_client([stale, _www()], **{f"PATCH /zones/{OUR_ZONE}/dns_records/d1": refused})
+    client = _dns_client(
+        [stale, _www(), _bing()], **{f"PATCH /zones/{OUR_ZONE}/dns_records/d1": refused}
+    )
     report = apply_module.Report()
     apply_module.apply_dns(client, report)
     outcome = next(o for o in report.outcomes if o.resource == "dns:TXT _dmarc")
@@ -531,3 +553,97 @@ def test_tiered_cache_off_is_written_exactly_once() -> None:
     apply_module.apply_tiered_cache(client, report)
     assert client.writes == [("PATCH", TIERED, {"value": "on"})]
     assert [o.state for o in report.outcomes] == ["updated"]
+
+
+# --- a name that holds more than one record ---------------------------------
+
+
+def _apex_spf() -> dict[str, Any]:
+    """The Email Routing SPF record. Breaking this one stops mail arriving."""
+    return {
+        "id": "spf1",
+        "type": "TXT",
+        "name": "loremfile.dev",
+        "content": "v=spf1 include:_spf.mx.cloudflare.net ~all",
+    }
+
+
+def _apex_verification() -> dict[str, Any]:
+    return {
+        "id": "ver1",
+        "type": "TXT",
+        "name": "loremfile.dev",
+        "content": "google-site-verification=abc123",
+    }
+
+
+def test_two_txt_records_at_one_name_are_both_considered(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The defect this guards, and why it mattered.
+
+    `existing` was `{(type, name): record}`, so the apex's second TXT record replaced the
+    first and only one was ever compared. With SPF and a site-verification string both on
+    the apex, declaring either one would have PATCHed whichever the listing happened to
+    put last — rewriting SPF with a verification string, and stopping mail.
+    """
+    monkeypatch.setattr(
+        apply_module,
+        "load_desired",
+        lambda _name: {"records": [dict(_apex_verification(), id=None)]},
+    )
+    client = _dns_client([_apex_spf(), _apex_verification()])
+    report = apply_module.Report()
+    apply_module.apply_dns(client, report)
+
+    assert client.writes == [], "the declared value is already present on one of the two"
+    outcome = next(o for o in report.outcomes if o.resource.startswith("dns:TXT"))
+    assert outcome.state == "unchanged"
+
+
+def test_an_unmatched_txt_is_created_beside_its_siblings(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A TXT name holds several values, so "no match" means add one — never overwrite."""
+    wanted = {"type": "TXT", "name": "loremfile.dev", "content": "v=DMARC1-not-really"}
+    monkeypatch.setattr(apply_module, "load_desired", lambda _name: {"records": [wanted]})
+    client = _dns_client([_apex_spf(), _apex_verification()])
+    report = apply_module.Report()
+    apply_module.apply_dns(client, report)
+
+    methods = [w[0] for w in client.writes]
+    assert methods == ["POST"], f"expected a create beside the siblings, got {methods}"
+    assert "PATCH" not in methods, "patching a sibling is what breaks SPF"
+    assert client.writes[0][2]["content"] == wanted["content"]
+
+
+def test_a_single_valued_type_with_two_candidates_refuses_to_guess(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """CNAME cannot legitimately be duplicated, so two candidates mean the zone is not
+    what this code thinks it is. Failing names them; guessing would write to one at random."""
+    wanted = {"type": "CNAME", "name": "www", "content": "loremfile.dev", "proxied": True}
+    monkeypatch.setattr(apply_module, "load_desired", lambda _name: {"records": [wanted]})
+    twins = [
+        {"id": "c1", "type": "CNAME", "name": "www.loremfile.dev", "content": "old-a.example"},
+        {"id": "c2", "type": "CNAME", "name": "www.loremfile.dev", "content": "old-b.example"},
+    ]
+    client = _dns_client(twins)
+    report = apply_module.Report()
+    apply_module.apply_dns(client, report)
+
+    assert client.writes == [], "nothing is written when the target is ambiguous"
+    outcome = next(o for o in report.outcomes if o.resource == "dns:CNAME www")
+    assert outcome.state == "failed"
+    assert "old-a.example" in outcome.detail and "old-b.example" in outcome.detail
+
+
+def test_a_single_valued_type_with_one_candidate_still_patches(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Empty-set control for the test above: the ordinary case must still update."""
+    wanted = {"type": "CNAME", "name": "www", "content": "loremfile.dev", "proxied": True}
+    monkeypatch.setattr(apply_module, "load_desired", lambda _name: {"records": [wanted]})
+    stale = {"id": "c1", "type": "CNAME", "name": "www.loremfile.dev", "content": "old.example"}
+    client = _dns_client([stale])
+    report = apply_module.Report()
+    apply_module.apply_dns(client, report)
+
+    assert [w[0] for w in client.writes] == ["PATCH"]
+    assert client.writes[0][1].endswith("/c1")
