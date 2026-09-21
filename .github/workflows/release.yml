@@ -69,9 +69,20 @@ jobs:
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
+        # A tag can be re-pointed legitimately: a history rewrite moves it to the rewritten
+        # commit, and the push fires this workflow again. If the release already exists it is
+        # left alone, and this run proves it holds exactly the assets assembled here — name,
+        # size and SHA-256. Green if it does, red if it does not; never a second release.
         run: |
-          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag \
-            --title "$GITHUB_REF_NAME" --notes-file release-assets/notes.md release-assets/*
+          code=0
+          loremfile release check-existing --tag "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" --dir release-assets || code=$?
+          case "$code" in
+            0) echo "the release for $GITHUB_REF_NAME already holds exactly these assets" ;;
+            3) gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag \
+                 --title "$GITHUB_REF_NAME" --notes-file release-assets/notes.md release-assets/* ;;
+            *) exit 1 ;;
+          esac
 
   rehearse:
     needs: setup

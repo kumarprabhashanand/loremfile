@@ -1,6 +1,6 @@
 """Every job that reads or writes the zone's desired state runs one at a time (ADR-029).
 
-#58 was a race, not drift: audit run 34905539807 read `http_response_headers_transform` at
+Old issue #58 was a race, not drift: audit run 34905539807 read `http_response_headers_transform` at
 22:44:46 and saw three rules, while deploy run 34905529591 applied the fourth at 22:45:16-21.
 `deploy.yml` had a concurrency group; `infra.yml` and `audit.yml` had none. They now share
 one, never cancel a run in progress, and leave `health.yml` and the determinism job outside.

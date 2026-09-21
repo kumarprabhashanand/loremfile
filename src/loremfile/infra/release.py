@@ -286,6 +286,77 @@ def changelog_excerpt(changelog: str, version: str) -> str:
     return f"{lines[starts[0]]}\n\n{text}\n"
 
 
+#: `release check-existing` exit codes. Not 2: click exits 2 on a usage error, and a usage
+#: error read as "no release yet" would create a second release.
+EXISTING_MATCHES = 0
+NO_RELEASE = 3
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def published_release(repository: str, tag: str) -> list[dict[str, Any]] | None:
+    """The assets of the release for `tag`, or None when no release exists for it."""
+    executable = shutil.which("gh")
+    if executable is None:
+        raise ReleaseError("gh is not on PATH; it lives in the toolchain image")
+    done = subprocess.run(  # noqa: S603 - fixed argv, no shell
+        [executable, "api", f"repos/{repository}/releases/tags/{tag}"],
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+    )
+    if done.returncode != 0:
+        if "HTTP 404" in done.stderr:
+            return None
+        raise ReleaseError(f"could not read the release for {tag}: {done.stderr.strip()}")
+    assets = json.loads(done.stdout).get("assets")
+    if not isinstance(assets, list):
+        raise ReleaseError(f"the release for {tag} has no assets list")
+    return assets
+
+
+def existing_release_differences(assets_dir: Path, published: list[dict[str, Any]]) -> list[str]:
+    """What differs between the assets assembled here and a release that already exists.
+
+    A tag can be re-pointed legitimately — a history rewrite moves it to the rewritten commit
+    — and the push fires this workflow again. The published release is left alone; this proves
+    it holds exactly what this run assembled, by name, size and SHA-256. An asset whose digest
+    the API does not report is a difference: an unverifiable match is not a match.
+    """
+    local = {path.name: path for path in sorted(assets_dir.iterdir()) if path.is_file()}
+    remote = {str(asset.get("name")): asset for asset in published}
+    differences = [
+        f"{name}: assembled here, not on the release"
+        for name in sorted(local.keys() - remote.keys())
+    ]
+    differences += [
+        f"{name}: on the release, not assembled here"
+        for name in sorted(remote.keys() - local.keys())
+    ]
+    for name in sorted(local.keys() & remote.keys()):
+        path, asset = local[name], remote[name]
+        if asset.get("size") != path.stat().st_size:
+            differences.append(
+                f"{name}: {asset.get('size')} bytes on the release, {path.stat().st_size} assembled"
+            )
+            continue
+        digest = asset.get("digest")
+        if not isinstance(digest, str) or not digest.startswith("sha256:"):
+            differences.append(
+                f"{name}: the release reports no sha256 digest, so it cannot be compared"
+            )
+        elif digest.removeprefix("sha256:") != sha256_file(path):
+            differences.append(f"{name}: sha256 differs from the one assembled")
+    return differences
+
+
 @dataclass
 class ReleaseAssets:
     plan: Plan

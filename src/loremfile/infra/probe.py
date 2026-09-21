@@ -727,7 +727,7 @@ def check_404s_are_cached() -> str:
     Measured M2.4 runs 7-9: a non-zero `Age` on the first sample of every run
     (`Age 3s after 1 sample(s)`, three times). That is **pre-registered branch (a)** —
     3/3 runs positive with `K <= 2` — decided before any of the runs were read, with the
-    full three-branch matrix and its thresholds recorded on issue #20 so the standard is
+    full three-branch matrix and its thresholds recorded on old issue #20 so the standard is
     auditable rather than remembered.
 
     The history is worth keeping, because the wrong answer was recorded twice. The

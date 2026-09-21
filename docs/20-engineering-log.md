@@ -12,6 +12,17 @@ see: fixtures added or removed, changes to the URL contract, and changes to the 
 Release notes are built from `CHANGELOG.md`'s `## [X.Y.Z]` section (`09` §3.5), so this
 file is never read by the release path.
 
+### Changed — personal information removed from the repository history (2026-09-21)
+
+- On 2026-09-21 the repository was deleted and recreated to remove personal information from its
+  history, so that no pull request, cached commit or old reference survived. `main` restarts at a
+  single commit, `285fda6555` "Initial public release (v1.1.0)", whose tree is exactly the old
+  `main`'s, and `v1.1.0` points at it.
+- Commits, pull requests and issues from before the recreation are cited as "old commit",
+  "old PR #N" and "old issue #N"; none of them resolves any more.
+- `HISTORY_REWRITTEN_AT` stays at 2026-09-21T12:03:25Z, so no deploy created before it is used
+  as a base.
+
 ### Added
 
 - The specification (`docs/00`–`19`) and its three review passes (`review/`).
@@ -75,7 +86,7 @@ fires every run stops meaning anything — the failure already avoided for `font
 - **Written URLs are purged,** so a cached 404 or the old bytes cannot shadow the restore.
 - **`infra.yml` gains `restore-dry-run` and `restore`.** Inputs pass through `env` and are checked for
   shape, and the tests run that guard itself. A real restore ends with `verify-live --mode full`.
-- `redact` follows with `loremfile release redact`, now that #62's asset layout is on `main`.
+- `redact` follows with `loremfile release redact`, now that old PR #62's asset layout is on `main`.
 
 ### Fixed — container jobs let git read the checkout explicitly; the release rehearsal can run
 
@@ -172,14 +183,14 @@ called the replacement benign; it now says for what.
   so every merge would switch it off mid-incident. `docs/11` §7.4 step 4 now says not to merge
   `infra/` changes or dispatch an apply while it is on, and not to close the resulting
   `security_level` drift issue by hand.
-- **Stale since #59:** `docs/09` still described the ruleset phases and tiered cache as
+- **Stale since old PR #59:** `docs/09` still described the ruleset phases and tiered cache as
   unconditional writes — the table and the "`audit` is not `apply --dry-run`" paragraph — and so
   did `audit.yml`'s header, `infra audit --help`, `audit.py` and three test docstrings. They
   describe compare-before-write now, with the history in one sentence.
 
 ### Fixed — the zone is serialised, and `apply` compares before it writes
 
-**#58 was a race.** Audit run `34905539807` read `http_response_headers_transform` at
+**old issue #58 was a race.** Audit run `34905539807` read `http_response_headers_transform` at
 22:44:46 (three rules) while deploy run `34905529591` applied the fourth at 22:45:16–21, and
 opened "Infra drift detected" for a zone that was mid-apply. The owner's re-run closed it
 through `gh_issue`. `deploy.yml` had a concurrency group; `infra.yml` and `audit.yml` had none.
@@ -194,7 +205,7 @@ through `gh_issue`. `deploy.yml` had a concurrency group; `infra.yml` and `audit
   issue — is in ADR-029 and `docs/11` §7.2, with the check to make on a busy Monday.
 
 **`apply` reported the write, not the change.** It PUT all five ruleset phases and PATCHed
-tiered cache unconditionally, reporting `updated` each time — so #56's dry run named four
+tiered cache unconditionally, reporting `updated` each time — so old PR #56's dry run named four
 phases as changing that the audit called `ok`. It now reads first and writes only when
 `compare_rules` — moved into `apply` and shared with the audit — finds a difference, reporting
 `unchanged` otherwise; a phase that cannot be read is `failed`, not written blind. The zone
@@ -211,15 +222,15 @@ guard is unchanged.
 
 ### Recorded — the second control drill, M0.5, and the Python move
 
-- **Drill 2** (after #54): run `34904105748` ended **red** and opened #57 at 22:29:39; run
+- **Drill 2** (after old PR #54): run `34904105748` ended **red** and opened old issue #57 at 22:29:39; run
   `34904276619` closed it at 22:30:45. **The runs overlapped** — run 2 started at 22:28:25,
   before run 1 ended at 22:29:48. The issue events are in order, so the owner accepted it with
   no re-drill; `docs/11` §7.11 records both run ids, the overlap, and a new rule to wait for each
   run before dispatching the next.
 - **M0.5 is done**: the email routes exist. Their destinations are not recorded.
-- **Dependabot closed #50 itself** (22:26:13, "python is no longer being updated by
+- **Dependabot closed old PR #50 itself** (22:26:13, "python is no longer being updated by
   Dependabot") once the ignore rule took effect; the comment no longer says "held". The Python
-  3.12 → 3.14 move is tracked in #1 as a milestone-boundary item with a determinism audit.
+  3.12 → 3.14 move is tracked in old issue #1 as a milestone-boundary item with a determinism audit.
 
 ### Changed — DMARC requests no reports; apply updates DNS records by content
 
@@ -247,17 +258,17 @@ the expected result is `dns:TXT _dmarc ok` with 0 drift.
 
 ### Verified — the first alerting control drill, and the defect it found
 
-The three post-#52 dispatches were run by the owner on 2026-09-14 and read here; they are
+The three dispatches after old PR #52 were run by the owner on 2026-09-14 and read here; they are
 the first entry in `docs/11` §7.11, a new standing drill re-run after any change to
 `health.yml`, `audit.yml` or `gh_issue`.
 
-- **Injected failure** (`34894269022`): `1 failing` on `pdf/minimal.pdf`; issue **#53
-  opened**; cost and rotation still ran. **Clean run** (`34896362833`): #53 **closed**.
+- **Injected failure** (`34894269022`): `1 failing` on `pdf/minimal.pdf`; **old issue #53
+  opened**; cost and rotation still ran. **Clean run** (`34896362833`): old issue #53 **closed**.
   **`force_ops_log`** (`34896553339`): the keep-alive ran for the first time and created
   the `ops-log` branch (`6f2bf9b`), rows 2026-09-08 → 2026-09-14.
 - **The defect: a check that found a problem ended the run green.** Run 1 opened its issue
   and was a green tick. `verify`, cost and rotation each swallow their result so the others
-  still run, and nothing failed the job afterwards. **This corrects #52's entry above**,
+  still run, and nothing failed the job afterwards. **This corrects old PR #52's entry above**,
   which said the job "still ends red" — true only for a step that *crashes*.
 
 ### Fixed — health ends red on a finding; full mode; the ops-log header
@@ -278,14 +289,14 @@ the first entry in `docs/11` §7.11, a new standing drill re-run after any chang
   write, so the live branch heals on its next commit; rows are still merged. `docs/11` §8
   now documents the implemented columns.
 - **`docs/09` §3.3's spec YAML** no longer switches the checkout for the ops-log commit (the
-  bug #52 fixed in the workflow but only noted in the listing), and lists the verdict step.
+  bug old PR #52 fixed in the workflow but only noted in the listing), and lists the verdict step.
 
 ### Changed — Dependabot proposes only patch-level Python base-image updates
 
 `ignore` on `python` for `version-update:semver-minor` and `semver-major`, syntax checked
 against GitHub's Dependabot options reference. The base image is part of the determinism
 contract, so a minor or major Python move is one deliberate PR at a milestone boundary with
-a determinism audit. **#50 (3.12 → 3.14) and #51 are held, not closed.** GitHub's reference
+a determinism audit. **old PR #50 (3.12 → 3.14) and old PR #51 are held, not closed.** GitHub's reference
 does not say how a tag like `3.12-slim-bookworm` is read as a version, so whether the rule
 suppresses that exact proposal is confirmed on Dependabot's next run, not assumed.
 
@@ -824,7 +835,7 @@ operation and a billed one is kept rather than elided.
   other check.
 - `--inject-failure` reports a path as failing without it being so (REQ-27): the issue
   automation is a control, and a control nobody has seen fire is one nobody can trust.
-- `docs/19` §3 and #22: the Class B measurement is **corroborated from the billing side**
+- `docs/19` §3 and old issue #22: the Class B measurement is **corroborated from the billing side**
   — the owner reads R2 → Overview's Class B month-to-date counter immediately before and
   after the run, because it is not reachable from an API token. Two agreeing consumption
   records, or a disagreement that is a finding in its own right. If they agree, RISK-22's
@@ -840,7 +851,7 @@ operation and a billed one is kept rather than elided.
   `actionType: GetObject` with `actionStatus: userError` — a GET for a key that does not
   exist — so a delta in *that* counter is 404s and nothing else. A 24-hour read already
   shows **1,329** of them, which are this project's own probe bursts.
-- **The measurement is pre-registered in `docs/19` §3 and on #22**, and the 404 result
+- **The measurement is pre-registered in `docs/19` §3 and on old issue #22**, and the 404 result
   re-scoped it: with 404s confirmed cached, repeating one path would measure the *cache*
   rather than the billing, so it fires **1,000 unique paths**. Thresholds, the quiet
   window and the baseline-stability requirement are fixed before the run; an unstable

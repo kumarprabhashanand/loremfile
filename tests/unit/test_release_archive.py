@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import tarfile
@@ -24,6 +25,8 @@ from loremfile import cli, config
 from loremfile.infra import release, verify_live
 from loremfile.infra.release import Plan, ReleaseError
 from loremfile.manifest import Manifest, render_sha256sums
+
+ROOT = Path(__file__).resolve().parents[2]
 
 WORKFLOW = Path(__file__).resolve().parents[2] / ".github" / "workflows" / "release.yml"
 
@@ -495,3 +498,131 @@ def test_the_rehearsal_never_publishes() -> None:
     runs = [step.get("run", "") for step in steps("rehearse")]
     assert any("loremfile release archive --rehearsal" in run for run in runs)
     assert not any("gh release" in run for run in runs)
+
+
+# --- a release that already exists for the tag -----------------------------------------------
+# A history rewrite re-points a tag, and the push fires release.yml again. The published
+# release must be left alone, and the run must go green only if it holds exactly what the run
+# assembled (after the history rewrite the run went red instead, on "a release with the same
+# tag name already exists", with the release untouched).
+
+
+def _assembled(tmp_path: Path) -> Path:
+    out = tmp_path / "release-assets"
+    out.mkdir()
+    (out / "manifest.json").write_bytes(b'{"fixtures": []}\n')
+    (out / "notes.md").write_bytes(b"Release one.\n")
+    return out
+
+
+def _as_published(directory: Path) -> list[dict[str, object]]:
+    return [
+        {"name": p.name, "size": p.stat().st_size, "digest": f"sha256:{release.sha256_file(p)}"}
+        for p in sorted(directory.iterdir())
+    ]
+
+
+def test_an_identical_existing_release_has_no_differences(tmp_path: Path) -> None:
+    assets = _assembled(tmp_path)
+    assert release.existing_release_differences(assets, _as_published(assets)) == []
+
+
+@pytest.mark.parametrize(
+    ("change", "expected"),
+    [
+        (lambda pub: pub[:1], "notes.md: assembled here, not on the release"),
+        (
+            lambda pub: [*pub, {"name": "extra.tar", "size": 1, "digest": "sha256:0"}],
+            "extra.tar: on the release",
+        ),
+        (lambda pub: [{**pub[0], "size": 1}, pub[1]], "manifest.json: 1 bytes on the release"),
+        (
+            lambda pub: [{**pub[0], "digest": "sha256:" + "0" * 64}, pub[1]],
+            "manifest.json: sha256 differs",
+        ),
+        (
+            lambda pub: [{k: v for k, v in pub[0].items() if k != "digest"}, pub[1]],
+            "no sha256 digest",
+        ),
+    ],
+)
+def test_every_kind_of_difference_is_reported(tmp_path: Path, change, expected: str) -> None:
+    """Negative controls: each way an existing release can differ must be caught. A match that
+    cannot be verified — no digest — is a difference, not a pass."""
+    assets = _assembled(tmp_path)
+    found = release.existing_release_differences(assets, change(_as_published(assets)))
+    assert any(expected in line for line in found), found
+
+
+def _fake_gh(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    stdout: str = "",
+    stderr: str = "",
+    code: int = 0,
+) -> None:
+    """A real executable named gh on PATH, so the subprocess call itself runs."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    script = bin_dir / "gh"
+    script.write_text(
+        f"#!/bin/sh\nprintf '%s' '{stdout}'\nprintf '%s' '{stderr}' >&2\nexit {code}\n"
+    )
+    script.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{bin_dir}:{os.environ['PATH']}")
+
+
+def test_no_release_for_the_tag_is_none(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _fake_gh(tmp_path, monkeypatch, stderr="gh: Not Found (HTTP 404)", code=1)
+    assert release.published_release("o/r", "v1.1.0") is None
+
+
+def test_a_release_that_cannot_be_read_is_an_error_not_absence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Read as "no release", a failed lookup would create a second one."""
+    _fake_gh(tmp_path, monkeypatch, stderr="gh: Server Error (HTTP 502)", code=1)
+    with pytest.raises(release.ReleaseError, match="502"):
+        release.published_release("o/r", "v1.1.0")
+
+
+def test_an_existing_release_returns_its_assets(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _fake_gh(tmp_path, monkeypatch, stdout='{"assets": [{"name": "notes.md", "size": 13}]}')
+    assert release.published_release("o/r", "v1.1.0") == [{"name": "notes.md", "size": 13}]
+
+
+@pytest.mark.parametrize(
+    ("published", "code"),
+    [(None, 3), ("same", 0), ("different", 1)],
+)
+def test_check_existing_exits_0_on_a_match_3_on_no_release_and_1_otherwise(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, published: str | None, code: int
+) -> None:
+    """The workflow creates a release only on 3. 2 is avoided because click uses it."""
+    assets = _assembled(tmp_path)
+    answer = {None: None, "same": _as_published(assets), "different": _as_published(assets)[:1]}[
+        published
+    ]
+    monkeypatch.setattr(release, "published_release", lambda _repo, _tag: answer)
+    result = CliRunner().invoke(
+        cli.main,
+        ["release", "check-existing", "--tag", "v1.1.0", "--repo", "o/r", "--dir", str(assets)],
+    )
+    assert result.exit_code == code, result.output
+
+
+def test_the_workflow_creates_a_release_only_when_none_exists() -> None:
+    step = next(
+        s
+        for s in yaml.safe_load((ROOT / ".github" / "workflows" / "release.yml").read_text())[
+            "jobs"
+        ]["release"]["steps"]
+        if s.get("name") == "Publish the release"
+    )
+    run = step["run"]
+    assert run.index("release check-existing") < run.index("gh release create")
+    assert "3) gh release create" in run, "create only when check-existing reports no release"
+    assert "*) exit 1" in run, "a differing or unreadable release must fail the run"

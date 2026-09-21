@@ -231,8 +231,8 @@ jobs:
       # The run's verdict. Each check above swallows its own result so the others still
       # run and each reports to its own issue, which also meant a check that FOUND a
       # problem ended the run green: the first control drill (2026-09-14) injected a
-      # failure, opened #53, and still produced a green tick. This turns any reported
-      # finding into a red run.
+      # failure, opened old issue #53, and still produced a green tick. This turns any
+      # reported finding into a red run.
       #
       # LAST, on purpose. Placed before the two did-not-complete steps, its exit 1 would
       # make `failure()` open "Health workflow did not complete" on every real finding,
