@@ -1,0 +1,17 @@
+# kmz fixtures (docs/05 §3.7). Launch-set rows only; the rest are P1b.
+format: kmz
+family: data
+mime: application/vnd.google-earth.kmz
+description: >-
+  The same KML placemarks, zipped as KMZ with doc.kml first.
+seo_title: "Sample KMZ file for testing mapping tools — free, CC0"
+related: [kml, geojson]
+fixtures:
+  - name: placemarks-10.kmz
+    phase: 1
+    generator: geo.kmz_placemarks
+    params: { count: 10 }
+    description: "Ten Point placemarks zipped as KMZ, with doc.kml as the first entry as the format expects."
+    tags: [data, geo, archive]
+    expect: { entries: 1, placemarks: 10, method: deflate }
+    size_class: free

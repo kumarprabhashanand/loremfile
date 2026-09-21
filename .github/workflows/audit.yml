@@ -1,0 +1,212 @@
+# Weekly infrastructure audit, and a monthly determinism audit (docs/09 §3.4).
+#
+# THIS JOB READS. It holds T1, which can write — Cloudflare tokens cannot be split
+# read/write per call — so "the audit never calls apply" is enforced in three places
+# rather than trusted: the client is constructed `read_only=True` and raises on any
+# write, a unit test walks `audit.py`'s AST for write calls, and no step here invokes
+# `infra apply`.
+#
+# WHY IT IS NOT `apply --dry-run`. A dry run says what `apply` would write: a difference
+# is `updated`, it exits 0 and opens no issue, and its client no-ops writes rather than
+# refusing them. (Until 2026-09-15 it also reported `updated` for all five ruleset phases
+# plus `tiered-cache` on every run.) `infra audit` reads the deployed state, compares
+# content, and exits 1 on drift and 2 when it could not run, so `drift` means drift.
+name: audit
+
+on:
+  schedule:
+    # Mondays, offset from the health check so two containers do not start together.
+    - cron: "43 5 * * 1"
+  workflow_dispatch:
+    inputs:
+      determinism:
+        description: Run the determinism audit too, regardless of the date
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  setup:
+    runs-on: ubuntu-24.04
+    outputs:
+      digest: ${{ steps.read.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: read
+        run: echo "digest=$(cat tools/TOOLCHAIN_DIGEST)" >> "$GITHUB_OUTPUT"
+
+  infra:
+    needs: setup
+    runs-on: ubuntu-24.04
+    environment: production
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 20
+    # Job-level, on this job only: it is the one that reads the zone. The `determinism` job
+    # touches nothing remote and stays outside the group (ADR-029). The race this prevents is
+    # #58: this job read a ruleset phase at 22:44:46 while a deploy applied a fourth rule at
+    # 22:45:16, and reported drift that was only a timing artefact.
+    concurrency:
+      group: loremfile-zone
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      # Three outcomes, not two: 0 clean, 1 drift, 2 the audit could not run. They have
+      # different remedies (docs/11 §7.2), so they get different issue titles under the
+      # same label — `gh_issue` de-duplicates on label **plus** title, so the two open and
+      # close independently.
+      - id: audit
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          # Account-scoped R2 read, kept separate from the zone token on purpose: T1 is
+          # zone-only and must stay so (`08` §6). Without it `audit_bucket_locks` reports
+          # `unreadable` — never `ok`, because an audit that could not look has learned
+          # nothing about the rules protecting every published prefix.
+          R2_READ_TOKEN: ${{ secrets.R2_READ_TOKEN }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+        run: |
+          loremfile infra audit --json > audit.json && code=0 || code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
+      # The same reasoning as the determinism summary: `--json` sends everything to the
+      # file, so without this the log shows a green tick and no checks. Code 2 means the
+      # audit could not run, and then there is no report to summarise.
+      - name: Summarise the infra audit
+        if: ${{ !cancelled() && (steps.audit.outputs.code == '0' || steps.audit.outputs.code == '1') }}
+        run: |
+          python - audit.json <<'PY'
+          import json, sys
+
+          import collections
+
+          report = json.load(open(sys.argv[1]))
+          items = report.get("items")
+          if items is None:
+              sys.exit(f"{sys.argv[1]}: no items; the audit's scope is unknown")
+          # One count per state. Collapsing them printed `failing=1` every week for a
+          # permission warning (url-normalization, which T1 cannot read), which is how a
+          # clean run learns to look broken and a broken one stops standing out.
+          state = collections.Counter(item.get("status", "unknown") for item in items)
+          print(
+              f"infra audit: checks={len(items)} ok={state['ok']} "
+              f"warning={state['warning']} unreadable={state['unreadable']} "
+              f"drift={state['drift']}"
+          )
+          PY
+
+      # Only when the audit actually ran. An audit that could not run has learned nothing
+      # about drift, so the drift issue is left exactly as it was found — otherwise a bad
+      # token would close a genuine drift issue by reporting `ok`.
+      - name: Open, update or close the infra-drift issue
+        if: ${{ !cancelled() && (steps.audit.outputs.code == '0' || steps.audit.outputs.code == '1') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m loremfile.gh_issue \
+            --label infra-drift \
+            --title "Infra drift detected" \
+            --report audit.json \
+            --state ${{ steps.audit.outputs.code == '1' && 'failing' || 'ok' }}
+
+      # `!cancelled()`: independent of the drift report above. The first real run of this
+      # workflow failed in that step, and the implicit `success()` then skipped this one.
+      #
+      # `ok` only on a 0 or 1 — an audit that *ran*. Keyed on `== '2'` alone, a job that
+      # died before the audit step produced any code at all would read as `ok` and close
+      # an open could-not-run issue on a run that never looked at the zone.
+      - name: Open, update or close the audit-could-not-run issue
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m loremfile.gh_issue \
+            --label infra-drift \
+            --title "Infra audit could not run" \
+            --report audit.json \
+            --state ${{ (steps.audit.outputs.code == '0' || steps.audit.outputs.code == '1') && 'ok' || 'failing' }}
+
+  # First Monday of the month, or on demand. Separate job because it needs no
+  # credentials at all and takes minutes rather than seconds.
+  determinism:
+    needs: setup
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - id: due
+        run: |
+          day="$(date -u +%d)"
+          if [ "${{ inputs.determinism }}" = "true" ] || [ "$day" -le 7 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "not the first Monday of the month; skipping the determinism audit"
+          fi
+
+      - name: Install the package
+        if: steps.due.outputs.run == 'true'
+        run: pip install -e . --no-deps
+
+      # Reports drift; never a deploy blocker. Published bytes are canonical (docs/06
+      # §8), and `expected_drift` paths are reported in their own section so the four
+      # fixtures that are known not to reproduce off this fleet do not train anyone to
+      # scroll past the section that matters.
+      - id: audit
+        if: steps.due.outputs.run == 'true'
+        run: |
+          loremfile build --all --audit --json > determinism.json \
+            || echo "drift=true" >> "$GITHUB_OUTPUT"
+
+      # A redirected stdout and a suppressed stderr block left this job reporting a
+      # green tick with no counts at all: an audit of 0 rows looked exactly like an audit
+      # of 228 (2026-09-16, run 35135699048). The scope goes in the log, and a report
+      # without counts fails the step rather than printing nothing.
+      - name: Summarise the determinism audit
+        if: steps.due.outputs.run == 'true'
+        run: |
+          python - determinism.json <<'PY'
+          import json, sys
+
+          report = json.load(open(sys.argv[1]))
+          counts = report.get("summary") or {}
+          wanted = ("regenerated", "drifted", "expected_drift")
+          missing = [key for key in wanted if key not in counts]
+          if missing:
+              sys.exit(f"{sys.argv[1]}: no {', '.join(missing)}; the audit's scope is unknown")
+          line = "determinism audit: " + " ".join(f"{key}={counts[key]}" for key in wanted)
+          if not counts["expected_drift"]:
+              # Not evidence that the flagged rows reproduced: every row carrying
+              # `expected_drift` is still `awaiting_publication`, so it is absent from
+              # manifest.json and the audit never compares it (09 §3.4).
+              line += " (flagged rows are awaiting publication, so none were compared)"
+          print(line)
+          PY
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: steps.due.outputs.run == 'true'
+        with:
+          name: determinism-report
+          path: determinism.json
+          retention-days: 90
+
+      - name: Open, update or close the determinism issue
+        if: steps.due.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m loremfile.gh_issue \
+            --label determinism \
+            --title "Fixtures no longer regenerate byte for byte" \
+            --report determinism.json \
+            --state ${{ steps.audit.outputs.drift == 'true' && 'failing' || 'ok' }}

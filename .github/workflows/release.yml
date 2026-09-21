@@ -1,0 +1,99 @@
+# Release archives on a version tag (docs/09 §3.5, ADR-007).
+#
+# THE BYTES COME FROM PRODUCTION. Every member is fetched from https://loremfile.dev as any
+# client would and verified against the manifest hash before it enters the archive. The
+# archive is the restore path when the bucket is gone (docs/11 §7.6), so it has to hold what
+# was served: an archive of rebuilt fixtures would prove only that the generators still run.
+#
+# NO ENVIRONMENT, AND NO SECRET. `production` admits only `main`, so a job started by a tag
+# could not read its secrets, and this workflow needs none: the fetch is public and
+# GITHUB_TOKEN creates the release. `contents: write` belongs to the one job that publishes.
+#
+# DISPATCH IS A REHEARSAL. It assembles and verifies the whole archive from the dispatched
+# commit's manifest and publishes nothing, so the first time this fetches every published
+# byte is not also the first public release. It tolerates a missing CHANGELOG section,
+# which a tag run does not.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # tools/TOOLCHAIN_DIGEST is the only place the digest lives (docs/09 §2).
+  setup:
+    runs-on: ubuntu-24.04
+    outputs:
+      digest: ${{ steps.read.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: read
+        run: echo "digest=$(cat tools/TOOLCHAIN_DIGEST)" >> "$GITHUB_OUTPUT"
+
+  # A pushed tag, and nothing else: a dispatch run from a tag ref must not publish.
+  release:
+    needs: setup
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    steps:
+      # All history and every tag: the previous release is found among the tags reachable
+      # from this commit, and a delta reads its manifest with `git show <tag>:manifest.json`.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      # actions/checkout marks the repository safe only in a temporary global git config it
+      # creates for its own step, so git in any later step of this container is refused as
+      # "dubious ownership". The first rehearsal (run 34982012684) died on exactly that, in
+      # `git tag --merged HEAD` (docs/09 §3.5). tests/unit/test_workflow_git.py pins the rule.
+      - name: Let git read the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Assemble and verify the archive from the published bytes
+        run: loremfile release archive --tag "$GITHUB_REF_NAME" --out release-assets
+
+      # `--verify-tag`: never create a tag here that the maintainer did not push. `--repo`:
+      # gh must not infer the repository from a container checkout (gh_issue).
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "$GITHUB_REF_NAME" --notes-file release-assets/notes.md release-assets/*
+
+  rehearse:
+    needs: setup
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      # actions/checkout marks the repository safe only in a temporary global git config it
+      # creates for its own step, so git in any later step of this container is refused as
+      # "dubious ownership". The first rehearsal (run 34982012684) died on exactly that, in
+      # `git tag --merged HEAD` (docs/09 §3.5). tests/unit/test_workflow_git.py pins the rule.
+      - name: Let git read the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Assemble and verify the archive, publishing nothing
+        run: loremfile release archive --rehearsal --out release-assets

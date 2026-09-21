@@ -1,0 +1,18 @@
+# QuickTime video (docs/05 §3.3). Launch-set rows only; the rest are P1b.
+format: mov
+family: video
+mime: video/quicktime
+description: >-
+  QuickTime, MP4's older sibling and what Apple devices produce. H.264 plus AAC,
+  faststart, so the moov atom is ahead of the media.
+seo_title: "Sample MOV video files for testing — free, CC0, hotlinkable"
+related: [mp4, mkv]
+fixtures:
+  - name: 720p-5s.mov
+    phase: 1
+    generator: media_video.mp4
+    params: { width: 1280, height: 720, duration: 5, container: mov }
+    description: "1280x720 at 30 fps, five seconds, H.264 plus AAC in a QuickTime container."
+    tags: [video, codec-h264, codec-aac]
+    expect: { width: 1280, height: 720, vcodec: h264, acodec: aac }
+    size_class: free

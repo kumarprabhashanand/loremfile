@@ -1,0 +1,18 @@
+# geojson fixtures (docs/05 §3.7). Launch-set rows only; the rest are P1b.
+format: geojson
+family: data
+mime: application/geo+json
+description: >-
+  A GeoJSON FeatureCollection of Point features over open ocean, so no invented
+  data sits on top of a real place.
+seo_title: "Sample GeoJSON file for testing mapping tools — free, CC0"
+related: [gpx, kml, json]
+fixtures:
+  - name: points-100.geojson
+    phase: 1
+    generator: geo.geojson_points
+    params: { count: 100 }
+    description: "A FeatureCollection of 100 Point features with names, categories, elevations and timestamps, inside a bounding box over the South Atlantic."
+    tags: [data, geo]
+    expect: { features: 100, top_type: object, geometry_types: ["Point"] }
+    size_class: free

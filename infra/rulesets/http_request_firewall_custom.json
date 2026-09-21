@@ -1,0 +1,5 @@
+{ "rules": [
+  { "ref": "loremfile_legal_pages_ai_agents", "description": "block self-identifying AI agents on the two legal pages that name the operator (ADR-028, ADR-030)", "enabled": true,
+    "expression": "(http.request.uri.path eq \"/legal/imprint\" or http.request.uri.path eq \"/legal/imprint/\" or http.request.uri.path eq \"/legal/privacy\" or http.request.uri.path eq \"/legal/privacy/\") and (http.user_agent contains \"GPTBot\" or http.user_agent contains \"OAI-SearchBot\" or http.user_agent contains \"ChatGPT-User\" or http.user_agent contains \"OAI-AdsBot\" or http.user_agent contains \"ClaudeBot\" or http.user_agent contains \"Claude-User\" or http.user_agent contains \"Claude-SearchBot\")",
+    "action": "block" }
+] }

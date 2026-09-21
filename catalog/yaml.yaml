@@ -1,0 +1,18 @@
+# yaml fixtures (docs/05 §3.7). Launch-set rows only; the rest are P1b.
+format: yaml
+family: data
+mime: application/yaml
+description: >-
+  A configuration file using the YAML features that trip parsers: anchors, aliases,
+  merge keys, block scalars, multiple documents and the full scalar type set.
+seo_title: "Sample YAML config file for testing parsers — free, CC0"
+related: [json, toml, ini]
+fixtures:
+  - name: config-all-types.yaml
+    phase: 1
+    generator: data.yaml_config
+    params: {}
+    description: "Anchors, aliases and a merge key, two documents in one stream, literal and folded block scalars, and every scalar type including .inf, .nan, dates and timestamps."
+    tags: [data]
+    expect: { documents: 2 }
+    size_class: free

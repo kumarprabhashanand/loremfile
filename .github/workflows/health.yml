@@ -1,0 +1,255 @@
+# Daily health, cost and rotation checks (docs/09 §3.3).
+#
+# Every step here reports through `gh_issue`, which de-duplicates by **label plus title**
+# and closes with a comment on the first green run. A week of failure is one issue with
+# seven comments, not seven issues — and an issue that never closes itself is one nobody
+# reads by the second month.
+#
+# The defacement check compares every site key with this job's own rebuild of the commit,
+# never with anything read from the bucket (docs/09 §3.3).
+name: health
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+    inputs:
+      inject_failure:
+        description: >-
+          REQ-27 control: report this manifest path as failing without it being so, to
+          watch the issue automation fire. A control nobody has seen fire is one nobody
+          can trust.
+        type: string
+        default: ""
+      force_ops_log:
+        description: >-
+          Write the ops-log rows now, regardless of the day. The Monday commit is gated
+          on a scheduled run, so without this it cannot be exercised on demand, and a
+          step that has never run is not known to work.
+        type: boolean
+        default: false
+
+permissions:
+  # `contents: write` only for the Monday ops-log commit, and only to the `ops-log`
+  # branch, which carries no ruleset. `main` keeps its pull-request requirement and no
+  # workflow is granted a bypass — rulesets bypass by actor, not by path.
+  contents: write
+  issues: write
+
+jobs:
+  setup:
+    runs-on: ubuntu-24.04
+    outputs:
+      digest: ${{ steps.read.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: read
+        run: echo "digest=$(cat tools/TOOLCHAIN_DIGEST)" >> "$GITHUB_OUTPUT"
+
+  check:
+    needs: setup
+    runs-on: ubuntu-24.04
+    environment: production
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    # Not re-sized: this bounds the whole job, and the whole job has never completed —
+    # the first four scheduled runs died at step five. The dominant step is bounded on its
+    # own below, from measurements. Re-size this after the first complete run.
+    timeout-minutes: 30
+    env:
+      CLOUDFLARE_ANALYTICS_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      - name: Let git read the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      # The defacement baseline. The legal pages need their real values to hash equal to
+      # production, and nothing here prints a page (docs/13 §3b).
+      - name: Build the site
+        env:
+          IMPRINT_NAME: ${{ secrets.IMPRINT_NAME }}
+          IMPRINT_STREET: ${{ secrets.IMPRINT_STREET }}
+          IMPRINT_POSTAL_CITY: ${{ secrets.IMPRINT_POSTAL_CITY }}
+          # Optional. One string per line that must never appear in the tree; the list
+          # lives only in this secret, because committing it would publish it (13 §3b).
+          FORBIDDEN_STRINGS: ${{ secrets.FORBIDDEN_STRINGS }}
+        run: loremfile site build --legal-values-from-env
+
+      # Needs no credentials: it reads production over HTTPS like any visitor.
+      #
+      # FULL mode since 2026-09-14: `daily` never hashed a fixture of 1 MB or more, and full
+      # closes that gap without any sampling logic. It GETs and hashes all 161 fixtures
+      # (414 MB; R2 egress is free, +161 Class B reads a run).
+      #
+      # Timeout, from measurements (docs/12 §4): full took 132 s from a home connection
+      # where daily took 56 s, so full is ~2.4x daily. Daily on GitHub runners took 21-99 s
+      # across seven runs, so full on CI is estimated at 50-235 s, ~330 s at 228 fixtures.
+      # 10 minutes is ~1.8x that worst estimate. CI full itself is UNMEASURED until the
+      # first run after this change; revisit the bound if it exceeds 5 minutes.
+      # +10 minutes when a site key differs: the retry waits out a deploy still publishing.
+      - id: verify
+        timeout-minutes: 20
+        run: |
+          loremfile verify-live --mode full --json --site-dir build/site --site-retry-seconds 600 \
+            ${{ inputs.inject_failure != '' && format('--inject-failure {0}', inputs.inject_failure) || '' }} \
+            > health.json || echo "failed=true" >> "$GITHUB_OUTPUT"
+
+      # Failing unless verify-live **completed and passed**. A timeout kills the shell before
+      # `|| echo failed=true` runs, so a check that hung sets no output — reading only that
+      # output would report `ok` and close a genuine health issue on a run that learned
+      # nothing. The step outcome is what distinguishes "passed" from "never finished".
+      - name: Open, update or close the health issue
+        if: ${{ !cancelled() }}
+        run: |
+          python -m loremfile.gh_issue \
+            --label health \
+            --title "Health check failing" \
+            --report health.json \
+            --state ${{ (steps.verify.outcome == 'success' && steps.verify.outputs.failed != 'true') && 'ok' || 'failing' }}
+
+      # The cost control. The Free plan has no usage-based billing notification, so this
+      # read *is* the alert (docs/19 §2, ADR-025). The threshold is applied here rather
+      # than inside `usage`, because the threshold belongs to the check and the command
+      # should stay a plain reader.
+      # `!cancelled()` on every step after the first report, because the checks are
+      # independent and their *reporting* is not a precondition for running them. The
+      # first four scheduled runs of this workflow proved why: `gh_issue` failed on the
+      # health issue, and with the default implicit `success()` every later step was
+      # skipped — the cost check, the rotation reminder and the ops-log keep-alive did
+      # not run once in four days. This only stops one failure from hiding the others: a
+      # step that CRASHES turns the job red, but a check that FINDS a problem does not by
+      # itself. The final verdict step does that.
+      - name: R2 usage and the cost threshold
+        id: cost
+        if: ${{ !cancelled() }}
+        run: |
+          loremfile usage --json > usage.json || true
+          state=$(python - <<'PY'
+          import json
+          report = json.load(open("usage.json"))
+          reads = report.get("summary", {}).get("r2_class_b_mtd")
+          print("failing" if isinstance(reads, int) and reads > 5_000_000 else "ok")
+          PY
+          )
+          # Recorded before reporting, so the verdict sees it even if reporting fails.
+          echo "state=$state" >> "$GITHUB_OUTPUT"
+          python -m loremfile.gh_issue \
+            --label cost \
+            --title "R2 operations above threshold" \
+            --report usage.json \
+            --state "$state"
+
+      - name: Token rotation reminder
+        id: rotation
+        if: ${{ !cancelled() }}
+        run: |
+          loremfile tokens-due --json > tokens.json || true
+          state=$(python - <<'PY'
+          import json
+          report = json.load(open("tokens.json"))
+          print("failing" if report.get("summary", {}).get("due", 0) else "ok")
+          PY
+          )
+          echo "state=$state" >> "$GITHUB_OUTPUT"
+          python -m loremfile.gh_issue \
+            --label rotation-due \
+            --title "Token rotation due" \
+            --report tokens.json \
+            --state "$state"
+
+      # Mondays only. One commit a week, one row a day: the commit backfills every day in
+      # the report, so the series is daily even though the commits are weekly (docs/19
+      # §3.2 — the pre-launch missing-key rate cannot be reconstructed after Cloudflare's
+      # 90-day retention). It doubles as the keep-alive that stops GitHub disabling
+      # scheduled workflows after 60 quiet days.
+      - name: Weekly ops-log commit
+        if: ${{ !cancelled() && (github.event_name == 'schedule' || inputs.force_ops_log) }}
+        env:
+          # Defaulted where it is read, not compared where it is used: on `schedule`
+          # there are no inputs, and `inputs.force_ops_log` is empty (docs/09 §3.2).
+          FORCE: ${{ inputs.force_ops_log || false }}
+        run: |
+          [ "$(date -u +%u)" = "1" ] || [ "$FORCE" = "true" ] \
+            || { echo "not Monday; no ops-log commit"; exit 0; }
+          # In a separate worktree, not by switching this checkout. docs/09 §3.3's block
+          # checked out `ops-log` in place — which replaces `src/`, the editable install
+          # `python -m loremfile.ops_log` needs, one line before running it. It could never
+          # have succeeded, and never ran to show it.
+          LOG="${RUNNER_TEMP:-/tmp}/ops-log-worktree"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global --add safe.directory "$LOG"
+          # Absent on the very first run, when git prints "fatal: couldn't find remote ref".
+          # Expected, and silenced so a green log carries no alarming line to misread.
+          git fetch origin +refs/heads/ops-log:refs/remotes/origin/ops-log 2>/dev/null || true
+          if git show-ref --verify --quiet refs/remotes/origin/ops-log; then
+            git worktree add -B ops-log "$LOG" origin/ops-log
+          else
+            git worktree add --detach "$LOG" HEAD
+            git -C "$LOG" checkout --orphan ops-log
+            git -C "$LOG" rm -rfq .
+          fi
+          python -m loremfile.ops_log --from usage.json --append "$LOG/ops-log.md"
+          git -C "$LOG" add ops-log.md
+          git -C "$LOG" diff --cached --quiet && { echo "no new rows"; exit 0; }
+          git -C "$LOG" -c user.name=loremfile-bot -c user.email=bot@loremfile.dev \
+            commit -qm "ops-log: weekly numbers"
+          git -C "$LOG" push origin ops-log
+
+      # The catch-all. Every check above reports its own result, but a job can also fail
+      # in ways no check reports — a crashed reader, a broken step, a timeout. Four silent
+      # days are the reason this exists. It cannot catch a broken `gh_issue` itself (that
+      # is what the subprocess-boundary tests and the post-merge `inject_failure` dispatch
+      # are for), but it catches everything else.
+      - name: Open the did-not-complete issue
+        if: ${{ failure() }}
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          printf '{"command": "health.yml", "ok": false, "summary": {}, "errors": ["A step failed or timed out: %s"]}\n' "$RUN_URL" > incomplete.json
+          python -m loremfile.gh_issue \
+            --label health \
+            --title "Health workflow did not complete" \
+            --report incomplete.json \
+            --state failing
+
+      - name: Close the did-not-complete issue
+        if: ${{ success() }}
+        run: |
+          python -m loremfile.gh_issue \
+            --label health \
+            --title "Health workflow did not complete" \
+            --report health.json \
+            --state ok
+
+      # The run's verdict. Each check above swallows its own result so the others still
+      # run and each reports to its own issue, which also meant a check that FOUND a
+      # problem ended the run green: the first control drill (2026-09-14) injected a
+      # failure, opened #53, and still produced a green tick. This turns any reported
+      # finding into a red run.
+      #
+      # LAST, on purpose. Placed before the two did-not-complete steps, its exit 1 would
+      # make `failure()` open "Health workflow did not complete" on every real finding,
+      # and the `success()`-gated close would never run again.
+      - name: Fail the run if any check reported a problem
+        if: ${{ !cancelled() }}
+        env:
+          VERIFY_FAILED: ${{ steps.verify.outcome != 'success' || steps.verify.outputs.failed == 'true' }}
+          COST_STATE: ${{ steps.cost.outputs.state }}
+          ROTATION_STATE: ${{ steps.rotation.outputs.state }}
+        run: |
+          failing=""
+          if [ "$VERIFY_FAILED" = "true" ]; then failing="$failing health"; fi
+          if [ "$COST_STATE" = "failing" ]; then failing="$failing cost"; fi
+          if [ "$ROTATION_STATE" = "failing" ]; then failing="$failing rotation-due"; fi
+          if [ -n "$failing" ]; then
+            echo "checks reported a problem:$failing (see the open issues with those labels)"
+            exit 1
+          fi
+          echo "no check reported a problem"

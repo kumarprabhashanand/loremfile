@@ -1,0 +1,621 @@
+{
+  "catalog_version": "1.1.0",
+  "formats": [
+    {
+      "format": "7z",
+      "count": 1,
+      "total_bytes": 1356,
+      "url": "https://loremfile.dev/7z",
+      "index": "https://loremfile.dev/7z/index.json",
+      "mime_default": "application/x-7z-compressed"
+    },
+    {
+      "format": "aac",
+      "count": 1,
+      "total_bytes": 490385,
+      "url": "https://loremfile.dev/aac",
+      "index": "https://loremfile.dev/aac/index.json",
+      "mime_default": "audio/aac"
+    },
+    {
+      "format": "aiff",
+      "count": 1,
+      "total_bytes": 529254,
+      "url": "https://loremfile.dev/aiff",
+      "index": "https://loremfile.dev/aiff/index.json",
+      "mime_default": "audio/aiff"
+    },
+    {
+      "format": "arrow",
+      "count": 1,
+      "total_bytes": 260674,
+      "url": "https://loremfile.dev/arrow",
+      "index": "https://loremfile.dev/arrow/index.json",
+      "mime_default": "application/vnd.apache.arrow.file"
+    },
+    {
+      "format": "avi",
+      "count": 1,
+      "total_bytes": 1734596,
+      "url": "https://loremfile.dev/avi",
+      "index": "https://loremfile.dev/avi/index.json",
+      "mime_default": "video/x-msvideo"
+    },
+    {
+      "format": "avif",
+      "count": 1,
+      "total_bytes": 1284,
+      "url": "https://loremfile.dev/avif",
+      "index": "https://loremfile.dev/avif/index.json",
+      "mime_default": "image/avif"
+    },
+    {
+      "format": "avro",
+      "count": 1,
+      "total_bytes": 109157,
+      "url": "https://loremfile.dev/avro",
+      "index": "https://loremfile.dev/avro/index.json",
+      "mime_default": "application/avro"
+    },
+    {
+      "format": "bin",
+      "count": 23,
+      "total_bytes": 230715033,
+      "url": "https://loremfile.dev/bin",
+      "index": "https://loremfile.dev/bin/index.json",
+      "mime_default": "application/octet-stream"
+    },
+    {
+      "format": "bmp",
+      "count": 1,
+      "total_bytes": 196662,
+      "url": "https://loremfile.dev/bmp",
+      "index": "https://loremfile.dev/bmp/index.json",
+      "mime_default": "image/bmp"
+    },
+    {
+      "format": "bz2",
+      "count": 1,
+      "total_bytes": 151824,
+      "url": "https://loremfile.dev/bz2",
+      "index": "https://loremfile.dev/bz2/index.json",
+      "mime_default": "application/x-bzip2"
+    },
+    {
+      "format": "css",
+      "count": 1,
+      "total_bytes": 579,
+      "url": "https://loremfile.dev/css",
+      "index": "https://loremfile.dev/css/index.json",
+      "mime_default": "text/css"
+    },
+    {
+      "format": "csv",
+      "count": 8,
+      "total_bytes": 36370708,
+      "url": "https://loremfile.dev/csv",
+      "index": "https://loremfile.dev/csv/index.json",
+      "mime_default": "text/csv"
+    },
+    {
+      "format": "der",
+      "count": 1,
+      "total_bytes": 359,
+      "url": "https://loremfile.dev/der",
+      "index": "https://loremfile.dev/der/index.json",
+      "mime_default": "application/pkix-cert"
+    },
+    {
+      "format": "docx",
+      "count": 5,
+      "total_bytes": 11251430,
+      "url": "https://loremfile.dev/docx",
+      "index": "https://loremfile.dev/docx/index.json",
+      "mime_default": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    },
+    {
+      "format": "edge",
+      "count": 19,
+      "total_bytes": 1002742,
+      "url": "https://loremfile.dev/edge",
+      "index": "https://loremfile.dev/edge/index.json",
+      "mime_default": "application/octet-stream"
+    },
+    {
+      "format": "eml",
+      "count": 2,
+      "total_bytes": 5620,
+      "url": "https://loremfile.dev/eml",
+      "index": "https://loremfile.dev/eml/index.json",
+      "mime_default": "message/rfc822"
+    },
+    {
+      "format": "epub",
+      "count": 1,
+      "total_bytes": 4871,
+      "url": "https://loremfile.dev/epub",
+      "index": "https://loremfile.dev/epub/index.json",
+      "mime_default": "application/epub+zip"
+    },
+    {
+      "format": "flac",
+      "count": 1,
+      "total_bytes": 411820,
+      "url": "https://loremfile.dev/flac",
+      "index": "https://loremfile.dev/flac/index.json",
+      "mime_default": "audio/flac"
+    },
+    {
+      "format": "geojson",
+      "count": 1,
+      "total_bytes": 35344,
+      "url": "https://loremfile.dev/geojson",
+      "index": "https://loremfile.dev/geojson/index.json",
+      "mime_default": "application/geo+json"
+    },
+    {
+      "format": "gif",
+      "count": 2,
+      "total_bytes": 37593,
+      "url": "https://loremfile.dev/gif",
+      "index": "https://loremfile.dev/gif/index.json",
+      "mime_default": "image/gif"
+    },
+    {
+      "format": "gpx",
+      "count": 1,
+      "total_bytes": 12873,
+      "url": "https://loremfile.dev/gpx",
+      "index": "https://loremfile.dev/gpx/index.json",
+      "mime_default": "application/gpx+xml"
+    },
+    {
+      "format": "gz",
+      "count": 2,
+      "total_bytes": 253127,
+      "url": "https://loremfile.dev/gz",
+      "index": "https://loremfile.dev/gz/index.json",
+      "mime_default": "application/gzip"
+    },
+    {
+      "format": "har",
+      "count": 1,
+      "total_bytes": 3636,
+      "url": "https://loremfile.dev/har",
+      "index": "https://loremfile.dev/har/index.json",
+      "mime_default": "application/json"
+    },
+    {
+      "format": "hls",
+      "count": 6,
+      "total_bytes": 4122346,
+      "url": "https://loremfile.dev/hls",
+      "index": "https://loremfile.dev/hls/index.json",
+      "mime_default": "application/vnd.apple.mpegurl"
+    },
+    {
+      "format": "html",
+      "count": 4,
+      "total_bytes": 5031,
+      "url": "https://loremfile.dev/html",
+      "index": "https://loremfile.dev/html/index.json",
+      "mime_default": "text/html"
+    },
+    {
+      "format": "ico",
+      "count": 1,
+      "total_bytes": 1507,
+      "url": "https://loremfile.dev/ico",
+      "index": "https://loremfile.dev/ico/index.json",
+      "mime_default": "image/x-icon"
+    },
+    {
+      "format": "ics",
+      "count": 2,
+      "total_bytes": 721,
+      "url": "https://loremfile.dev/ics",
+      "index": "https://loremfile.dev/ics/index.json",
+      "mime_default": "text/calendar"
+    },
+    {
+      "format": "ini",
+      "count": 1,
+      "total_bytes": 468,
+      "url": "https://loremfile.dev/ini",
+      "index": "https://loremfile.dev/ini/index.json",
+      "mime_default": "text/plain"
+    },
+    {
+      "format": "ipynb",
+      "count": 1,
+      "total_bytes": 1094,
+      "url": "https://loremfile.dev/ipynb",
+      "index": "https://loremfile.dev/ipynb/index.json",
+      "mime_default": "application/x-ipynb+json"
+    },
+    {
+      "format": "jpg",
+      "count": 9,
+      "total_bytes": 11425413,
+      "url": "https://loremfile.dev/jpg",
+      "index": "https://loremfile.dev/jpg/index.json",
+      "mime_default": "image/jpeg"
+    },
+    {
+      "format": "js",
+      "count": 1,
+      "total_bytes": 158,
+      "url": "https://loremfile.dev/js",
+      "index": "https://loremfile.dev/js/index.json",
+      "mime_default": "text/javascript"
+    },
+    {
+      "format": "json",
+      "count": 6,
+      "total_bytes": 11514230,
+      "url": "https://loremfile.dev/json",
+      "index": "https://loremfile.dev/json/index.json",
+      "mime_default": "application/json"
+    },
+    {
+      "format": "kml",
+      "count": 1,
+      "total_bytes": 2394,
+      "url": "https://loremfile.dev/kml",
+      "index": "https://loremfile.dev/kml/index.json",
+      "mime_default": "application/vnd.google-earth.kml+xml"
+    },
+    {
+      "format": "kmz",
+      "count": 1,
+      "total_bytes": 790,
+      "url": "https://loremfile.dev/kmz",
+      "index": "https://loremfile.dev/kmz/index.json",
+      "mime_default": "application/vnd.google-earth.kmz"
+    },
+    {
+      "format": "log",
+      "count": 2,
+      "total_bytes": 277759,
+      "url": "https://loremfile.dev/log",
+      "index": "https://loremfile.dev/log/index.json",
+      "mime_default": "text/plain"
+    },
+    {
+      "format": "m4a",
+      "count": 1,
+      "total_bytes": 486931,
+      "url": "https://loremfile.dev/m4a",
+      "index": "https://loremfile.dev/m4a/index.json",
+      "mime_default": "audio/mp4"
+    },
+    {
+      "format": "mbox",
+      "count": 1,
+      "total_bytes": 2922,
+      "url": "https://loremfile.dev/mbox",
+      "index": "https://loremfile.dev/mbox/index.json",
+      "mime_default": "application/mbox"
+    },
+    {
+      "format": "md",
+      "count": 2,
+      "total_bytes": 5016,
+      "url": "https://loremfile.dev/md",
+      "index": "https://loremfile.dev/md/index.json",
+      "mime_default": "text/markdown"
+    },
+    {
+      "format": "mkv",
+      "count": 1,
+      "total_bytes": 1971254,
+      "url": "https://loremfile.dev/mkv",
+      "index": "https://loremfile.dev/mkv/index.json",
+      "mime_default": "video/x-matroska"
+    },
+    {
+      "format": "mov",
+      "count": 1,
+      "total_bytes": 1974629,
+      "url": "https://loremfile.dev/mov",
+      "index": "https://loremfile.dev/mov/index.json",
+      "mime_default": "video/quicktime"
+    },
+    {
+      "format": "mp3",
+      "count": 7,
+      "total_bytes": 11690256,
+      "url": "https://loremfile.dev/mp3",
+      "index": "https://loremfile.dev/mp3/index.json",
+      "mime_default": "audio/mpeg"
+    },
+    {
+      "format": "mp4",
+      "count": 6,
+      "total_bytes": 11794239,
+      "url": "https://loremfile.dev/mp4",
+      "index": "https://loremfile.dev/mp4/index.json",
+      "mime_default": "video/mp4"
+    },
+    {
+      "format": "ndjson",
+      "count": 1,
+      "total_bytes": 408525,
+      "url": "https://loremfile.dev/ndjson",
+      "index": "https://loremfile.dev/ndjson/index.json",
+      "mime_default": "application/x-ndjson"
+    },
+    {
+      "format": "ogg",
+      "count": 1,
+      "total_bytes": 95083,
+      "url": "https://loremfile.dev/ogg",
+      "index": "https://loremfile.dev/ogg/index.json",
+      "mime_default": "audio/ogg"
+    },
+    {
+      "format": "ogv",
+      "count": 1,
+      "total_bytes": 3801030,
+      "url": "https://loremfile.dev/ogv",
+      "index": "https://loremfile.dev/ogv/index.json",
+      "mime_default": "video/ogg"
+    },
+    {
+      "format": "otf",
+      "count": 1,
+      "total_bytes": 4268,
+      "url": "https://loremfile.dev/otf",
+      "index": "https://loremfile.dev/otf/index.json",
+      "mime_default": "font/otf"
+    },
+    {
+      "format": "parquet",
+      "count": 2,
+      "total_bytes": 9870481,
+      "url": "https://loremfile.dev/parquet",
+      "index": "https://loremfile.dev/parquet/index.json",
+      "mime_default": "application/vnd.apache.parquet"
+    },
+    {
+      "format": "pdf",
+      "count": 12,
+      "total_bytes": 10955016,
+      "url": "https://loremfile.dev/pdf",
+      "index": "https://loremfile.dev/pdf/index.json",
+      "mime_default": "application/pdf"
+    },
+    {
+      "format": "pem",
+      "count": 1,
+      "total_bytes": 542,
+      "url": "https://loremfile.dev/pem",
+      "index": "https://loremfile.dev/pem/index.json",
+      "mime_default": "application/x-pem-file"
+    },
+    {
+      "format": "png",
+      "count": 8,
+      "total_bytes": 1031116,
+      "url": "https://loremfile.dev/png",
+      "index": "https://loremfile.dev/png/index.json",
+      "mime_default": "image/png"
+    },
+    {
+      "format": "pptx",
+      "count": 3,
+      "total_bytes": 1094475,
+      "url": "https://loremfile.dev/pptx",
+      "index": "https://loremfile.dev/pptx/index.json",
+      "mime_default": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    },
+    {
+      "format": "rtf",
+      "count": 1,
+      "total_bytes": 1694,
+      "url": "https://loremfile.dev/rtf",
+      "index": "https://loremfile.dev/rtf/index.json",
+      "mime_default": "application/rtf"
+    },
+    {
+      "format": "sql",
+      "count": 1,
+      "total_bytes": 429863,
+      "url": "https://loremfile.dev/sql",
+      "index": "https://loremfile.dev/sql/index.json",
+      "mime_default": "application/sql"
+    },
+    {
+      "format": "sqlite",
+      "count": 2,
+      "total_bytes": 401408,
+      "url": "https://loremfile.dev/sqlite",
+      "index": "https://loremfile.dev/sqlite/index.json",
+      "mime_default": "application/vnd.sqlite3"
+    },
+    {
+      "format": "srt",
+      "count": 1,
+      "total_bytes": 268,
+      "url": "https://loremfile.dev/srt",
+      "index": "https://loremfile.dev/srt/index.json",
+      "mime_default": "application/x-subrip"
+    },
+    {
+      "format": "svg",
+      "count": 2,
+      "total_bytes": 4053,
+      "url": "https://loremfile.dev/svg",
+      "index": "https://loremfile.dev/svg/index.json",
+      "mime_default": "image/svg+xml"
+    },
+    {
+      "format": "tar",
+      "count": 3,
+      "total_bytes": 12660,
+      "url": "https://loremfile.dev/tar",
+      "index": "https://loremfile.dev/tar/index.json",
+      "mime_default": "application/x-tar"
+    },
+    {
+      "format": "tiff",
+      "count": 1,
+      "total_bytes": 921740,
+      "url": "https://loremfile.dev/tiff",
+      "index": "https://loremfile.dev/tiff/index.json",
+      "mime_default": "image/tiff"
+    },
+    {
+      "format": "toml",
+      "count": 1,
+      "total_bytes": 751,
+      "url": "https://loremfile.dev/toml",
+      "index": "https://loremfile.dev/toml/index.json",
+      "mime_default": "application/toml"
+    },
+    {
+      "format": "ts",
+      "count": 1,
+      "total_bytes": 2054840,
+      "url": "https://loremfile.dev/ts",
+      "index": "https://loremfile.dev/ts/index.json",
+      "mime_default": "video/mp2t"
+    },
+    {
+      "format": "tsv",
+      "count": 1,
+      "total_bytes": 249645,
+      "url": "https://loremfile.dev/tsv",
+      "index": "https://loremfile.dev/tsv/index.json",
+      "mime_default": "text/tab-separated-values"
+    },
+    {
+      "format": "ttf",
+      "count": 1,
+      "total_bytes": 5616,
+      "url": "https://loremfile.dev/ttf",
+      "index": "https://loremfile.dev/ttf/index.json",
+      "mime_default": "font/ttf"
+    },
+    {
+      "format": "txt",
+      "count": 16,
+      "total_bytes": 23664843,
+      "url": "https://loremfile.dev/txt",
+      "index": "https://loremfile.dev/txt/index.json",
+      "mime_default": "text/plain"
+    },
+    {
+      "format": "vcf",
+      "count": 2,
+      "total_bytes": 805,
+      "url": "https://loremfile.dev/vcf",
+      "index": "https://loremfile.dev/vcf/index.json",
+      "mime_default": "text/vcard"
+    },
+    {
+      "format": "vtt",
+      "count": 1,
+      "total_bytes": 251,
+      "url": "https://loremfile.dev/vtt",
+      "index": "https://loremfile.dev/vtt/index.json",
+      "mime_default": "text/vtt"
+    },
+    {
+      "format": "wasm",
+      "count": 1,
+      "total_bytes": 41,
+      "url": "https://loremfile.dev/wasm",
+      "index": "https://loremfile.dev/wasm/index.json",
+      "mime_default": "application/wasm"
+    },
+    {
+      "format": "wav",
+      "count": 2,
+      "total_bytes": 10529244,
+      "url": "https://loremfile.dev/wav",
+      "index": "https://loremfile.dev/wav/index.json",
+      "mime_default": "audio/wav"
+    },
+    {
+      "format": "webmanifest",
+      "count": 1,
+      "total_bytes": 542,
+      "url": "https://loremfile.dev/webmanifest",
+      "index": "https://loremfile.dev/webmanifest/index.json",
+      "mime_default": "application/manifest+json"
+    },
+    {
+      "format": "webp",
+      "count": 2,
+      "total_bytes": 4002,
+      "url": "https://loremfile.dev/webp",
+      "index": "https://loremfile.dev/webp/index.json",
+      "mime_default": "image/webp"
+    },
+    {
+      "format": "woff",
+      "count": 1,
+      "total_bytes": 1848,
+      "url": "https://loremfile.dev/woff",
+      "index": "https://loremfile.dev/woff/index.json",
+      "mime_default": "font/woff"
+    },
+    {
+      "format": "woff2",
+      "count": 1,
+      "total_bytes": 1072,
+      "url": "https://loremfile.dev/woff2",
+      "index": "https://loremfile.dev/woff2/index.json",
+      "mime_default": "font/woff2"
+    },
+    {
+      "format": "xlsx",
+      "count": 6,
+      "total_bytes": 11250551,
+      "url": "https://loremfile.dev/xlsx",
+      "index": "https://loremfile.dev/xlsx/index.json",
+      "mime_default": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    },
+    {
+      "format": "xml",
+      "count": 3,
+      "total_bytes": 10792,
+      "url": "https://loremfile.dev/xml",
+      "index": "https://loremfile.dev/xml/index.json",
+      "mime_default": "application/xml"
+    },
+    {
+      "format": "xz",
+      "count": 1,
+      "total_bytes": 198972,
+      "url": "https://loremfile.dev/xz",
+      "index": "https://loremfile.dev/xz/index.json",
+      "mime_default": "application/x-xz"
+    },
+    {
+      "format": "yaml",
+      "count": 1,
+      "total_bytes": 1091,
+      "url": "https://loremfile.dev/yaml",
+      "index": "https://loremfile.dev/yaml/index.json",
+      "mime_default": "application/yaml"
+    },
+    {
+      "format": "zip",
+      "count": 8,
+      "total_bytes": 110033201,
+      "url": "https://loremfile.dev/zip",
+      "index": "https://loremfile.dev/zip/index.json",
+      "mime_default": "application/zip"
+    },
+    {
+      "format": "zst",
+      "count": 1,
+      "total_bytes": 239346,
+      "url": "https://loremfile.dev/zst",
+      "index": "https://loremfile.dev/zst/index.json",
+      "mime_default": "application/zstd"
+    }
+  ]
+}

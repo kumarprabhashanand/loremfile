@@ -1,0 +1,611 @@
+"""Apply `infra/` to Cloudflare (docs/08 §6). Runs only from `infra.yml`.
+
+The eight steps are the spec's. What is not in the spec, and is the reason to read this
+file before running it, is the order of the first two: **the zone is verified before any
+step executes, and `--dry-run` prints the zone id and hostname it resolved.** Ruleset
+entry points are written with a full PUT, so a request aimed at the wrong zone replaces
+that zone's rules rather than adding to them, and this account holds two unrelated
+production zones. `cloudflare_api.Client` refuses every write until `verify_zone`
+succeeds; this module makes sure it is called first and that a human can see the answer.
+
+A step whose endpoint returns 403 is reported as `manual` with the dashboard path from
+docs/08 §2 rather than failing the run — the permission names are still being confirmed
+(docs/08 §6's table). A step that fails for any other reason fails the run.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+from loremfile import config
+from loremfile.config import SITE_HOST
+from loremfile.infra.cloudflare_api import (
+    Client,
+    CloudflareError,
+    Response,
+    ZoneScopeError,
+)
+
+#: Ruleset phases this project writes. No other phase is ever read or written: a full
+#: PUT on a phase someone else configured would replace their rules with ours.
+WRITTEN_PHASES = (
+    "http_request_dynamic_redirect",
+    "http_request_transform",
+    "http_response_headers_transform",
+    "http_request_cache_settings",
+    "http_ratelimit",
+)
+
+#: Verified by GET, never written (docs/08 §5.6, resolved 2026-09-09). Cloudflare deploys
+#: its managed ruleset into this phase itself; the zone has no entry point of its own, and
+#: `GET .../phases/http_request_firewall_managed/entrypoint` answers `10003: could not
+#: find entrypoint ruleset`. Creating one to add our `execute` rule would be writing a
+#: phase Cloudflare owns, so apply confirms the managed ruleset is deployed and stops.
+MANAGED_PHASE = "http_request_firewall_managed"
+
+#: Written one rule at a time, never as a phase (ADR-030): incident rules are added here
+#: in the dashboard (docs/11 §7.4), and a PUT of the entry point would delete them.
+#: `cloudflare_api.NEVER_PUT_PHASES` refuses that PUT before it is sent.
+CUSTOM_PHASE = "http_request_firewall_custom"
+#: The custom rules that are ours to add, change or delete. Any other rule is a warning.
+CUSTOM_REF_PREFIX = "loremfile_"
+
+#: Every phase with a file in infra/rulesets/.
+PHASES = (*WRITTEN_PHASES, MANAGED_PHASE, CUSTOM_PHASE)
+
+#: docs/08 §6: the dashboard path to print when the API refuses a step.
+FALLBACKS = {
+    "zone-settings": "Speed / Security / Scrape Shield toggles",
+    "bot-management": "Security → Bots (docs/08 §2 step 13)",
+    "dnssec": "DNS → Settings → Enable DNSSEC",
+    "dns": "DNS → Records",
+    "http_request_dynamic_redirect": "Rules → Redirect Rules",
+    "http_request_transform": "Rules → Transform Rules",
+    "http_response_headers_transform": "Rules → Transform Rules",
+    "http_request_cache_settings": "Caching → Cache Rules",
+    "http_ratelimit": "Security → WAF → Rate limiting rules",
+    "http_request_firewall_managed": "Security → WAF → Managed rules",
+    "http_request_firewall_custom": "Security → WAF → Custom rules",
+    "tiered-cache": "Caching → Tiered Cache → Smart Tiered Cache",
+    "url-normalization": "Rules → Settings → Normalize incoming URLs",
+    "bucket-locks": "R2 → loremfile-public → Settings → Bucket lock rules "
+    "(needs R2_READ_TOKEN; docs/08 §7b)",
+}
+
+#: The zone reports this name. docs/08 §5.6 had the words transposed ("Cloudflare Free
+#: Managed Ruleset"), so a name match would never have succeeded — corrected 2026-09-09.
+FREE_MANAGED_RULESET_NAME = "Cloudflare Managed Free Ruleset"
+
+#: A refused permission is reported as `manual` with a dashboard path; a missing
+#: endpoint means the API shape in docs/08 §6 is wrong and M2.3 has to record that.
+HTTP_FORBIDDEN = 403
+HTTP_NOT_FOUND = 404
+#: Cloudflare's error when a phase has no entry point ruleset (docs/08 §5.6).
+NO_ENTRY_POINT_CODE = 10003
+
+
+@dataclass
+class Outcome:
+    resource: str
+    state: str  # unchanged | updated | skipped | manual | warning | failed
+    detail: str = ""
+
+
+@dataclass
+class Report:
+    zone_id: str = ""
+    hostname: str = ""
+    outcomes: list[Outcome] = field(default_factory=list)
+
+    @property
+    def ok(self) -> bool:
+        return not any(o.state == "failed" for o in self.outcomes)
+
+    def add(self, resource: str, state: str, detail: str = "") -> None:
+        self.outcomes.append(Outcome(resource, state, detail))
+
+    def render(self) -> str:
+        width = max((len(o.resource) for o in self.outcomes), default=8)
+        lines = [f"zone {self.zone_id} ({self.hostname})", ""]
+        lines += [
+            f"  {o.resource.ljust(width)}  {o.state:<9} {o.detail}".rstrip() for o in self.outcomes
+        ]
+        manual = [o for o in self.outcomes if o.state == "manual"]
+        if manual:
+            lines += ["", "Needs the dashboard:"]
+            lines += [f"  {o.resource}: {o.detail}" for o in manual]
+        warnings = [o for o in self.outcomes if o.state == "warning"]
+        if warnings:
+            lines += ["", "Not ours, left in place (warning):"]
+            lines += [f"  {o.resource}: {o.detail}" for o in warnings]
+        return "\n".join(lines)
+
+
+def infra_dir() -> Path:
+    return config.repo_root() / "infra"
+
+
+def load_desired(name: str) -> Any:  # noqa: ANN401 - each file has its own shape
+    return json.loads((infra_dir() / name).read_text(encoding="utf-8"))
+
+
+def _is_forbidden(response: Response) -> bool:
+    return response.status == HTTP_FORBIDDEN
+
+
+def no_entry_point(response: Response) -> bool:
+    """No entry point in this phase: HTTP 404, or Cloudflare's 10003 whatever the status."""
+    codes = {e.get("code") for e in response.body.get("errors") or [] if isinstance(e, dict)}
+    return response.status == HTTP_NOT_FOUND or NO_ENTRY_POINT_CODE in codes
+
+
+def apply_zone_settings(client: Client, report: Report) -> None:
+    desired = load_desired("zone-settings.json")
+    current = client.get(f"/zones/{client.zone_id}/settings")
+    if not current.ok:
+        report.add("zone-settings", "failed", current.errors)
+        return
+    by_id = {item["id"]: item for item in (current.result or [])}
+    for key, value in desired.items():
+        found = by_id.get(key)
+        if found is None:
+            report.add(f"setting:{key}", "skipped", "not offered on this plan")
+            continue
+        if not found.get("editable", True):
+            # Pro-only settings (polish, mirage): audit only complains if not off.
+            report.add(f"setting:{key}", "skipped", f"read-only, is {found.get('value')!r}")
+            continue
+        if found.get("value") == value:
+            report.add(f"setting:{key}", "unchanged")
+            continue
+        response = client.patch(f"/zones/{client.zone_id}/settings/{key}", {"value": value})
+        if response.ok:
+            report.add(f"setting:{key}", "updated", f"{found.get('value')!r} → {value!r}")
+        elif _is_forbidden(response):
+            report.add(f"setting:{key}", "manual", FALLBACKS["zone-settings"])
+        else:
+            report.add(f"setting:{key}", "failed", response.errors)
+
+
+def apply_bot_management(client: Client, report: Report) -> None:
+    desired = load_desired("bot-management.json")
+    current = client.get(f"/zones/{client.zone_id}/bot_management")
+    if _is_forbidden(current):
+        report.add("bot-management", "manual", FALLBACKS["bot-management"])
+        return
+    if current.ok and all((current.result or {}).get(k) == v for k, v in desired.items()):
+        report.add("bot-management", "unchanged")
+        return
+    response = client.put(f"/zones/{client.zone_id}/bot_management", desired)
+    if response.ok:
+        report.add("bot-management", "updated")
+    elif _is_forbidden(response):
+        report.add("bot-management", "manual", FALLBACKS["bot-management"])
+    else:
+        report.add("bot-management", "failed", response.errors)
+
+
+def apply_dnssec(client: Client, report: Report) -> None:
+    current = client.get(f"/zones/{client.zone_id}/dnssec")
+    if _is_forbidden(current):
+        report.add("dnssec", "manual", FALLBACKS["dnssec"])
+        return
+    if current.ok and (current.result or {}).get("status") == "active":
+        report.add("dnssec", "unchanged", "active")
+        return
+    response = client.patch(f"/zones/{client.zone_id}/dnssec", {"status": "active"})
+    if response.ok:
+        report.add("dnssec", "updated")
+    elif _is_forbidden(response):
+        report.add("dnssec", "manual", FALLBACKS["dnssec"])
+    else:
+        report.add("dnssec", "failed", response.errors)
+
+
+def dns_content(record_type: str, content: object) -> str:
+    """A record's content in comparable form.
+
+    Cloudflare's API reference says TXT content "must consist of quoted character
+    strings", and the live `_dmarc` record was stored unquoted. Comparing raw strings would
+    turn that formatting difference into permanent drift in both `apply` and `audit`, so a
+    TXT value is compared with one pair of surrounding double quotes removed. Nothing else
+    is normalised: a real difference in the text is still a difference.
+    """
+    text = str(content or "").strip()
+    if record_type == "TXT" and len(text) >= 2 and text[0] == text[-1] == '"':  # noqa: PLR2004
+        text = text[1:-1]
+    return text
+
+
+#: Record types where one name may hold several values at once, so a row that matches
+#: none of them means "add another", never "overwrite one of these". TXT is the live
+#: case: the apex carries the Email Routing SPF record and a site-verification string.
+#:
+#: A row may set `"exclusive": true` to opt out, and `_dmarc` does. DMARC is single-valued
+#: by RFC 7489 — two records at one name make the policy *ignored*, not merged — so
+#: creating a sibling there would silently disable `p=reject` the first time its content
+#: was edited. Exclusive rows patch their single candidate and refuse when there are
+#: several, exactly as CNAME does.
+MULTI_VALUED_TYPES = frozenset({"TXT"})
+
+
+def dns_candidates(records: list[dict[str, Any]]) -> dict[tuple[str, str], list[dict[str, Any]]]:
+    """Every record at each `(type, name)`, not merely the last one listed.
+
+    Keyed by a dict comprehension this was `{(type, name): record}`, so a second record
+    at the same name silently replaced the first. With two TXT records on the apex that
+    is not a cosmetic bug: `apply` would compare the wrong one and PATCH the survivor,
+    rewriting SPF with a verification string and breaking mail delivery.
+    """
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for record in records:
+        grouped.setdefault((record["type"], record["name"]), []).append(record)
+    return grouped
+
+
+def apply_dns(client: Client, report: Report) -> None:
+    """Ensure the records we own, **content included**. Never deletes: Email Routing owns
+    MX and SPF.
+
+    It used to check only that a record of the right type and name existed. A content
+    change in `infra/dns.json` could therefore never reach the zone: apply said
+    `unchanged`, and the audit — which compares content — would have reported drift on
+    every run. Found when removing `rua` from `_dmarc`.
+    """
+    desired = load_desired("dns.json")["records"]
+    listing = client.get(f"/zones/{client.zone_id}/dns_records?per_page=100")
+    if not listing.ok:
+        report.add("dns", "failed", listing.errors)
+        return
+    existing = dns_candidates(listing.result or [])
+    for record in desired:
+        fqdn = (
+            record["name"]
+            if record["name"].endswith(SITE_HOST)
+            else f"{record['name']}.{SITE_HOST}"
+        )
+        label = f"dns:{record['type']} {record['name']}"
+        candidates = existing.get((record["type"], fqdn), [])
+        wanted = dns_content(record["type"], record.get("content"))
+        if any(dns_content(record["type"], c.get("content")) == wanted for c in candidates):
+            report.add(label, "unchanged")
+            continue
+        if not candidates:
+            response = client.post(f"/zones/{client.zone_id}/dns_records", {**record, "name": fqdn})
+            done = "created"
+        elif record["type"] in MULTI_VALUED_TYPES and not record.get("exclusive"):
+            # A TXT name legitimately holds several values — SPF and a site verification
+            # both live at the apex. Patching a sibling here would rewrite one service's
+            # record with another's content; the apex SPF is exactly what that would break.
+            response = client.post(f"/zones/{client.zone_id}/dns_records", {**record, "name": fqdn})
+            done = f"created alongside {len(candidates)} existing {record['type']} record(s)"
+        elif len(candidates) != 1:
+            contents = ", ".join(repr(c.get("content")) for c in candidates)
+            report.add(
+                label,
+                "failed",
+                f"{len(candidates)} {record['type']} records at {fqdn} ({contents}); "
+                "refusing to guess which one this row means",
+            )
+            continue
+        elif not candidates[0].get("id"):
+            report.add(label, "failed", "record exists but the listing carries no id to update")
+            continue
+        else:
+            # PATCH is a partial update: only the content moves; name, type, TTL and
+            # proxying stay as the zone has them.
+            found = candidates[0]
+            response = client.patch(
+                f"/zones/{client.zone_id}/dns_records/{found['id']}",
+                {"content": record["content"]},
+            )
+            done = f"content {found.get('content')!r} → {record['content']!r}"
+        if response.ok:
+            report.add(label, "updated", done)
+        elif _is_forbidden(response):
+            report.add(label, "manual", FALLBACKS["dns"])
+        else:
+            report.add(label, "failed", response.errors)
+
+
+def managed_ruleset_deployed(client: Client) -> dict[str, Any] | None:
+    """The managed ruleset deployed in the firewall phase, read **zone-scoped**.
+
+    Deliberately not `GET /accounts/{id}/rulesets`: T1 is a zone token and listing
+    account rulesets would mean widening it to account scope, which is the token working
+    as designed rather than a problem to solve. The zone's own ruleset list answers the
+    only question that matters — is the managed ruleset deployed here.
+    """
+    response = client.get(f"/zones/{client.zone_id}/rulesets")
+    if not response.ok:
+        return None
+    for ruleset in response.result or []:
+        if ruleset.get("phase") == MANAGED_PHASE and ruleset.get("kind") == "managed":
+            return dict(ruleset)
+    return None
+
+
+#: Fields Cloudflare assigns to a stored rule. Everything else a committed rule declares is
+#: ours and is compared. **`ref` is not in this set**: the committed files declare it, and the
+#: live zone was checked on 2026-09-15 — every deployed rule carries exactly the committed ref.
+#: Treating it as Cloudflare's would make a changed ref compare "equal" and never be applied.
+SERVER_ASSIGNED = frozenset({"id", "version", "last_updated"})
+
+
+def declared_fields(rule: dict[str, Any]) -> dict[str, Any]:
+    """The rule as we declared it: Cloudflare-assigned keys dropped."""
+    return {k: v for k, v in rule.items() if k not in SERVER_ASSIGNED}
+
+
+def compare_rules(desired: list[dict[str, Any]], deployed: list[dict[str, Any]]) -> list[str]:
+    """Differences between committed rules and deployed ones, in order. Empty means equal.
+
+    Shared by `apply` (write only on a difference) and `audit` (report drift). The dangerous
+    direction is a false "equal": a committed change that compares equal is never applied,
+    so every declared leaf of every committed rule is mutated in the tests to prove it is
+    caught. Order is part of a ruleset's meaning, so rules are compared by position. A
+    field Cloudflare fills in on its own is not compared — we own what we declare.
+    """
+    differences: list[str] = []
+    if len(desired) != len(deployed):
+        differences.append(f"{len(deployed)} rule(s) deployed, {len(desired)} committed")
+    for index, want in enumerate(desired):
+        if index >= len(deployed):
+            differences.append(f"[{index}] missing: {want.get('description', '?')!r}")
+            continue
+        have = deployed[index]
+        for key, value in declared_fields(want).items():
+            if key not in have or have[key] != value:
+                differences.append(
+                    f"[{index}] {want.get('description', '?')!r}: {key} is "
+                    f"{json.dumps(have.get(key))} not {json.dumps(value)}"
+                )
+    for index in range(len(desired), len(deployed)):
+        extra = deployed[index]
+        differences.append(f"[{index}] extra rule deployed: {extra.get('description', '?')!r}")
+    return differences
+
+
+def apply_rulesets(client: Client, report: Report) -> None:
+    """Read each phase, compare, and write only what differs.
+
+    It used to PUT every phase unconditionally and report `updated`, so a dry run said
+    `updated` for phases the audit calls `ok` — a report of the write, not of what would
+    change. Now `updated` means a difference was found and written, and `unchanged` means
+    the deployed rules already equal the committed ones. The write is still a full PUT of
+    the phase, behind the same zone guard.
+    """
+    for phase in WRITTEN_PHASES:
+        path = f"/zones/{client.zone_id}/rulesets/phases/{phase}/entrypoint"
+        rules = load_desired(f"rulesets/{phase}.json")["rules"]
+        current = client.get(path)
+        if current.ok:
+            differences = compare_rules(rules, list((current.result or {}).get("rules") or []))
+            if not differences:
+                report.add(phase, "unchanged", f"{len(rules)} rule(s) match")
+                continue
+            detail = f"{len(differences)} difference(s): " + "; ".join(differences[:3])
+        elif current.status == HTTP_NOT_FOUND:
+            detail = f"no entry point yet; {len(rules)} rule(s)"
+        elif _is_forbidden(current):
+            report.add(phase, "manual", FALLBACKS[phase])
+            continue
+        else:
+            # Unreadable for another reason: nothing to compare against, so no write.
+            report.add(phase, "failed", current.errors)
+            continue
+        response = client.put(path, {"rules": rules})
+        if response.ok:
+            report.add(phase, "updated", detail)
+        elif _is_forbidden(response):
+            report.add(phase, "manual", FALLBACKS[phase])
+        else:
+            report.add(phase, "failed", response.errors)
+
+    verify_managed_ruleset(client, report)
+
+
+def verify_managed_ruleset(client: Client, report: Report) -> None:
+    """Confirm Cloudflare's managed ruleset is deployed; never write this phase."""
+    deployed = managed_ruleset_deployed(client)
+    if deployed is None:
+        report.add(
+            MANAGED_PHASE,
+            "failed",
+            "no managed ruleset is deployed in this phase. docs/08 §5.6 assumes Free "
+            "zones receive it automatically; if that is no longer true the zone is "
+            "running without the Free Managed Ruleset and the assumption needs revisiting.",
+        )
+        return
+    report.add(
+        MANAGED_PHASE,
+        "skipped",
+        f"deployed by Cloudflare as {deployed.get('name')!r} ({deployed.get('id')}); "
+        "verified by GET, never written",
+    )
+
+
+def custom_rules_desired() -> list[dict[str, Any]]:
+    return list(load_desired(f"rulesets/{CUSTOM_PHASE}.json")["rules"])
+
+
+def is_ours(rule: dict[str, Any]) -> bool:
+    """A custom rule `apply` may add, change or delete: its `ref` carries our prefix."""
+    return str(rule.get("ref") or "").startswith(CUSTOM_REF_PREFIX)
+
+
+def _record_write(report: Report, resource: str, response: Response, detail: str) -> None:
+    if response.ok:
+        report.add(resource, "updated", detail)
+    elif _is_forbidden(response):
+        report.add(resource, "manual", FALLBACKS[CUSTOM_PHASE])
+    else:
+        report.add(resource, "failed", response.errors)
+
+
+def apply_custom_rules(client: Client, report: Report) -> None:
+    """Our WAF custom rules, one at a time — never the phase as a whole (ADR-030).
+
+    The phase is shared. Incident rules are added in the dashboard (docs/11 §7.4), and a
+    PUT of the entry point removes every rule the request does not carry. So only rules
+    whose `ref` starts with `loremfile_` are ours: each is compared by ref and, only on a
+    difference, added with POST, changed with PATCH or removed with DELETE, by rule id.
+    Every other rule is reported as a `warning` and left exactly where it is.
+    """
+    desired = custom_rules_desired()
+    zone = f"/zones/{client.zone_id}"
+    current = client.get(f"{zone}/rulesets/phases/{CUSTOM_PHASE}/entrypoint")
+    if no_entry_point(current):
+        _create_custom_entry_point(client, report, desired)
+        return
+    if _is_forbidden(current):
+        report.add(CUSTOM_PHASE, "manual", FALLBACKS[CUSTOM_PHASE])
+        return
+    ruleset = current.result if current.ok else None
+    if not isinstance(ruleset, dict) or not ruleset.get("id"):
+        # Nothing to compare against, and no ruleset to write through: no write at all.
+        detail = current.errors if not current.ok else "the entry point has no id"
+        report.add(CUSTOM_PHASE, "failed", detail)
+        return
+    ours, unwritable = _sort_custom_rules(list(ruleset.get("rules") or []), report)
+    rules_path = f"{zone}/rulesets/{ruleset['id']}/rules"
+    _converge_custom_rules(client, report, rules_path, desired, ours, unwritable)
+
+
+def _create_custom_entry_point(
+    client: Client, report: Report, desired: list[dict[str, Any]]
+) -> None:
+    """No entry point yet: create it carrying our rules (not a PUT, which ADR-030 forbids)."""
+    if not desired:
+        report.add(CUSTOM_PHASE, "unchanged", "no entry point, and no rule of ours")
+        return
+    created = client.post(
+        f"/zones/{client.zone_id}/rulesets",
+        {"name": "default", "kind": "zone", "phase": CUSTOM_PHASE, "rules": desired},
+    )
+    for want in desired:
+        resource = f"{CUSTOM_PHASE}:{want['ref']}"
+        _record_write(report, resource, created, "added, creating the entry point")
+
+
+def _sort_custom_rules(
+    deployed: list[dict[str, Any]], report: Report
+) -> tuple[dict[str, dict[str, Any]], set[str]]:
+    """Ours by ref, and the refs of ours that cannot be written. Every other rule is
+    reported as a warning here and goes no further."""
+    ours: dict[str, dict[str, Any]] = {}
+    unwritable: set[str] = set()
+    for rule in deployed:
+        name = rule.get("ref") or rule.get("id", "?")
+        if not is_ours(rule):
+            detail = (
+                f"not ours (no {CUSTOM_REF_PREFIX} ref), left in place: {rule.get('description')!r}"
+            )
+            report.add(f"{CUSTOM_PHASE}:{name}", "warning", detail)
+        elif not rule.get("id"):
+            report.add(f"{CUSTOM_PHASE}:{name}", "failed", "deployed without an id; not written")
+            unwritable.add(rule["ref"])
+        else:
+            ours[rule["ref"]] = rule
+    return ours, unwritable
+
+
+def _converge_custom_rules(
+    client: Client,
+    report: Report,
+    rules_path: str,
+    desired: list[dict[str, Any]],
+    ours: dict[str, dict[str, Any]],
+    unwritable: set[str],
+) -> None:
+    """Add, change or delete one rule of ours at a time, and only on a difference."""
+    for want in desired:
+        if want["ref"] in unwritable:
+            continue  # already reported: there is no id to write through
+        resource = f"{CUSTOM_PHASE}:{want['ref']}"
+        have = ours.pop(want["ref"], None)
+        if have is None:
+            _record_write(report, resource, client.post(rules_path, want), "added")
+        elif differences := compare_rules([want], [have]):
+            response = client.patch(f"{rules_path}/{have['id']}", want)
+            _record_write(report, resource, response, "; ".join(differences[:3]))
+        else:
+            report.add(resource, "unchanged", "matches")
+    for ref, stale in ours.items():
+        response = client.delete(f"{rules_path}/{stale['id']}")
+        _record_write(report, f"{CUSTOM_PHASE}:{ref}", response, "deleted: no longer committed")
+
+
+def apply_tiered_cache(client: Client, report: Report) -> None:
+    """Read the topology; PATCH it `on` only if it is not already on."""
+    path = f"/zones/{client.zone_id}/cache/tiered_cache_smart_topology_enable"
+    current = client.get(path)
+    if current.ok and (current.result or {}).get("value") == "on":
+        report.add("tiered-cache", "unchanged", "smart topology on")
+        return
+    if _is_forbidden(current):
+        report.add("tiered-cache", "manual", FALLBACKS["tiered-cache"])
+        return
+    if not current.ok and current.status != HTTP_NOT_FOUND:
+        report.add("tiered-cache", "failed", current.errors)
+        return
+    was = (current.result or {}).get("value") if current.ok else None
+    response = client.patch(path, {"value": "on"})
+    if response.ok:
+        report.add("tiered-cache", "updated", f"smart topology {was!r} → 'on'")
+    elif _is_forbidden(response):
+        report.add("tiered-cache", "manual", FALLBACKS["tiered-cache"])
+    else:
+        report.add("tiered-cache", "failed", response.errors)
+
+
+def apply_url_normalization(client: Client, report: Report) -> None:
+    """Read first; write only if it is off. The header rules depend on it (docs/08 §5.3)."""
+    path = f"/zones/{client.zone_id}/url_normalization"
+    current = client.get(path)
+    if _is_forbidden(current) or current.status == HTTP_NOT_FOUND:
+        report.add("url-normalization", "manual", FALLBACKS["url-normalization"])
+        return
+    if not current.ok:
+        report.add("url-normalization", "failed", current.errors)
+        return
+    found = current.result or {}
+    if found.get("type") == "cloudflare" and found.get("scope") == "incoming":
+        report.add("url-normalization", "unchanged")
+        return
+    response = client.put(path, {"type": "cloudflare", "scope": "incoming"})
+    if response.ok:
+        report.add("url-normalization", "updated")
+    elif _is_forbidden(response):
+        report.add("url-normalization", "manual", FALLBACKS["url-normalization"])
+    else:
+        report.add("url-normalization", "failed", response.errors)
+
+
+STEPS = (
+    apply_zone_settings,
+    apply_bot_management,
+    apply_dnssec,
+    apply_dns,
+    apply_rulesets,
+    apply_custom_rules,
+    apply_tiered_cache,
+    apply_url_normalization,
+)
+
+
+def run(client: Client) -> Report:
+    """Verify the zone, then apply every step. Nothing writes before the verification."""
+    report = Report(zone_id=client.zone_id)
+    report.hostname = client.verify_zone(SITE_HOST)
+    for step in STEPS:
+        try:
+            step(client, report)
+        except ZoneScopeError:
+            raise
+        except CloudflareError as exc:
+            report.add(step.__name__.removeprefix("apply_"), "failed", str(exc))
+    return report

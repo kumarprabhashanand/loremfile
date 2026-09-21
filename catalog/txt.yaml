@@ -1,0 +1,150 @@
+# Plain-text fixtures (docs/05 §3.6). Launch-set rows only; the rest are P1b.
+format: txt
+family: text
+mime: text/plain
+description: >-
+  Plain text at exact sizes, every common line ending, and every charset a parser
+  is likely to meet: UTF-8/16 with and without BOM, Latin-1, Windows-1252,
+  Shift-JIS, plus a multilingual torture file and an emoji-only file.
+seo_title: "Sample text files for testing encodings and line endings — free, CC0"
+related: [md, log, ini, bin]
+fixtures:
+  - name: lorem-1kb.txt
+    phase: 1
+    generator: text.lorem_sized
+    params: { size: 1000 }
+    description: "Exactly 1,000 bytes of Lorem Ipsum, LF line endings, cut at a word boundary and space-padded before the final newline."
+    tags: [text, sized]
+    expect: { line_ending: lf, bom: false }
+    size_class: exact
+    nominal_bytes: 1000
+  - name: lorem-100kb.txt
+    phase: 1
+    generator: text.lorem_sized
+    params: { size: 100000 }
+    description: "Exactly 100,000 bytes of Lorem Ipsum, LF line endings, cut at a word boundary and space-padded before the final newline."
+    tags: [text, sized]
+    expect: { line_ending: lf, bom: false }
+    size_class: exact
+    nominal_bytes: 100000
+  - name: lorem-1mb.txt
+    phase: 1
+    generator: text.lorem_sized
+    params: { size: 1000000 }
+    description: "Exactly 1,000,000 bytes of Lorem Ipsum, LF line endings, cut at a word boundary and space-padded before the final newline."
+    tags: [text, sized]
+    expect: { line_ending: lf, bom: false }
+    size_class: exact
+    nominal_bytes: 1000000
+  - name: lorem-10mb.txt
+    phase: 1
+    generator: text.lorem_sized
+    params: { size: 10000000 }
+    description: "Exactly 10,000,000 bytes of Lorem Ipsum, LF line endings, cut at a word boundary and space-padded before the final newline."
+    tags: [text, sized]
+    expect: { line_ending: lf, bom: false }
+    size_class: exact
+    nominal_bytes: 10000000
+  - name: lorem-1mib.txt
+    phase: 1
+    generator: text.lorem_sized
+    params: { size: 1048576 }
+    description: "Exactly 1,048,576 bytes of Lorem Ipsum, LF line endings, cut at a word boundary and space-padded before the final newline."
+    tags: [text, sized]
+    expect: { line_ending: lf, bom: false }
+    size_class: exact
+    nominal_bytes: 1048576
+  - name: lorem-10mib.txt
+    phase: 1
+    generator: text.lorem_sized
+    params: { size: 10485760 }
+    description: "Exactly 10,485,760 bytes of Lorem Ipsum, LF line endings, cut at a word boundary and space-padded before the final newline."
+    tags: [text, sized]
+    expect: { line_ending: lf, bom: false }
+    size_class: exact
+    nominal_bytes: 10485760
+  - name: lf.txt
+    phase: 1
+    generator: text.lines
+    params: { count: 100, line_ending: lf }
+    description: "100 lines of Lorem Ipsum with Unix (LF) line endings."
+    tags: [text, encoding]
+    expect: { line_ending: lf, lines: 100, bom: false }
+    size_class: free
+  - name: crlf.txt
+    phase: 1
+    generator: text.lines
+    params: { count: 100, line_ending: crlf }
+    description: "100 lines of Lorem Ipsum with Windows (CRLF) line endings."
+    tags: [text, encoding]
+    expect: { line_ending: crlf, lines: 100, bom: false }
+    size_class: free
+  - name: utf8-bom.txt
+    phase: 1
+    generator: text.encoded
+    params: { encoding: utf-8, bom: true }
+    description: "UTF-8 text preceded by a byte-order mark, which many parsers mishandle."
+    tags: [text, encoding, unicode]
+    expect: { encoding: utf-8, bom: true }
+    size_class: free
+  - name: utf16le-bom.txt
+    phase: 1
+    generator: text.encoded
+    params: { encoding: utf-16le, bom: true }
+    description: "UTF-16 little-endian text with a byte-order mark."
+    tags: [text, encoding, unicode]
+    expect: { bom: true }
+    size_class: free
+    mime: "text/plain; charset=utf-16"
+  - name: latin1.txt
+    phase: 1
+    generator: text.encoded
+    params: { encoding: iso-8859-1 }
+    description: "Western European text encoded as ISO-8859-1, not UTF-8."
+    tags: [text, encoding]
+    expect: { encoding: iso-8859-1, bom: false }
+    size_class: free
+    mime: "text/plain; charset=iso-8859-1"
+  - name: windows-1252.txt
+    phase: 1
+    generator: text.encoded
+    params: { encoding: windows-1252 }
+    description: "Text encoded as Windows-1252, the charset mislabelled as Latin-1 most often."
+    tags: [text, encoding]
+    expect: { encoding: windows-1252, bom: false }
+    size_class: free
+    mime: "text/plain; charset=windows-1252"
+  - name: shift-jis.txt
+    phase: 1
+    generator: text.encoded
+    params: { encoding: shift_jis, script: kanji }
+    description: "Japanese pseudo-text encoded as Shift-JIS; every character is representable in that charset."
+    tags: [text, encoding, unicode]
+    expect: { encoding: shift_jis, bom: false }
+    size_class: free
+    mime: "text/plain; charset=shift_jis"
+  - name: utf8-multilingual.txt
+    phase: 1
+    generator: text.multilingual
+    params: {}
+    description: "One line per script — Latin, Greek, Cyrillic, Arabic, Hebrew, Devanagari, Thai, CJK, Hangul — plus emoji, combining marks, bidi controls and unusual space characters."
+    tags: [text, unicode, encoding]
+    expect: { encoding: utf-8, bom: false }
+    size_class: free
+  - name: emoji-only.txt
+    phase: 1
+    generator: text.emoji_only
+    params: { count: 200 }
+    description: "Nothing but emoji sequences, including ZWJ families and skin-tone modifiers."
+    tags: [text, unicode]
+    expect: { encoding: utf-8, bom: false }
+    size_class: free
+  - name: very-long-line-1mb.txt
+    phase: 1
+    generator: text.one_long_line
+    params: { size: 1000000 }
+    description: "A single line of exactly 1,000,000 bytes, for tools that read a whole line into memory."
+    tags: [text, sized, stress]
+    expect: { lines: 1, line_ending: lf }
+    size_class: exact
+    nominal_bytes: 1000000

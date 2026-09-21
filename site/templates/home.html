@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="pitch">{{ pitch }}</div>
+
+<section class="search" aria-labelledby="search-heading">
+  <h2 id="search-heading">Find a file</h2>
+  <div role="search" class="search-box" hidden>
+    <label for="q">Search {{ count }} files by path or description</label>
+    <input id="q" type="search" autocomplete="off" spellcheck="false" data-index="/search-index.json">
+    <ul id="results" class="results" aria-live="polite"></ul>
+  </div>
+  <p>Browse by format below, or see <a href="/formats">all formats</a> in one table.</p>
+</section>
+
+<section aria-labelledby="formats-heading">
+  <h2 id="formats-heading">Formats</h2>
+  <div class="families">
+{% for family in families %}
+    <div class="family">
+      <h3>{{ family.label }}</h3>
+      <ul>
+{% for item in family.formats %}
+        <li><a href="/{{ item.format }}">{{ item.label }}</a> <span class="count">{{ item.count }}</span></li>
+{% endfor %}
+      </ul>
+    </div>
+{% endfor %}
+  </div>
+</section>
+
+<section aria-labelledby="popular-heading">
+  <h2 id="popular-heading">Popular</h2>
+  <ul class="popular">
+{% for item in popular %}
+    <li>
+      <a href="/{{ item.path }}"><code>{{ item.path }}</code></a> <span class="size">{{ item.size }}</span>
+      <button type="button" class="copy" data-copy="{{ item.url }}" hidden>Copy URL</button>
+      <p>{{ item.description }}</p>
+    </li>
+{% endfor %}
+  </ul>
+</section>
+
+<section aria-labelledby="use-heading">
+  <h2 id="use-heading">Use it from anywhere</h2>
+  <h3>curl</h3>
+  <pre><code>curl -O https://loremfile.dev/pdf/a4-3pages.pdf</code></pre>
+  <h3>JavaScript</h3>
+  <pre><code>const response = await fetch("https://loremfile.dev/json/people-1000.json");
+const people = await response.json();</code></pre>
+  <h3>Python</h3>
+  <pre><code>import urllib.request
+
+with urllib.request.urlopen("https://loremfile.dev/csv/people-1000.csv") as response:
+    data = response.read()</code></pre>
+</section>
+
+<section aria-labelledby="agents-heading">
+  <h2 id="agents-heading">For agents</h2>
+  <p>Read <a href="/llms.txt">llms.txt</a> for a short summary, <a href="/llms-full.txt">llms-full.txt</a> for every file, or <a href="/manifest.json">manifest.json</a> for sizes, hashes and measured properties. Each format also has its own list at <code>/{format}/index.json</code>.</p>
+</section>
+
+<section aria-labelledby="rules-heading">
+  <h2 id="rules-heading">Rules</h2>
+  <ul>
+    <li><strong>Stable URLs.</strong> The bytes at a published path do not change; a fix is a new path.</li>
+    <li><strong>Rate limit.</strong> Stay under 30 requests per second per IP. In CI, download once and cache.</li>
+    <li><strong>Licence.</strong> Every file is CC0 1.0: use it for anything, no credit needed.</li>
+    <li><strong>Host.</strong> If this host is ever unavailable, the <a href="{{ site.source }}">repository README</a> states the current canonical host.</li>
+  </ul>
+</section>
+{% endblock %}

@@ -1,0 +1,18 @@
+# AVI video (docs/05 §3.3). Launch-set rows only; the rest are P1b.
+format: avi
+family: video
+mime: video/x-msvideo
+description: >-
+  AVI with MPEG-4 Part 2 video and MP3 audio — the combination AVI files in the wild
+  actually carry, and a useful check that a decoder is not assuming H.264.
+seo_title: "Sample AVI video files for testing — free, CC0, hotlinkable"
+related: [mp4, mkv]
+fixtures:
+  - name: 640x480-5s.avi
+    phase: 1
+    generator: media_video.avi
+    params: { width: 640, height: 480, duration: 5 }
+    description: "640x480 at 30 fps, five seconds, MPEG-4 Part 2 video with MP3 audio."
+    tags: [video, codec-mp3]
+    expect: { width: 640, height: 480, vcodec: mpeg4, acodec: mp3 }
+    size_class: free

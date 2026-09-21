@@ -1,0 +1,20 @@
+{
+  "rules": [
+    {
+      "ref": "per_ip_burst",
+      "description": "300 req / 10 s per IP per data centre, verified bots exempt. The path test is a tautology: Free-plan rate-limit expressions may only reference the path and verified-bot fields, and an expression is mandatory. Do not simplify it away.",
+      "enabled": true,
+      "expression": "(starts_with(http.request.uri.path, \"/\") and not cf.client.bot)",
+      "action": "block",
+      "ratelimit": {
+        "characteristics": [
+          "cf.colo.id",
+          "ip.src"
+        ],
+        "period": 10,
+        "requests_per_period": 300,
+        "mitigation_timeout": 10
+      }
+    }
+  ]
+}

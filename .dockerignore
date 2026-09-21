@@ -1,0 +1,5 @@
+# The toolchain image only needs tools/requirements.lock (tools/Dockerfile).
+# Keeping the build context small keeps `docker build` and toolchain.yml fast and
+# keeps the repository's contents out of the image's build cache.
+*
+!tools/requirements.lock

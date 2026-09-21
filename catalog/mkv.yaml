@@ -1,0 +1,18 @@
+# Matroska video (docs/05 §3.3). Launch-set rows only; the rest are P1b.
+format: mkv
+family: video
+mime: video/x-matroska
+description: >-
+  Matroska, the container that will hold anything. H.264 plus AAC here, so the only
+  variable against the MP4 fixture is the container itself.
+seo_title: "Sample MKV video files for testing — free, CC0, hotlinkable"
+related: [mp4, webm, mov]
+fixtures:
+  - name: 720p-5s.mkv
+    phase: 1
+    generator: media_video.mp4
+    params: { width: 1280, height: 720, duration: 5, container: matroska }
+    description: "1280x720 at 30 fps, five seconds, H.264 plus AAC in Matroska."
+    tags: [video, codec-h264, codec-aac]
+    expect: { width: 1280, height: 720, vcodec: h264, acodec: aac }
+    size_class: free

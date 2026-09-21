@@ -1,0 +1,17 @@
+# arrow fixtures (docs/05 §3.7). Launch-set rows only; the rest are P1b.
+format: arrow
+family: data
+mime: application/vnd.apache.arrow.file
+description: >-
+  The people dataset in the Arrow IPC file format.
+seo_title: "Sample Arrow IPC file for testing data pipelines — free, CC0"
+related: [parquet, avro]
+fixtures:
+  - name: people-1000.arrow
+    phase: 1
+    generator: columnar.arrow_people
+    params: { rows: 1000 }
+    description: "1,000 rows of the shared people dataset in the Arrow IPC file format (not the stream format), one record batch."
+    tags: [data, dataset-people]
+    expect: { rows: 1000, columns: 14, row_groups: 1 }
+    size_class: free

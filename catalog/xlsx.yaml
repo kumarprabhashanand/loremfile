@@ -1,0 +1,61 @@
+# Excel workbooks (docs/05 §3.5). Launch-set rows only; the rest are P1b.
+format: xlsx
+family: documents
+mime: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+description: >-
+  Excel workbooks for importers, parsers and upload forms: the shared people dataset at
+  two sizes, formulas that carry cached results so a non-calculating reader still sees
+  numbers, and one sheet holding every cell type and number format worth testing.
+seo_title: "Sample XLSX files for testing — free, CC0, hotlinkable"
+related: [csv, docx, parquet]  # ods joins when M7 adds it
+fixtures:
+  - name: 1sheet-10rows.xlsx
+    phase: 1
+    generator: office.xlsx_people
+    params: { rows: 10 }
+    description: "One sheet: a bold, frozen header row plus ten records of the shared people dataset across all fourteen columns."
+    tags: [document, data, dataset-people]
+    expect: { sheets: 1, rows: 11, columns: 14, formulas: 0 }
+    size_class: free
+  - name: 1sheet-1000rows.xlsx
+    phase: 1
+    generator: office.xlsx_people
+    params: { rows: 1000 }
+    description: "One sheet: a bold, frozen header row plus a thousand records of the shared people dataset. The first ten rows are the same records as the ten-row fixture."
+    tags: [document, data, dataset-people]
+    expect: { sheets: 1, rows: 1001, columns: 14, formulas: 0 }
+    size_class: free
+  - name: with-formulas.xlsx
+    phase: 1
+    generator: office.xlsx_with_formulas
+    params: { rows: 10 }
+    description: "SUM, AVERAGE, IF and VLOOKUP over a ten-line order table, each with its result cached in the file. Readers that do not calculate — pandas, openpyxl's data_only mode — still see the values."
+    tags: [document, data]
+    expect: { sheets: 1, rows: 11, formulas: 14 }
+    size_class: free
+  - name: with-types-and-formats.xlsx
+    phase: 1
+    generator: office.xlsx_with_types
+    params: {}
+    description: "One row per cell type and number format: text, integer, float, negative, booleans, date, time, datetime, percentage, currency, scientific, an empty cell, and text that only looks numeric ('007', '2020-01-01', a phone number)."
+    tags: [document, data]
+    expect: { sheets: 1, rows: 17, columns: 2, formulas: 0 }
+    size_class: free
+  - name: 1mb.xlsx
+    phase: 1
+    generator: office.xlsx_sized
+    params: { size: 1000000 }
+    description: "About 1MB: a people sheet plus a second sheet of embedded incompressible seeded-noise PNGs, so the size is honest rather than padded."
+    tags: [document, sized, image]
+    expect: { sheets: 2 }
+    size_class: approx
+    nominal_bytes: 1000000
+  - name: 10mb.xlsx
+    phase: 1
+    generator: office.xlsx_sized
+    params: { size: 10000000 }
+    description: "About 10MB: a people sheet plus a second sheet of embedded incompressible seeded-noise PNGs, so the size is honest rather than padded."
+    tags: [document, sized, image, large]
+    expect: { sheets: 2 }
+    size_class: approx
+    nominal_bytes: 10000000

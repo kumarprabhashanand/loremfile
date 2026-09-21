@@ -1,0 +1,17 @@
+# ndjson fixtures (docs/05 §3.7). Launch-set rows only; the rest are P1b.
+format: ndjson
+family: data
+mime: application/x-ndjson
+description: >-
+  One JSON object per line — the shape stream processors and log shippers expect.
+seo_title: "Sample NDJSON file for testing stream processors — free, CC0"
+related: [json, log]
+fixtures:
+  - name: people-1000.ndjson
+    phase: 1
+    generator: data.ndjson_people
+    params: { rows: 1000 }
+    description: "1,000 people objects, one compact JSON object per line."
+    tags: [data, dataset-people]
+    expect: { items: 1000, top_type: object, line_ending: lf }
+    size_class: free

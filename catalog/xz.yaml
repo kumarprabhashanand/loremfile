@@ -1,0 +1,18 @@
+# Single-stream xz compression (docs/05 §3.8). Launch-set rows only.
+format: xz
+family: archives
+mime: application/x-xz
+description: >-
+  A single xz stream, the shape `xz` produces when it compresses one file rather
+  than an archive. No container, no entry list: one payload in, one stream out.
+seo_title: "Sample XZ files for testing decompression — free, CC0"
+related: [tar, zip]
+fixtures:
+  - name: lorem-1mb.txt.xz
+    phase: 1
+    generator: archive.compressed_text
+    params: { size: 1000000, kind: xz }
+    description: "Exactly 1,000,000 bytes of Lorem Ipsum compressed as a single xz stream, so the compression ratio is that of ordinary text."
+    tags: [archive, text]
+    expect: { compression: xz, uncompressed_bytes: 1000000 }
+    size_class: free

@@ -1,0 +1,27 @@
+{
+  "rules": [
+    {
+      "ref": "cache_everything_respect_origin",
+      "description": "cache all objects; TTL from object Cache-Control",
+      "enabled": true,
+      "expression": "(http.host eq \"loremfile.dev\")",
+      "action": "set_cache_settings",
+      "action_parameters": {
+        "cache": true,
+        "edge_ttl": {
+          "mode": "respect_origin"
+        },
+        "browser_ttl": {
+          "mode": "respect_origin"
+        },
+        "cache_key": {
+          "custom_key": {
+            "query_string": {
+              "exclude": "*"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

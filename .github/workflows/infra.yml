@@ -1,0 +1,315 @@
+# Maintainer operations against Cloudflare, without credentials on any machine
+# (docs/09 §3.2b, ADR-022). The tokens live in the `production` environment and are only
+# ever read by a job running here.
+#
+# M2.2 adds `apply-dry-run` and `apply`, M2.4 `probe`, M4.4 the restore and redact modes.
+# A mode that does not exist yet is not offered.
+#
+# `apply-dry-run` exists as its own mode rather than a flag on `apply` because the point
+# of it is to be run first and read: it resolves and prints the target zone id and
+# hostname before anything could write. Ruleset entry points are written with a full PUT
+# and this account holds unrelated production zones (docs/10 §3).
+name: infra
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: What to run
+        required: true
+        default: verify-tokens
+        type: choice
+        options:
+          - verify-tokens
+          - apply-dry-run
+          - apply
+          - probe
+          - restore-dry-run
+          - restore
+          - redact-dry-run
+          - redact
+      restore_archive_url:
+        description: >-
+          restore modes only: space-separated release archive parts of this repository,
+          https://github.com/OWNER/REPO/releases/download/TAG/NAME.tar
+        type: string
+        default: ""
+      restore_only:
+        description: >-
+          restore modes only: space-separated fixture paths; empty restores every fixture
+          the archives hold
+        type: string
+        default: ""
+      redact_path:
+        description: >-
+          redact modes only: the tombstoned fixture path to remove from the release archives
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+# Serialised with deploy.yml and audit.yml's `infra` job (ADR-029): an apply dispatched here
+# must not race a deploy's apply — both write whole ruleset phases — and an audit must not
+# read the zone mid-apply. Never cancelled midway.
+concurrency:
+  group: loremfile-zone
+  cancel-in-progress: false
+
+jobs:
+  # tools/TOOLCHAIN_DIGEST is the only place the digest lives (docs/09 §2). Jobs read it
+  # here and refer to the output, so a digest bump touches one file and no workflow —
+  # which is also why `propose-digest-bump` needs no `workflows: write`.
+  # Verified before adopting: `container.image` does accept `needs.*.outputs.*` on
+  # GitHub-hosted runners (spike run 34354550593 pulled and created the container).
+  setup:
+    runs-on: ubuntu-24.04
+    outputs:
+      digest: ${{ steps.read.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: read
+        run: echo "digest=$(cat tools/TOOLCHAIN_DIGEST)" >> "$GITHUB_OUTPUT"
+
+  verify-tokens:
+    needs: setup
+    if: inputs.mode == 'verify-tokens'
+    runs-on: ubuntu-24.04
+    # Only this environment holds the secrets, and it is restricted to main.
+    environment: production
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      - name: Verify every credential can do its job
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ANALYTICS_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+        run: |
+          python - <<'PY'
+          import sys
+          from loremfile.infra.tokens import verify_all
+
+          report = verify_all()
+          print(report.render())
+          print()
+          print("all credentials usable" if report.ok else "one or more credentials failed")
+          sys.exit(0 if report.ok else 1)
+          PY
+
+      - name: Token expiry reminder
+        # Dates only; infra/token-expiry.json never holds a secret.
+        run: |
+          python - <<'PY'
+          import datetime as dt, json, pathlib
+          data = json.loads(pathlib.Path("infra/token-expiry.json").read_text())
+          today = dt.date.today()
+          for key, row in sorted(data.items()):
+              if key.startswith("_"):
+                  continue
+              due = dt.date.fromisoformat(row["expires"])
+              days = (due - today).days
+              flag = "  <-- rotate soon" if days <= 30 else ""
+              print(f"  {row['name']:24s} expires {row['expires']}  ({days} days){flag}")
+          PY
+
+  apply:
+    needs: setup
+    if: inputs.mode == 'apply-dry-run' || inputs.mode == 'apply'
+    runs-on: ubuntu-24.04
+    environment: production
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      # Reads the zone and refuses unless its name is loremfile.dev, before any write is
+      # possible. Run as its own step so the target is visible in the log even when the
+      # apply below fails for an unrelated reason.
+      - name: Confirm which zone this will write to
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: loremfile infra apply --dry-run
+
+      - name: Apply
+        if: inputs.mode == 'apply'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: loremfile infra apply
+
+  probe:
+    if: inputs.mode == 'probe'
+    needs: setup
+    runs-on: ubuntu-24.04
+    environment: production
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      R2_BUCKET: ${{ vars.R2_BUCKET }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      # `rate-limit-rule` reads the deployed rule back from the zone (T1, zone-scoped).
+      # Without these the read cannot authenticate, and no statement about the rate
+      # limit is supportable — the burst alone cannot tell a missing rule from an
+      # unprovoked one.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      - name: Upload the objects the checks read
+        run: loremfile probe --up
+
+      - name: Probe
+        run: loremfile probe
+
+      # Always: a failed probe must still clean up after itself, or the next run starts
+      # against objects it did not write. `_probe/` is outside every lock rule precisely
+      # so this can succeed (docs/08 §7b). `_locktest/probe` is deliberately left behind.
+      - name: Clean up
+        if: always()
+        run: loremfile probe --down
+
+  # docs/09 §5, docs/11 §7.6. Run `restore-dry-run` first: it downloads and verifies every
+  # member and prints the plan — including any live object it would try to replace — and
+  # writes nothing. Only `restore` writes, purges what it wrote, and then verifies the
+  # whole published set.
+  restore:
+    needs: setup
+    if: inputs.mode == 'restore-dry-run' || inputs.mode == 'restore'
+    runs-on: ubuntu-24.04
+    environment: production
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 90
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      R2_BUCKET: ${{ vars.R2_BUCKET }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      # Read through the environment and checked for shape rather than interpolated into
+      # the shell — the same guard as deploy.yml's `only`. `upload --restore` checks each URL
+      # again; this refuses before anything is downloaded.
+      - name: Check the inputs
+        id: flags
+        env:
+          SOURCES: ${{ inputs.restore_archive_url }}
+          ONLY: ${{ inputs.restore_only }}
+        run: |
+          set -eu
+          prefix="https://github.com/$GITHUB_REPOSITORY/releases/download/"
+          flags=""
+          for url in $SOURCES; do
+            case "$url" in
+              "$prefix"*) ;;
+              *) echo "refusing '$url': not a release asset of $GITHUB_REPOSITORY" >&2; exit 1 ;;
+            esac
+            case "${url#"$prefix"}" in
+              *[!A-Za-z0-9._/-]*|*..*|*/*/*) echo "refusing '$url': not TAG/NAME.tar" >&2; exit 1 ;;
+              */*.tar) ;;
+              *) echo "refusing '$url': not TAG/NAME.tar" >&2; exit 1 ;;
+            esac
+            flags="$flags --restore $url"
+          done
+          if [ -z "$flags" ]; then
+            echo "restore_archive_url is empty" >&2
+            exit 1
+          fi
+          for path in $ONLY; do
+            case "$path" in
+              *[!A-Za-z0-9._/-]*|*..*|/*) echo "refusing '$path': not the shape of a fixture path" >&2; exit 1 ;;
+            esac
+            flags="$flags --only $path"
+          done
+          echo "flags=$flags" >> "$GITHUB_OUTPUT"
+
+      - name: Plan the restore (downloads and verifies; writes nothing)
+        if: inputs.mode == 'restore-dry-run'
+        run: loremfile upload ${{ steps.flags.outputs.flags }} --dry-run
+
+      - name: Restore
+        if: inputs.mode == 'restore'
+        run: |
+          status=0
+          loremfile upload ${{ steps.flags.outputs.flags }} --json > restore.json || status=$?
+          cat restore.json
+          exit "$status"
+
+      # Only the paths this run wrote: a fresh account gets its lock rules and site after the
+      # restore (docs/11 §7.6), so a full check would fail a restore that succeeded.
+      - name: Verify the restored fixtures
+        if: ${{ !cancelled() && inputs.mode == 'restore' }}
+        run: |
+          paths=$(python -c 'import json; print(" ".join("--only " + i["path"] for i in json.load(open("restore.json"))["items"] if i["status"] == "written"))')
+          if [ -z "$paths" ]; then echo "nothing was written; nothing to verify"; exit 0; fi
+          loremfile verify-live --mode full $paths
+
+  # docs/09 §10, ADR-031. `redact-dry-run` names the releases that would change; `redact`
+  # rewrites them. Each release's own `isImmutable` decides whether it can be rewritten.
+  redact:
+    needs: setup
+    if: inputs.mode == 'redact-dry-run' || inputs.mode == 'redact'
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REDACT_PATH: ${{ inputs.redact_path }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      - name: Let git read the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Check the input
+        run: |
+          case "$REDACT_PATH" in
+            ""|*[!A-Za-z0-9._/-]*|*..*|/*) echo "refusing '$REDACT_PATH': not a fixture path" >&2; exit 1 ;;
+          esac
+
+      - name: Plan the redaction (writes nothing)
+        if: inputs.mode == 'redact-dry-run'
+        run: loremfile release redact --path "$REDACT_PATH" --dry-run
+
+      - name: Redact
+        if: inputs.mode == 'redact'
+        run: loremfile release redact --path "$REDACT_PATH"

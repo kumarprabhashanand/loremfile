@@ -1,0 +1,441 @@
+# 08 — Infrastructure (Cloudflare)
+
+Everything runs in one Cloudflare account, one zone (`loremfile.dev`), one R2 bucket. The owner performs the one-time manual steps in §2; everything else is declarative JSON under `infra/` applied by `loremfile infra apply` and checked by `loremfile infra audit`.
+
+## 1. Inventory
+
+| Resource | Name / value | Managed by |
+|---|---|---|
+| Domain | `loremfile.dev`, Cloudflare Registrar, auto-renew on, DNSSEC on | Owner (purchase), apply.py (DNSSEC) |
+| Zone | `loremfile.dev`, Free plan | Owner (created automatically with the purchase) |
+| R2 bucket | `loremfile-public`, location hint `auto` (or `ENAM`/`WEUR` — Q-04) | Owner via wrangler once |
+| R2 custom domain | `loremfile.dev` (apex) attached to the bucket, enabled, min TLS 1.2 | Owner once |
+| Bucket CORS | policy in `infra/r2-cors.json` | Owner once via wrangler (admin token); audited live by CI |
+| Bucket locks | `infra/r2-locks.json`: one indefinite lock rule per `{format}/` prefix (storage-level immutability) | Owner applies once via wrangler (admin token); `infra audit`'s `audit_bucket_locks` reads the applied rules with `R2_READ_TOKEN` and compares prefix, `enabled` and condition type against the committed file — a difference is drift, and a missing or refused token is `unreadable`, never `ok` |
+| URL normalization | Rules → Settings → Normalize incoming URLs: **on** (default) | Owner verifies; audit.py reads it if the API permits **[VERIFY]** |
+| DNS | apex record created by R2; `www` CNAME; Email Routing MX + SPF; DMARC | apply.py (`www`, `_dmarc`), Email Routing UI (MX/SPF) |
+| Zone settings | `infra/zone-settings.json` | apply.py |
+| Rulesets | `infra/rulesets/*.json` (6 phase files, §5) | apply.py |
+| Bot settings | `infra/bot-management.json` | apply.py (falls back to a dashboard step if the token lacks permission — see §6) |
+| Email Routing | `hello@`, `security@` → owner's mailbox. **No DMARC report route**: the DMARC record requests no reports (see `infra/dns.json` below) | Owner once |
+| Notifications | HTTP DDoS alert, Registrar expiry (Usage Based Billing only if the account type offers it, Q-20) | Owner once |
+| API tokens | T1 zone CI token; T2 R2 object token; T3 setup admin token (temporary, never stored in CI, deleted after setup); T4 read-only analytics token; T5 R2 read token | Owner creates; runbook rotates |
+
+## 2. One-time manual setup (owner, ~45 minutes)
+
+> **Progress, 2026-09-08.** Steps 1–3 and 5 are done. Step 4 (DNSSEC), step 7 (bucket,
+> apex, CORS) and step 14 (repository variables) were applied through the Cloudflare MCP
+> API session rather than a T3 token, so **steps 6 and 8 — create and then delete a T3
+> setup token — were not needed and should be skipped.** No admin token ever existed on
+> a machine, which is the outcome those two steps were protecting.
+>
+> Applied and verified: DNSSEC `pending` with the zone already signed (SOA carries an
+> RRSIG; Cloudflare Registrar publishes the DS automatically); bucket `loremfile-public`
+> (location `auto` resolved to EEUR, Standard class); apex `loremfile.dev` attached with
+> min TLS 1.2; CORS exactly as §7; the `pub-*.r2.dev` URL confirmed **disabled**;
+> `curl -sI https://loremfile.dev/` returns a Cloudflare 404. Repository variables
+> `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_ZONE_ID` are set.
+>
+> **Lock rules (step 7's fourth command) are deliberately deferred to M2 — corrected
+> rationale.** The original note here claimed that applying them early would force the
+> "lift-and-re-add ceremony of `11` §7.9 step 2b for every new format". That was wrong:
+> §7.9 step 2b *adds* a rule for a new prefix and lifts nothing. Lifting is §7.8, and
+> only for a legal takedown.
+>
+> The real reason is narrower and expires: **before first publication, mistakes must
+> still be correctable.** M3.6 demonstrated exactly that — five manifest entries
+> described bytes that had never been published and could not be rebuilt, and the remedy
+> was to withdraw them (`03` §7.1). Locks are the storage-layer half of a promise that
+> only begins at publication.
+>
+> **That argument ends at the first deploy, and the deferral must not outlive it.**
+> ADR-023, RISK-20, T3 and T12 all assume locks exist. A first deploy onto an unlocked
+> bucket leaves published fixtures mutable by a leaked T2 — precisely the threat locks
+> were introduced for. `deploy.yml` therefore refuses to upload to any prefix not covered
+> by a lock rule (`09` §3.2), and M4.4 is not done until the rules are applied and
+> verified.
+>
+> Still outstanding and owner-only: steps 9, 10, 10b (tokens T1/T2/T4 — the API session
+> cannot mint tokens, `/user/tokens` returns `9109 Unauthorized`, which is correct),
+> step 11 (Email Routing, blocked on Q-07), step 12 (notifications) and step 13 (bot
+> settings, if `apply.py` cannot set them).
+>
+> **The account holds other, unrelated zones.** Every
+> call above was scoped to the `loremfile.dev` zone id and the others were verified unchanged
+> afterwards. Anything applied to this zone in future must be scoped the same way.
+
+
+
+Do these in order. Each step says how to verify it.
+
+1. **Cloudflare account hygiene.** Sign in → My Profile → Authentication: enable 2FA with a hardware key or passkey **and** an authenticator app; download and store recovery codes offline. Verify: 2FA badge shown.
+2. **Payment method.** Billing → Payment info: add a card (required for Registrar even at USD 0 Cloudflare spend). Verify: card listed.
+3. **Buy the domain.** Domain Registration → Register Domains → search `loremfile.dev` → purchase (1 year, auto-renew on, WHOIS redaction on by default). This is the one purchase the API cannot do. Verify: Domain Registration → Manage Domains shows the domain; Websites shows the zone `loremfile.dev` on the Free plan with Cloudflare nameservers.
+4. **DNSSEC.** Websites → loremfile.dev → DNS → Settings → Enable DNSSEC (Registrar domains publish the DS automatically). Verify (after ~1 h): `dig +dnssec loremfile.dev SOA` returns `RRSIG`; or https://dnsviz.net.
+5. **Enable R2.** R2 Object Storage → accept terms (free tier, no card charge). Verify: R2 overview loads.
+6. **Create T3 setup token (temporary).** My Profile → API Tokens → Create Token → Custom: permissions `Account → Workers R2 Storage → Edit`, `Zone → Zone → Read`, `Zone → DNS → Edit` for zone `loremfile.dev`; TTL 1 day. Use it only for steps 7–9 from your own machine; delete it afterwards.
+7. **Create the bucket, attach the apex, set CORS** (from a shell with `CLOUDFLARE_API_TOKEN=<T3>` and Node 20+ installed):
+   ```bash
+   npx wrangler@<pinned version, the current 4.x> r2 bucket create loremfile-public
+   npx wrangler@<pinned> r2 bucket domain add loremfile-public --domain loremfile.dev --zone-id <ZONE_ID> --min-tls 1.2   # dashboard equivalent: R2 → bucket → Settings → Custom Domains → Add
+   npx wrangler@<pinned> r2 bucket cors set loremfile-public --file infra/r2-cors.wrangler.json                          # dashboard equivalent: bucket → Settings → CORS policy → Add
+   npx wrangler@<pinned> r2 bucket lock set loremfile-public --file infra/r2-locks.json                                  # one indefinite lock per format prefix (§7b); dashboard: bucket → Settings → Bucket lock rules
+   ```
+   Pin the wrangler version instead of `@latest` because this shell holds an admin token. Also run `curl -s -H "Authorization: Bearer $T3" https://api.cloudflare.com/client/v4/user/tokens/permission_groups` and paste the zone permission names for redirect rules, bot management, DNSSEC and cache settings into step 9 (the dashboard token builder labels them differently across plans).
+   Attaching the apex **replaces** any existing A/AAAA records at the root with the R2 record (observed behaviour). Verify: `curl -sI https://loremfile.dev/` returns a Cloudflare response with a 404 (expected until the site is uploaded), and in R2 → bucket → Settings the **r2.dev public URL is disabled** (it must stay disabled; the custom domain is the only public path). CORS and headers are verified in M2.4 by the probe workflow, not here.
+8. **Delete T3.** My Profile → API Tokens → delete.
+9. **Create T1 (zone CI token).** Custom token, name `loremfile-ci-zone`, permissions: `Zone → Zone Settings → Edit`, `Zone → Transform Rules → Edit`, `Zone → Cache Rules → Edit`, `Zone → Zone WAF → Edit`, `Zone → Cache Purge → Purge`, `Zone → DNS → Edit`, `Zone → Zone → Read`, `Zone → Single Redirect → Edit`, and `Zone → Bot Management → Edit` if listed. **Corrected 2026-09-08 against the live token builder:** the entry is **Single Redirect**, not "Dynamic Redirect"; and **do not add `Zone → Config Rule`** — that is Configuration Rules (`http_config_settings`), a phase `apply.py` never writes. The six phases it does write are `http_ratelimit`, `http_request_cache_settings`, `http_request_dynamic_redirect`, `http_request_firewall_managed`, `http_request_transform` and `http_response_headers_transform`; rate limiting rules are part of WAF, so `Zone WAF: Edit` is expected to cover `http_ratelimit`. **To watch at M2.3:** Cloudflare's cache-rules page also lists `Account Rulesets → Edit` and `Account Filter Lists → Edit`. Those are account-scoped and would widen the token past this one zone, so T1 stays zone-only; if `apply.py` gets a 403 on the cache phase, add them then, with the error as evidence; zone resources: include `loremfile.dev` only; client IP filtering: none; TTL: 180 days (set an end date). §6 lists every endpoint apply.py calls with the fallback when a permission is missing. Copy the token into the GitHub `production` environment secret `CLOUDFLARE_API_TOKEN` (see `09`). Verify: `curl -s -H "Authorization: Bearer $T" https://api.cloudflare.com/client/v4/user/tokens/verify` → `"status":"active"`.
+10. **Create T2 (R2 object token).** R2 → Manage R2 API Tokens → Create: name `loremfile-ci-r2`, permission **Object Read & Write**, specify bucket `loremfile-public` only, TTL 180 days. Copy the S3 **Access Key ID** and **Secret Access Key** into the GitHub secrets `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`. Verify: the uploader's `--dry-run` lists the bucket. Whether this permission can delete objects is not stated in the docs; M2.4's `probe --down` establishes it (**[VERIFY]**) — with bucket locks in place it only matters for `_probe/` and tombstoned keys.
+10c. **Create T5 (R2 read token).** Admin Read only, so it can list bucket configuration and nothing else. GitHub secret `R2_READ_TOKEN`, used by exactly one caller: `audit_bucket_locks`, which compares the applied lock rules with `infra/r2-locks.json` (`09` §3.4). It is deliberately not the zone token — T1 is zone-scoped and this read is account-scoped — and deliberately not T3, which is created and deleted inside setup.
+
+10b. **Create T4 (read-only analytics token).** Custom token, name `loremfile-ci-analytics`, permissions `Account → Account Analytics → Read` and `Zone → Analytics → Read` for `loremfile.dev`, TTL 365 days. GitHub secret `CLOUDFLARE_ANALYTICS_TOKEN`. Used only by `health.yml` to read R2 operations and zone traffic; it can change nothing.
+11. **Email Routing.** Websites → loremfile.dev → Email → Email Routing → Enable → add destination (your mailbox, confirm the verification mail) → routes: `hello@`, `security@` → destination. **No route for DMARC reports**: the DMARC record asks for no aggregate reports — RFC 7489 §6.3 marks `rua` OPTIONAL, the domain sends no mail, and the reports would carry third-party sending-server data into a personal inbox. Accept the automatic MX/SPF DNS records. Verify: send a mail to `hello@loremfile.dev`.
+12. **Notifications.** Notifications → Add: `DDoS – HTTP DDoS Attack Alert` (all plans) and `Registrar – domain expiring` if listed; destination: your email. The `Billing – Usage Based Billing` notification exists only for Pro+ plans and pay-as-you-go accounts (Q-20) — add it if the dashboard offers it, but the cost control is the automated daily usage check in `health.yml` (ADR-025), not this notification. **Status 2026-09-15:** the HTTP DDoS Attack Alert is added; no registrar-expiry alert is offered on this account, so `verify-live`'s RDAP check (`12` §4) is the domain-expiry warning. Destinations are not recorded.
+13. **Bot settings (dashboard, if apply.py cannot).** Security → Bots: Bot Fight Mode **off**; Security → Settings (or Security → Bots): Block AI bots **off** / "Do not block" (including the post-2026-09-15 "training"/"agent" crawler defaults); "Managed robots.txt" **off**. Verify: `curl -A "python-requests/2.32" https://loremfile.dev/manifest.json` is not challenged (200 after the first deploy).
+14. **Hand the rest to CI.** Fill `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_ZONE_ID` (Websites → loremfile.dev → Overview, right column) as GitHub variables. From here on `deploy.yml` applies §3–§5.
+
+## 3. Zone settings — `infra/zone-settings.json`
+
+```json
+{
+  "always_use_https": "on",
+  "ssl": "strict",
+  "min_tls_version": "1.2",
+  "tls_1_3": "zrt",
+  "http3": "on",
+  "0rtt": "on",
+  "ipv6": "on",
+  "brotli": "on",
+  "opportunistic_encryption": "on",
+  "cache_level": "aggressive",
+  "websockets": "off",
+  "rocket_loader": "off",
+  "email_obfuscation": "off",
+  "automatic_https_rewrites": "off",
+  "hotlink_protection": "off",
+  "browser_check": "off",
+  "security_level": "essentially_off",
+  "server_side_exclude": "off",
+  "development_mode": "off",
+  "early_hints": "off",
+  "polish": "off",
+  "mirage": "off"
+}
+```
+
+Why the "off" list matters: each of `rocket_loader`, `email_obfuscation`, `automatic_https_rewrites`, `server_side_exclude`, `polish`, `mirage` rewrites response bodies, which would change fixture bytes; `hotlink_protection` blocks the product's purpose; `browser_check` and `security_level` challenge non-browser clients (curl, CI, agents). Browser TTL is governed by the cache rule (`browser_ttl.mode: respect_origin`), not by the zone-level `browser_cache_ttl` setting, whose "respect existing headers" value is reported to be rejected by the API on non-Enterprise zones. `polish`/`mirage` are Pro features: apply.py skips settings whose GET reports `editable: false`; audit.py only complains if such a setting is not `off`.
+
+## 4. Bot management — `infra/bot-management.json`
+
+```json
+{ "fight_mode": false, "ai_bots_protection": "disabled", "is_robots_txt_managed": false, "cf_robots_variant": "off", "content_bots_protection": "disabled" }
+```
+
+Applied with `PUT /zones/{zone_id}/bot_management`. `cf_robots_variant: "off"` and `content_bots_protection: "disabled"` matter because Cloudflare's defaults for zones onboarded after 2026-09-15 block "training" and "agent" AI crawlers, and agents are an audience of this site. `is_robots_txt_managed: false` is essential: the managed robots.txt feature prepends Cloudflare content to our `robots.txt`. If the T1 token cannot write this endpoint (permission name varies by plan — **[VERIFY]** during M2), apply.py prints the dashboard instructions from §2 step 13 and continues; audit.py still reads the state if it can and otherwise checks behaviour live.
+
+## 5. Rulesets — `infra/rulesets/`
+
+Each file is the complete desired list of rules for one phase's zone entry-point ruleset — **except `http_request_firewall_custom.json` (§5.7)**. That file holds only our rules, in a phase shared with incident rules, and is written one rule at a time (ADR-030). apply.py `PUT`s `https://api.cloudflare.com/client/v4/zones/<ZONE_ID>/rulesets/phases/<phase>/entrypoint` with `{"rules": [...]}` (creating the entry point if the GET returns 404). Rule `ref` values are stable identifiers so audits can diff by ref.
+
+### 5.1 `http_request_dynamic_redirect.json` (Single Redirects)
+
+```json
+{ "rules": [
+  { "ref": "www_to_apex", "description": "www → apex, keep path and query", "enabled": true,
+    "expression": "(http.host eq \"www.loremfile.dev\")",
+    "action": "redirect",
+    "action_parameters": { "from_value": { "status_code": 301,
+      "target_url": { "expression": "concat(\"https://loremfile.dev\", http.request.uri.path)" },
+      "preserve_query_string": true } } }
+] }
+```
+
+### 5.2 `http_request_transform.json` (URL rewrites; 4 of the 10 free transform rules)
+
+Pages are stored once, as extensionless keys, and never under a locked format prefix (ADR-032). Every rule in a phase reads the original path, so the expressions are mutually exclusive.
+
+```json
+{ "rules": [
+  { "ref": "root_index", "description": "/ → /index.html", "enabled": true,
+    "expression": "(http.request.uri.path eq \"/\")",
+    "action": "rewrite", "action_parameters": { "uri": { "path": { "value": "/index.html" } } } },
+  { "ref": "dir_index", "description": "probe directories: trailing slash → index.html", "enabled": true,
+    "expression": "(ends_with(http.request.uri.path, \"/\") and starts_with(http.request.uri.path, \"/_probe/\"))",
+    "action": "rewrite", "action_parameters": { "uri": { "path": { "expression": "concat(http.request.uri.path, \"index.html\")" } } } },
+  { "ref": "page_slash", "description": "site pages: trailing slash → the extensionless key (ADR-032)", "enabled": true,
+    "expression": "(ends_with(http.request.uri.path, \"/\") and http.request.uri.path ne \"/\" and not starts_with(http.request.uri.path, \"/_probe/\"))",
+    "action": "rewrite", "action_parameters": { "uri": { "path": { "expression": "substring(http.request.uri.path, 0, -1)" } } } },
+  { "ref": "format_index_json", "description": "/{format}/index.json → /_formats/{format}.json (ADR-032)", "enabled": true,
+    "expression": "(ends_with(http.request.uri.path, \"/index.json\") and not starts_with(http.request.uri.path, \"/_\"))",
+    "action": "rewrite", "action_parameters": { "uri": { "path": { "expression": "concat(\"/_formats\", substring(http.request.uri.path, 0, -11), \".json\")" } } } }
+] }
+```
+
+### 5.3 `http_response_headers_transform.json` (5 of the 10, plus an optional sixth below)
+
+```json
+{ "rules": [
+  { "ref": "files_headers", "description": "all objects with an extension (fixtures, discovery files, assets)", "enabled": true,
+    "expression": "(http.request.uri.path contains \".\" and not ends_with(http.request.uri.path, \"/index.html\"))",
+    "action": "rewrite", "action_parameters": { "headers": {
+      "X-Content-Type-Options": { "operation": "set", "value": "nosniff" },
+      "Cross-Origin-Resource-Policy": { "operation": "set", "value": "cross-origin" },
+      "Timing-Allow-Origin": { "operation": "set", "value": "*" } } } },
+  { "ref": "files_noindex", "description": "keep raw files out of search, except the display assets search engines and social platforms show", "enabled": true,
+    "expression": "(http.request.uri.path contains \".\" and not ends_with(http.request.uri.path, \"/index.html\") and not (http.request.uri.path eq \"/favicon.ico\" or http.request.uri.path eq \"/apple-touch-icon.png\" or http.request.uri.path eq \"/assets/og.png\" or http.request.uri.path eq \"/assets/mark.svg\"))",
+    "action": "rewrite", "action_parameters": { "headers": {
+      "X-Robots-Tag": { "operation": "set", "value": "noindex" } } } },
+  { "ref": "active_content_sandbox", "description": "inert CSP for markup fixtures", "enabled": true,
+    "expression": "((ends_with(http.request.uri.path, \".html\") and not ends_with(http.request.uri.path, \"/index.html\")) or ends_with(http.request.uri.path, \".htm\") or ends_with(http.request.uri.path, \".xhtml\") or ends_with(http.request.uri.path, \".svg\") or ends_with(http.request.uri.path, \".xml\"))",
+    "action": "rewrite", "action_parameters": { "headers": {
+      "Content-Security-Policy": { "operation": "set", "value": "sandbox; default-src 'none'; img-src https://loremfile.dev data:; media-src https://loremfile.dev; style-src 'unsafe-inline'; font-src https://loremfile.dev" } } } },
+  { "ref": "site_pages_headers", "description": "site pages (extensionless keys and index.html)", "enabled": true,
+    "expression": "((not http.request.uri.path contains \".\") or ends_with(http.request.uri.path, \"/index.html\"))",
+    "action": "rewrite", "action_parameters": { "headers": {
+      "Content-Security-Policy": { "operation": "set", "value": "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" },
+      "X-Frame-Options": { "operation": "set", "value": "DENY" },
+      "Referrer-Policy": { "operation": "set", "value": "strict-origin-when-cross-origin" },
+      "X-Content-Type-Options": { "operation": "set", "value": "nosniff" },
+      "Permissions-Policy": { "operation": "set", "value": "camera=(), microphone=(), geolocation=()" } } } },
+  { "ref": "legal_pages_noindex", "description": "keep the pages that name the operator out of search (ADR-028)", "enabled": true,
+    "expression": "(http.request.uri.path eq \"/legal/imprint\" or http.request.uri.path eq \"/legal/imprint/\" or http.request.uri.path eq \"/legal/privacy\" or http.request.uri.path eq \"/legal/privacy/\")",
+    "action": "rewrite", "action_parameters": { "headers": {
+      "X-Robots-Tag": { "operation": "set", "value": "noindex, nofollow, nosnippet" } } } }
+] }
+```
+
+Notes: the `site_pages_headers` expression groups `(not A) or B` explicitly; the Rules language would evaluate it the same way without the parentheses (documented precedence: `not` first, then `and`, `xor`, `or`), but a security-relevant rule should not depend on a reader knowing that. `http.request.uri.path` in this phase reflects the URL-rewrite result, so `/` is seen as `/index.html` and `/pdf/` as `/pdf`, and both get site headers. `assets/site.<hash>.css` gets file headers (harmless). The sandbox CSP also lands on `sitemap.xml` and RSS/Atom fixtures, which is harmless for non-document consumers and desirable when opened in a browser.
+
+These suffix tests rely on Cloudflare's **URL normalization** (Rules → Settings → Normalize incoming URLs, on by default) so that `/html/basic%2Ehtml` is evaluated as `/html/basic.html`; the setting is part of the desired state and audit probes request encoded paths. As belt-and-braces, a fifth header rule keyed on the response type is added if the field is available on the Free plan (**[VERIFY]** in M2.3; the `http.response.content_type` field is documented for response-phase rules):
+
+```json
+  { "ref": "active_content_sandbox_by_type", "description": "sandbox CSP by response Content-Type (belt and braces)", "enabled": true,
+    "expression": "(http.request.uri.path contains \".\" and not ends_with(http.request.uri.path, \"/index.html\") and (http.response.content_type contains \"text/html\" or http.response.content_type contains \"xml\"))",
+    "action": "rewrite", "action_parameters": { "headers": {
+      "Content-Security-Policy": { "operation": "set", "value": "sandbox; default-src 'none'; img-src https://loremfile.dev data:; media-src https://loremfile.dev; style-src 'unsafe-inline'; font-src https://loremfile.dev" } } } }
+```
+
+**`files_noindex`** (split out of `files_headers` 2026-09-21, owner decision). `X-Robots-Tag` used to sit in `files_headers`, so it reached every dotted path — including the four files that exist to be *shown*: `favicon.ico`, `apple-touch-icon.png`, `/assets/og.png`, `/assets/mark.svg`. Narrowing `files_headers` itself would also have stripped their `nosniff`, CORP and TAO, so the header moved to its own rule instead: `files_headers`' expression is **unchanged**, and `files_noindex` is that expression minus the four. Every fixture and data file therefore receives exactly the headers it did before. The exclusion uses `eq`, like `legal_pages_noindex`, rather than an unproven set literal, and the four paths are pinned against `routes.DISPLAY_ASSETS` by a test so the rule and the code that verifies it cannot drift apart. Both new rules never set a header another rule sets: `legal_pages_noindex` only matches extensionless paths. **This removes a wrong header; it is not the fix for the missing favicon in search.** Google's favicon documentation does not list `noindex` as a cause and the icon itself is valid (square ICO, 16/32/48 px), so that is most likely crawl latency, which Google describes as several days to several weeks. **Verified on production after deploy `35586022540` (2026-09-21):** the four display assets serve no `X-Robots-Tag` and do serve `nosniff`; fixtures still carry `noindex`.
+
+**`legal_pages_noindex`** (added 2026-09-15, ADR-028) sets only `X-Robots-Tag` on the two legal pages that name the operator, in both their forms: ADR-032 rewrites `/legal/imprint/` to the page, and whether a later phase sees the rewritten path or the requested one is undocumented, so each rule names both and does not depend on the answer. Both paths are extensionless, so `site_pages_headers` matches them too; it sets no `X-Robots-Tag`, so the two rules never set the same header. The expression uses `eq`, already proven on this zone by the request transform, rather than a set literal. Verified against the published pages when M4.1 first publishes them (`15` M4.1).
+
+Transform rules now: **4 URL rewrites + 5 header rules = 9 of the 10** (since `files_noindex`, 2026-09-21). **Verified 2026-09-21:** Cloudflare's availability table lists 10 active Transform Rules on the Free plan, shared across rule types rather than per phase. **One slot is left.** The optional content-type rule would take the zone to 10, the cap, so it is the last transform rule this zone can add in either phase — any later need has to replace a rule, not join them.
+
+**Self-identifying AI agents are refused on the two legal pages by a WAF custom rule**, in §5.7 (ADR-030). robots.txt only asks (`04` §6).
+
+### 5.4 `http_request_cache_settings.json` (1 of 10 cache rules)
+
+```json
+{ "rules": [
+  { "ref": "cache_everything_respect_origin", "description": "cache all objects; TTL from object Cache-Control", "enabled": true,
+    "expression": "(http.host eq \"loremfile.dev\")",
+    "action": "set_cache_settings",
+    "action_parameters": { "cache": true, "edge_ttl": { "mode": "respect_origin" }, "browser_ttl": { "mode": "respect_origin" },
+      "cache_key": { "custom_key": { "query_string": { "exclude": "*" } } } } }
+] }
+```
+
+"Ignore query string" in the cache key is available on all plans (the API form documented for it is `exclude: "*"`; if the API rejects that literal, use `{"all": true}` — M2.3 confirms). With it, `?anything` requests share the cached object and cost no extra R2 read.
+
+Also enable **Tiered Cache → Smart Tiered Cache** (Caching → Tiered Cache) — apply.py does this via `PATCH /zones/{zone_id}/cache/tiered_cache_smart_topology_enable {"value":"on"}` (endpoint and Free-plan availability verified); it reduces R2 reads by funnelling misses through one upper-tier data centre, which matters because every distinct embedding origin has its own cache entry. Dashboard fallback: Caching → Tiered Cache → Smart Tiered Cache → On.
+
+### 5.5 `http_ratelimit.json` (the single free rule)
+
+```json
+{ "rules": [
+  { "ref": "per_ip_burst", "description": "300 req / 10 s per IP per data centre, verified bots exempt. The path test is a tautology: Free-plan rate-limit expressions may only reference the path and verified-bot fields, and an expression is mandatory. Do not simplify it away.", "enabled": true,
+    "expression": "(starts_with(http.request.uri.path, \"/\") and not cf.client.bot)",
+    "action": "block",
+    "ratelimit": { "characteristics": ["cf.colo.id", "ip.src"], "period": 10, "requests_per_period": 300, "mitigation_timeout": 10 } }
+] }
+```
+
+**Partly verified, and the remainder is open. Deployment: confirmed** — the read-back returns `["cf.colo.id", "ip.src"]`, so `cf.colo.id` stands rather than joining the falsified list. **Enforcement: proven possible, not proven reliable.** Run 4 blocked at request 547 of a 600-request burst at 156 req/s against a single cached object, which also shows the rule counts cache hits. Run 5 then sent 600 requests at 69 req/s and 600 unique-path requests at 45 req/s — both above the 30 req/s threshold, both unblocked — and the slower run had *more* headroom after crossing the threshold (4.3 s against 1.9 s), so window coverage does not explain the difference. Two variables were unmeasured and now are: the probe sustains load for a fixed **duration** rather than a fixed count, and samples the `ip`/`colo` the edge attributes it to via `/cdn-cgi/trace`, because the counter is per `(ip.src, cf.colo.id)` and a split identity would mean no counter ever saw the whole load.
+
+**Enforcement is not instantaneous, and the rule bounds sustained abuse rather than short bursts.** Run 3 completed 600 requests at 156 req/s with no 429 at all; run 4 was blocked ~5 s in, at request 547. A burst that finishes inside a few seconds can outrun the counter. This matters for what the rule is relied on for: it is a bound on sustained volume, not a guarantee that any given short burst is refused (`19` §3).
+
+Free-plan constraints (verified): 1 rule, period 10 s, mitigation timeout 10 s, IP characteristic, expression fields limited to path and verified-bot. In the API the dashboard's "IP" characteristic is `ip.src` **plus `cf.colo.id`, which Cloudflare documents as mandatory in every rule's `characteristics` list on every plan** (counting is therefore per IP per data centre; never use `cf.colo.id` in the expression itself). 300/10 s = 30 rps per IP per data centre, comfortably above real usage and below abuse.
+
+### 5.6 `http_request_firewall_managed.json`
+
+```json
+{ "rules": [
+  { "ref": "free_managed_ruleset", "description": "Cloudflare Free Managed Ruleset", "enabled": true,
+    "expression": "true", "action": "execute",
+    "action_parameters": { "id": "77454fe2d30c4220b5701f6fdfb893ba" } }
+] }
+```
+
+**Resolved 2026-09-09 against the live zone — this phase is verified, never written.**
+
+The zone has **no entry point** in `http_request_firewall_managed`: `GET /zones/{id}/rulesets/phases/http_request_firewall_managed/entrypoint` answers `10003: could not find entrypoint ruleset in the http_request_firewall_managed phase`. Cloudflare deploys its managed ruleset into the phase directly, and it appears in the zone's own ruleset list as `{"name": "Cloudflare Managed Free Ruleset", "kind": "managed", "phase": "http_request_firewall_managed"}` with id `77454fe2d30c4220b5701f6fdfb893ba`. Creating an entry point to add our `execute` rule would be writing a phase Cloudflare owns.
+
+So `apply.py` **confirms the managed ruleset is deployed and stops** — a permanent skip with a reason, not a fallback — and `audit.py` verifies the same way. The file above stays as the record of what is expected to be executing.
+
+**Two corrections this produced.** The name is **"Cloudflare Managed Free Ruleset"**, not "Cloudflare Free Managed Ruleset" as this section said; a `name ==` match against the old string would never have succeeded. And the lookup is **zone-scoped** (`GET /zones/{id}/rulesets`), not `GET /accounts/{id}/rulesets`: T1 is a zone token, and it failing to list account rulesets is the token working as designed, not a permission to widen. The id in the constant was correct.
+
+### 5.7 `http_request_firewall_custom.json` (1 of the 5 free custom rules; written rule by rule — ADR-030)
+
+```json
+{ "rules": [
+  { "ref": "loremfile_legal_pages_ai_agents", "description": "block self-identifying AI agents on the two legal pages that name the operator (ADR-028, ADR-030)", "enabled": true,
+    "expression": "(http.request.uri.path eq \"/legal/imprint\" or http.request.uri.path eq \"/legal/imprint/\" or http.request.uri.path eq \"/legal/privacy\" or http.request.uri.path eq \"/legal/privacy/\") and (http.user_agent contains \"GPTBot\" or http.user_agent contains \"OAI-SearchBot\" or http.user_agent contains \"ChatGPT-User\" or http.user_agent contains \"OAI-AdsBot\" or http.user_agent contains \"ClaudeBot\" or http.user_agent contains \"Claude-User\" or http.user_agent contains \"Claude-SearchBot\")",
+    "action": "block" }
+] }
+```
+
+**Why rule by rule, not the ADR-008 `PUT`.** This is the phase `11` §7.4 reaches for during an incident, adding custom rules in the dashboard. Cloudflare on writing an entry point with `PUT`: "This API method requires that you include in the request all rules you want to keep in the ruleset, or else they will be removed." So the next apply after an incident would delete the incident's rule. Instead:
+
+- **Ours means the `ref` starts with `loremfile_`.** Every committed rule carries the prefix (tested).
+- **Compare, then write one rule.** `apply` reads the entry point and compares each of our rules by `ref` with `apply.compare_rules`. Only on a difference does it write:
+  - `POST /zones/{id}/rulesets/{ruleset_id}/rules` to add a rule;
+  - `PATCH …/rules/{rule_id}` to change one, sending the whole rule ("You must include all the rule fields that you want to be part of the new rule definition, even if you are not changing their values");
+  - `DELETE …/rules/{rule_id}` to remove a rule of ours that is no longer committed.
+- **No entry point yet** (`10003`, as in §5.6): `POST /zones/{id}/rulesets` creates it, carrying our rules.
+- **Any other rule is a `warning` and is never deleted** — by `apply` and by `infra audit` alike.
+- **The phase is never `PUT`.** `cloudflare_api` refuses such a request before sending it, dry run included (`PhaseWriteRefused`).
+- **Rule order in this phase is neither compared nor changed.**
+
+**The rule.** It is scoped with `eq` to the two paths and their trailing-slash forms, as `legal_pages_noindex` is (§5.3), and matches `http.user_agent contains` each token in its vendor's casing. Cloudflare: "All string operators are case-sensitive unless explicitly stated as case-insensitive". The tokens are exactly the `04` §6 AI group minus `Google-Extended`, which `tests/unit/test_legal_pages.py` keeps true:
+
+- **OpenAI** publishes a full header string containing each of its four tokens. On `ChatGPT-User` it says "robots.txt rules may not apply", which is why this rule exists. On `OAI-AdsBot`: "OAI-AdsBot is used to validate the safety of web pages submitted as ads on ChatGPT. When you submit an ad, OpenAI may visit the landing page to ensure it complies with our policies. We may also use content from the landing page to determine when it's most relevant to show the ad to users. OAI-AdsBot only visits pages submitted as ads, and the data collected by OAI-AdsBot is not used to train generative AI foundation models." Its header is `Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; OAI-AdsBot/1.0; +https://openai.com/adsbot`.
+- **Anthropic** names `ClaudeBot`, `Claude-User` and `Claude-SearchBot` as robots.txt user agents but publishes **no header strings**. Matching them assumes the header carries the token in that casing, and that stays unverified until a request from one is seen.
+- **`Google-Extended` never.** Google: "Google-Extended doesn't have a separate HTTP request user agent string." A clause for it could not fire.
+
+**Resolved 2026-09-15: Free accepts `http.user_agent` in a custom rule.** Cloudflare's documentation said nothing either way. The custom-rules availability table names no field restriction, the field reference states no plan availability, and User Agent Blocking recommends custom rules with an `http.user_agent eq` example. So the first write decided it:
+
+- **The write.** Push deploy run `34940201386` (`99334dd9e2`, #61's merge): `Apply infra` reported `http_request_firewall_custom:loremfile_legal_pages_ai_agents updated — added, creating the entry point`, with `failed=0` and `warning=0`; every other phase `unchanged`. T1 made that write, which also confirms its permission for this phase (§6, row 5b).
+- **The behaviour.** Probe run `34941018789`: `legal-pages-ai-agents` passed ("7 agent tokens refused on 2 pages; a browser was not"). 14 checks, 0 failed; the rate limit answered 429 after 288 requests at 259/s (colo ORD); `uploaded=5`, `deleted=5`.
+- **The path scope, by hand.** The owner, at 07:11:42 UTC from colo TXL:
+  - a `GPTBot` User-Agent got `403` on `/legal/imprint` and `/legal/privacy`;
+  - a browser got `404` on both, because the pages are not published yet;
+  - `GPTBot` got `200` on `/pdf/minimal.pdf` and `404` on `/robots.txt` (not published yet).
+
+  The refusal is scoped to the two paths.
+
+**Still unverified:** Anthropic publishes no header strings, so matching `ClaudeBot`, `Claude-User` and `Claude-SearchBot` assumes each request's header carries its token in that casing.
+
+**What the probe checks.** `infra.yml` → `probe` runs `legal-pages-ai-agents`.
+1. **It settles first**, as the other post-apply checks do (`11` §7.2b). The first agent request on the first page is polled until it is refused, for up to 180 s. A settle that expires reports "never appeared" — the rule has not propagated or was never applied — which is a different finding from a wrong rule.
+2. **Then, once each and unretried:**
+   - every token gets `403` on both pages (a block is "`403` (most security features)");
+   - a browser User-Agent does not;
+   - no token is refused on `/robots.txt`, a path the rule does not name.
+
+The browser control shows the rule does not refuse everyone; the off-path control shows the `403` comes from the rule's path scope. The pages need not be published for this, because the edge answers before R2 does.
+
+**Budget.** 1 of 5 custom rules, leaving 4 for incidents (`11` §7.4).
+
+## 6. `apply.py` and `audit.py`
+
+Common: read `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_ACCOUNT_ID` from env; retry with backoff on 429/5xx; never delete resources it did not define (rulesets are `PUT` in full because each file is the complete desired list for that phase — the phases used are owned by this project; other phases are never touched. **`http_request_firewall_custom` is the exception**: it is shared with incident rules, written one rule at a time, and never `PUT` — §5.7, ADR-030). Both run from GitHub Actions (`infra.yml`, `deploy.yml`, `audit.yml`); nobody needs the tokens locally.
+
+`apply.py [--dry-run]`:
+1. Zone settings: `GET /zones/{id}/settings`; for each key in `zone-settings.json`, if `editable` and value differs → `PATCH /zones/{id}/settings/{key}`.
+2. Bot management: `GET`, `PUT` if different; on 403 print §2 step 13 and continue (exit code stays 0 but the summary marks it "manual").
+3. DNSSEC: `GET /zones/{id}/dnssec`; if not `active` → `PATCH {"status":"active"}`.
+4. DNS: ensure `www` CNAME → `loremfile.dev` proxied; ensure `_dmarc` TXT `v=DMARC1; p=reject; adkim=s; aspf=s` — **by content, not only by existence**: a record we own whose content differs is updated in place with `PATCH /zones/{id}/dns_records/{record_id}`, TXT values compared ignoring one pair of surrounding double quotes (Cloudflare's API reference says TXT content "must consist of quoted character strings"; the live record was stored unquoted). Until 2026-09-14 apply only checked existence, so a content change in `infra/dns.json` could never have reached the zone; ensure the SPF TXT contains `include:_spf.mx.cloudflare.net` **only if** Email Routing already created it (never create SPF from scratch; Email Routing owns it). Never delete records.
+5. Rulesets: for each phase file, `GET …/phases/{phase}/entrypoint` and compare its rules with the committed file — the same comparison `infra audit` uses (`apply.compare_rules`): every field the committed rule declares, `ref` included, by position; `id`, `version` and `last_updated` are Cloudflare's. **Write only on a difference**, with `PUT …/phases/{phase}/entrypoint` (a full PUT of the phase, which also creates a missing entry point), and report `updated`; otherwise report `unchanged`. A phase that cannot be read is reported `failed` and is **not** written blind. *(Until 2026-09-15 every phase was PUT unconditionally and reported `updated`, so a dry run named phases as changing that the audit called `ok`.)* For `http_request_firewall_managed`, first list `GET /accounts/{account_id}/rulesets` to resolve the Free Managed Ruleset ID by name and skip if the entry point already executes it.
+5b. WAF custom rules (§5.7): `GET …/phases/http_request_firewall_custom/entrypoint`, then:
+   - for each committed rule, whose `ref` starts with `loremfile_`, compare by `ref`, and on a difference `POST`, `PATCH` or `DELETE` that one rule by id;
+   - with no entry point, `POST /zones/{id}/rulesets` with our rules;
+   - any other rule is reported as a `warning` and left untouched;
+   - never `PUT`.
+6. Tiered cache: `GET …/cache/tiered_cache_smart_topology_enable`; `PATCH` it `on` only if it is not already on.
+7. URL normalization: `GET`; if not `type: cloudflare, scope: incoming` → write it (or print the dashboard path when the API refuses).
+8. Print a summary table: resource → unchanged / updated / skipped(reason) / manual / warning (a custom rule that is not ours, left in place).
+
+`infra/dns.json` (desired records; apply.py step 4 reads it rather than hard-coding):
+
+```json
+{ "records": [
+  { "type": "CNAME", "name": "www", "content": "loremfile.dev", "proxied": true },
+  { "type": "TXT", "name": "_dmarc", "content": "v=DMARC1; p=reject; adkim=s; aspf=s", "exclusive": true },
+  { "type": "CNAME", "name": "2ca55a2a310caebda76ef903b38e8649", "content": "verify.bing.com", "proxied": false }
+], "expected_managed": ["apex R2 record", "MX ×3 (Email Routing)", "TXT SPF (Email Routing)"] }
+```
+
+`infra/token-expiry.json` (dates only, never secrets; updated by the rotation procedure `11` §7.3; read by `health.yml` to open `rotation-due` issues 30 days ahead):
+
+```json
+{ "T1": { "name": "loremfile-ci-zone", "expires": "2027-03-06" }, "T2": { "name": "loremfile-ci-r2", "expires": "2027-03-06" }, "T4": { "name": "loremfile-ci-analytics", "expires": "2027-09-06" } }
+```
+
+Endpoints, expected token permissions and the fallback when the API answers 403 (all confirmed or corrected in M2.3, which records the outcome in this table):
+
+| Step | Endpoint | Permission expected | 403 fallback |
+|---|---|---|---|
+| 1 | `/zones/{id}/settings/*` | Zone Settings: Edit | dashboard: Speed / Security / Scrape Shield toggles |
+| 2 | `/zones/{id}/bot_management` | Bot Management: Edit **[VERIFY]** | §2 step 13 |
+| 3 | `/zones/{id}/dnssec` | DNS: Edit (or Zone Settings: Edit) **[VERIFY]** | DNS → Settings → Enable DNSSEC |
+| 4 | `/zones/{id}/dns_records` | DNS: Edit | DNS → Records |
+| 5 | `/zones/{id}/rulesets/phases/http_request_dynamic_redirect/entrypoint` | **Zone → Single Redirect → Edit** (**resolved 2026-09-08**: the token builder has no "Dynamic Redirect" entry; Cloudflare's own docs name *Zone → Single Redirect → Edit* as the required permission for this phase. The API phase kept the older internal name) | Rules → Redirect Rules |
+| 5 | `…/http_request_transform`, `…/http_response_headers_transform` | Transform Rules: Edit | Rules → Transform Rules |
+| 5 | `…/http_request_cache_settings` | Cache Rules: Edit | Caching → Cache Rules |
+| 5 | `…/http_ratelimit` | Zone WAF: Edit | Security → WAF |
+| 5 | `…/http_request_firewall_managed` | **none — never written** (**resolved 2026-09-09**: no zone entry point exists; Cloudflare deploys the managed ruleset itself, verified zone-scoped via `GET /zones/{id}/rulesets`) | n/a |
+| 5b | `…/phases/http_request_firewall_custom/entrypoint` (read); `…/rulesets/{ruleset_id}/rules[/{rule_id}]` (`POST`/`PATCH`/`DELETE`); `POST /zones/{id}/rulesets` (create) — **never `PUT`** | Zone WAF: Edit, as for `http_ratelimit` (**resolved 2026-09-15**: T1's first write created the entry point and the rule — push deploy run `34940201386`, §5.7) | Security → WAF → Custom rules |
+| 6 | `/zones/{id}/cache/tiered_cache_smart_topology_enable` | Cache Settings: Edit (endpoint verified) | Caching → Tiered Cache |
+| 7 | `/zones/{id}/url_normalization` (read; write only if off) | Zone Settings: Edit **[VERIFY endpoint]** | Rules → Settings → Normalize incoming URLs |
+| health | GraphQL Analytics `r2OperationsAdaptiveGroups` (T4) | Account → Account Analytics: Read **[VERIFY in M0.4 when T4 is created]** | Read R2 usage in the dashboard |
+| purge | `/zones/{id}/purge_cache` | Cache Purge | Caching → Configuration → Purge |
+
+`audit.py [--strict]`: performs every GET, diffs against desired state, and additionally runs behavioural probes against production: `GET /` is HTML; `GET /pdf/` equals `GET /pdf`; header rules present on a fixture, a markup fixture and a page; the sandbox CSP is present on `/html/basic%2Ehtml` and `/svg/simple-shapes%2Esvg` (normalization check); a warm-cache CORS check (GET without `Origin`, then with `Origin: https://example.org` → `access-control-allow-origin: *`, `cf-cache-status` MISS then HIT on repeat); `OPTIONS` preflight returns `access-control-allow-origin: *`; `www` redirects; `X-Robots-Tag` absent on `/pdf`; bucket lock rules present for every format prefix (via `GET /accounts/{account_id}/r2/buckets/{bucket}/lock` if T1/T4 may read it, else skipped with a warning); the DNS zone contains only the expected records (apex R2 record, `www`, MX ×3, SPF, DMARC) and lists any others as findings. Settings the token cannot read are reported as warnings and do not fail the run unless `--strict`. Exit 1 on any real difference. Runs after every deploy and weekly.
+
+## 7. `infra/r2-cors.json` (S3 shape) and `infra/r2-cors.wrangler.json` (wrangler shape)
+
+S3 shape, for reference and for `audit.py`'s behavioural check:
+
+```json
+[ { "AllowedOrigins": ["*"], "AllowedMethods": ["GET", "HEAD"], "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["Content-Length", "Content-Range", "Content-Type", "Content-Disposition", "ETag", "Accept-Ranges", "Last-Modified"],
+    "MaxAgeSeconds": 86400 } ]
+```
+
+Wrangler shape (`rules[].allowed.{origins,methods,headers}`, `exposeHeaders`, `maxAgeSeconds`) is the same policy in the format `wrangler r2 bucket cors set` reads; keep both files in sync (a unit test checks equivalence).
+
+## 7b. `infra/r2-locks.json` — bucket lock rules (storage-level immutability)
+
+R2 bucket locks "prevent the deletion and overwriting of objects" under a prefix, indefinitely if configured so. One rule per format prefix (generated from the catalog by `loremfile infra locks --write`; committed):
+
+```json
+{ "rules": [
+  { "id": "lock-pdf",  "enabled": true, "prefix": "pdf/",  "condition": { "type": "Indefinite" } },
+  { "id": "lock-png",  "enabled": true, "prefix": "png/",  "condition": { "type": "Indefinite" } },
+  { "id": "lock-edge", "enabled": true, "prefix": "edge/", "condition": { "type": "Indefinite" } },
+  { "id": "lock-locktest", "enabled": true, "prefix": "_locktest/", "condition": { "type": "Indefinite" } }
+] }
+```
+
+The committed file has one entry for every format directory in `05` §3 (≈ 65 rules; the three above are illustrative) plus the `_locktest/` rule, which exists so that M2.4 can prove lock behaviour: the probe writes one 1-byte object `_locktest/probe` once (it then stays forever, harmless) and verifies that overwriting and deleting it are refused. Fixture prefixes are never probed that way.
+
+Consequences: `upload --fixtures` can only ever add objects; a leaked T2 cannot overwrite or delete a fixture; site keys (root, `docs/`, `legal/`, `assets/`, discovery files) and `_probe/` are outside every locked prefix and stay writable; a takedown requires the owner to remove the affected prefix's rule with an admin token, delete the object, and re-add the rule (`11` §7.8) — the right amount of ceremony for a legal removal. **Resolved 2026-09-09 (M2.3): the API accepted all 53 rules in one `PUT /accounts/{account_id}/r2/buckets/loremfile-public/lock`, and a read-back returned 53, every one `Indefinite` and enabled.** The rules are applied and stay applied: the bucket is empty, and R2 locks never block *creation* — only overwrite and delete — so uploads are unaffected. Formats added in M3.7 add their rules as they land. The deploy gate checks the **committed** file covers every prefix it is about to write; `audit_bucket_locks` is what compares that file with the rules the bucket actually holds. The documented maximum is still unstated, so the ceiling above 53 remains unknown; RISK-20 is retained at reduced likelihood rather than closed. Adding a new format later means adding its rule (owner step with T3, listed in `11` §7.9).
+
+## 8. Cloudflare features that must stay OFF
+
+> **`fonts` and `speed_brain` resolved 2026-09-09 (M2.3): they are not zone settings on this zone.**
+> `GET /zones/{id}/settings` returns 56 ids and neither appears, nor does anything matching
+> `font`, `speed` or `brain`. They are therefore **not** in `zone-settings.json` — a key the API
+> does not offer would be reported as `skipped: not offered on this plan` on every run, which is
+> noise that trains people to ignore the summary. If they appear later as settings, add them then.
+> All 22 keys `zone-settings.json` does declare were confirmed present on the zone. (checked by audit.py where readable, otherwise in the monthly checklist)
+
+> **`tls_1_3` resolved 2026-09-10 (M4.4): the desired state was wrong, not the zone.** It was the
+> only setting of 23 that did not converge after M2.3 — the zone reports `zrt`, the file asked for
+> `on`, and `apply` reported `updated` every run. `zrt` **is** TLS 1.3 with 0-RTT, and the file also
+> declared `"0rtt": "on"`, so it asked for two things Cloudflare expresses as one value and wrote
+> one of them in a form that denies the other. `modified_on` is `null` for both keys while every
+> setting M2.3 actually changed carries a `2026-09-09T13:49Z` timestamp, which is the evidence that
+> the write never landed. The desired state now holds `"tls_1_3": "zrt"`; **no zone behaviour
+> changes.** ADR-027 records the rejected alternative (turning 0-RTT off) and what would reopen it.
+
+> **Cloudflare Web Analytics / RUM stays off (owner decision, 2026-09-21).** Three independent reasons, any one of which would be enough: (1) the published privacy notice says the site uses "no cookies and no analytics scripts" (`13` §3), and every page's footer says "No cookies, no analytics, no third-party requests" — RUM works by injecting a beacon script, which would make both false; (2) § 25 TDDDG makes access to a visitor's device consent-dependent unless it is strictly necessary, and performance analytics is not; (3) the site CSP is `script-src 'self'` and would block the beacon, so enabling it would also mean weakening a security header. The operational need is already met without a script: `health.yml`'s cost check reads server-side zone analytics with T4. **None of our tokens can read this setting**, so it cannot be audited; it is checked in the dashboard with the other manual items below, and turning it on is a decision that has to reopen all three reasons, not a toggle.
+
+Read and enforced by `infra audit` via zone settings: Rocket Loader, Email Address Obfuscation, Automatic HTTPS Rewrites, Server-side Excludes, Hotlink Protection, Browser Integrity Check, Polish, Mirage, Early Hints, plus (via the bot-management endpoint, if readable) Bot Fight Mode, Block AI Bots, Managed robots.txt, and URL normalization (must stay **on**). Cloudflare Fonts and Speed Brain have zone-setting IDs (`fonts`, `speed_brain`) that M2.3 confirms **[VERIFY]** and then adds to `zone-settings.json` as `off`. Checked manually in the monthly checklist because they are separate products without a simple setting: Zaraz (never enabled), Web Analytics automatic injection (never add the site), Crawler Hints, Under Attack Mode (only during an incident).
+
+## 9. What the Free plan cannot do (so nobody tries)
+
+Regex in rules; excluding the `Origin` header from the cache key or adding headers/cookies to it (ignoring or sorting the query string **is** available); more than one rate-limiting rule; host-header override; custom error pages; Cache Reserve without paying; caching objects > 512 MB. Purge by URL, hostname, tag, prefix and purge-everything are all available on Free (100 operations per request).
+
+
+

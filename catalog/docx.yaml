@@ -1,0 +1,54 @@
+# Word documents (docs/05 §3.5). Launch-set rows only; the rest are P1b.
+format: docx
+family: documents
+mime: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+description: >-
+  Word documents for upload forms, converters and text extractors: plain paragraphs,
+  embedded images and a data table. Written by python-docx and normalised so the bytes
+  never move. No macros — a .docx cannot carry them, and none of these is a .docm.
+seo_title: "Sample DOCX files for testing — free, CC0, hotlinkable"
+related: [pdf, rtf, xlsx]  # odt joins when M7 adds it
+fixtures:
+  - name: 1page.docx
+    phase: 1
+    generator: office.docx_basic
+    params: { paragraphs: 3 }
+    description: "One page: a heading and three paragraphs of Lorem Ipsum in the default Word styles. The page count is what Word renders it as; .docx stores no page count of its own."
+    tags: [document, text]
+    expect: { paragraphs: 4, tables: 0, images: 0 }
+    size_class: free
+  - name: with-images.docx
+    phase: 1
+    generator: office.docx_with_images
+    params: { images: ["png/100x100.png", "png/640x480.png"] }
+    description: "Two published PNG fixtures embedded as pictures, read from the bytes that were actually published rather than regenerated."
+    tags: [document, image]
+    expect: { images: 2, tables: 0 }
+    size_class: free
+    depends_on: ["png/100x100.png", "png/640x480.png"]
+  - name: with-table.docx
+    phase: 1
+    generator: office.docx_with_table
+    params: { rows: 10 }
+    description: "A ten-row table of the shared people dataset with a bold header row, in the Table Grid style."
+    tags: [document, dataset-people]
+    expect: { tables: 1, table_rows: 11, images: 0 }
+    size_class: free
+  - name: 1mb.docx
+    phase: 1
+    generator: office.docx_sized
+    params: { size: 1000000 }
+    description: "About 1MB: one Lorem Ipsum paragraph per embedded incompressible seeded-noise PNG, so the size is honest rather than padded."
+    tags: [document, sized, image]
+    expect: { tables: 0 }
+    size_class: approx
+    nominal_bytes: 1000000
+  - name: 10mb.docx
+    phase: 1
+    generator: office.docx_sized
+    params: { size: 10000000 }
+    description: "About 10MB: one Lorem Ipsum paragraph per embedded incompressible seeded-noise PNG, so the size is honest rather than padded."
+    tags: [document, sized, image, large]
+    expect: { tables: 0 }
+    size_class: approx
+    nominal_bytes: 10000000

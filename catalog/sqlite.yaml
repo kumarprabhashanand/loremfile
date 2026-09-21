@@ -1,0 +1,26 @@
+# sqlite fixtures (docs/05 §3.7). Launch-set rows only; the rest are P1b.
+format: sqlite
+family: data
+mime: application/vnd.sqlite3
+description: >-
+  SQLite databases: one flat table of the people dataset, and one with three related
+  tables, a foreign key, indexes, a view and a trigger.
+seo_title: "Sample SQLite database files for testing — free, CC0"
+related: [sql, csv, parquet]
+fixtures:
+  - name: people-1000.sqlite
+    phase: 1
+    generator: columnar.sqlite_people
+    params: { rows: 1000 }
+    description: "A single table holding 1,000 rows of the shared people dataset. Page size 4096, journal mode DELETE, vacuumed so the file is byte-stable."
+    tags: [data, dataset-people]
+    expect: { tables: 1, rows_total: 1000, page_size: 4096, journal_mode: delete, has_fts: false }
+    size_class: free
+  - name: multi-table-with-fk-indexes-views.sqlite
+    phase: 1
+    generator: columnar.sqlite_multi_table
+    params: { people: 200, orders: 500 }
+    description: "Four tables with a foreign key from orders to people, two indexes, a view aggregating order totals, and an insert trigger. What a schema inspector should be tested against."
+    tags: [data, dataset-people, dataset-orders, dataset-products]
+    expect: { tables: 4, page_size: 4096, views: 1, indexes: 2, triggers: 1, has_fts: false }
+    size_class: free

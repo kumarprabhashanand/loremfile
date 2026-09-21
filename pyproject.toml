@@ -1,0 +1,142 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "loremfile"
+version = "0.1.0"
+description = "Generators, validators and tooling for loremfile.dev — CC0 sample files for every file type"
+readme = "README.md"
+requires-python = "==3.12.*"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "the loremfile.dev contributors" }]
+keywords = ["fixtures", "test-data", "sample-files", "cc0"]
+classifiers = [
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Testing",
+]
+# Runtime dependencies are pinned with hashes in tools/requirements.lock, which is
+# what the toolchain image installs (docs/06 §9). Nothing is declared here, so that
+# there is exactly one source of truth for versions.
+dependencies = []
+
+[project.scripts]
+loremfile = "loremfile.cli:main"
+
+[project.urls]
+Homepage = "https://loremfile.dev"
+Source = "https://github.com/kumarprabhashanand/loremfile"
+Issues = "https://github.com/kumarprabhashanand/loremfile/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+loremfile = ["data/**/*", "schema/*.json"]
+
+# ---------------------------------------------------------------------------
+# ruff — lint and format (docs/06 §13)
+# ---------------------------------------------------------------------------
+[tool.ruff]
+src = ["src", "tests"]
+target-version = "py312"
+line-length = 100
+# Lint and format Python only. `docs/` and `review/` are the specification, copied
+# verbatim; ruff reformats Python code blocks inside Markdown, which would silently
+# rewrite the documents. `build/` holds generated fixtures and is never linted.
+include = ["*.py", "*.pyi", "**/pyproject.toml"]
+extend-exclude = ["docs", "review", "build"]
+
+[tool.ruff.lint]
+select = [
+  "F",    # pyflakes
+  "E",    # pycodestyle errors
+  "W",    # pycodestyle warnings
+  "I",    # isort
+  "UP",   # pyupgrade
+  "B",    # bugbear
+  "C4",   # comprehensions
+  "SIM",  # simplify
+  "PTH",  # use pathlib
+  "RUF",  # ruff-specific
+  "ANN",  # annotations — type hints everywhere
+  "S",    # bandit
+  "T20",  # no print() outside the CLI
+  "ARG",  # unused arguments
+  "PL",   # pylint subset
+]
+ignore = [
+  "PLR0913",  # generators legitimately take many keyword parameters from the catalog
+  "PLR0917",  # same: fit() and the generators keep the signatures docs/05-06 specify
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "ANN", "PLR2004", "S311"]  # asserts, loose annotations, magic
+                                                 # numbers, and random.* — which the
+                                                 # determinism tests must call directly
+"src/loremfile/cli.py" = ["T20"]          # the CLI is the one place that prints
+"tools/licences.py" = ["T20"]             # a reporting script: printing is the whole point
+
+[tool.ruff.lint.isort]
+known-first-party = ["loremfile"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+# ---------------------------------------------------------------------------
+# mypy — strict on src/ (docs/06 §13)
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.12"
+files = ["src"]
+strict = true
+warn_unreachable = true
+show_error_codes = true
+# mutagen ships py.typed, but its ID3 frame classes take (*args, **kwargs) with no
+# annotations, so every `TIT2(...)` is an untyped call in a strict context. This excludes
+# calls *into* mutagen from that one check — our own code is still fully checked, which a
+# per-module `disallow_untyped_calls = false` on generators/media_audio.py would not be.
+untyped_calls_exclude = ["mutagen"]
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+ignore_errors = true
+
+# These libraries ship no inline types and no py.typed marker. Each is required by
+# docs/06 — lxml for hardened XML parsing (§6), pyarrow for Parquet/Arrow and fastavro
+# for Avro (§3.7), openpyxl for xlsx (§3.5) — so the imports are not optional; only
+# their typing is. The override is listed module by module and never blanket: a new
+# untyped dependency has to be added here deliberately, which is the point.
+#
+#   lxml      — `lxml-stubs` exists but is incomplete and third-party.
+#   pyarrow   — ships no stubs at all; upstream tracks it as unresolved.
+#   fastavro  — a compiled C extension, so there is nothing to infer from.
+#   html5lib  — ships no py.typed; `types-html5lib` is third-party and a toolchain change.
+#   pyzipper  — a zipfile fork with no py.typed and no stub package at all.
+#   fontTools — ships no py.typed; the font family and its validator use it directly.
+#   vobject   — ships no py.typed; it reads the vCards back in their validator.
+#   openpyxl  — ships no stubs; `types-openpyxl` is third-party and would be a
+#               toolchain change (see below). python-docx and python-pptx both ship
+#               py.typed and are deliberately absent from this list.
+#
+# Stub packages are deliberately NOT added mid-M3. A new toolchain image can shift the
+# generated bytes of formats already catalogued in earlier M3 pull requests, and
+# M3.9's `build --all --audit` would then report drift across every one of them. If
+# stubs are wanted, batch them into a single deliberate toolchain-bump pull request at
+# the M3 -> M4 boundary, where a determinism audit runs anyway.
+[[tool.mypy.overrides]]
+module = ["lxml.*", "pyarrow.*", "fastavro.*", "openpyxl.*", "html5lib.*", "pyzipper.*", "fontTools.*", "vobject.*"]
+ignore_missing_imports = true
+
+# ---------------------------------------------------------------------------
+# pytest (docs/12)
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+  "slow: takes more than a few seconds (media generation)",
+  "container: requires the pinned toolchain image to be meaningful",
+]

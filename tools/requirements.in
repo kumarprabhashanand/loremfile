@@ -1,0 +1,62 @@
+# Direct dependencies of the loremfile toolchain (docs/06 §9).
+#
+# Minimum versions are stated only where a feature depends on them; everything else
+# floats and is pinned exactly by tools/requirements.lock.
+#
+# Regenerate the lock inside the image after any change here:
+#   pip-compile --generate-hashes --output-file=tools/requirements.lock tools/requirements.in
+# and bump tools/TOOLCHAIN_DIGEST in the same pull request — tools/check_lock.sh
+# fails the build otherwise (docs/09 §4).
+
+# --- documents -------------------------------------------------------------
+fpdf2>=2.8
+pypdf>=5
+python-docx>=1.2          # comments API
+openpyxl
+python-pptx
+
+# --- images ----------------------------------------------------------------
+Pillow>=11.3              # AVIF support in the published wheels starts at 11.3.0
+
+# --- data ------------------------------------------------------------------
+pyarrow>=17
+fastavro
+ijson
+lxml
+PyYAML
+tomli-w
+jsonschema
+
+# --- archives --------------------------------------------------------------
+py7zr
+pyzipper
+zstandard                 # .tar.zst: Python 3.12's tarfile has no zstd mode
+
+# --- fonts, media, web -----------------------------------------------------
+fonttools[woff]
+brotli
+mutagen
+markdown-it-py
+html5lib
+
+# --- mail, calendar, certificates -----------------------------------------
+icalendar
+vobject
+cryptography
+
+# --- framework -------------------------------------------------------------
+pydantic>=2
+click
+Jinja2
+boto3
+requests
+
+# --- development -----------------------------------------------------------
+pytest
+responses
+ruff
+mypy
+types-requests
+types-PyYAML
+boto3-stubs[s3]
+pip-tools

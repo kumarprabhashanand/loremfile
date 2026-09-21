@@ -1,0 +1,25 @@
+# parquet fixtures (docs/05 §3.7). Launch-set rows only; the rest are P1b.
+format: parquet
+family: data
+mime: application/vnd.apache.parquet
+description: >-
+  The people dataset as Apache Parquet, snappy-compressed, one row group.
+seo_title: "Sample Parquet files for testing data pipelines — free, CC0"
+related: [arrow, avro, csv, sqlite]
+fixtures:
+  - name: people-1000.parquet
+    phase: 1
+    generator: columnar.parquet_people
+    params: { rows: 1000 }
+    description: "1,000 rows of the shared people dataset as Parquet, snappy-compressed, in a single row group. The same rows as every other people fixture."
+    tags: [data, dataset-people]
+    expect: { rows: 1000, columns: 14, row_groups: 1, compression: snappy }
+    size_class: free
+  - name: people-100k.parquet
+    phase: 1
+    generator: columnar.parquet_people
+    params: { rows: 100000 }
+    description: "100,000 rows of the shared people dataset as Parquet, snappy-compressed, in a single row group. The same rows as every other people fixture."
+    tags: [data, dataset-people]
+    expect: { rows: 100000, columns: 14, row_groups: 1, compression: snappy }
+    size_class: free

@@ -1,0 +1,17 @@
+# tsv fixtures (docs/05 §3.7). Launch-set rows only; the rest are P1b.
+format: tsv
+family: data
+mime: text/tab-separated-values
+description: >-
+  The people dataset delimited by tabs.
+seo_title: "Sample TSV file for testing parsers — free, CC0"
+related: [csv, json]
+fixtures:
+  - name: people-1000.tsv
+    phase: 1
+    generator: data.csv_people
+    params: { rows: 1000, delimiter: "\t" }
+    description: "1,000 rows of the shared people dataset, tab-delimited, with a header row."
+    tags: [data, dataset-people]
+    expect: { rows: 1000, columns: 14, delimiter: "\t", has_header: true }
+    size_class: free

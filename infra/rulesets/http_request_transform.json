@@ -1,0 +1,60 @@
+{
+  "rules": [
+    {
+      "ref": "root_index",
+      "description": "/ → /index.html",
+      "enabled": true,
+      "expression": "(http.request.uri.path eq \"/\")",
+      "action": "rewrite",
+      "action_parameters": {
+        "uri": {
+          "path": {
+            "value": "/index.html"
+          }
+        }
+      }
+    },
+    {
+      "ref": "dir_index",
+      "description": "probe directories: trailing slash → index.html",
+      "enabled": true,
+      "expression": "(ends_with(http.request.uri.path, \"/\") and starts_with(http.request.uri.path, \"/_probe/\"))",
+      "action": "rewrite",
+      "action_parameters": {
+        "uri": {
+          "path": {
+            "expression": "concat(http.request.uri.path, \"index.html\")"
+          }
+        }
+      }
+    },
+    {
+      "ref": "page_slash",
+      "description": "site pages: trailing slash → the extensionless key (ADR-032)",
+      "enabled": true,
+      "expression": "(ends_with(http.request.uri.path, \"/\") and http.request.uri.path ne \"/\" and not starts_with(http.request.uri.path, \"/_probe/\"))",
+      "action": "rewrite",
+      "action_parameters": {
+        "uri": {
+          "path": {
+            "expression": "substring(http.request.uri.path, 0, -1)"
+          }
+        }
+      }
+    },
+    {
+      "ref": "format_index_json",
+      "description": "/{format}/index.json → /_formats/{format}.json (ADR-032)",
+      "enabled": true,
+      "expression": "(ends_with(http.request.uri.path, \"/index.json\") and not starts_with(http.request.uri.path, \"/_\"))",
+      "action": "rewrite",
+      "action_parameters": {
+        "uri": {
+          "path": {
+            "expression": "concat(\"/_formats\", substring(http.request.uri.path, 0, -11), \".json\")"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+# MP3 audio (docs/05 §3.4). Launch-set rows only; the rest are P1b.
+format: mp3
+family: audio
+mime: audio/mpeg
+description: >-
+  MP3 test tones from ffmpeg's synthetic sources — a 440 Hz sine, a stereo pair for
+  channel checks, digital silence, and one file carrying ID3v2 tags with cover art.
+  Every file has a Xing header, so seeking and duration are exact rather than estimated.
+seo_title: "Sample MP3 audio files for testing — free, CC0, hotlinkable"
+related: [wav, flac, ogg, m4a]
+fixtures:
+  - name: sine-440hz-3s.mp3
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: mp3, duration: 3, bitrate: 128k }
+    description: "A 440 Hz sine wave, three seconds, 128 kbps stereo. The smallest useful audio sample. Measured duration is 3024 ms: an MP3 frame holds 1152 samples, so the encoder rounds up to a whole frame."
+    tags: [audio, codec-mp3]
+    expect: { duration_ms: 3024, acodec: mp3, channels: 2, audio_streams: 1 }
+    size_class: free
+  - name: sine-440hz-30s.mp3
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: mp3, duration: 30, bitrate: 128k }
+    description: "A 440 Hz sine wave, thirty seconds, 128 kbps stereo — long enough to test seeking and scrubbing."
+    tags: [audio, codec-mp3]
+    expect: { acodec: mp3, channels: 2 }
+    size_class: free
+  - name: stereo-lr-5s.mp3
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: mp3, duration: 5, source: stereo-lr, bitrate: 128k }
+    description: "440 Hz in the left channel, 880 Hz in the right. If your pipeline swaps or downmixes channels, this is the file that shows it."
+    tags: [audio, codec-mp3]
+    expect: { acodec: mp3, channels: 2 }
+    size_class: free
+  - name: silence-5s.mp3
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: mp3, duration: 5, source: silence, bitrate: 128k }
+    description: "Five seconds of digital silence — a valid MP3 with nothing in it, for code that treats silence as failure."
+    tags: [audio, codec-mp3]
+    expect: { acodec: mp3, channels: 2 }
+    size_class: free
+  - name: with-id3v2-tags-3s.mp3
+    phase: 1
+    generator: media_audio.mp3_tagged
+    params: { duration: 3, cover: "png/100x100.png" }
+    description: "Three seconds of 440 Hz carrying ID3v2.3 tags — title, artist, album, year and a PNG cover image taken from the published 100x100 fixture."
+    tags: [audio, codec-mp3]
+    expect: { acodec: mp3 }
+    size_class: free
+    depends_on: ["png/100x100.png"]
+  - name: 1mb.mp3
+    phase: 1
+    generator: media_audio.mp3_sized
+    params: { size: 1000000 }
+    description: "About 1MB of 440 Hz sine at a constant 128 kbps, so the duration follows from the size rather than the other way round."
+    tags: [audio, sized, codec-mp3]
+    expect: { acodec: mp3 }
+    size_class: approx
+    nominal_bytes: 1000000
+  - name: 10mb.mp3
+    phase: 1
+    generator: media_audio.mp3_sized
+    params: { size: 10000000 }
+    description: "About 10MB of 440 Hz sine at a constant 128 kbps — roughly ten minutes of audio."
+    tags: [audio, sized, codec-mp3, large]
+    expect: { acodec: mp3 }
+    size_class: approx
+    nominal_bytes: 10000000

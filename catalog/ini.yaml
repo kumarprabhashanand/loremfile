@@ -1,0 +1,18 @@
+# INI fixtures (docs/05 §3.6).
+format: ini
+family: text
+mime: text/plain
+description: >-
+  A configuration file covering sections, both comment styles, quoted values,
+  empty values, lists and non-ASCII.
+seo_title: "Sample INI config file for testing parsers — free, CC0"
+related: [txt]
+fixtures:
+  - name: config.ini
+    phase: 1
+    generator: text.ini_config
+    params: {}
+    description: "A configuration file with sections, ';' and '#' comments, quoted and empty values, a comma list and non-ASCII characters."
+    tags: [text, data]
+    expect: { line_ending: lf, bom: false }
+    size_class: free

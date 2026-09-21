@@ -1,0 +1,36 @@
+# PowerPoint presentations (docs/05 §3.5). Launch-set rows only; the rest are P1b.
+format: pptx
+family: documents
+mime: application/vnd.openxmlformats-officedocument.presentationml.presentation
+description: >-
+  PowerPoint presentations for converters, thumbnailers and upload forms. Widescreen
+  16:9, title-and-content slides of Lorem Ipsum. The 4:3 shape has its own fixture
+  rather than being a silent default.
+seo_title: "Sample PPTX files for testing — free, CC0, hotlinkable"
+related: [docx, pdf]  # odp joins when M7 adds it
+fixtures:
+  - name: 1slide.pptx
+    phase: 1
+    generator: office.pptx_basic
+    params: { slides: 1 }
+    description: "A single 16:9 title-and-content slide of Lorem Ipsum."
+    tags: [document, text]
+    expect: { slides: 1, images: 0, slide_width_emu: 12191695, slide_height_emu: 6858000 }
+    size_class: free
+  - name: 10slides.pptx
+    phase: 1
+    generator: office.pptx_basic
+    params: { slides: 10 }
+    description: "Ten 16:9 title-and-content slides of Lorem Ipsum, each with its own title."
+    tags: [document, multi-page, text]
+    expect: { slides: 10, images: 0, slide_width_emu: 12191695, slide_height_emu: 6858000 }
+    size_class: free
+  - name: 1mb.pptx
+    phase: 1
+    generator: office.pptx_sized
+    params: { size: 1000000 }
+    description: "About 1MB: one slide per embedded incompressible seeded-noise PNG, each with a speaker note, so the size is honest rather than padded."
+    tags: [document, sized, image]
+    expect: { slide_width_emu: 12191695 }
+    size_class: approx
+    nominal_bytes: 1000000

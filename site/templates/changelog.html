@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+{% if items is defined %}
+<ul class="index">
+{% for href, heading, text in items %}
+  <li><a href="{{ href }}">{{ heading }}</a>: {{ text }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+<div class="prose">{{ body }}</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+# Ogg video (docs/05 §3.3). Launch-set rows only; the rest are P1b.
+format: ogv
+family: video
+mime: video/ogg
+description: >-
+  Theora video with Vorbis audio in Ogg — the older royalty-free stack, still what some
+  toolchains emit and a useful negative control against VP9.
+seo_title: "Sample OGV video files for testing — free, CC0, hotlinkable"
+related: [webm, mp4, ogg]
+fixtures:
+  - name: 720p-5s.ogv
+    phase: 1
+    generator: media_video.ogv
+    params: { width: 1280, height: 720, duration: 5 }
+    description: "1280x720 at 30 fps, five seconds, Theora video with Vorbis audio."
+    tags: [video]
+    expect: { width: 1280, height: 720, vcodec: theora, acodec: vorbis }
+    size_class: free
