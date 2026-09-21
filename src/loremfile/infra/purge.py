@@ -24,6 +24,7 @@ SITE_PREFIXES = (
     f"{SITE_HOST}/docs/",
     f"{SITE_HOST}/legal/",
     f"{SITE_HOST}/assets/",
+    f"{SITE_HOST}/.well-known/agent-skills/",
 )
 
 #: Discovery files and the root, purged by exact URL.
@@ -46,6 +47,7 @@ SITE_FILES = (
     "sitemap.xml",
     "robots.txt",
     ".well-known/security.txt",
+    ".well-known/api-catalog",
     "favicon.ico",
     "apple-touch-icon.png",
 )

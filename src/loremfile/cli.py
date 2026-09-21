@@ -927,6 +927,9 @@ def verify_live_command(
             if hash_it:
                 body = verify_live_module.fetch(f"/{entry['path']}", method="GET")
                 report.findings.append(verify_live_module.check_fixture_bytes(entry, body))
+        if not only:
+            # Smoke's remaining checks; daily and full are smoke plus more (docs/12 §4).
+            report.findings += verify_live_module.contract_findings(entries)
         if site_dir is not None:
             report.findings += verify_live_module.site_findings(site_dir, retry_after=site_retry)
         if mode in {"daily", "full"} and not only:

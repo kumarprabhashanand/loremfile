@@ -101,7 +101,7 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
 
 ## ADR-020 Domain registered at Cloudflare Registrar (not split from DNS/CDN)
 - **Context**: splitting registrar and DNS reduces blast radius of one account compromise, but adds an account and a payment method to keep alive for a no-ops owner; Cloudflare Registrar is at cost with one-click DNSSEC and a transfer lock.
-- **Decision**: Cloudflare Registrar; compensate with hardware-key 2FA and the transfer lock. Revisit if the owner prefers separation (Q-06).
+- **Decision**: Cloudflare Registrar; compensate with hardware-key 2FA and the transfer lock. Revisit if separation becomes preferable (Q-06).
 - **Consequences**: the disaster-recovery promise is honest about it — content and a mirror hostname within a day; `loremfile.dev` itself only as fast as Cloudflare restores the account (RISK-19); the repository README is the out-of-band pointer to the current host.
 
 ## ADR-021 Manifest entries are committed by the PR author; CI regenerates and verifies; deploy never rewrites the manifest
@@ -152,7 +152,7 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
 
 ## ADR-028 Impressum under § 18 Abs. 1 MStV, not § 5 DDG; its values exist only as production secrets (M4.1)
 
-*This records the owner's decision and the facts it rests on. It is not legal advice, and the regulator's position below is the owner's cited basis rather than something this repository verified.*
+*This records the decision and the facts it rests on. It is not legal advice, and the regulator's position below is the cited basis rather than something this repository verified.*
 
 - **Context**: `/legal/imprint` and `/legal/privacy` must identify the operator. Which law sets the requirement decides what the page has to contain, and the identity of a private individual must never enter a public repository, its issues, pull requests, logs or artifacts.
 - **Facts the decision depends on** — every one of them is a reopen trigger if it stops being true:

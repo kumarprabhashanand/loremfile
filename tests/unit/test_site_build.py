@@ -98,7 +98,7 @@ def test_every_page_links_impressum_and_privacy_in_its_footer(
 ) -> None:
     """One click from every page, labelled exactly "Impressum" (docs/07 §2, 2026-09-21).
 
-    The header copies were dropped as an owner decision; this pins what § 18 Abs. 1 MStV
+    The header copies were dropped; this pins what § 18 Abs. 1 MStV
     and BGH I ZR 228/03 depend on — a permanent link, reachable in one step, with the exact
     label — rather than the position the old test asserted.
     """

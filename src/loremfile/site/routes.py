@@ -22,6 +22,9 @@ SITE_CSP: Final = (
     "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
     "frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
 )
+#: RFC 8288, on every page and on the API catalog (whose HEAD must carry it, RFC 9727 §2).
+#: Registered relation types only: `sitemap` is not one, and robots.txt names the sitemap.
+LINK_HEADER: Final = '</llms.txt>; rel="describedby", </.well-known/api-catalog>; rel="api-catalog"'
 LEGAL_ROBOTS: Final = "noindex, nofollow, nosnippet"
 #: Both edge rules match these exact paths, so the values may live nowhere else (docs/15 M4.1).
 LEGAL_KEYS: Final = ("legal/imprint", "legal/privacy")
@@ -56,7 +59,15 @@ CONTENT_TYPES: Final = {
     "svg": "image/svg+xml",
     "png": "image/png",
     "ico": "image/x-icon",
+    "md": "text/markdown; charset=utf-8",
 }
+#: RFC 9727's well-known name has no extension, and the only content type it may carry is a
+#: Linkset — with the profile that marks it as an API catalog (§4.2).
+API_CATALOG_KEY: Final = ".well-known/api-catalog"
+API_CATALOG_TYPE: Final = (
+    'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"'
+)
+AGENT_SKILLS_INDEX_KEY: Final = ".well-known/agent-skills/index.json"
 #: The only external hosts a page may link to (docs/07 §4).
 ALLOWED_HOSTS: Final = frozenset(
     {"creativecommons.org", "llmstxt.org", "developers.cloudflare.com"}
@@ -78,6 +89,8 @@ def format_index_key(fmt: str) -> str:
 
 
 def is_page(key: str) -> bool:
+    if key == API_CATALOG_KEY:
+        return False
     return key == "index.html" or "." not in key.rsplit("/", 1)[-1]
 
 
@@ -133,6 +146,8 @@ def content_type(key: str) -> str:
         return "text/html; charset=utf-8"
     if key.startswith("schema/") and key.endswith(".json"):
         return "application/schema+json"
+    if key == API_CATALOG_KEY:
+        return API_CATALOG_TYPE
     suffix = key.rsplit(".", 1)[-1]
     if suffix not in CONTENT_TYPES:
         raise ValueError(f"{key}: no content type for .{suffix} (docs/09 §5)")

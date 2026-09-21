@@ -42,11 +42,11 @@ loremfile = ["data/**/*", "schema/*.json"]
 src = ["src", "tests"]
 target-version = "py312"
 line-length = 100
-# Lint and format Python only. `docs/` and `review/` are the specification, copied
-# verbatim; ruff reformats Python code blocks inside Markdown, which would silently
-# rewrite the documents. `build/` holds generated fixtures and is never linted.
+# Lint and format Python only. `docs/` is the specification; ruff reformats Python code
+# blocks inside Markdown, which would silently rewrite the documents. `build/` holds
+# generated fixtures and is never linted.
 include = ["*.py", "*.pyi", "**/pyproject.toml"]
-extend-exclude = ["docs", "review", "build"]
+extend-exclude = ["docs", "build"]
 
 [tool.ruff.lint]
 select = [

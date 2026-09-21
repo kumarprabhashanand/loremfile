@@ -17,7 +17,7 @@
 - [ ] I did not modify any existing manifest entry (immutability)
 - [ ] `manifest.json` / `sha256sums.txt` were produced by `loremfile manifest update` in the
       container, not edited by hand
-- [ ] `CHANGELOG.md` updated
+- [ ] `CHANGELOG.md`: one short bullet if a user would notice the change (`docs/09` §7), or nothing
 - [ ] Dependency added? `tools/requirements.lock` regenerated **and**
       `tools/TOOLCHAIN_DIGEST` bumped in this PR
 - [ ] New format? `loremfile infra locks --write` run — owner step noted below

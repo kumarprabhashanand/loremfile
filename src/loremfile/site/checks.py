@@ -19,7 +19,7 @@ import html5lib
 from html5lib.html5parser import ParseError
 
 from loremfile.config import SITE_HOST
-from loremfile.site import routes
+from loremfile.site import build, routes
 
 ATTRIBUTE = re.compile(r'\s(href|src|content)="([^"]*)"')
 H1 = re.compile(r"<h1[\s>]")
@@ -30,6 +30,8 @@ PAGE_GZIP_LIMIT = 60_000
 CSS_LIMIT = 15_000
 JS_LIMIT = 10_000
 LEGAL_PATHS = tuple(f"/{key}" for key in routes.LEGAL_KEYS)
+#: The Agent Skills naming rule: lowercase alphanumerics and single hyphens, 1-64 characters.
+SKILL_NAME = re.compile(r"(?!.*--)[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?")
 
 
 def _jsonld(text: str) -> list[Any]:
@@ -148,6 +150,74 @@ def _security_txt_problems(text: str) -> list[str]:
     return problems
 
 
+def _resolves(url: str, keys: set[str]) -> bool:
+    parts = urlsplit(url)
+    return parts.netloc in {"", SITE_HOST} and routes.key_for(parts.path) in keys
+
+
+def _api_catalog_problems(text: str, keys: set[str]) -> list[str]:
+    name = routes.API_CATALOG_KEY
+    try:
+        linkset = json.loads(text).get("linkset") if text else None
+    except (ValueError, AttributeError):
+        linkset = None
+    if not isinstance(linkset, list) or not linkset:
+        return [f"{name}: no `linkset` array (RFC 9727 §4.2)"]
+    problems: list[str] = []
+    for entry in linkset:
+        anchor = entry.get("anchor", "") if isinstance(entry, dict) else ""
+        if not _resolves(anchor, keys):
+            problems.append(f"{name}: anchor {anchor!r} resolves to no key")
+        links = [link for key, value in entry.items() if key != "anchor" for link in value]
+        if not links:
+            problems.append(f"{name}: {anchor} carries no link relation")
+        problems += [
+            f"{name}: {link.get('href')!r} resolves to no key"
+            for link in links
+            if not _resolves(str(link.get("href", "")), keys)
+        ]
+    return problems
+
+
+def _agent_skills_problems(site_dir: Path, text: str, keys: set[str]) -> list[str]:
+    name = routes.AGENT_SKILLS_INDEX_KEY
+    try:
+        index = json.loads(text) if text else {}
+    except ValueError:
+        index = {}
+    skills = index.get("skills") if isinstance(index, dict) else None
+    if not isinstance(skills, list) or not skills:
+        return [f"{name}: no `skills` array"]
+    problems = [] if index.get("$schema") == build.AGENT_SKILLS_SCHEMA else [f"{name}: $schema"]
+    for skill in skills:
+        label = skill.get("name")
+        if not isinstance(label, str) or not SKILL_NAME.fullmatch(label):
+            problems.append(f"{name}: skill name {label!r} breaks the naming rule")
+        if skill.get("type") != "skill-md":
+            problems.append(f"{name}: {label} is not type skill-md")
+        url = str(skill.get("url", ""))
+        if not _resolves(url, keys):
+            problems.append(f"{name}: {label} url {url!r} resolves to no key")
+            continue
+        data = (site_dir / routes.disk_path(routes.key_for(urlsplit(url).path))).read_bytes()
+        if skill.get("digest") != f"sha256:{build.sha256(data)}":
+            problems.append(f"{name}: {label} digest is not the SHA-256 of {url}")
+    return problems
+
+
+def _agent_problems(site_dir: Path, keys: set[str], read: Any) -> list[str]:  # noqa: ANN401
+    """The agent discovery files (docs/04 §11): valid, resolvable, and silent on the legal pages."""
+    problems = _api_catalog_problems(read(routes.API_CATALOG_KEY), keys)
+    problems += _agent_skills_problems(site_dir, read(routes.AGENT_SKILLS_INDEX_KEY), keys)
+    agent_keys = {key for key in keys if key.startswith(".well-known/agent-skills/")}
+    for key in sorted(({routes.API_CATALOG_KEY} | agent_keys) & keys):
+        if any(path in read(key) for path in LEGAL_PATHS):
+            problems.append(f"{key}: names a legal page (ADR-028)")
+    if "Content-Signal: " not in read("robots.txt"):
+        problems.append("robots.txt: no Content-Signal (docs/04 §6)")
+    return problems
+
+
 def _asset_problems(site_dir: Path, keys: set[str]) -> list[str]:
     problems: list[str] = []
     for suffix, limit in ((".css", CSS_LIMIT), (".js", JS_LIMIT)):
@@ -174,6 +244,7 @@ def discovery_problems(site_dir: Path, keys: set[str]) -> list[str]:
         f"{key}: the legal page is missing" for key in routes.LEGAL_KEYS if key not in keys
     ]
     problems += [f"{key}: twin of a legal page" for key in routes.LEGAL_TWINS if key in keys]
+    problems += _agent_problems(site_dir, keys, read)
     return problems + _asset_problems(site_dir, keys)
 
 

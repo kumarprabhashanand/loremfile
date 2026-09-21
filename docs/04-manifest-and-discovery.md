@@ -174,6 +174,7 @@ Follow the llmstxt.org layout (H1 title, blockquote summary, H2 sections with li
 
 ```
 User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Allow: /
 
 User-agent: GPTBot
@@ -184,6 +185,7 @@ User-agent: ClaudeBot
 User-agent: Claude-User
 User-agent: Claude-SearchBot
 User-agent: Google-Extended
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Disallow: /legal/imprint
 Disallow: /legal/privacy
 
@@ -197,6 +199,7 @@ AI crawlers are deliberately allowed (the audience includes agents). Raw fixture
 - **`Google-Extended` sends no requests of its own** — Google says it "doesn't have a separate HTTP request user agent string" — so it belongs here and **never** in a user-agent-matching rule, where it could not fire.
 - **robots.txt asks; a WAF custom rule refuses.** Every token in this group except `Google-Extended` is also matched by the custom rule `loremfile_legal_pages_ai_agents` (`08` §5.7, ADR-030), which answers `403` on the two paths. `tests/unit/test_legal_pages.py` keeps the two lists equal.
 - **The limit.** RFC 9309: robots.txt is "not a form of access authorization". These groups ask; they cannot enforce (`13` §3b).
+- **`Content-Signal` states what the content may be used for**: search, AI input and AI training are all allowed, which is what CC0 already grants. Syntax as contentsignals.org publishes it (read 2026-09-21): a group member line before the group's rules, `key=yes|no` pairs separated by commas. It is in **both** groups because a crawler obeys only its most specific group (RFC 9309 §2.2.1); in the `*` group alone it would never reach the AI crawlers the named group matches. It grants nothing on the two disallowed paths: a signal is about use, and those paths are not to be fetched at all.
 
 ## 7. `sitemap.xml`
 
@@ -242,3 +245,12 @@ Deployed copy of the JSON Schema (§1.4). `application/schema+json`, immutable c
 ## 10. Structured data on pages
 
 JSON-LD per page type (single source of truth; `07` §3 refers here): home → `WebSite` + `SoftwareSourceCode` (pointing at the repository); format page → `Dataset` (`name`, `description`, `license: CC0`, `distribution` with `contentUrl` and `encodingFormat` per active fixture, `isAccessibleForFree: true`) + `BreadcrumbList`; docs and legal pages → `TechArticle` + `BreadcrumbList`, **except `/legal/imprint` and `/legal/privacy`, which carry no JSON-LD at all** (ADR-028). No `Organization` node.
+
+## 11. Agent discovery
+
+Four static standards, checked by Cloudflare's agent-readiness scanner. None of them lists or links either legal page, and `site build` refuses one that does (`site/checks.py`).
+
+- **`Content-Signal`** in robots.txt (§6).
+- **`Link` on every page** (RFC 8288), set by the `site_pages_headers` rule: `</llms.txt>; rel="describedby", </.well-known/api-catalog>; rel="api-catalog"`. Registered relation types only — `sitemap` is not in the IANA registry, RFC 8288 requires an unregistered type to be a URI, and robots.txt already names the sitemap. The same rule matches `/.well-known/api-catalog`, because RFC 9727 §2 requires its `HEAD` to carry the relation.
+- **`/.well-known/api-catalog`** (RFC 9727), served as `application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"` — the key has no extension, so `routes.content_type` names it rather than defaulting to HTML. One linkset entry per data file an agent can use: `manifest.json` with its schema as `service-desc`, `sha256sums.txt`, and every `{format}/index.json`, each with `llms.txt` as `service-doc`. A per-format index has no `service-desc`: it lacks the manifest's `formats` array, so the manifest schema does not describe it.
+- **`/.well-known/agent-skills/index.json`** (Agent Skills Discovery v0.2.0) listing one skill, `find-and-verify-fixtures` (`site/agent-skills/`): find a fixture by format, fetch it, verify it against the manifest hash. The index carries `$schema`, and the skill entry's `digest` is the SHA-256 of the `SKILL.md` bytes, computed at build.

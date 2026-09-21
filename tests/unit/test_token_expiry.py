@@ -50,7 +50,7 @@ def test_each_row_has_a_parseable_iso_date(key: str) -> None:
 def test_each_row_names_its_token_and_secret(key: str) -> None:
     row = rows()[key]
     # Every token belongs to this project. T5 is `loremfile-public` rather than
-    # `loremfile-ci-*`: it is the name the owner gave it in the dashboard, and the
+    # `loremfile-ci-*`: it is the name it was given in the dashboard, and the
     # reminder is only useful if it names the token as the dashboard shows it.
     assert row["name"].startswith("loremfile-")
     for name in row["secret"].replace(" / ", " ").split():

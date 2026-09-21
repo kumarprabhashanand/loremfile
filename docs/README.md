@@ -30,7 +30,7 @@
 | 17 | [Risk register](17-risks.md) | Know what can go wrong and the mitigation for each |
 | 18 | [Open questions](18-open-questions.md) | See the decisions only the owner can make, with the defaults assumed |
 | 19 | [Cost & quotas](19-cost-and-quotas.md) | Know every quota, cost and alert threshold |
-| 20 | [Engineering log](20-engineering-log.md) | Read how each part was built, what broke, and what was measured — the narrative `CHANGELOG.md` used to carry |
+| 20 | [Engineering log](20-engineering-log.md) | Check the platform facts this project verified before changing a workflow, a rule or a generator |
 
 ## Conventions used in these documents
 

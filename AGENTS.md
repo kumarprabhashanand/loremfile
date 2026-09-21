@@ -153,7 +153,7 @@ did not run.
 - [ ] No third-party content, no real personal data, no private keys, no executables, no
       external entities (`docs/13-legal-and-policy.md` §5)
 - [ ] I did not modify any existing manifest entry (immutability)
-- [ ] `CHANGELOG.md` updated, listing every added path
+- [ ] `CHANGELOG.md`: one short bullet if a user would notice the change (`docs/09` §7), or nothing
 - [ ] New format? `loremfile infra locks --write` run and the owner step noted in the description
 
 ## State lives in the repository

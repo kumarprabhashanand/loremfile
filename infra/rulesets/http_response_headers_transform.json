@@ -55,9 +55,9 @@
     },
     {
       "ref": "site_pages_headers",
-      "description": "site pages (extensionless keys and index.html)",
+      "description": "site pages (extensionless keys and index.html) and the API catalog",
       "enabled": true,
-      "expression": "((not http.request.uri.path contains \".\") or ends_with(http.request.uri.path, \"/index.html\"))",
+      "expression": "((not http.request.uri.path contains \".\") or ends_with(http.request.uri.path, \"/index.html\") or http.request.uri.path eq \"/.well-known/api-catalog\")",
       "action": "rewrite",
       "action_parameters": {
         "headers": {
@@ -80,6 +80,10 @@
           "Permissions-Policy": {
             "operation": "set",
             "value": "camera=(), microphone=(), geolocation=()"
+          },
+          "Link": {
+            "operation": "set",
+            "value": "</llms.txt>; rel=\"describedby\", </.well-known/api-catalog>; rel=\"api-catalog\""
           }
         }
       }
