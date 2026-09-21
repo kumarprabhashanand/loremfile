@@ -132,7 +132,7 @@ The consequence is a shorter deadline than "90 days from now": **from the moment
 
 **And the claim that this window is "minutes, because the deploy follows the merge" is not true yet.** It will be once `push: branches: [main]` is enabled. Today the deploy is dispatch-only by our own decision (above), so it follows *someone remembering to dispatch it* — which means adopting entries opens a 90-day clock that nothing is watching. That is the same shape as the failure this whole detour came from. Until the trigger is enabled, the window is closed procedurally instead: **`11` §7.9b requires the pull request that adopts the entries and the dispatch that publishes them to happen in the same working session.**
 
-If the owner would rather have all the bytes and pay for the storage, it is a three-line change; see `19` for the cost picture.
+If having all the bytes ever becomes worth paying for the storage, it is a three-line change; see `19` for the cost picture.
 
 **How this file is built up (M1.5 onwards).** The listing above is the finished workflow. Each step is added by the milestone that creates the thing it checks, so the job never calls a command that does not exist yet: **M1.5** landed `lint-and-test` with checkout, `pip install -e .`, ruff, `mypy src/` and `pytest tests/unit`; **M1.6** added `tools/check_lock.sh` and `loremfile catalog validate` to the same job; **M3.1** adds the whole `build-and-validate` job and puts it in the branch ruleset. `lint-and-test` is added to the ruleset in M1.5, in the same pull request that introduces the job — a required check that never reports would block every pull request.
 
@@ -210,7 +210,7 @@ Ordering rationale: fixtures first (immutable, safe to be early), removals next 
 | Deferred | Why | Returns with |
 |---|---|---|
 | ~~`loremfile site build`, `upload --site`, `purge --site`~~ | — | ✅ **M4.1**: built with the legal values, published, purged, then `verify-live --site-dir build/site` |
-| `loremfile infra audit` | Only `apply.py` landed in M2.2; `audit.py` was never written | `audit.yml`, M4.4 second half |
+| ~~`loremfile infra audit`~~ | — | ✅ **`audit.yml`**, weekly and on dispatch, in the `loremfile-zone` group; not a deploy step |
 | `-j 4` on the build | `-j` is not implemented and the measurement in `06` §11 says it need not be yet | M7 |
 | ~~`push: branches: [main]`~~ | **A judgement, not a missing command** — see below | ✅ **enabled 2026-09-10** |
 
@@ -524,7 +524,7 @@ Python updates change `requirements.in`; the PR must also regenerate `requiremen
 
 - `catalog_version` is semver in `manifest.json` and `CHANGELOG.md`. **Minor** = fixtures added or removed (tombstoned); **patch** = descriptions, tags, notes, deprecation flags or site-only changes (`props`, `bytes`, `sha256`, `mime` never change); **major** = manifest schema or URL contract change (never removes anything).
 - Tags `v1.2.0` are created by the maintainer after the deploy that introduced the fixtures is green; `release.yml` runs. **Before tagging, move the released entries out of `[Unreleased]` under `## [1.2.0]`**: the release notes are that section, and a tag without it fails before anything is downloaded.
-- `CHANGELOG.md` follows Keep a Changelog; every fixture addition lists the path.
+- `CHANGELOG.md` follows Keep a Changelog and is written for people who use the files: **one short bullet per change a user would notice** — files added or removed, a change to the URL or manifest contract, a notable site feature. No site-copy tweaks, layout, legal-link placement, infrastructure, milestone codes or doc references; those belong in the pull request and the docs. Keep `## [Unreleased]` at the top, even when empty.
 
 ## 8. Pull request template (excerpt)
 
@@ -537,7 +537,7 @@ Python updates change `requirements.in`; the PR must also regenerate `requiremen
 - [ ] Every new fixture has description, tags, expect, size_class
 - [ ] No third-party content, no real personal data, no private keys, no executables, no external entities (13-legal-and-policy.md §5)
 - [ ] I did not modify any existing manifest entry (immutability)
-- [ ] CHANGELOG updated
+- [ ] CHANGELOG: one short bullet if a user would notice the change, or nothing
 ```
 
 ## 9. AGENTS.md (checked into the repo root; instructions for coding agents)

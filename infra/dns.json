@@ -17,6 +17,11 @@
       "name": "2ca55a2a310caebda76ef903b38e8649",
       "content": "verify.bing.com",
       "proxied": false
+    },
+    {
+      "type": "TXT",
+      "name": "loremfile.dev",
+      "content": "google-site-verification=fAY7kvsrckmB6_mqBMw9QnpahH02wXnodltMh6I4M-Y"
     }
   ],
   "expected_managed": [

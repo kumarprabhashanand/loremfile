@@ -80,16 +80,16 @@ If they agree, RISK-22's residual is recorded as **accepted-on-evidence** — an
 
 ### 3.1 The result, 2026-09-10 — branch (a), on both instruments
 
-Attended run, handshaked with the owner: the dashboard readings are theirs, the analytics
+Attended run: the dashboard readings are read by hand, the analytics
 readings are the token's.
 
 | # | Reading | Time (UTC) | `GetObject`/`userError` MTD | Class B MTD | R2 → Overview |
 |---|---|---|---|---|---|
 | 1 | baseline | 09:04:40 | 1,865 | 2,028 | — |
 | 2 | baseline | 09:15:22 | 1,866 | 2,036 | — |
-| 3 | owner, before | ~09:16 | — | — | **1.89 k** |
+| 3 | dashboard, before | ~09:16 | — | — | **1.89 k** |
 | — | *burst: 1,000 unique paths, 0 blocked, 14.2 req/s* | 09:17:29–09:18:40 | | | |
-| 4 | owner, after | ~12:20 | — | — | **3.3 k** |
+| 4 | dashboard, after | ~12:20 | — | — | **3.3 k** |
 | 5 | post-burst | 12:16:18 | 3,169 | 3,345 | — |
 | 6 | post-burst | 12:26:44 | 3,169 | 3,351 | — |
 
@@ -100,7 +100,7 @@ request sent was recorded. Post-burst readings 5 and 6, ten minutes apart, agree
 load-bearing counter **exactly** (3,169 both times); the Class B *total* differs by 6, which
 is background `ListBuckets`/`HeadObject` traffic and not the dimension under test.
 
-**The billing side agrees.** The owner's Overview moved **1.89 k → 3.3 k**; the analytics
+**The billing side agrees.** The account's Overview moved **1.89 k → 3.3 k**; the analytics
 Class B total moved **2,040 → 3,351** over the same span. Two independent consumption
 records, agreeing on level and on movement. RISK-22's residual is therefore
 **accepted-on-evidence**, in the sense defined immediately above: two agreeing consumption
@@ -112,9 +112,9 @@ records, not an observed invoice.
   about 0.1/min. That was reported before the burst was fired rather than after it. At that
   rate the drift cannot reach either branch boundary within the run — it would need roughly
   eight hours to move 50 — so it cannot change the verdict; but the criterion said *agree*
-  and it did not, and the run continued on the owner's judgement rather than on the rule.
+  and it did not, and the run continued on judgement rather than on the rule.
 - The post-burst wait was **~3 hours**, not the 10 minutes specified, because the run was
-  attended and the owner's second reading came late. This strengthens the result rather
+  attended and the second dashboard reading came late. This strengthens the result rather
   than weakening it: at that distance, "the dashboard has not caught up yet" is no longer
   an available explanation for a moving *or* a flat reading.
 
@@ -180,7 +180,7 @@ against, and that this is the last month in which the comparison can be establis
 
 ## 4. What spending a little money would buy — and whether it is worth it
 
-Assessment requested by the owner. **The core design does not get significantly better with money**: the static R2 + CDN architecture is already the most robust and cheapest option at any budget, and the paid Cloudflare plans do not remove the constraints that matter here (custom cache-key headers/cookies, regex in rules and >512 MB caching are Enterprise features). Money buys optional capabilities and resilience at the edges:
+**The core design does not get significantly better with money**: the static R2 + CDN architecture is already the most robust and cheapest option at any budget, and the paid Cloudflare plans do not remove the constraints that matter here (custom cache-key headers/cookies, regex in rules and >512 MB caching are Enterprise features). Money buys optional capabilities and resilience at the edges:
 
 | Option | Cost | What it buys | Verdict |
 |---|---|---|---|

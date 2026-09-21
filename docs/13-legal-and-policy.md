@@ -33,7 +33,7 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 > 7. **Discontinuation.** We may discontinue the service at any time; where reasonably possible we announce it in advance on the site and in the repository. Every file is CC0, and the release archives and `manifest.json` let anyone mirror the collection.
 > 8. **Contact.** hello@loremfile.dev · https://github.com/kumarprabhashanand/loremfile
 
-**What changed, and why (owner decision, 2026-09-16).** The earlier text promised to keep every URL working "indefinitely" and carried no liability clause. A free, non-commercial service run by a private individual should promise what it can keep: the bytes at a published path do not change, a file may be withdrawn in rare cases, and the service may be discontinued with notice where that is possible. The liability clause is the standard German split — unlimited for intent, gross negligence and mandatory statutory liability; for slight negligence only essential contractual obligations, capped at the foreseeable typical damage. No jurisdiction or choice-of-law clause is claimed.
+**What changed, and why (2026-09-16).** The earlier text promised to keep every URL working "indefinitely" and carried no liability clause. A free, non-commercial service run by a private individual should promise what it can keep: the bytes at a published path do not change, a file may be withdrawn in rare cases, and the service may be discontinued with notice where that is possible. The liability clause is the standard German split — unlimited for intent, gross negligence and mandatory statutory liability; for slight negligence only essential contractual obligations, capped at the foreseeable typical damage. No jurisdiction or choice-of-law clause is claimed.
 
 ## 3. Privacy notice (`/legal/privacy`) — full text
 
@@ -140,7 +140,8 @@ JSON blob, because GitHub warns structured data "can cause secret redaction with
 
 **Keeping the pages out of search and AI crawlers** — `X-Robots-Tag: noindex, nofollow,
 nosnippet` and the matching meta tag, robots.txt groups for verified AI tokens, and exclusion from
-every sitemap, `llms` file, search index and JSON-LD (`04` §6–§10, ADR-016 amendment).
+every sitemap, `llms` file, search index, JSON-LD and agent discovery file (`04` §6–§11,
+ADR-016 amendment).
 **The limit, stated plainly: these measures reduce reading; they cannot prevent it.** A page
 served to the public can be read by anyone who requests it, and RFC 9309 says of robots.txt that
 it is "not a form of access authorization".
@@ -154,7 +155,7 @@ Processor", and requires affirmative acceptance by someone with authority to bin
 customer.
 
 **Acceptance (M0.6, recorded 2026-09-08).** The DPA is in force for this account: it
-forms part of the Self-Serve Subscription Agreement, which the owner accepted when the
+forms part of the Self-Serve Subscription Agreement, which was accepted when the
 Cloudflare account was created, and its own opening clause is what makes that so for
 self-serve customers. There is no separate DPA click and Cloudflare exposes no
 per-account acceptance record through its API, so what this section cites is the version

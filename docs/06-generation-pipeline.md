@@ -313,7 +313,7 @@ WORKDIR /work
 | `loremfile release redact --path <path>` | Rebuilds and re-uploads every release asset containing the path without it (`09` §10) |
 | `loremfile release archive [--tag vX.Y.Z] [--since <tag> \| --snapshot] [--out <dir>] [--rehearsal]` | Build a release's assets from the **published** bytes: the delta or snapshot archive part(s), `parts.txt`, `manifest.json`, `sha256sums.txt` and the CHANGELOG notes (`09` §3.5). Without `--since`/`--snapshot`, the previous release tag decides. Never publishes; `--rehearsal` proceeds without the notes |
 
-All commands exit non-zero on any failure. With `--json` every command prints one object: `{"command": str, "ok": bool, "summary": {<counts>}, "items": [{"path": str, "status": str, "detail": str}], "errors": [str]}`; `verify-live` items use `status ∈ {ok, missing_object, content_length_mismatch, content_type_mismatch, hash_mismatch, header_missing, status, timeout, rdap_expiry, tls_expiry, security_txt_expiry}`.
+All commands exit non-zero on any failure. With `--json` every command prints one object: `{"command": str, "ok": bool, "summary": {<counts>}, "items": [{"path": str, "status": str, "detail": str}], "errors": [str]}`; `verify-live` items use `status ∈ {ok, missing_object, content_length_mismatch, content_type_mismatch, hash_mismatch, header_missing, status, timeout, rdap_expiry, tls_expiry, security_txt_expiry, count_mismatch}`.
 
 ## 11. Local development
 

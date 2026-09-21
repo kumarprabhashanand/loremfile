@@ -126,6 +126,14 @@ def test_dns_desired_records_are_only_the_ones_we_own() -> None:
     assert "TXT SPF (Email Routing)" in document["expected_managed"]
 
 
+def test_no_apex_txt_row_is_exclusive() -> None:
+    """The apex holds Email Routing's SPF next to the site verification. An exclusive row
+    patches its single candidate, so an exclusive apex TXT would overwrite SPF."""
+    apex = [r for r in load("dns.json")["records"] if r["name"] == "loremfile.dev"]
+    assert [r["type"] for r in apex] == ["TXT"], "control: the apex verification row exists"
+    assert not any(r.get("exclusive") for r in apex)
+
+
 def test_the_two_cors_files_describe_the_same_policy() -> None:
     s3 = load("r2-cors.json")[0]
     wrangler = load("r2-cors.wrangler.json")["rules"][0]

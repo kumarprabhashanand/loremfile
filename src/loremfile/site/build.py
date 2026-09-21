@@ -72,6 +72,7 @@ RESERVED = frozenset({"formats", "docs", "legal", "changelog", "status", "assets
 SECURITY_TXT_DAYS = 365
 #: docs/04 §6, exactly; tests/unit/test_site_build.py compares the two.
 ROBOTS_TXT = """User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Allow: /
 
 User-agent: GPTBot
@@ -82,6 +83,7 @@ User-agent: ClaudeBot
 User-agent: Claude-User
 User-agent: Claude-SearchBot
 User-agent: Google-Extended
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Disallow: /legal/imprint
 Disallow: /legal/privacy
 
@@ -661,6 +663,64 @@ def sitemap(pages: list[Page], committed: dt.datetime) -> bytes:
     ).encode()
 
 
+def api_catalog(formats: list[str]) -> bytes:
+    """RFC 9727: the data files an agent can use, each with the documentation that explains it.
+
+    Only machine-readable data is listed, never a page, so neither legal page can appear.
+    """
+    doc = [{"href": routes.absolute_url("llms.txt"), "type": "text/plain"}]
+    schema = {
+        "href": routes.absolute_url("schema/manifest-v1.json"),
+        "type": "application/schema+json",
+    }
+    linkset = [
+        {
+            "anchor": routes.absolute_url("manifest.json"),
+            "service-desc": [schema],
+            "service-doc": doc,
+        },
+        {"anchor": routes.absolute_url("sha256sums.txt"), "service-doc": doc},
+        *(
+            {"anchor": routes.absolute_url(routes.format_index_key(fmt)), "service-doc": doc}
+            for fmt in formats
+        ),
+    ]
+    return (json.dumps({"linkset": linkset}, indent=2) + "\n").encode()
+
+
+#: One skill, published as its own `SKILL.md` (Agent Skills Discovery v0.2.0, `type: skill-md`).
+AGENT_SKILL = "find-and-verify-fixtures"
+AGENT_SKILLS_SCHEMA = "https://schemas.agentskills.io/discovery/0.2.0/schema.json"
+
+
+def agent_skill_key(name: str) -> str:
+    return f".well-known/agent-skills/{name}/SKILL.md"
+
+
+def agent_skills(root: Path) -> dict[str, bytes]:
+    """The skill file and the index that lists it, with the SHA-256 of the file's bytes."""
+    skill = (root / "site" / "agent-skills" / AGENT_SKILL / "SKILL.md").read_bytes()
+    front = re.match(r"---\nname: (\S+)\ndescription: (.+)\n---\n", skill.decode("utf-8"))
+    if front is None or front.group(1) != AGENT_SKILL:
+        raise SiteError(f"{AGENT_SKILL}/SKILL.md: frontmatter must name {AGENT_SKILL}")
+    index = {
+        "$schema": AGENT_SKILLS_SCHEMA,
+        "skills": [
+            {
+                "name": AGENT_SKILL,
+                "type": "skill-md",
+                "description": front.group(2),
+                "url": routes.public_path(agent_skill_key(AGENT_SKILL)),
+                "digest": f"sha256:{sha256(skill)}",
+            }
+        ],
+    }
+    return {
+        agent_skill_key(AGENT_SKILL): skill,
+        routes.AGENT_SKILLS_INDEX_KEY: (json.dumps(index, indent=2) + "\n").encode(),
+    }
+
+
 def security_txt(committed: dt.datetime) -> bytes:
     expires = committed.astimezone(dt.UTC) + dt.timedelta(days=SECURITY_TXT_DAYS)
     lines = [
@@ -751,6 +811,8 @@ def build(out: Path, *, root: Path, committed: dt.datetime) -> BuildReport:
             "sitemap.xml": sitemap(pages, committed),
             "robots.txt": ROBOTS_TXT.encode(),
             ".well-known/security.txt": security_txt(committed),
+            routes.API_CATALOG_KEY: api_catalog(formats),
+            **agent_skills(root),
         }
     )
     if out.exists():

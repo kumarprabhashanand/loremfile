@@ -156,7 +156,7 @@ jobs:
         # artifact of build/fixtures; that directory is already 243 MB at M3.1 and would
         # be ~620 MB at launch, on every pull request, against a free-tier storage quota.
         # The hashes and sizes are what a reviewer actually reads, and they are 4 KB.
-        # Revisit if the owner would rather pay for the bytes (see docs/19).
+        # Revisit if paying for the bytes ever becomes the better trade (see docs/19).
         run: |
           cd build/fixtures
           find . -type f -printf '%s\t%p\n' | sort -k2 > "$GITHUB_WORKSPACE/inventory.txt"

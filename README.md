@@ -60,7 +60,6 @@ No third-party media is redistributed — everything is generated.
 | Path | What |
 |---|---|
 | [`docs/`](docs/) | The full specification, 00–19. Start with [`docs/README.md`](docs/README.md). |
-| [`review/`](review/) | The three independent review passes the specification went through. |
 | `catalog/` | Declarative fixture definitions, one YAML per format. |
 | `src/loremfile/` | Generators, validators, site builder, uploader, infrastructure code. |
 | `infra/` | Cloudflare desired state, applied by workflow. |

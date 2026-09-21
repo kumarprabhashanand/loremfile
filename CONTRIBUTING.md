@@ -83,7 +83,7 @@ A generator family is not mergeable on its own. The same pull request must conta
 4. a **determinism test** that runs the generator twice and asserts identical bytes,
 5. the catalog entries, with `description`, `tags`, `expect` and `size_class`,
 6. the regenerated `manifest.json` and `sha256sums.txt`,
-7. a `CHANGELOG.md` line listing every added path.
+7. a `CHANGELOG.md` bullet a user would understand, under `[Unreleased]` (`docs/09` §7: files added or removed, contract changes, notable site features — nothing else).
 
 ### Adding a dependency
 

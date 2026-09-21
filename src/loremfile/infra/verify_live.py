@@ -49,6 +49,7 @@ class Status(StrEnum):
     RDAP_EXPIRY = "rdap_expiry"
     TLS_EXPIRY = "tls_expiry"
     SECURITY_TXT_EXPIRY = "security_txt_expiry"
+    COUNT_MISMATCH = "count_mismatch"
 
 
 #: Our own rate limit answering. Retried, unlike in the probe (see the module docstring).
@@ -136,15 +137,29 @@ class Response:
 
 
 def fetch(
-    path: str, *, method: str = "HEAD", extra_headers: dict[str, str] | None = None
+    path: str,
+    *,
+    method: str = "HEAD",
+    extra_headers: dict[str, str] | None = None,
+    host: str = SITE_HOST,
+    redirects: bool = True,
+    limit: int | None = None,
 ) -> Response:
     """One request, retrying **only** a 429 from our own rate limit.
 
     docs/12 §4. The retry is the documented behaviour for this tool and the reason it
     cannot share a fetcher with `probe.py`, where the absence of a 429 is the failure.
+    `redirects=False` returns a 3xx as the answer; `limit` reads at most that many bytes.
     """
     for attempt in range(MAX_RATE_LIMIT_RETRIES):
-        response = _once(path, method=method, extra_headers=extra_headers)
+        response = _once(
+            path,
+            method=method,
+            extra_headers=extra_headers,
+            host=host,
+            redirects=redirects,
+            limit=limit,
+        )
         if response.status != HTTP_TOO_MANY_REQUESTS:
             return response
         if attempt < MAX_RATE_LIMIT_RETRIES - 1:
@@ -152,16 +167,53 @@ def fetch(
     return response
 
 
-def _once(path: str, *, method: str, extra_headers: dict[str, str] | None = None) -> Response:
-    request = urllib.request.Request(
-        f"https://{SITE_HOST}{path}", method=method, headers=extra_headers or {}
+class _NoRedirects(urllib.request.HTTPRedirectHandler):
+    """A 3xx is the answer the `www` check asks for, not a step on the way to one."""
+
+    def redirect_request(self, *_args: object, **_kwargs: object) -> None:
+        return None
+
+
+_NO_REDIRECTS = urllib.request.build_opener(_NoRedirects)
+
+
+def _once(
+    path: str,
+    *,
+    method: str,
+    extra_headers: dict[str, str] | None = None,
+    host: str = SITE_HOST,
+    redirects: bool = True,
+    limit: int | None = None,
+) -> Response:
+    return _open(
+        f"https://{host}{path}",
+        method=method,
+        headers=extra_headers or {},
+        redirects=redirects,
+        limit=limit,
     )
+
+
+def _open(
+    url: str,
+    *,
+    method: str,
+    headers: dict[str, str],
+    redirects: bool = True,
+    limit: int | None = None,
+) -> Response:
+    request = urllib.request.Request(url, method=method, headers=headers)  # noqa: S310
+    opener = urllib.request.urlopen if redirects else _NO_REDIRECTS.open
     try:
-        with urllib.request.urlopen(request, timeout=30) as raw:  # noqa: S310
+        with opener(request, timeout=30) as raw:
+            body = b""
+            if method == "GET":
+                body = raw.read() if limit is None else raw.read(limit)
             return Response(
                 status=raw.status,
                 headers={k.lower(): v for k, v in raw.headers.items()},
-                body=raw.read() if method == "GET" else b"",
+                body=body,
             )
     except urllib.error.HTTPError as exc:
         return Response(
@@ -238,6 +290,144 @@ def smallest_per_format(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
         fmt = entry["path"].split("/", 1)[0]
         chosen.setdefault(fmt, entry)
     return [chosen[fmt] for fmt in sorted(chosen)]
+
+
+# --- the rest of smoke: count, preflight, Range, www (every mode, docs/12 §4) ------------
+
+HTTP_OK = 200
+HTTP_PARTIAL_CONTENT = 206
+HTTP_MOVED_PERMANENTLY = 301
+#: The bucket CORS policy answers a preflight with one of these (docs/03 §5).
+PREFLIGHT_STATUSES = frozenset({200, 204})
+#: The policy allows every origin, so which foreign origin asks is irrelevant.
+PREFLIGHT_ORIGIN = "https://example.org"
+#: `Range: bytes=0-99`, the request docs/03 §9 shows.
+RANGE_BYTES = 100
+#: The `www` redirect keeps the query string (`preserve_query_string`), so ask with one.
+WWW_QUERY = "?verify-live"
+
+
+def check_manifest_count(local: int, response: Response) -> Finding:
+    """The published manifest lists exactly as many fixtures as this checkout's does."""
+    name = "count:/manifest.json"
+    if response.status != HTTP_OK:
+        return Finding(name, Status.STATUS, str(response.status))
+    try:
+        document = json.loads(response.body)
+    except ValueError:
+        return Finding(name, Status.COUNT_MISMATCH, "not a JSON document")
+    count = document.get("count") if isinstance(document, dict) else None
+    fixtures = document.get("fixtures") if isinstance(document, dict) else None
+    if not isinstance(count, int) or not isinstance(fixtures, list):
+        return Finding(name, Status.COUNT_MISMATCH, "no `count` and `fixtures` to compare")
+    active = sum(
+        1 for e in fixtures if isinstance(e, dict) and e.get("status", "active") == "active"
+    )
+    if count != local or active != local:
+        return Finding(
+            name,
+            Status.COUNT_MISMATCH,
+            f"count {count}, {active} active entries; this checkout has {local}",
+        )
+    return Finding(name, Status.OK, f"{local} fixtures")
+
+
+def range_targets(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The smallest and the largest fixture longer than the range (docs/12 §4: two files).
+
+    The largest is above the 16 MiB multipart threshold today, so one of the two ranges is
+    served from an object that was uploaded in parts.
+    """
+    eligible = sorted(
+        (e for e in entries if e["bytes"] > RANGE_BYTES), key=lambda e: (e["bytes"], e["path"])
+    )
+    return [eligible[0], eligible[-1]] if len(eligible) > 1 else eligible
+
+
+def check_range(entry: dict[str, Any], response: Response) -> Finding:
+    name = f"range:{entry['path']}"
+    if response.status != HTTP_PARTIAL_CONTENT:
+        return Finding(name, Status.STATUS, f"{response.status} to bytes=0-{RANGE_BYTES - 1}")
+    wanted = f"bytes 0-{RANGE_BYTES - 1}/{entry['bytes']}"
+    served = response.header("content-range")
+    if served != wanted:
+        status = Status.HEADER_VALUE if served else Status.HEADER_MISSING
+        return Finding(name, status, f"content-range: {served!r} != {wanted!r}")
+    if len(response.body) != RANGE_BYTES:
+        return Finding(
+            name,
+            Status.CONTENT_LENGTH_MISMATCH,
+            f"{len(response.body)} bytes for a {RANGE_BYTES}-byte range",
+        )
+    return Finding(name, Status.OK, wanted)
+
+
+def _listed(value: str) -> set[str]:
+    return {part.strip().lower() for part in value.split(",") if part.strip()}
+
+
+def check_preflight(entry: dict[str, Any], response: Response) -> list[Finding]:
+    """A browser's preflight for a ranged GET from another origin (docs/03 §5)."""
+    name = f"preflight:{entry['path']}"
+    if response.status not in PREFLIGHT_STATUSES:
+        return [Finding(name, Status.STATUS, str(response.status))]
+    findings: list[Finding] = []
+    allow = response.header("access-control-allow-origin")
+    if allow != "*":
+        status = Status.HEADER_VALUE if allow else Status.HEADER_MISSING
+        findings.append(Finding(name, status, f"access-control-allow-origin: {allow!r} != '*'"))
+    for header, needed in (
+        ("access-control-allow-methods", "get"),
+        ("access-control-allow-headers", "range"),
+    ):
+        served = _listed(response.header(header))
+        if needed not in served and "*" not in served:
+            status = Status.HEADER_VALUE if served else Status.HEADER_MISSING
+            findings.append(Finding(name, status, f"{header} does not allow {needed}"))
+    return findings or [Finding(name, Status.OK)]
+
+
+def check_www_redirect(path: str, response: Response) -> Finding:
+    name = f"www:{path}"
+    if response.status != HTTP_MOVED_PERMANENTLY:
+        return Finding(name, Status.STATUS, f"{response.status}, expected 301")
+    wanted = f"https://{SITE_HOST}{path}"
+    served = response.header("location")
+    if served != wanted:
+        status = Status.HEADER_VALUE if served else Status.HEADER_MISSING
+        return Finding(name, status, f"location: {served!r} != {wanted!r}")
+    return Finding(name, Status.OK, wanted)
+
+
+def contract_findings(entries: list[dict[str, Any]]) -> list[Finding]:
+    """The manifest count, a CORS preflight, Range on two files and the `www` redirect."""
+    findings = [check_manifest_count(len(entries), fetch("/manifest.json", method="GET"))]
+    targets = range_targets(entries)
+    if not targets:
+        detail = f"no fixture longer than {RANGE_BYTES} bytes, so nothing was requested"
+        return [*findings, Finding("range", Status.MISSING_OBJECT, detail)]
+    first = targets[0]
+    preflight = fetch(
+        f"/{first['path']}",
+        method="OPTIONS",
+        extra_headers={
+            "Origin": PREFLIGHT_ORIGIN,
+            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Headers": "range",
+        },
+    )
+    findings += check_preflight(first, preflight)
+    for target in targets:
+        ranged = fetch(
+            f"/{target['path']}",
+            method="GET",
+            extra_headers={"Range": f"bytes=0-{RANGE_BYTES - 1}"},
+            limit=RANGE_BYTES + 1,
+        )
+        findings.append(check_range(target, ranged))
+    path = f"/{first['path']}{WWW_QUERY}"
+    findings.append(check_www_redirect(path, fetch(path, host=f"www.{SITE_HOST}", redirects=False)))
+    return findings
 
 
 # --- expiry (daily and full) ----------------------------------------------------------
@@ -333,6 +523,7 @@ EXPECTED_PAGE_HEADERS: dict[str, str] = {
     "referrer-policy": "strict-origin-when-cross-origin",
     "x-content-type-options": "nosniff",
     "permissions-policy": "camera=(), microphone=(), geolocation=()",
+    "link": routes.LINK_HEADER,
 }
 #: Set only by the fixture rule (H1). On a page they mean its `/index.html` exclusion or its
 #: extension test no longer holds (docs/09 §3.2).

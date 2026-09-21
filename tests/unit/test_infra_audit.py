@@ -303,15 +303,23 @@ def test_the_audit_reads_txt_content_the_way_apply_writes_it() -> None:
     )
     bing = {"type": "CNAME", "name": f"{bing['name']}.loremfile.dev", "content": bing["content"]}
     quoted = {"type": "TXT", "name": "_dmarc.loremfile.dev", "content": f'"{dmarc["content"]}"'}
+    verification = next(
+        r for r in apply_module.load_desired("dns.json")["records"] if r["name"] == "loremfile.dev"
+    )
+    apex = {"type": "TXT", "name": "loremfile.dev", "content": f'"{verification["content"]}"'}
 
     report = AuditReport()
-    audit.audit_dns(FakeZone({"dns_records?per_page=100": response([quoted, www, bing])}), report)  # type: ignore[arg-type]
+    audit.audit_dns(
+        FakeZone({"dns_records?per_page=100": response([quoted, www, bing, apex])}), report
+    )  # type: ignore[arg-type]
     assert report.drifted == []
 
     # Negative control: a real difference in the text is still drift.
     wrong = {**quoted, "content": '"v=DMARC1; p=none"'}
     report = AuditReport()
-    audit.audit_dns(FakeZone({"dns_records?per_page=100": response([wrong, www, bing])}), report)  # type: ignore[arg-type]
+    audit.audit_dns(
+        FakeZone({"dns_records?per_page=100": response([wrong, www, bing, apex])}), report
+    )  # type: ignore[arg-type]
     assert [f.resource for f in report.drifted] == ["dns:TXT _dmarc"]
 
 

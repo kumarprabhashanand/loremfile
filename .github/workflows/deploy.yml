@@ -16,12 +16,9 @@
 #   2. No regeneration of an `expected_drift` path. Those bytes come from the artifact or
 #      the deploy fails; it never substitutes a rebuild.
 #
-# NOT HERE YET, and deliberately not stubbed. `docs/09` §3.2 lists a step this workflow
-# does not carry:
-#   * `loremfile infra audit` — only `apply.py` landed in M2.2; the audit arrives with
-#     `audit.yml` in the second half of M4.4.
-# Each is added by the milestone that implements it, rather than standing here as a
-# guaranteed red cross.
+# NOT HERE: `loremfile infra audit`. `audit.yml` runs it weekly and on dispatch, in the
+# same `loremfile-zone` concurrency group, and opens an `infra-drift` issue on a real
+# difference. This workflow's `infra apply --dry-run` already reports what differs.
 #
 # ON `push` SINCE 2026-09-10. The trigger was deferred until this workflow had been
 # exercised for real, because its first run was also the first time `loremfile upload`

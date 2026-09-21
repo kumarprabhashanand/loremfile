@@ -16,6 +16,7 @@ from typing import Any
 
 import pytest
 
+from loremfile.config import SITE_HOST
 from loremfile.infra import apply as apply_module
 from loremfile.infra.cloudflare_api import Client, Response, ZoneScopeError
 
@@ -250,6 +251,7 @@ def test_dns_never_deletes_and_only_adds_what_is_missing() -> None:
         {"id": "d1", "type": "TXT", "name": "_dmarc.loremfile.dev", "content": _dmarc()["content"]},
         {"id": "m1", "type": "MX", "name": "loremfile.dev", "content": "route1.mx.cloudflare.net"},
         _bing(),
+        *_apex_txt(),
     ]
     client = FakeClient({f"GET /zones/{OUR_ZONE}/dns_records": ok(existing)})
     client.verify_zone()
@@ -272,6 +274,19 @@ def _dmarc() -> dict[str, Any]:
 
 def _www() -> dict[str, Any]:
     return {"id": "w1", "type": "CNAME", "name": "www.loremfile.dev", "content": "loremfile.dev"}
+
+
+def _apex_txt() -> list[dict[str, Any]]:
+    """The apex as the zone holds it: Email Routing's SPF next to the site verification,
+    both stored quoted. Neither may be patched or deleted."""
+    row = next(
+        r for r in apply_module.load_desired("dns.json")["records"] if r["name"] == SITE_HOST
+    )
+    spf = '"v=spf1 include:_spf.mx.cloudflare.net ~all"'
+    return [
+        {"id": "s1", "type": "TXT", "name": SITE_HOST, "content": spf},
+        {"id": "g1", "type": "TXT", "name": SITE_HOST, "content": f'"{row["content"]}"'},
+    ]
 
 
 def _bing() -> dict[str, Any]:
@@ -309,7 +324,7 @@ def test_a_record_whose_content_changed_is_patched_in_place() -> None:
         "name": "_dmarc.loremfile.dev",
         "content": "v=DMARC1; p=reject; rua=mailto:reports@example.invalid; adkim=s; aspf=s",
     }
-    client = _dns_client([stale, _www(), _bing()])
+    client = _dns_client([stale, _www(), _bing(), *_apex_txt()])
     report = apply_module.Report()
     apply_module.apply_dns(client, report)
 
@@ -332,7 +347,7 @@ def test_a_txt_value_differing_only_by_surrounding_quotes_is_left_alone() -> Non
         "name": "_dmarc.loremfile.dev",
         "content": f'"{_dmarc()["content"]}"',
     }
-    client = _dns_client([quoted, _www(), _bing()])
+    client = _dns_client([quoted, _www(), _bing(), *_apex_txt()])
     report = apply_module.Report()
     apply_module.apply_dns(client, report)
     assert client.writes == []
@@ -353,7 +368,8 @@ def test_a_refused_record_update_is_manual_not_failed() -> None:
     }
     refused = Response(403, {"success": False, "errors": [{"code": 10000, "message": "no"}]})
     client = _dns_client(
-        [stale, _www(), _bing()], **{f"PATCH /zones/{OUR_ZONE}/dns_records/d1": refused}
+        [stale, _www(), _bing(), *_apex_txt()],
+        **{f"PATCH /zones/{OUR_ZONE}/dns_records/d1": refused},
     )
     report = apply_module.Report()
     apply_module.apply_dns(client, report)
