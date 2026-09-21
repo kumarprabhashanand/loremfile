@@ -35,6 +35,7 @@ GIT_COMMANDS = (
     "loremfile infra changed",  # infra/changed.py
     "loremfile release archive",  # infra/release.py
     "loremfile release redact",  # release.manifest_at, via infra/redact.py
+    "loremfile release check-existing",  # infra/release.py; gh api only, listed with its module
     "loremfile site build",  # site/build.py (commit date), site/legal.py (git grep)
     "loremfile build --new",  # build.merge_base_manifest
     "loremfile manifest check",  # build.merge_base_manifest
@@ -243,6 +244,7 @@ def test_every_cli_command_that_reaches_git_is_listed() -> None:
         "loremfile infra changed",
         "loremfile release archive",
         "loremfile release redact",
+        "loremfile release check-existing",
         "loremfile site build",
     }, "empty-set control, and a change here means GIT_COMMANDS needs one too"
     assert reaching <= set(GIT_COMMANDS)

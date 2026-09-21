@@ -1333,6 +1333,41 @@ def release_archive(
     )
 
 
+@release.command("check-existing")
+@click.option("--tag", required=True, help="The release tag, e.g. v1.1.0.")
+@click.option("--repo", "repository", required=True, help="OWNER/REPO.")
+@click.option(
+    "--dir",
+    "assets_dir",
+    required=True,
+    type=click.Path(path_type=Path, file_okay=False),
+    help="The directory of assets this run assembled.",
+)
+def release_check_existing(tag: str, repository: str, assets_dir: Path) -> None:
+    """Exit 0 if a release for TAG exists and holds exactly these assets, 3 if none exists.
+
+    Anything else fails: a release that differs, or one that could not be read.
+    """
+    try:
+        published = release_module.published_release(repository, tag)
+    except release_module.ReleaseError as exc:
+        click.echo(f"release check-existing: {exc}", err=True)
+        sys.exit(1)
+    if published is None:
+        click.echo(f"release check-existing: no release exists for {tag}", err=True)
+        sys.exit(release_module.NO_RELEASE)
+    differences = release_module.existing_release_differences(assets_dir, published)
+    for difference in differences:
+        click.echo(f"  {difference}", err=True)
+    if differences:
+        click.echo(f"release check-existing: the release for {tag} differs from this run", err=True)
+        sys.exit(1)
+    click.echo(
+        f"release check-existing: the release for {tag} holds exactly these {len(published)} assets"
+    )
+    sys.exit(release_module.EXISTING_MATCHES)
+
+
 @release.command("redact")
 @click.option("--path", "path", required=True, help="A tombstoned fixture path to remove.")
 @click.option("--dry-run", "dry_run", is_flag=True, help="Name the releases; write nothing.")

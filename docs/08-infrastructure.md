@@ -304,7 +304,7 @@ So `apply.py` **confirms the managed ruleset is deployed and stops** — a perma
 
 **Resolved 2026-09-15: Free accepts `http.user_agent` in a custom rule.** Cloudflare's documentation said nothing either way. The custom-rules availability table names no field restriction, the field reference states no plan availability, and User Agent Blocking recommends custom rules with an `http.user_agent eq` example. So the first write decided it:
 
-- **The write.** Push deploy run `34940201386` (`99334dd9e2`, #61's merge): `Apply infra` reported `http_request_firewall_custom:loremfile_legal_pages_ai_agents updated — added, creating the entry point`, with `failed=0` and `warning=0`; every other phase `unchanged`. T1 made that write, which also confirms its permission for this phase (§6, row 5b).
+- **The write.** Push deploy run `34940201386` (old commit `99334dd9e2`, old PR #61's merge): `Apply infra` reported `http_request_firewall_custom:loremfile_legal_pages_ai_agents updated — added, creating the entry point`, with `failed=0` and `warning=0`; every other phase `unchanged`. T1 made that write, which also confirms its permission for this phase (§6, row 5b).
 - **The behaviour.** Probe run `34941018789`: `legal-pages-ai-agents` passed ("7 agent tokens refused on 2 pages; a browser was not"). 14 checks, 0 failed; the rate limit answered 429 after 288 requests at 259/s (colo ORD); `uploaded=5`, `deleted=5`.
 - **The path scope, by hand.** The owner, at 07:11:42 UTC from colo TXL:
   - a `GPTBot` User-Agent got `403` on `/legal/imprint` and `/legal/privacy`;
