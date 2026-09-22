@@ -305,8 +305,8 @@ M3.1, not estimated.
 
 **Measured, the launch set only (M3.9, 2026-09-16).** The table above counts all 416
 phase-1 rows and stays an estimate until P1b is built; these are the 223 launch fixtures
-that `manifest.json` actually holds, from the manifest's own `bytes` (the 5 withheld rows
-of §9 are not counted, having no published bytes).
+that `manifest.json` held then, from the manifest's own `bytes` (the 5 rows withheld until
+1.2.0 are not counted).
 
 | Family | Files | Bytes |
 |---|---|---|
@@ -364,7 +364,7 @@ Many fixtures are cheap variants; the byte budget (≤ 8 GB) and the generation 
 
 ## 9. Launch set (P1) — the fixtures that must exist on launch day
 
-Everything else marked phase 1 in §3 (188 files) is P1b. Chosen for search demand, boundary testing and at least one representative per family: **228 files, 595,170,670 bytes** (measured at M3.9; 223 of them published, 526,137,760 bytes, the other 5 `awaiting_publication`).
+Everything else marked phase 1 in §3 (188 files) is P1b. Chosen for search demand, boundary testing and at least one representative per family: **228 files, 595,163,271 bytes**, all in `manifest.json` since catalog 1.2.0 (223 files and 526,137,760 bytes in 1.1.0).
 
 P1b stays **188**: `100mib.bin` moved out of phase 1 entirely, so it left both the phase-1 total (417 → 416) and the launch set (229 → 228), and 416 − 228 = 188. Deferring a launch row to phase 2 does not add it to P1b.
 
@@ -372,8 +372,8 @@ P1b stays **188**: `100mib.bin` moved out of phase 1 entirely, so it left both t
 
 | Bucket | Count | |
 |---|---|---|
-| Published in `manifest.json` | 223 | live entries, uploaded by `deploy.yml` |
-| Catalogued, **awaiting publication** | 5 | `mp4/1080p-10s`, `mp4/10mb`, `mp4/50mb`, `opus/30s`, `webm/720p-5s-vp9` — `expected_drift` rows whose entries were withdrawn in M3.6 because the bytes existed nowhere reproducible (`03` §7.1). They return through the carry-forward path, not through a rebuild |
+| Published in `manifest.json` | 228 | live entries, uploaded by `deploy.yml`. The five `expected_drift` rows — `mp4/1080p-10s`, `mp4/10mb`, `mp4/50mb`, `opus/30s`, `webm/720p-5s-vp9` — entered in 1.2.0 through the carry-forward path (`11` §7.9b), not through a rebuild |
+| Catalogued, **awaiting publication** | 0 | |
 | Still to catalogue | 0 | M3.7 and M3.8 catalogued all 62: archives, fonts, mail, calendar, cert, wasm, web, and the edge cases |
 | **Launch set (ADR-024)** | **228** | |
 
