@@ -80,19 +80,14 @@ def test_the_determinism_summary_prints_the_three_counts(tmp_path: Path) -> None
     assert "regenerated=228" in done.stdout
     assert "drifted=0" in done.stdout
     assert "expected_drift=5" in done.stdout
-    assert "awaiting publication" not in done.stdout, "a real count needs no excuse"
 
 
-def test_a_zero_expected_drift_says_why_it_is_zero(tmp_path: Path) -> None:
-    """`expected_drift=0` is structurally unreachable while every flagged row is
-    `awaiting_publication`: absent from the manifest, so never compared. Unqualified, the
-    zero reads as evidence those five reproduced."""
+def test_a_zero_expected_drift_is_printed_as_the_count_it_is(tmp_path: Path) -> None:
+    """The flagged rows are published and compared, so zero means they all reproduced."""
     report = {"summary": {"regenerated": 228, "drifted": 0, "expected_drift": 0}}
     done = run("determinism", DETERMINISM, report, tmp_path, "determinism.json")
     assert done.returncode == 0, done.stderr
-    assert "expected_drift=0" in done.stdout
-    assert "awaiting publication" in done.stdout
-    assert "none were compared" in done.stdout
+    assert done.stdout.strip() == "determinism audit: regenerated=228 drifted=0 expected_drift=0"
 
 
 def test_a_report_without_counts_fails_the_step(tmp_path: Path) -> None:

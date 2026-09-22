@@ -10,6 +10,7 @@ Two files target specific assumptions. `mp4/no-audio-720p-5s.mp4` has no audio t
 for code paths that assume every video has one, and `mp4/h264-baseline-720p-5s.mp4` uses the
 constrained Baseline profile that old devices and some hardware decoders need.
 
-For size limits, `mp4/1mb.mp4` reaches about 1 MB through two-pass encoding at a flat bitrate
-rather than padding, so its size is honest. Related formats: [MKV](/mkv), [MOV](/mov) and
+For size limits, `mp4/1mb.mp4`, `mp4/10mb.mp4` and `mp4/50mb.mp4` reach their sizes through
+two-pass encoding at a flat bitrate rather than padding, so the sizes are honest.
+`mp4/1080p-10s.mp4` is full HD for ten seconds. Related formats: [MKV](/mkv), [MOV](/mov) and
 [MP3](/mp3).

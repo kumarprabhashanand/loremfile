@@ -209,21 +209,17 @@ def test_the_launch_set_still_adds_up() -> None:
     )
 
 
-def test_the_five_withheld_fixtures_are_the_gap_between_catalog_and_manifest() -> None:
-    """223 published + 5 withheld = 228.
-
-    The five carry `awaiting_publication`: their bytes were never published, so their
-    manifest entries were withdrawn outright rather than tombstoned (docs/03 §7.1). They
-    return through the carry-forward path, which is why they are counted here rather
-    than written off.
-    """
+def test_every_catalogued_fixture_is_in_the_manifest() -> None:
+    """228 in the manifest, none withheld. The five `expected_drift` rows entered with the
+    entries of the CI run whose artifact holds their bytes (docs/11 §7.9b)."""
     manifest = json.loads((Path(__file__).resolve().parents[2] / "manifest.json").read_text())
-    published = [e for e in manifest["fixtures"] if e.get("status", "active") == "active"]
-    withheld = [f for f in CATALOG.fixtures() if f.awaiting_publication]
+    published = {e["path"] for e in manifest["fixtures"] if e.get("status", "active") == "active"}
+    catalogued = {f.path for f in CATALOG.fixtures()}
 
-    assert len(published) + len(withheld) == len(list(CATALOG.fixtures()))
-    assert len(published) + len(withheld) + REMAINING_M37_M38 == LAUNCH_SET
-    assert {f.path for f in withheld} == {f.path for f in CATALOG.fixtures() if f.expected_drift}
+    assert published == catalogued
+    assert len(published) + REMAINING_M37_M38 == LAUNCH_SET
+    assert not [f.path for f in CATALOG.fixtures() if f.awaiting_publication]
+    assert {f.path for f in CATALOG.fixtures() if f.expected_drift} <= published
 
 
 # --- the staged first publish -----------------------------------------------

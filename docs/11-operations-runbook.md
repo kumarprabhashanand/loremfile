@@ -178,21 +178,18 @@ Read the failing step. `manifest check` hash diff → a generator drifted for a 
 2b. A **new format** also needs a bucket-lock rule: `loremfile infra locks --write` updates `infra/r2-locks.json`, and the owner applies it once with `wrangler r2 bucket lock set` (T3) before the deploy — add the owner step to the PR description.
 3. Update `CHANGELOG.md`. Open a PR; CI must be green; merge; deploy runs; tag a release when convenient.
 
-### 7.9b Publish a fixture that cannot be rebuilt (`expected_drift`), and the five withheld ones
+### 7.9b Publish a fixture that cannot be rebuilt (`expected_drift`)
 
-A fixture marked `expected_drift` does not reproduce byte for byte off the reference fleet (`06` §4, RISK-21), so the bytes the manifest describes exist in exactly one place until they are published: the `carry-forward-fixtures` artifact of the CI run that built them. Three artifact sizes have been observed for the same five files across runs, so "some recent run's artifact" is not good enough — it must be **that** run's.
+A fixture marked `expected_drift` does not reproduce byte for byte across the runner pool (`06` §4, RISK-21): the encoders pick SIMD kernels from the CPU, so the bytes depend on the CPU model a run lands on. Until the deploy publishes them, the only copy is the `carry-forward-fixtures` artifact of a CI run that built exactly the bytes the manifest describes. The deploy takes that artifact from the CI run on the pull request's **head** commit, and `upload` hashes every byte against the manifest before publishing.
 
-**The rule: adopt and publish in the same working session.** Do not end the session between them.
+`manifest check` enforces the pairing: a new `expected_drift` entry whose bytes this run did not reproduce fails the run and prints the entries this run built. A failed run uploads no artifact. So:
 
-1. On a branch, clear `awaiting_publication` from the catalog rows and open the pull request. CI builds the fixtures and uploads `carry-forward-fixtures`.
-2. Read CI's printed entries, `loremfile manifest adopt --from <file>`, push. **Note the run id of the CI run whose entries you adopted** — that run's artifact is now the only one that can fulfil them.
-3. Merge.
-4. **Immediately** dispatch `deploy.yml` with `mode: deploy` and `only:` set to those paths. Do not defer this to the next session.
-5. Read the run: `upload` must report `written` equal to the number of paths, and `verify-live` must report `failing=0`. Only then is the artifact no longer load-bearing.
+1. On a branch, clear `awaiting_publication` from the catalog rows, run `loremfile manifest update` in the image, and open the pull request as a **draft**.
+2. CI fails on the rows whose bytes differ from your machine's and prints its own entries. Save them and `loremfile manifest adopt --from <file>` in the image; push. Note the CPU model that run logged (`Record the CPU this runner has`).
+3. CI on the adopt commit passes only if it reproduces those bytes — in practice, if it lands on the same CPU model. If it fails, re-run that CI run (`gh run rerun <id> --failed`) rather than adopting again; adopting again only moves the target.
+4. When the head commit's CI run is green, its artifact holds exactly the manifest's bytes. Mark the pull request ready; the owner merges; the push deploy publishes from that artifact. Read the run: `upload` must report the paths written and `verify-live` `failing=0`.
 
-**Why step 4 is written as a rule rather than left to judgement.** `deploy.yml` is dispatch-only until the first green real deploy enables `push: branches: [main]` (`09` §3.2), so nothing publishes on merge — a merge that is not followed by a dispatch starts a 90-day clock with nobody watching it. That is precisely the shape that withdrew these five entries in the first place. **When the push trigger is enabled, steps 3–5 collapse into "merge and read the run", and this warning can go.**
-
-If the session is interrupted between steps 3 and 4, the recovery is not urgent but it is real: dispatch the deploy at the next opportunity, and check the artifact still exists (`gh api repos/<owner>/loremfile/actions/artifacts --jq '.artifacts[] | select(.name=="carry-forward-fixtures")'` shows `expires_at`). If it has expired, the entries are unfulfillable: withdraw them again (`03` §7.1 — they were never published, so they leave the manifest rather than becoming tombstones) and start over from step 1.
+A later push to the pull request replaces the head commit and starts over at step 3. If the artifact expires before the merge (90 days, `expires_at` on the artifact), re-run CI on the head commit until it reproduces the bytes again.
 
 ### 7.10 Data-subject request (access, erasure, objection, or the same right under another law)
 

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-22
+
+- 5 more media files: H.264 MP4 at 1080p for 10 seconds, at 10 MB and at 50 MB, a 30-second Opus
+  file and a 720p VP9 WebM.
+
 ## [1.1.0] - 2026-09-16
 
 First public release.
