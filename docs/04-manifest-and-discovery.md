@@ -184,7 +184,18 @@ User-agent: OAI-AdsBot
 User-agent: ClaudeBot
 User-agent: Claude-User
 User-agent: Claude-SearchBot
+User-agent: CCBot
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Bytespider
+User-agent: meta-externalagent
+User-agent: meta-externalfetcher
+User-agent: Amazonbot
+User-agent: Diffbot
+User-agent: MistralAI-User
+User-agent: DuckAssistBot
 User-agent: Google-Extended
+User-agent: Applebot-Extended
 Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Disallow: /legal/imprint
 Disallow: /legal/privacy
@@ -196,7 +207,9 @@ AI crawlers are deliberately allowed (the audience includes agents). Raw fixture
 
 - **`User-agent: *` keeps `Allow: /`.** Google honours `noindex` only on a page it is "not … blocked by a robots.txt file"; disallowing the legal pages for everyone would stop search engines from ever seeing the `noindex` that keeps them out.
 - **The named group replaces the `*` group for those crawlers, and disallows only the two paths** — everything else stays allowed for them. Each token is checked against its vendor's own documentation, and **no token is added without that check**: OpenAI documents `GPTBot`, `OAI-SearchBot`, `ChatGPT-User` and `OAI-AdsBot` ("OAI-AdsBot only visits pages submitted as ads, and the data collected by OAI-AdsBot is not used to train generative AI foundation models"), and says of `ChatGPT-User` that "robots.txt rules may not apply" to user-initiated actions; Anthropic documents `ClaudeBot`, `Claude-User` and `Claude-SearchBot` as robots.txt user agents; Google documents `Google-Extended` as a robots.txt token that "does not impact a site's inclusion in Google Search".
-- **`Google-Extended` sends no requests of its own** — Google says it "doesn't have a separate HTTP request user agent string" — so it belongs here and **never** in a user-agent-matching rule, where it could not fire.
+- **`Google-Extended` and `Applebot-Extended` send no requests of their own.** Google says `Google-Extended` "doesn't have a separate HTTP request user agent string"; Apple says `Applebot-Extended` "does not crawl webpages" and only controls how Applebot's data is used. Both belong here and **never** in a user-agent-matching rule, where they could not fire.
+- **Checked against each operator's own documentation (2026-09-22), with the token in the casing that operator publishes**: `CCBot` (Common Crawl, `CCBot/2.0`), `PerplexityBot` and `Perplexity-User` (Perplexity; the second "generally ignores robots.txt", which is why the WAF rule matters), `meta-externalagent` and `meta-externalfetcher` (Meta publishes them lower-case in the user agent), `Amazonbot` (`compatible; Amazonbot/0.1`), `Diffbot`, `MistralAI-User` (Mistral also runs `MistralAI-Index` and `MistralAI-Training`), `DuckAssistBot` (`DuckAssistBot/1.2`) and `Applebot-Extended`. **`Bytespider` is the one token vouched for by someone other than its operator**: ByteDance publishes no crawler documentation, and Cloudflare's AI Crawl Control bot reference lists it as `Bytespider | ByteDance | AI Crawler` (read 2026-09-22).
+- **Four proposed tokens are deliberately absent, because nobody documents them.** `anthropic-ai` and `claude-web`: Anthropic's crawler page names only `ClaudeBot`, `Claude-User` and `Claude-SearchBot`. `cohere-ai`: Cohere's own page says it runs no crawling bots "at this time" and names none. `archive.org_bot`: the Internet Archive's help pages do not name it, though a *verified* archiver is refused by category at the edge (`08` §5.7). `ia_archiver`: that token belongs to Alexa Internet, retired in 2022, so a clause for it could not fire. Adding any of them is a decision to drop this section's rule, not a detail.
 - **robots.txt asks; a WAF custom rule refuses.** Every token in this group except `Google-Extended` is also matched by the custom rule `loremfile_legal_pages_ai_agents` (`08` §5.7, ADR-030), which answers `403` on the two paths. `tests/unit/test_legal_pages.py` keeps the two lists equal.
 - **The limit.** RFC 9309: robots.txt is "not a form of access authorization". These groups ask; they cannot enforce (`13` §3b).
 - **`Content-Signal` states what the content may be used for**: search, AI input and AI training are all allowed, which is what CC0 already grants. Syntax as contentsignals.org publishes it (read 2026-09-21): a group member line before the group's rules, `key=yes|no` pairs separated by commas. It is in **both** groups because a crawler obeys only its most specific group (RFC 9309 §2.2.1); in the `*` group alone it would never reach the AI crawlers the named group matches. It grants nothing on the two disallowed paths: a signal is about use, and those paths are not to be fetched at all.

@@ -43,7 +43,9 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 > is the controller for the personal data described here. Contact: hello@loremfile.dev.
 >
 > **What is processed, and by whom.** loremfile.dev has no server, no accounts, no logins,
-> no cookies and no analytics scripts. Every request is answered by Cloudflare's network in
+> no cookies and no analytics scripts. The one exception: if Cloudflare has to show a
+> security check during an attack, it sets one strictly necessary cookie (cf_clearance)
+> recording that the check was passed. Every request is answered by Cloudflare's network in
 > front of a Cloudflare R2 bucket. To deliver and protect the service, Cloudflare processes:
 >
 > - your **IP address**;
@@ -71,6 +73,8 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 > We delete ordinary correspondence **no later than 24 months** after the last message in the
 > thread. Records of legal notices, takedown requests and law-enforcement requests are kept
 > for **6 years** after the request is resolved, so we can show why a file was removed.
+> Mail to loremfile.dev addresses is forwarded by Cloudflare Email Routing to the operator's
+> mailbox at an email provider.
 >
 > **Sharing.** Nothing is sold, rented, or shared for advertising — ever. The only recipient
 > of request data is Cloudflare, Inc. as our processor. If you choose to open an issue or a

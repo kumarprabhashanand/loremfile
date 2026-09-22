@@ -154,6 +154,43 @@ def test_a_redirect_that_is_missing_or_loses_the_path_fails(
     assert verify_live.check_www_redirect(PATH, response).status is status
 
 
+# --- the legal pages refuse declared AI agents ------------------------------------------
+
+
+def test_a_403_to_a_declared_ai_agent_passes() -> None:
+    agent = verify_live.REFUSED_AGENTS[0]
+    finding = verify_live.check_agent_refused(agent, "/legal/imprint", Response(403, {}))
+    assert (finding.status, finding.path) == (Status.OK, "ai-agent:CCBot /legal/imprint")
+
+
+@pytest.mark.parametrize("status", [200, 404, 429, 500])
+def test_anything_but_a_403_fails(status: int) -> None:
+    """200 is the failure this exists for: the page naming the operator was served."""
+    agent = verify_live.REFUSED_AGENTS[1]
+    finding = verify_live.check_agent_refused(agent, "/legal/privacy", Response(status, {}))
+    assert finding.status is Status.STATUS
+    assert finding.path == "ai-agent:PerplexityBot /legal/privacy"
+    assert str(status) in finding.detail
+
+
+def test_the_agents_are_asked_for_both_legal_pages_by_name(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    recorder = Recorder()
+    monkeypatch.setattr(verify_live, "fetch", recorder)
+    verify_live.contract_findings([LARGE, SMALL])
+    asked = {
+        (path, (kwargs.get("extra_headers") or {}).get("User-Agent"))
+        for path, kwargs in recorder.calls
+        if path.startswith("/legal/")
+    }
+    assert asked == {
+        (page, agent)
+        for page in ("/legal/imprint", "/legal/privacy")
+        for agent in verify_live.REFUSED_AGENTS
+    }
+
+
 # --- what is actually requested ---------------------------------------------------------
 
 
@@ -171,7 +208,14 @@ def test_the_requests_carry_what_each_check_depends_on(monkeypatch: pytest.Monke
     monkeypatch.setattr(verify_live, "fetch", recorder)
     verify_live.contract_findings([LARGE, SMALL])
     calls = dict(recorder.calls)
-    assert set(calls) == {"/manifest.json", "/edge/small.xml", "/bin/large.bin", PATH}
+    assert set(calls) == {
+        "/manifest.json",
+        "/edge/small.xml",
+        "/bin/large.bin",
+        PATH,
+        "/legal/imprint",
+        "/legal/privacy",
+    }
     preflight = next(k for p, k in recorder.calls if k.get("method") == "OPTIONS")
     assert preflight["extra_headers"]["Access-Control-Request-Headers"] == "range"
     ranges = [k for p, k in recorder.calls if "Range" in (k.get("extra_headers") or {})]

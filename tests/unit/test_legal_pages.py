@@ -28,8 +28,22 @@ AI_TOKENS = {
     "ClaudeBot",
     "Claude-User",
     "Claude-SearchBot",
+    "CCBot",
+    "PerplexityBot",
+    "Perplexity-User",
+    "Bytespider",
+    "meta-externalagent",
+    "meta-externalfetcher",
+    "Amazonbot",
+    "Diffbot",
+    "MistralAI-User",
+    "DuckAssistBot",
     "Google-Extended",
+    "Applebot-Extended",
 }
+#: Their operators say these send no requests of their own, so a WAF clause for them could
+#: never fire; they exist only as robots.txt directives (docs/04 §6).
+ROBOTS_ONLY = {"Google-Extended", "Applebot-Extended"}
 PLACEHOLDER = re.compile(r"%%IMPRINT_[A-Z_]+%%")
 
 
@@ -140,17 +154,30 @@ def test_the_ai_group_names_exactly_the_verified_tokens_and_blocks_only_the_lega
 # --- the WAF rule that refuses what robots.txt only asks (ADR-030) -------------------
 
 
-def test_the_waf_rule_refuses_the_robots_tokens_except_google_extended() -> None:
-    """One list, two enforcements. `Google-Extended` sends no requests of its own, so a
-    clause for it could never fire; every other token is refused on the two pages."""
+def test_the_waf_rule_refuses_the_robots_tokens_that_send_requests() -> None:
+    """One list, two enforcements. A token whose operator sends no request under it could
+    never fire in a WAF rule; every other token is refused on the two pages."""
     expression = ai_agent_rule()["expression"]
     tokens = re.findall(r'http\.user_agent contains "([^"]+)"', expression)
     assert tokens, "empty-set control: the pattern must find the rule's tokens"
-    assert set(tokens) == AI_TOKENS - {"Google-Extended"}
-    assert "Google-Extended" not in expression
+    assert set(tokens) == AI_TOKENS - ROBOTS_ONLY
+    for token in ROBOTS_ONLY:
+        assert token not in expression
     assert set(re.findall(r'http\.request\.uri\.path eq "([^"]+)"', expression)) == RULE_PATHS
     assert "lower(" not in expression, "tokens are matched in the vendor's casing (ADR-030)"
     assert ai_agent_rule()["action"] == "block"
+
+
+def test_the_rule_also_refuses_cloudflares_verified_ai_bot_categories() -> None:
+    """Categories catch a verified bot whose token is not on the list; the four names are
+    Cloudflare's own (verified bot categories, read 2026-09-22). `Archiver` is in because an
+    archived copy of these pages would outlive any later fix. Search engine crawlers are a
+    different category and stay out, because they must see the noindex header."""
+    expression = ai_agent_rule()["expression"]
+    categories = 'cf.verified_bot_category in {"AI Crawler" "AI Assistant" "AI Search" "Archiver"}'
+    assert categories in expression
+    for other in ("Search Engine Crawler", "Accessibility", "Feed Fetcher"):
+        assert other not in expression
 
 
 # --- placeholders -----------------------------------------------------------------
