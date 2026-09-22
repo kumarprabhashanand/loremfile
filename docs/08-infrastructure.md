@@ -166,7 +166,7 @@ Pages are stored once, as extensionless keys, and never under a locked format pr
     "expression": "(ends_with(http.request.uri.path, \"/\") and http.request.uri.path ne \"/\" and not starts_with(http.request.uri.path, \"/_probe/\"))",
     "action": "rewrite", "action_parameters": { "uri": { "path": { "expression": "substring(http.request.uri.path, 0, -1)" } } } },
   { "ref": "format_index_json", "description": "/{format}/index.json → /_formats/{format}.json (ADR-032)", "enabled": true,
-    "expression": "(ends_with(http.request.uri.path, \"/index.json\") and not starts_with(http.request.uri.path, \"/_\"))",
+    "expression": "(ends_with(http.request.uri.path, \"/index.json\") and not starts_with(http.request.uri.path, \"/_\") and not starts_with(http.request.uri.path, \"/.well-known/\"))",
     "action": "rewrite", "action_parameters": { "uri": { "path": { "expression": "concat(\"/_formats\", substring(http.request.uri.path, 0, -11), \".json\")" } } } }
 ] }
 ```

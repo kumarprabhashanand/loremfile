@@ -159,6 +159,8 @@ Practise steps 1–3 before launch (M5.5) and record the time taken. At M5.5 als
 
 Read the failing step. `manifest check` hash diff → a generator drifted for a fixture that had to be regenerated (rare; both use the same image) → re-run; if persistent, open a `determinism` issue and restore the affected paths from the release archive via `infra.yml` `restore` mode. `upload --fixtures` refusing to overwrite → somebody changed a published entry; revert the PR. `upload --apply-removals` refused by a bucket lock → the takedown ordering in §7.8 was not followed (lift the lock first). `infra apply` errors → token permissions (see `08` §6); fix and re-run with `workflow_dispatch`. `verify-live smoke` failing right after upload → wait 60 s (propagation) and re-run the job.
 
+**Re-running an old tag after its release notes were edited ends red, by design.** A tag run builds `notes.md` from the CHANGELOG in the tag's own commit, finds the published release different, and stops without touching it. Nothing to fix.
+
 ### 7.8 Takedown (legal request or policy violation)
 
 1. Verify the request is legitimate (see `13` §7). Record it in a private issue (security advisory draft) with the request text.
