@@ -82,7 +82,17 @@ User-agent: OAI-AdsBot
 User-agent: ClaudeBot
 User-agent: Claude-User
 User-agent: Claude-SearchBot
+User-agent: CCBot
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: meta-externalagent
+User-agent: meta-externalfetcher
+User-agent: Amazonbot
+User-agent: Diffbot
+User-agent: MistralAI-User
+User-agent: DuckAssistBot
 User-agent: Google-Extended
+User-agent: Applebot-Extended
 Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Disallow: /legal/imprint
 Disallow: /legal/privacy

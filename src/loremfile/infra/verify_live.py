@@ -297,6 +297,7 @@ def smallest_per_format(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
 HTTP_OK = 200
 HTTP_PARTIAL_CONTENT = 206
 HTTP_MOVED_PERMANENTLY = 301
+HTTP_FORBIDDEN = 403
 #: The bucket CORS policy answers a preflight with one of these (docs/03 §5).
 PREFLIGHT_STATUSES = frozenset({200, 204})
 #: The policy allows every origin, so which foreign origin asks is irrelevant.
@@ -387,6 +388,27 @@ def check_preflight(entry: dict[str, Any], response: Response) -> list[Finding]:
     return findings or [Finding(name, Status.OK)]
 
 
+#: Two of the agents `loremfile_legal_pages_ai_agents` refuses, in the user agent each
+#: operator publishes (docs/04 §6). The rule asks for the two pages that name the operator
+#: and nothing else, so this is checked against production rather than inferred from the rule.
+REFUSED_AGENTS = (
+    "CCBot/2.0 (https://commoncrawl.org/faq/)",
+    "Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://www.perplexity.ai/perplexitybot)",
+)
+
+
+def agent_token(agent: str) -> str:
+    return re.sub(r"[/;].*", "", agent.rpartition("compatible; ")[2] or agent).strip()
+
+
+def check_agent_refused(agent: str, path: str, response: Response) -> Finding:
+    """A page naming the operator, served to a declared AI agent, is the failure (ADR-028)."""
+    name = f"ai-agent:{agent_token(agent)} {path}"
+    if response.status != HTTP_FORBIDDEN:
+        return Finding(name, Status.STATUS, f"{response.status}, expected {HTTP_FORBIDDEN}")
+    return Finding(name, Status.OK, str(HTTP_FORBIDDEN))
+
+
 def check_www_redirect(path: str, response: Response) -> Finding:
     name = f"www:{path}"
     if response.status != HTTP_MOVED_PERMANENTLY:
@@ -427,6 +449,12 @@ def contract_findings(entries: list[dict[str, Any]]) -> list[Finding]:
         findings.append(check_range(target, ranged))
     path = f"/{first['path']}{WWW_QUERY}"
     findings.append(check_www_redirect(path, fetch(path, host=f"www.{SITE_HOST}", redirects=False)))
+    for agent in REFUSED_AGENTS:
+        for key in routes.LEGAL_KEYS:
+            legal = routes.public_path(key)
+            findings.append(
+                check_agent_refused(agent, legal, fetch(legal, extra_headers={"User-Agent": agent}))
+            )
     return findings
 
 

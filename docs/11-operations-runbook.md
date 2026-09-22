@@ -201,7 +201,9 @@ Response template:
 
 > Thank you for your request of {date}.
 >
-> loremfile.dev has no accounts, sets no cookies, runs no analytics and keeps no server logs, so the only personal data we hold about you is this email thread — your address and what you wrote — which we delete no later than 24 months after the last message, or sooner if you ask.
+> loremfile.dev has no accounts, runs no analytics and keeps no server logs, and sets no
+> cookie of its own (only the strictly necessary one Cloudflare sets if it has to show you a
+> security check), so the only personal data we hold about you is this email thread — your address and what you wrote — which we delete no later than 24 months after the last message, or sooner if you ask.
 >
 > Requests to the site are delivered by Cloudflare, Inc., which processes IP addresses and request metadata as our processor; we have no access to those raw logs. {If applicable: we forwarded your request to Cloudflare on {date}.}
 >
