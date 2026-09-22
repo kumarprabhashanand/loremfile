@@ -56,6 +56,19 @@ def test_the_checks_see_the_whole_site(keys: dict[str, Path]) -> None:
     } <= pages
 
 
+def test_every_built_key_is_what_its_public_path_reaches(keys: dict[str, Path]) -> None:
+    """A key the edge rewrites elsewhere is published and unreachable: a 404 in production
+    and a green build. `key_for` mirrors the committed rewrite rules (test_site_routes)."""
+    kinds = {"index.html", "legal/imprint", "_formats/pdf.json", routes.AGENT_SKILLS_INDEX_KEY}
+    assert kinds <= set(keys), "control: every kind of key is in the build"
+    unreachable = {
+        key: routes.key_for(routes.public_path(key))
+        for key in keys
+        if routes.key_for(routes.public_path(key)) != key
+    }
+    assert unreachable == {}
+
+
 def test_the_built_site_passes_every_post_build_check(site: Path) -> None:
     assert checks.all_problems(site, fixtures()) == []
 

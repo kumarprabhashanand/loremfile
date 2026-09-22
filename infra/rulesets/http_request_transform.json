@@ -46,7 +46,7 @@
       "ref": "format_index_json",
       "description": "/{format}/index.json → /_formats/{format}.json (ADR-032)",
       "enabled": true,
-      "expression": "(ends_with(http.request.uri.path, \"/index.json\") and not starts_with(http.request.uri.path, \"/_\"))",
+      "expression": "(ends_with(http.request.uri.path, \"/index.json\") and not starts_with(http.request.uri.path, \"/_\") and not starts_with(http.request.uri.path, \"/.well-known/\"))",
       "action": "rewrite",
       "action_parameters": {
         "uri": {

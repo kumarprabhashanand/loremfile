@@ -136,7 +136,7 @@ def key_for(path: str) -> str:
         return f"{path[1:]}index.html"
     if path.endswith("/"):
         return path[1:-1]
-    if path.endswith("/index.json") and not path.startswith("/_"):
+    if path.endswith("/index.json") and not path.startswith(("/_", "/.well-known/")):
         return f"{FORMAT_INDEX_DIR}{path[: -len('/index.json')]}.json"
     return path[1:]
 

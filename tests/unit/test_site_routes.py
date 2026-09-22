@@ -28,6 +28,7 @@ DAY = "public, max-age=86400"
         ("/_probe/dir/", "_probe/dir/index.html"),
         ("/_probe/index.json", "_probe/index.json"),
         ("/.well-known/security.txt", ".well-known/security.txt"),
+        ("/.well-known/agent-skills/index.json", ".well-known/agent-skills/index.json"),
     ],
 )
 def test_a_request_path_reaches_the_key_the_edge_serves(path: str, key: str) -> None:
@@ -63,6 +64,10 @@ def test_the_mirror_matches_the_committed_rewrite_rules() -> None:
     assert target("page_slash") == "substring(http.request.uri.path, 0, -1)"
     assert f'"/{routes.FORMAT_INDEX_DIR}"' in target("format_index_json")
     assert f"0, -{len('/index.json')}" in target("format_index_json")
+    for excluded in ("/_", "/.well-known/"):
+        clause = f'not starts_with(http.request.uri.path, "{excluded}")'
+        assert clause in rules["format_index_json"]["expression"]
+        assert routes.key_for(f"{excluded}x/index.json") == f"{excluded[1:]}x/index.json"
 
 
 @pytest.mark.parametrize(
