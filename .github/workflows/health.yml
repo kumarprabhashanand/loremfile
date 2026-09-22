@@ -88,8 +88,8 @@ jobs:
       # (595 MB; R2 egress is free, +228 Class B reads a run).
       #
       # Timeout, from measurements (docs/12 §4): full on GitHub runners took 116 s at 228
-      # fixtures and 154 s at 223. 10 minutes is about 5x the slower of the two; revisit the
-      # bound if a run exceeds 5 minutes.
+      # fixtures and 154 s at 223. 10 minutes is about 4x the slower run (154 s) and 5x
+      # today's (116 s); revisit the bound if a run exceeds 5 minutes.
       # +10 minutes when a site key differs: the retry waits out a deploy still publishing.
       - id: verify
         timeout-minutes: 20
