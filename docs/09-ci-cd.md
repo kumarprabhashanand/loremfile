@@ -405,7 +405,7 @@ A further guard covers the whole set: a unit test asserts `audit.CHECKS` covers 
 
 `build --audit` exits non-zero on **real** drift only; `expected_drift` paths are reported in their own section and exit 0, so the five fixtures known not to reproduce off this fleet do not train anyone to close the issue unread (`06` §8).
 
-**`expected_drift=0` in the summary does not mean those five reproduced — it means they were never compared.** The five flagged rows are exactly the five that are `awaiting_publication` (`05` §9), so they are absent from `manifest.json`, and `_report_audit` skips any path the manifest does not carry. Until they are published the count is structurally zero, and the summary line says so rather than leaving a zero that reads like evidence. When they are published it becomes a real number, and a non-zero value there is expected behaviour, not a regression.
+**`expected_drift` counts the five flagged rows that did not reproduce on the audit's runner.** They are published, so the audit compares them; a non-zero value is expected behaviour, not a regression, and zero means all five reproduced. (Until they were published they were absent from `manifest.json`, `_report_audit` skipped them, and the count was structurally zero.)
 
 ### 3.5 `release.yml` — on tag `v*`
 

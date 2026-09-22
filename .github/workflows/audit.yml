@@ -184,13 +184,9 @@ jobs:
           missing = [key for key in wanted if key not in counts]
           if missing:
               sys.exit(f"{sys.argv[1]}: no {', '.join(missing)}; the audit's scope is unknown")
-          line = "determinism audit: " + " ".join(f"{key}={counts[key]}" for key in wanted)
-          if not counts["expected_drift"]:
-              # Not evidence that the flagged rows reproduced: every row carrying
-              # `expected_drift` is still `awaiting_publication`, so it is absent from
-              # manifest.json and the audit never compares it (09 §3.4).
-              line += " (flagged rows are awaiting publication, so none were compared)"
-          print(line)
+          # Every row carrying `expected_drift` is published and compared (09 §3.4), so a
+          # zero here means each of them reproduced on this runner.
+          print("determinism audit: " + " ".join(f"{key}={counts[key]}" for key in wanted))
           PY
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.1.0",
+  "catalog_version": "1.2.0",
   "formats": [
     {
       "format": "7z",
@@ -331,8 +331,8 @@
     },
     {
       "format": "mp4",
-      "count": 6,
-      "total_bytes": 11794239,
+      "count": 9,
+      "total_bytes": 79774316,
       "url": "https://loremfile.dev/mp4",
       "index": "https://loremfile.dev/mp4/index.json",
       "mime_default": "video/mp4"
@@ -360,6 +360,14 @@
       "url": "https://loremfile.dev/ogv",
       "index": "https://loremfile.dev/ogv/index.json",
       "mime_default": "video/ogg"
+    },
+    {
+      "format": "opus",
+      "count": 1,
+      "total_bytes": 431592,
+      "url": "https://loremfile.dev/opus",
+      "index": "https://loremfile.dev/opus/index.json",
+      "mime_default": "audio/opus"
     },
     {
       "format": "otf",
@@ -536,6 +544,14 @@
       "url": "https://loremfile.dev/wav",
       "index": "https://loremfile.dev/wav/index.json",
       "mime_default": "audio/wav"
+    },
+    {
+      "format": "webm",
+      "count": 1,
+      "total_bytes": 621241,
+      "url": "https://loremfile.dev/webm",
+      "index": "https://loremfile.dev/webm/index.json",
+      "mime_default": "video/webm"
     },
     {
       "format": "webmanifest",

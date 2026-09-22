@@ -52,16 +52,11 @@ def audit(builts: list[Built], *, manifest: Manifest | None = None) -> tuple[int
 
 
 def manifest_including(path: str) -> Manifest:
-    """The committed manifest plus an entry for a path currently withheld from it.
-
-    The five `expected_drift` paths are held out of the manifest until a run can publish
-    them (docs/03 §7.1), so the classification below has no live example to work from.
-    Rather than drop the coverage, the situation is constructed: this is what the audit
-    will meet once M4.3 puts those entries back.
-    """
+    """The committed manifest, with `path`'s entry describing bytes no rebuild produces."""
     loaded = Manifest.load()
-    template = dict(loaded.by_path["pdf/a4-3pages.pdf"])
-    loaded.entries = [*loaded.entries, {**template, "path": path, "sha256": "a" * 64}]
+    template = dict(loaded.by_path.get(path) or loaded.by_path["pdf/a4-3pages.pdf"])
+    kept = [e for e in loaded.entries if e["path"] != path]
+    loaded.entries = [*kept, {**template, "path": path, "sha256": "a" * 64}]
     return loaded
 
 
@@ -148,17 +143,13 @@ def test_manifest_check_downgrades_a_marked_path_but_not_its_neighbours() -> Non
     assert not _names_a_path("opus/30s.opus", marked), "a message with no diagnostic"
 
 
-def test_the_withheld_paths_are_absent_from_the_manifest() -> None:
-    """M3.6's remedy, asserted: five entries described bytes that existed nowhere.
-
-    They are withheld rather than tombstoned, because a tombstone asserts a publication
-    that never happened (docs/03 §7.1, amended in the same milestone).
-    """
+def test_the_marked_paths_are_in_the_manifest_and_none_is_withheld() -> None:
+    """They entered the manifest only with entries from the run whose artifact holds their
+    bytes (docs/11 §7.9b). Withdrawn entries stay removals, never tombstones (docs/03 §7.1)."""
     committed = set(Manifest.load().by_path)
     catalog = Catalog.load()
-    withheld = {f.path for f in catalog.fixtures() if f.awaiting_publication}
-    assert withheld == KNOWN_SENSITIVE
-    assert not (withheld & committed), "a withheld path is in the manifest"
+    assert committed >= KNOWN_SENSITIVE
+    assert not [f.path for f in catalog.fixtures() if f.awaiting_publication]
     assert not any(e.get("status") == "removed" for e in Manifest.load().entries), (
         "withdrawn entries must be removals, not tombstones"
     )
