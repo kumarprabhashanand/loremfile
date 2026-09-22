@@ -31,6 +31,7 @@ AI_TOKENS = {
     "CCBot",
     "PerplexityBot",
     "Perplexity-User",
+    "Bytespider",
     "meta-externalagent",
     "meta-externalfetcher",
     "Amazonbot",
@@ -168,12 +169,14 @@ def test_the_waf_rule_refuses_the_robots_tokens_that_send_requests() -> None:
 
 
 def test_the_rule_also_refuses_cloudflares_verified_ai_bot_categories() -> None:
-    """Categories catch a verified AI bot whose token is not on the list; the three names
-    are Cloudflare's own (verified bot categories, read 2026-09-22). Search engine crawlers
-    are a different category and stay out, because they must see the noindex header."""
+    """Categories catch a verified bot whose token is not on the list; the four names are
+    Cloudflare's own (verified bot categories, read 2026-09-22). `Archiver` is in because an
+    archived copy of these pages would outlive any later fix. Search engine crawlers are a
+    different category and stay out, because they must see the noindex header."""
     expression = ai_agent_rule()["expression"]
-    assert 'cf.verified_bot_category in {"AI Crawler" "AI Assistant" "AI Search"}' in expression
-    for other in ("Search Engine Crawler", "Archiver", "Accessibility"):
+    categories = 'cf.verified_bot_category in {"AI Crawler" "AI Assistant" "AI Search" "Archiver"}'
+    assert categories in expression
+    for other in ("Search Engine Crawler", "Accessibility", "Feed Fetcher"):
         assert other not in expression
 
 

@@ -85,6 +85,7 @@ User-agent: Claude-SearchBot
 User-agent: CCBot
 User-agent: PerplexityBot
 User-agent: Perplexity-User
+User-agent: Bytespider
 User-agent: meta-externalagent
 User-agent: meta-externalfetcher
 User-agent: Amazonbot
