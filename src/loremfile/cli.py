@@ -31,6 +31,7 @@ from loremfile.catalog import Catalog, CatalogError
 from loremfile.infra import apply as apply_infra
 from loremfile.infra import audit as audit_infra
 from loremfile.infra import changed as changed_infra
+from loremfile.infra import crawlers as crawlers_module
 from loremfile.infra import locks
 from loremfile.infra import probe as probe_module
 from loremfile.infra import purge as purge_module
@@ -964,6 +965,64 @@ def verify_live_command(
             as_json=as_json,
         )
     )
+
+
+#: `crawler-watch` exit codes. Not 2: click exits 2 on a usage error, and a usage error
+#: read as "nothing new" would close the advisory issue on a run that read nothing.
+NOTHING_NEW = 0
+NEW_AGENTS = 1
+COULD_NOT_READ = 3
+EXPRESSION_TOO_LONG = 4
+
+
+@main.command("crawler-watch")
+@click.option("--url", default=crawlers_module.KNOWN_AGENTS_URL, help="The list to read.")
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def crawler_watch_command(url: str, as_json: bool) -> None:
+    """AI agents nobody here has decided about yet (docs/09 §3.4). Needs no credentials.
+
+    It never edits a rule: blocking an agent is a decision, and the run only reports. Exit
+    0 nothing new, 1 new agents to weigh, 3 the list could not be read — which says nothing
+    about crawlers, so the caller must leave the advisory issue alone — and 4 a committed
+    rule expression that Cloudflare would now refuse.
+    """
+    root = Path.cwd()
+    over_long = crawlers_module.over_long_expressions(root)
+    if over_long:
+        _emit(
+            "crawler-watch",
+            ok=False,
+            summary={"expressions_over_limit": len(over_long)},
+            items=[],
+            errors=over_long,
+            as_json=as_json,
+        )
+        sys.exit(EXPRESSION_TOO_LONG)
+    try:
+        known = crawlers_module.fetch_known(url)
+    except crawlers_module.WatchError as exc:
+        _emit(
+            "crawler-watch",
+            ok=False,
+            summary={"read": "failed"},
+            items=[],
+            errors=[str(exc)],
+            as_json=as_json,
+        )
+        sys.exit(COULD_NOT_READ)
+    blocked = crawlers_module.blocked_tokens(root)
+    found = crawlers_module.unreviewed(known, blocked, crawlers_module.seen_names(root))
+    for agent in found:
+        click.echo(f"  {agent.render()}", err=True)
+    _emit(
+        "crawler-watch",
+        ok=not found,
+        summary={"listed": len(known), "blocked": len(blocked), "new": len(found)},
+        items=[{"path": a.name, "status": "new", "detail": a.render()} for a in found],
+        errors=[f"not yet decided: {a.render()}" for a in found],
+        as_json=as_json,
+    )
+    sys.exit(NEW_AGENTS if found else NOTHING_NEW)
 
 
 @main.command("tokens-due")

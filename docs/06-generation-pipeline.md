@@ -306,6 +306,7 @@ WORKDIR /work
 | `loremfile purge --site` | Purge site/discovery URLs from the Cloudflare cache |
 | `loremfile verify-live [--mode smoke\|daily\|full] [--inject-failure path]` | Contract checks against production; `--inject-failure` reports the given path as failing to exercise the issue automation (REQ-27) |
 | `loremfile infra apply [--dry-run]\|audit [--strict]` | See `08-infrastructure.md`; `apply --dry-run` prints the plan; `audit` warns on unreadable settings and fails only with `--strict` |
+| `loremfile crawler-watch [--url URL] [--json]` | AI agents that are neither blocked nor already weighed (`09` §3.4). Exit 0 none, 1 new, 3 the list could not be read, 4 a committed rule expression over Cloudflare's 4,096-character limit |
 | `loremfile tokens-due [--json]` | Reads `infra/token-expiry.json` and lists tokens expiring within 30 days (health.yml `rotation-due` step) |
 | `loremfile infra locks --write` | Regenerates `infra/r2-locks.json` (one indefinite lock rule per format prefix) from the catalog |
 | `loremfile infra allowlist-rule` | Prints the WAF custom-rule expression that blocks paths outside known prefixes (incident use, `11` §7.4) |

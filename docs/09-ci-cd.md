@@ -387,6 +387,12 @@ The cost and rotation thresholds are applied in the workflow rather than inside 
 
 Runs `loremfile infra audit` (unreadable settings are warnings; opens/updates an `infra-drift` issue only on real differences) and, on the first Monday of each month, `loremfile build --all --audit` (opens/updates a `determinism` issue on drift). Uses the `production` environment for the T1 token because Cloudflare tokens cannot be split read/write per call; the job's steps never call apply.
 
+**The crawler watch (added 2026-09-22).** A third job, `crawlers`, reads the AI-agent list at `ai-robots-txt/ai.robots.txt` and reports the agents that are neither blocked here — in the WAF rule or in robots.txt (`04` §6) — nor recorded in `infra/crawlers-seen.json` as already weighed. It opens, updates or closes **one** advisory issue (`security`, "New AI crawlers to weigh"). It holds no zone credentials, stays outside the `loremfile-zone` group, and **never edits a rule**: blocking an agent is a decision about the two pages that name the operator, so the report is where it stops.
+
+- **A list that cannot be read is not a finding about crawlers.** `crawler-watch` exits 3, and the issue step is skipped entirely, so the advisory is left exactly as it was found — the same rule the drift issue follows (`11` §7.2). Reporting `ok` there would close a real advisory on a run that read nothing.
+- **Exit 4 fails the job**: a committed rule expression is over Cloudflare's documented 4,096-character maximum, which means the rule "cannot be created or updated" — better caught here than by the next `infra apply` against the live zone. Every committed expression is checked, not only the one that grows.
+- Seeded on 2026-09-22 with the 175 agents the list held then, so the first quiet week is quiet by construction rather than by luck. Answering an advisory means either adding the token (`04` §6's documentation rule applies) or adding the name to `crawlers-seen.json` — both are pull requests, and both are the owner's call (`11` §7.12).
+
 **Implemented M4.4. "Never calls apply" is enforced in three places rather than trusted**, because the job holds a token that *can* write:
 
 1. the client is constructed `read_only=True` and raises `ReadOnlyError` on any write method, before the request is even recorded;

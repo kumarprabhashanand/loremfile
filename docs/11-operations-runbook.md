@@ -235,6 +235,15 @@ If any row does not show what it must, the alerting path is broken: fix it befor
 | 2026-09-14 (after old PR #54) | `34904105748` (inject), `34904276619` (clean) | **Passed; no re-drill.** Run 1 ended **red** and opened old issue #57 at 22:29:39; run 2 closed old issue #57 at 22:30:45. **The runs overlapped**: run 2 started at 22:28:25, before run 1 ended at 22:29:48. The issue events are in the right order, so the open-then-close lifecycle is still shown, but the overlap is recorded rather than smoothed — hence the wait rule above. `force_ops_log` was not re-run; the first drill proved the keep-alive |
 | 2026-09-17 | `35267683488` (inject), `35268148973` (clean) | **Passed, and the runs did not overlap.** Run 1 failed 19:54:56–19:58:05 on the injected `pdf/a4-3pages.pdf` and opened old issue #74 at 19:57:58; run 2 started at 19:59:48 — after run 1 had ended — and closed old issue #74 at 20:05:17. The first drill to satisfy the wait rule above rather than record a breach of it, so the open-then-close lifecycle is shown by sequence and not inferred from event order. Full mode including the site half took **5m37s**, comfortably inside the 20-minute timeout |
 
+### 7.12 A "New AI crawlers to weigh" advisory
+
+The weekly watch (`09` §3.4) found agents on the public list that this repository has never decided about. Nothing was blocked and nothing was changed; the issue lists each name with its operator and stated purpose.
+
+1. For each name, decide: block it, or record it as weighed. There is no third option — leaving it open means the same names return every week and the label stops meaning anything.
+2. **To block:** add the token to the WAF rule and the robots.txt group, in the casing its operator publishes, with the documentation check `04` §6 requires. `loremfile crawler-watch` fails the audit if the expression passes 4,096 characters; splitting the rule then needs a decision, because the Free plan allows five custom rules in the phase.
+3. **To record as weighed:** add the name to `infra/crawlers-seen.json`.
+4. Either way the next run reports nothing and the issue closes itself.
+
 ## 8. `ops-log.md` format (on the `ops-log` branch)
 
 **One row per day, backfilled weekly.** The Monday `health.yml` run (or a dispatch with `force_ops_log`) writes a row for every day in its usage report — the last 32 days — and **replaces** a date already present rather than adding a second row, so overlapping windows converge (`09` §3.3, `19` §3.2).

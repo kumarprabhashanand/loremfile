@@ -206,3 +206,45 @@ jobs:
             --title "Fixtures no longer regenerate byte for byte" \
             --report determinism.json \
             --state ${{ steps.audit.outputs.drift == 'true' && 'failing' || 'ok' }}
+
+  # New AI agents to weigh (docs/09 §3.4). No zone credentials and nothing remote but a
+  # public list, so it stays outside the `loremfile-zone` group.
+  #
+  # IT NEVER EDITS A RULE. Blocking an agent is a decision about the two pages that name
+  # the operator (ADR-028, ADR-030); this reports what is new and the owner decides.
+  crawlers:
+    needs: setup
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install the package
+        run: pip install -e . --no-deps
+
+      # Exit 4 is a committed rule expression Cloudflare would now refuse to write at all
+      # (4,096 characters): this job's own failure, and the only one that fails the step.
+      - id: watch
+        run: |
+          code=0
+          loremfile crawler-watch --json > crawlers.json || code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          cat crawlers.json
+          [ "$code" = "4" ] && exit 1
+          exit 0
+
+      # Only when the list was actually read. Exit 3 means it was not, which says nothing
+      # about crawlers, so the advisory is left exactly as it was found — the same rule as
+      # the drift issue above (`11` §7.2): a run that learned nothing must not close one.
+      - name: Open, update or close the crawler advisory
+        if: ${{ !cancelled() && (steps.watch.outputs.code == '0' || steps.watch.outputs.code == '1') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m loremfile.gh_issue \
+            --label security \
+            --title "New AI crawlers to weigh" \
+            --report crawlers.json \
+            --state ${{ steps.watch.outputs.code == '1' && 'failing' || 'ok' }}
