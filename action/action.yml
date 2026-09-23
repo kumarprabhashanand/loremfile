@@ -119,8 +119,9 @@ runs:
         jq -r --argjson paths "$wanted_paths" --argjson formats "$wanted_formats" '
           [ .fixtures[]
             | select((.status // "active") == "active")
-            | select(($paths | index(.path)) != null or ($formats | index(.format)) != null)
-            | [.path, .sha256] | @tsv ]
+            | . as $e
+            | select(($paths | index($e.path)) != null or ($formats | index($e.format)) != null)
+            | [$e.path, $e.sha256] | @tsv ]
           | sort | .[]' "$work/manifest.json" > "$work/selected.tsv"
 
         for path in $PATHS; do
