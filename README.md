@@ -8,16 +8,15 @@ raw byte blobs and deliberately malformed edge cases.
 https://loremfile.dev/pdf/a4-3pages.pdf
 https://loremfile.dev/bin/10mb.bin
 https://loremfile.dev/mp4/720p-5s.mp4
-https://loremfile.dev/edge/truncated.png
+https://loremfile.dev/edge/jpg-truncated-50pct.jpg
 ```
 
 No ads, no accounts, no rate-limit surprises, no attribution required. Open CORS, byte-range
 support, one-year immutable caching, and a machine-readable
 [`manifest.json`](https://loremfile.dev/manifest.json) with SHA-256 hashes for every file.
 
-> **Status: not launched yet.** The specification is complete and lives in [`docs/`](docs/).
-> Implementation is in progress; `loremfile.dev` does not serve content yet. Follow the
-> [Implementation status](../../issues) issue for progress.
+228 files across 78 formats plus the `edge/` set are live, at catalog version 1.2.0. The
+specification lives in [`docs/`](docs/).
 
 ## Canonical host
 
@@ -26,14 +25,15 @@ The canonical host is **`https://loremfile.dev`**.
 This README is the out-of-band pointer: if `loremfile.dev` is ever unavailable or moves, the
 current canonical host is stated here first. Do not rely on any other mirror.
 
-## Promises
+## What you can rely on
 
-- **Immutability.** A published URL keeps the exact same bytes forever. Hash, byte count and
-  MIME type never change at a path. A fix is a new path; the old entry records `supersededBy`.
-  Files are removed only for legal reasons, and the manifest keeps a tombstone.
+- **The bytes at a published path do not change.** Hash, byte count and MIME type stay as
+  they are; a fix is a new path, and the old entry records `supersededBy`. A file may be
+  withdrawn for legal reasons, and the manifest then keeps a tombstone for it. There is no
+  promise of availability — see [the terms](https://loremfile.dev/legal/terms).
 - **Hotlinking is welcome.** That is what this is for. Please keep automated traffic under
   30 requests per second per client (the edge rate-limits at 300 requests / 10 s per IP).
-- **No tracking.** No cookies, no analytics scripts, no accounts.
+- **No tracking cookies, no analytics scripts, no accounts.**
 
 ## For agents and CI
 
