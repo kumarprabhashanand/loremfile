@@ -7,6 +7,10 @@ name: toolchain
 
 on:
   push:
+    # `paths` alone matches a tag push too: this workflow built and published an image on
+    # `v1.1.0`, `v1.2.0`, `action-v1` and a Dependabot branch before the branch filter was
+    # added. The image is published from `main` or by dispatch, never by moving a tag.
+    branches: [main]
     paths:
       - tools/Dockerfile
       - tools/apt-versions.txt

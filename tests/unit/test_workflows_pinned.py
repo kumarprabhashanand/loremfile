@@ -42,6 +42,11 @@ def test_actions_are_pinned_to_commit_shas(workflow: Path) -> None:
         # ./local and docker:// forms are not tag-pinned actions.
         if ref.startswith((".", "docker://")):
             continue
+        # This repository's own action, at the moving major tag the README tells readers to
+        # pin (`11` §7.12b). CI runs the published snippet as printed; pinning a SHA here
+        # would prove a different thing from the one the documentation promises.
+        if ref == "kumarprabhashanand/loremfile/action@action-v1":
+            continue
         _, _, version = ref.partition("@")
         if not SHA.match(version):
             floating.append(f"{workflow.name}:{number}: {ref}")
@@ -136,3 +141,20 @@ def test_the_guard_would_catch_a_reintroduced_literal() -> None:
 
     assert not TOOLCHAIN_LITERAL.search("      image: ${{ needs.setup.outputs.digest }}")
     assert not TOOLCHAIN_LITERAL.search("      image: ghcr.io/other/thing@sha256:" + "b" * 64)
+
+
+def test_a_push_trigger_always_names_its_branches_or_tags() -> None:
+    """`paths:` alone matches a tag push as well. `toolchain.yml` had exactly that shape and
+    built and published an image on both release tags, on `action-v1` and on a Dependabot
+    branch (docs/09 §3.6)."""
+    triggered = {}
+    for path in WORKFLOWS:
+        document = yaml.safe_load(path.read_text(encoding="utf-8"))
+        on = document[True] if True in document else document["on"]
+        if isinstance(on, dict) and "push" in on:
+            triggered[path.name] = on["push"] or {}
+    assert set(triggered) == {"deploy.yml", "release.yml", "toolchain.yml"}, (
+        "control: these are the workflows that run on a push"
+    )
+    for name, push in triggered.items():
+        assert "branches" in push or "tags" in push, f"{name}: a push trigger with neither"

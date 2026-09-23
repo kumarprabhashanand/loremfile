@@ -294,3 +294,29 @@ jobs:
           [ "${{ steps.bad-path.outcome }}" = "failure" ] || { echo "a bad path passed"; exit 1; }
           [ "${{ steps.wrong-version.outcome }}" = "failure" ] || { echo "a wrong version passed"; exit 1; }
           [ "${{ steps.bad-hash.outcome }}" = "failure" ] || { echo "a bad hash passed"; exit 1; }
+
+  # The published snippet, run exactly as the README prints it. The job above proves this
+  # pull request's `action/`; this one proves what a reader would actually paste, which is a
+  # different thing the moment the `action-v1` tag stops matching `main`.
+  action-as-documented:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - id: pull
+        uses: kumarprabhashanand/loremfile/action@action-v1
+        with:
+          paths: pdf/minimal.pdf mp4/720p-5s.mp4
+          formats: svg
+
+      - name: It fetched the named files and the whole format
+        env:
+          DIR: ${{ steps.pull.outputs.dir }}
+          COUNT: ${{ steps.pull.outputs.count }}
+        run: |
+          set -eu
+          for path in pdf/minimal.pdf mp4/720p-5s.mp4; do
+            [ -f "$DIR/$path" ] || { echo "$path is missing"; exit 1; }
+          done
+          # Two named files plus every svg: more than the named ones, or `formats` did nothing.
+          [ "$COUNT" -gt 2 ] || { echo "count was $COUNT"; exit 1; }
+          ls "$DIR/svg" >/dev/null || { echo "the svg format did not arrive"; exit 1; }

@@ -114,6 +114,27 @@ def test_every_example_path_is_a_published_fixture() -> None:
     assert "svg" in formats, "the README's `formats:` example"
 
 
+# --- the CI jobs ------------------------------------------------------------------------
+
+
+def test_ci_runs_the_snippet_the_readme_prints() -> None:
+    """The local job proves this ref; this one proves what a reader pastes. They differ the
+    moment `action-v1` stops matching `main`."""
+    documented = next(
+        step for step in CI["jobs"]["action-as-documented"]["steps"] if "uses" in step
+    )
+    snippet = re.search(
+        r"```yaml\n- uses: (\S+)\n  with:\n((?:    \S+: .+\n)+)```",
+        (ROOT / "README.md").read_text(encoding="utf-8"),
+    )
+    assert snippet, "control: the README still shows a usage snippet"
+    assert documented["uses"] == snippet.group(1)
+    printed = dict(
+        line.strip().split(": ", 1) for line in snippet.group(2).splitlines() if line.strip()
+    )
+    assert documented["with"] == printed, "CI must run exactly what the README prints"
+
+
 # --- the CI job -------------------------------------------------------------------------
 
 
