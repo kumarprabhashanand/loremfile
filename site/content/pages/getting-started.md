@@ -35,6 +35,17 @@ curl -fsSL https://loremfile.dev/sha256sums.txt | sha256sum -c --ignore-missing
 curl -fsSL https://loremfile.dev/sha256sums.txt | shasum -a 256 -c --ignore-missing
 ```
 
+## In a GitHub workflow
+
+```yaml
+- uses: kumarprabhashanand/loremfile/action@v1.3.0
+  with:
+    paths: pdf/minimal.pdf mp4/720p-5s.mp4
+```
+
+Files land in `loremfile-fixtures/`, each checked against its hash in the manifest. Linux and
+macOS runners; the action downloads one file at a time and backs off if it is rate limited.
+
 ## Find files without a browser
 
 [manifest.json](/manifest.json) lists every file with its size, hash, MIME type and measured

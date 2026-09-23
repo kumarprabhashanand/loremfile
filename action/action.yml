@@ -1,0 +1,158 @@
+name: Fetch loremfile fixtures
+description: >-
+  Download sample files from loremfile.dev and check each one against the SHA-256 in the
+  published manifest. Files are fetched one at a time with a short pause between them, and a
+  429 is retried with backoff: loremfile.dev publishes a rate limit of 30 requests a second
+  per IP, and this action is a client of it like any other. Shell only: no Node, no Python,
+  and no network access to anything but loremfile.dev.
+author: loremfile.dev
+
+inputs:
+  paths:
+    description: Fixture paths to download, whitespace separated, e.g. "pdf/minimal.pdf edge/empty.txt".
+    required: false
+    default: ""
+  formats:
+    description: Whole formats to download, whitespace separated, e.g. "pdf svg". Every published file of each.
+    required: false
+    default: ""
+  dest:
+    description: Directory to write into. Created if it does not exist.
+    required: false
+    default: loremfile-fixtures
+  verify:
+    description: Check every file against its SHA-256 in the manifest. Leave this on.
+    required: false
+    default: "true"
+  catalog-version:
+    description: Require the live manifest to be this catalog version, e.g. "1.2.0". Empty accepts any.
+    required: false
+    default: ""
+
+outputs:
+  dir:
+    description: The directory the files were written to.
+    value: ${{ steps.fetch.outputs.dir }}
+  count:
+    description: How many files were written.
+    value: ${{ steps.fetch.outputs.count }}
+
+runs:
+  using: composite
+  steps:
+    - id: fetch
+      shell: bash
+      env:
+        PATHS: ${{ inputs.paths }}
+        FORMATS: ${{ inputs.formats }}
+        DEST: ${{ inputs.dest }}
+        VERIFY: ${{ inputs.verify }}
+        CATALOG_VERSION: ${{ inputs.catalog-version }}
+      run: |
+        set -euo pipefail
+
+        # `LOREMFILE_BASE_URL` exists for this repository's own tests and accepts a loopback
+        # address only, so it cannot be used to point the action at somebody else's host.
+        base="https://loremfile.dev"
+        if [ -n "${LOREMFILE_BASE_URL:-}" ]; then
+          case "$LOREMFILE_BASE_URL" in
+            http://127.0.0.1:*|http://localhost:*) base="$LOREMFILE_BASE_URL" ;;
+            *) echo "::error::LOREMFILE_BASE_URL accepts a loopback address only"; exit 1 ;;
+          esac
+        fi
+
+        for tool in curl jq; do
+          command -v "$tool" >/dev/null 2>&1 || { echo "::error::$tool is required"; exit 1; }
+        done
+        if command -v sha256sum >/dev/null 2>&1; then
+          digest() { sha256sum "$1" | cut -d' ' -f1; }
+        elif command -v shasum >/dev/null 2>&1; then
+          digest() { shasum -a 256 "$1" | cut -d' ' -f1; }
+        else
+          echo "::error::neither sha256sum nor shasum is available (Windows is not supported)"
+          exit 1
+        fi
+
+        # The shape guard `deploy.yml` uses on its own path input: no absolute paths, no
+        # traversal, nothing but the characters a fixture path can hold.
+        for path in $PATHS; do
+          case "$path" in
+            *[!A-Za-z0-9._/-]*|*..*|/*)
+              echo "::error::refusing '$path': not the shape of a fixture path"; exit 1 ;;
+          esac
+        done
+        for format in $FORMATS; do
+          case "$format" in
+            *[!a-z0-9]*) echo "::error::refusing '$format': not the shape of a format"; exit 1 ;;
+          esac
+        done
+        if [ -z "$PATHS" ] && [ -z "$FORMATS" ]; then
+          echo "::error::name at least one path or format"; exit 1
+        fi
+
+        # One request, retrying only a 429 — our own rate limit asking for patience.
+        get() {
+          url="$1"; out="$2"; pause=2
+          for _ in 1 2 3 4; do
+            code="$(curl -sS -o "$out" -w '%{http_code}' --connect-timeout 20 --max-time 900 "$url" || echo 000)"
+            case "$code" in
+              200) return 0 ;;
+              429) echo "$url answered 429; waiting ${pause}s"; sleep "$pause"; pause=$((pause * 2)) ;;
+              *) echo "::error::$url answered $code"; return 1 ;;
+            esac
+          done
+          echo "::error::$url is still answering 429"; return 1
+        }
+
+        work="$(mktemp -d)"
+        trap 'rm -rf "$work"' EXIT
+        get "$base/manifest.json" "$work/manifest.json"
+
+        version="$(jq -r '.catalog_version // ""' "$work/manifest.json")"
+        if [ -n "$CATALOG_VERSION" ] && [ "$CATALOG_VERSION" != "$version" ]; then
+          echo "::error::loremfile.dev publishes catalog $version, not $CATALOG_VERSION"; exit 1
+        fi
+        echo "manifest: catalog $version, $(jq -r '.count // 0' "$work/manifest.json") files"
+
+        wanted_paths="$(printf '%s\n' $PATHS | jq -R . | jq -sc '[.[] | select(. != "")]')"
+        wanted_formats="$(printf '%s\n' $FORMATS | jq -R . | jq -sc '[.[] | select(. != "")]')"
+        jq -r --argjson paths "$wanted_paths" --argjson formats "$wanted_formats" '
+          [ .fixtures[]
+            | select((.status // "active") == "active")
+            | select(($paths | index(.path)) != null or ($formats | index(.format)) != null)
+            | [.path, .sha256] | @tsv ]
+          | sort | .[]' "$work/manifest.json" > "$work/selected.tsv"
+
+        for path in $PATHS; do
+          cut -f1 "$work/selected.tsv" | grep -qx -- "$path" \
+            || { echo "::error::$path is not a published fixture"; exit 1; }
+        done
+        for format in $FORMATS; do
+          grep -q "^$format/" "$work/selected.tsv" \
+            || { echo "::error::$format publishes no files"; exit 1; }
+        done
+        if [ ! -s "$work/selected.tsv" ]; then
+          echo "::error::nothing to download"; exit 1
+        fi
+
+        mkdir -p "$DEST"
+        count=0
+        while IFS="$(printf '\t')" read -r path want; do
+          [ -n "$path" ] || continue
+          out="$DEST/$path"
+          mkdir -p "$(dirname "$out")"
+          get "$base/$path" "$out"
+          if [ "$VERIFY" != "false" ]; then
+            got="$(digest "$out")"
+            if [ "$got" != "$want" ]; then
+              echo "::error::$path: downloaded sha256 $got, the manifest says $want"; exit 1
+            fi
+          fi
+          count=$((count + 1))
+          echo "  $path"
+          sleep 0.5
+        done < "$work/selected.tsv"
+
+        echo "dir=$DEST" >> "$GITHUB_OUTPUT"
+        echo "count=$count" >> "$GITHUB_OUTPUT"
+        echo "$count file(s) in $DEST, each checked against the manifest"

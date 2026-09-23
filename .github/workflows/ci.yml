@@ -203,3 +203,94 @@ jobs:
           name: carry-forward-fixtures
           path: carry-forward
           retention-days: 90
+
+  # The action, exercised from this pull request's own ref rather than from a tag: it is the
+  # only way a change to it is tested before it is published. Both runner families, because
+  # the digest tool differs (`sha256sum` on Linux, `shasum` on macOS) and Windows is not
+  # supported. Three files, one over 10 MB and one deliberately broken fixture, then the three
+  # failures that matter: a path that is not a fixture path, a catalog version that is not the
+  # one published, and bytes that do not match the manifest. None of them may pass silently.
+  action:
+    needs: setup
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-14]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - id: pull
+        uses: ./action
+        with:
+          paths: pdf/minimal.pdf edge/json-bom.json mp4/10mb.mp4
+
+      - name: The files are there, and the action said so
+        env:
+          DIR: ${{ steps.pull.outputs.dir }}
+          COUNT: ${{ steps.pull.outputs.count }}
+        run: |
+          set -eu
+          [ "$COUNT" = "3" ] || { echo "count was $COUNT"; exit 1; }
+          [ "$DIR" = "loremfile-fixtures" ] || { echo "dir was $DIR"; exit 1; }
+          for path in pdf/minimal.pdf edge/json-bom.json mp4/10mb.mp4; do
+            [ -f "$DIR/$path" ] || { echo "$path is missing"; exit 1; }
+          done
+          # Over 10 MB, checked rather than assumed: a truncated body is what would otherwise
+          # pass quietly on the one file big enough for that to happen.
+          size=$(wc -c < "$DIR/mp4/10mb.mp4")
+          [ "$size" -gt 10000000 ] || { echo "mp4/10mb.mp4 is $size bytes"; exit 1; }
+          rm -rf "$DIR"
+
+      # A manifest whose hash cannot match the bytes beside it, served from loopback. The
+      # curl is the control: without it, a refused connection would fail the next step for a
+      # reason that has nothing to do with hashes.
+      - name: Serve a manifest that disagrees with its bytes
+        run: |
+          set -eu
+          mkdir -p wrong/pdf
+          printf 'not the real bytes\n' > wrong/pdf/minimal.pdf
+          cat > wrong/manifest.json <<'JSON'
+          {"catalog_version": "0.0.0", "count": 1, "fixtures": [
+            {"path": "pdf/minimal.pdf", "format": "pdf", "status": "active",
+             "sha256": "0000000000000000000000000000000000000000000000000000000000000000"}]}
+          JSON
+          python3 -m http.server 8137 --directory wrong --bind 127.0.0.1 &
+          code=""
+          for _ in $(seq 1 20); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8137/manifest.json || true)
+            if [ "$code" = "200" ]; then break; fi
+            sleep 0.5
+          done
+          [ "$code" = "200" ] || { echo "the test server never answered"; exit 1; }
+
+      - id: bad-path
+        continue-on-error: true
+        uses: ./action
+        with:
+          paths: ../etc/passwd
+
+      - id: wrong-version
+        continue-on-error: true
+        uses: ./action
+        with:
+          paths: pdf/minimal.pdf
+          catalog-version: "0.0.1"
+          dest: wrong-version
+
+      - id: bad-hash
+        continue-on-error: true
+        env:
+          LOREMFILE_BASE_URL: http://127.0.0.1:8137
+        uses: ./action
+        with:
+          paths: pdf/minimal.pdf
+          dest: corrupted
+
+      - name: All three failed, and nothing was written for the bad hash
+        run: |
+          set -eu
+          [ "${{ steps.bad-path.outcome }}" = "failure" ] || { echo "a bad path passed"; exit 1; }
+          [ "${{ steps.wrong-version.outcome }}" = "failure" ] || { echo "a wrong version passed"; exit 1; }
+          [ "${{ steps.bad-hash.outcome }}" = "failure" ] || { echo "a bad hash passed"; exit 1; }
