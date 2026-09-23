@@ -117,15 +117,14 @@ def test_every_example_path_is_a_published_fixture() -> None:
 # --- the CI jobs ------------------------------------------------------------------------
 
 
-def test_ci_checks_the_published_tag_and_runs_the_readme_s_inputs() -> None:
+def test_ci_runs_the_published_tag_with_the_inputs_the_readme_prints() -> None:
     """The literal `uses: …@action-v1` cannot run here: this repository requires actions to
-    be pinned to a full commit SHA, and a tag ref fails the whole workflow at startup. So the
-    job checks the published tag's interface and runs the README's own inputs on this ref."""
+    be pinned to a full commit SHA, and a tag ref fails the whole workflow at startup. A path
+    action is exempt, so the tag is checked out and executed — the bytes a user gets."""
     steps = CI["jobs"]["action-as-documented"]["steps"]
-    published = next(s for s in steps if "tag the README pins" in str(s.get("name", "")))
-    assert "/kumarprabhashanand/loremfile/action-v1/action/action.yml" in str(published["run"])
-    assert "for input in paths formats dest verify catalog-version" in str(published["run"])
-    assert "using: composite" in str(published["run"])
+    checkout = next(s for s in steps if str(s.get("uses", "")).startswith("actions/checkout"))
+    assert checkout["with"]["ref"] == "action-v1"
+    assert checkout["with"]["path"] == "tagged"
 
     snippet = re.search(
         r"```yaml\n- uses: (\S+)\n  with:\n((?:    \S+: .+\n)+)```",
@@ -136,7 +135,7 @@ def test_ci_checks_the_published_tag_and_runs_the_readme_s_inputs() -> None:
         line.strip().split(": ", 1) for line in snippet.group(2).splitlines() if line.strip()
     )
     ran = next(s for s in steps if s.get("id") == "pull")
-    assert ran["uses"] == "./action"
+    assert ran["uses"] == "./tagged/action", "the tag's own code, from disk"
     assert ran["with"] == printed, "CI must run the inputs the README prints"
 
 
@@ -147,8 +146,6 @@ def test_ci_runs_the_action_from_this_ref_on_both_runner_families() -> None:
     assert JOB["strategy"]["matrix"]["os"] == ["ubuntu-24.04", "macos-14"]
     used = [step["uses"] for step in STEPS if "uses" in step]
     assert used.count("./action") == 4, "the real pull plus the three failures"
-    documented = [s.get("uses") for s in CI["jobs"]["action-as-documented"]["steps"]]
-    assert documented.count("./action") == 1, "and once more in the documented-inputs job"
     assert not any(u.startswith("kumarprabhashanand/loremfile") for u in used), "never a tag"
 
 
