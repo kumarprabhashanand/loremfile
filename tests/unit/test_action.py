@@ -114,6 +114,31 @@ def test_every_example_path_is_a_published_fixture() -> None:
     assert "svg" in formats, "the README's `formats:` example"
 
 
+# --- the CI jobs ------------------------------------------------------------------------
+
+
+def test_ci_runs_the_published_tag_with_the_inputs_the_readme_prints() -> None:
+    """The literal `uses: …@action-v1` cannot run here: this repository requires actions to
+    be pinned to a full commit SHA, and a tag ref fails the whole workflow at startup. A path
+    action is exempt, so the tag is checked out and executed — the bytes a user gets."""
+    steps = CI["jobs"]["action-as-documented"]["steps"]
+    checkout = next(s for s in steps if str(s.get("uses", "")).startswith("actions/checkout"))
+    assert checkout["with"]["ref"] == "action-v1"
+    assert checkout["with"]["path"] == "tagged"
+
+    snippet = re.search(
+        r"```yaml\n- uses: (\S+)\n  with:\n((?:    \S+: .+\n)+)```",
+        (ROOT / "README.md").read_text(encoding="utf-8"),
+    )
+    assert snippet and snippet.group(1).endswith("@action-v1"), "control: the README pins the tag"
+    printed = dict(
+        line.strip().split(": ", 1) for line in snippet.group(2).splitlines() if line.strip()
+    )
+    ran = next(s for s in steps if s.get("id") == "pull")
+    assert ran["uses"] == "./tagged/action", "the tag's own code, from disk"
+    assert ran["with"] == printed, "CI must run the inputs the README prints"
+
+
 # --- the CI job -------------------------------------------------------------------------
 
 

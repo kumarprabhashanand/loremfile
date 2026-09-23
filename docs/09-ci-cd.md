@@ -454,7 +454,7 @@ A further guard covers the whole set: a unit test asserts `audit.CHECKS` covers 
 
 ### 3.6 `toolchain.yml` — on changes under `tools/`
 
-Triggered by a push touching `tools/Dockerfile`, `tools/apt-versions.txt`, `tools/requirements.lock`, `tools/smoke.sh` or the workflow itself, and by `workflow_dispatch`. Permissions are per job and least-privilege: the `build` job takes `contents: read, packages: write`; only `propose-digest-bump` takes `contents: write, pull-requests: write`.
+Triggered by a push **to `main`** touching `tools/Dockerfile`, `tools/apt-versions.txt`, `tools/requirements.lock`, `tools/smoke.sh` or the workflow itself, and by `workflow_dispatch`. The branch filter is load-bearing: `paths` alone also matches a tag push, and this workflow published an image on both release tags, on `action-v1` and on a Dependabot branch before it was added (2026-09-23). Permissions are per job and least-privilege: the `build` job takes `contents: read, packages: write`; only `propose-digest-bump` takes `contents: write, pull-requests: write`.
 
 `build` builds `tools/Dockerfile`, pushes to `ghcr.io/kumarprabhashanand/loremfile-toolchain:<git-sha>` (**no `latest` tag** — workflows reference the image by digest and a moving tag would be a mutable surface), then smoke-tests **the pushed digest**, not a local build:
 

@@ -294,3 +294,40 @@ jobs:
           [ "${{ steps.bad-path.outcome }}" = "failure" ] || { echo "a bad path passed"; exit 1; }
           [ "${{ steps.wrong-version.outcome }}" = "failure" ] || { echo "a wrong version passed"; exit 1; }
           [ "${{ steps.bad-hash.outcome }}" = "failure" ] || { echo "a bad hash passed"; exit 1; }
+
+  # What a reader actually pastes, running the tag's own code. The literal
+  # `uses: …/action@action-v1` cannot run here — this repository requires actions to be
+  # pinned to a full commit SHA, and a tag ref fails the whole workflow at startup (proved
+  # 2026-09-23: the same job pinned to the SHA `action-v1` points at started and passed). A
+  # path action is exempt from that policy, so the tag is checked out and executed from disk:
+  # the bytes a user gets, with the inputs the README prints. The `action` job above covers
+  # this pull request's own `action/`; nothing here is compared against it, so a change to
+  # the action cannot deadlock on a tag that has not moved yet.
+  action-as-documented:
+    needs: setup
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: action-v1
+          path: tagged
+
+      - id: pull
+        uses: ./tagged/action
+        with:
+          paths: pdf/minimal.pdf mp4/720p-5s.mp4
+          formats: svg
+
+      - name: The published action fetched the named files and the whole format
+        env:
+          DIR: ${{ steps.pull.outputs.dir }}
+          COUNT: ${{ steps.pull.outputs.count }}
+        run: |
+          set -eu
+          for path in pdf/minimal.pdf mp4/720p-5s.mp4; do
+            [ -f "$DIR/$path" ] || { echo "$path is missing"; exit 1; }
+          done
+          # Two named files plus every svg: more than the named ones, or `formats` did nothing.
+          [ "$COUNT" -gt 2 ] || { echo "count was $COUNT"; exit 1; }
+          ls "$DIR/svg" >/dev/null || { echo "the svg format did not arrive"; exit 1; }
