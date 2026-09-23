@@ -49,7 +49,7 @@ current canonical host is stated here first. Do not rely on any other mirror.
 Pull fixtures into a workflow and check each one against its `sha256` in the manifest:
 
 ```yaml
-- uses: kumarprabhashanand/loremfile/action@v1.3.0
+- uses: kumarprabhashanand/loremfile/action@action-v1
   with:
     paths: pdf/minimal.pdf mp4/720p-5s.mp4
     formats: svg
@@ -64,8 +64,9 @@ time with a pause between them and backs off on a 429, because the published rat
 applies to it like any other client. **Linux and macOS runners only** — it needs `sha256sum`
 or `shasum`, and Windows is not supported rather than half-supported.
 
-**`@v1.3.0` is the first tag that will contain the action**: `v1.2.0` predates it, and the
-tag ruleset forbids moving a `v*` tag, so it cannot be added there.
+`action-v1` is a major tag that moves as the action changes; it is deliberately not a `v*`
+release tag, because those name a catalog version and are frozen once pushed. Pinning a
+commit SHA works too and is the strictest option.
 
 ## Licences
 

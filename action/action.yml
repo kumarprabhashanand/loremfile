@@ -9,7 +9,7 @@ author: loremfile.dev
 
 inputs:
   paths:
-    description: Fixture paths to download, whitespace separated, e.g. "pdf/minimal.pdf edge/empty.txt".
+    description: Fixture paths to download, whitespace separated, e.g. "pdf/minimal.pdf edge/zero-byte.txt".
     required: false
     default: ""
   formats:

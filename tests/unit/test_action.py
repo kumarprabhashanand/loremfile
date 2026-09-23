@@ -8,6 +8,7 @@ ever run from a tag is an action nobody tested before publishing it.
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -68,6 +69,49 @@ def test_it_is_a_polite_client_of_our_own_rate_limit() -> None:
     assert "sleep 0.5" in SCRIPT, "a pause between files"
     assert "429)" in SCRIPT and "pause=$((pause * 2))" in SCRIPT, "backoff, not a tight retry"
     assert "rate limit" in str(ACTION["description"]).lower(), "and it says so"
+
+
+# --- what the docs tell people to pin ----------------------------------------------------
+
+DOCS = ("README.md", "site/content/pages/getting-started.md")
+
+
+def test_the_documented_tag_is_outside_the_release_tag_pattern() -> None:
+    """`action-v1` moves when the action changes. A `v*` tag could not: `release.check_tag`
+    ties those to a catalog version, the tag ruleset freezes them, and `release.yml` fires
+    on them."""
+    pinned = {
+        pin
+        for doc in DOCS
+        for pin in re.findall(
+            r"uses: kumarprabhashanand/loremfile/action@(\S+)",
+            (ROOT / doc).read_text(encoding="utf-8"),
+        )
+    }
+    assert pinned == {"action-v1"}, "control: both documents pin the same thing"
+    assert not any(pin.startswith("v") for pin in pinned)
+    release = yaml.safe_load((ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8"))
+    assert release[True]["push"]["tags"] == ["v*"], "the pattern the tag must stay out of"
+
+
+def test_every_example_path_is_a_published_fixture() -> None:
+    """An example that 404s teaches the reader a path that does not exist, and makes a real
+    404 every time someone pastes it."""
+    manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
+    published = {e["path"] for e in manifest["fixtures"] if e.get("status", "active") == "active"}
+    formats = {e["format"] for e in manifest["fixtures"]}
+
+    shape = re.compile(r"[a-z0-9]+/[a-z0-9][a-z0-9._-]*\.[a-z0-9]+")
+    sources = [str(ACTION["inputs"][name]["description"]) for name in ("paths", "formats")]
+    for doc in DOCS:
+        sources += re.findall(r"^\s*paths: (.+)$", (ROOT / doc).read_text(encoding="utf-8"), re.M)
+    examples = {path for source in sources for path in shape.findall(source)}
+
+    assert {"pdf/minimal.pdf", "edge/zero-byte.txt", "mp4/720p-5s.mp4"} <= examples, (
+        "control: the examples were found in the action and both documents"
+    )
+    assert examples <= published, f"not published: {sorted(examples - published)}"
+    assert "svg" in formats, "the README's `formats:` example"
 
 
 # --- the CI job -------------------------------------------------------------------------

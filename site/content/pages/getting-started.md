@@ -38,7 +38,7 @@ curl -fsSL https://loremfile.dev/sha256sums.txt | shasum -a 256 -c --ignore-miss
 ## In a GitHub workflow
 
 ```yaml
-- uses: kumarprabhashanand/loremfile/action@v1.3.0
+- uses: kumarprabhashanand/loremfile/action@action-v1
   with:
     paths: pdf/minimal.pdf mp4/720p-5s.mp4
 ```
