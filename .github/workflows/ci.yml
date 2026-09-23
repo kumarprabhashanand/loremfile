@@ -295,15 +295,30 @@ jobs:
           [ "${{ steps.wrong-version.outcome }}" = "failure" ] || { echo "a wrong version passed"; exit 1; }
           [ "${{ steps.bad-hash.outcome }}" = "failure" ] || { echo "a bad hash passed"; exit 1; }
 
-  # The published snippet, run exactly as the README prints it. The job above proves this
-  # pull request's `action/`; this one proves what a reader would actually paste, which is a
-  # different thing the moment the `action-v1` tag stops matching `main`.
+  # What a reader actually pastes. The literal `uses: …/action@action-v1` cannot run here:
+  # this repository requires actions to be pinned to a full commit SHA, and a tag ref makes
+  # the whole workflow fail at startup (proved on 2026-09-23 — the same job pinned to the SHA
+  # `action-v1` points at started and passed). So this job checks the two halves separately:
+  # the published tag's interface, and the README's own inputs against this ref's action.
   action-as-documented:
+    needs: setup
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: The tag the README pins is published and still takes these inputs
+        run: |
+          set -eu
+          curl -fsSL -o published.yml \
+            https://raw.githubusercontent.com/kumarprabhashanand/loremfile/action-v1/action/action.yml
+          for input in paths formats dest verify catalog-version; do
+            grep -q "^  $input:" published.yml || { echo "action-v1 has no $input input"; exit 1; }
+          done
+          grep -q "^    using: composite" published.yml || { echo "action-v1 is not composite"; exit 1; }
+
       - id: pull
-        uses: kumarprabhashanand/loremfile/action@action-v1
+        uses: ./action
         with:
           paths: pdf/minimal.pdf mp4/720p-5s.mp4
           formats: svg

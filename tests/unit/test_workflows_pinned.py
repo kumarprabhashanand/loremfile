@@ -42,11 +42,6 @@ def test_actions_are_pinned_to_commit_shas(workflow: Path) -> None:
         # ./local and docker:// forms are not tag-pinned actions.
         if ref.startswith((".", "docker://")):
             continue
-        # This repository's own action, at the moving major tag the README tells readers to
-        # pin (`11` §7.12b). CI runs the published snippet as printed; pinning a SHA here
-        # would prove a different thing from the one the documentation promises.
-        if ref == "kumarprabhashanand/loremfile/action@action-v1":
-            continue
         _, _, version = ref.partition("@")
         if not SHA.match(version):
             floating.append(f"{workflow.name}:{number}: {ref}")
