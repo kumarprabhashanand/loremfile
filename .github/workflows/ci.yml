@@ -315,7 +315,7 @@ jobs:
           for input in paths formats dest verify catalog-version; do
             grep -q "^  $input:" published.yml || { echo "action-v1 has no $input input"; exit 1; }
           done
-          grep -q "^    using: composite" published.yml || { echo "action-v1 is not composite"; exit 1; }
+          grep -q "^  using: composite" published.yml || { echo "action-v1 is not composite"; exit 1; }
 
       - id: pull
         uses: ./action
