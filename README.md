@@ -44,6 +44,30 @@ current canonical host is stated here first. Do not rely on any other mirror.
   `sha256sum -c`.
 - `/{format}/index.json` — one format at a time.
 
+### GitHub Action
+
+Pull fixtures into a workflow and check each one against its `sha256` in the manifest:
+
+```yaml
+- uses: kumarprabhashanand/loremfile/action@action-v1
+  with:
+    paths: pdf/minimal.pdf mp4/720p-5s.mp4
+    formats: svg
+```
+
+It writes to `loremfile-fixtures/` and outputs `dir` and `count`. A file whose bytes do not
+match the manifest fails the step and names the file. `catalog-version: "1.2.0"` refuses to
+run if loremfile.dev has moved on.
+
+The action is shell only and talks to nothing but loremfile.dev. It downloads one file at a
+time with a pause between them and backs off on a 429, because the published rate limit
+applies to it like any other client. **Linux and macOS runners only** — it needs `sha256sum`
+or `shasum`, and Windows is not supported rather than half-supported.
+
+`action-v1` is a major tag that moves as the action changes; it is deliberately not a `v*`
+release tag, because those name a catalog version and are frozen once pushed. Pinning a
+commit SHA works too and is the strictest option.
+
 ## Licences
 
 | What | Licence |

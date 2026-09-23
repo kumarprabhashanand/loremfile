@@ -235,6 +235,16 @@ If any row does not show what it must, the alerting path is broken: fix it befor
 | 2026-09-14 (after old PR #54) | `34904105748` (inject), `34904276619` (clean) | **Passed; no re-drill.** Run 1 ended **red** and opened old issue #57 at 22:29:39; run 2 closed old issue #57 at 22:30:45. **The runs overlapped**: run 2 started at 22:28:25, before run 1 ended at 22:29:48. The issue events are in the right order, so the open-then-close lifecycle is still shown, but the overlap is recorded rather than smoothed — hence the wait rule above. `force_ops_log` was not re-run; the first drill proved the keep-alive |
 | 2026-09-17 | `35267683488` (inject), `35268148973` (clean) | **Passed, and the runs did not overlap.** Run 1 failed 19:54:56–19:58:05 on the injected `pdf/a4-3pages.pdf` and opened old issue #74 at 19:57:58; run 2 started at 19:59:48 — after run 1 had ended — and closed old issue #74 at 20:05:17. The first drill to satisfy the wait rule above rather than record a breach of it, so the open-then-close lifecycle is shown by sequence and not inferred from event order. Full mode including the site half took **5m37s**, comfortably inside the 20-minute timeout |
 
+### 7.12b Move the action's major tag
+
+`action-v1` is what the README tells people to pin, so a merged change to `action/` is not live until the tag moves. It is **not** a `v*` tag on purpose: those must equal a catalog version (`09` §7, `release.check_tag`), and the tag ruleset freezes them, so an action fix would otherwise need a catalog release.
+
+```sh
+git tag -f action-v1 <merge commit> && git push -f origin action-v1
+```
+
+The ruleset targets `refs/tags/v*` only, and `release.yml` triggers on `v*`, so moving this tag protects nothing and publishes nothing. A caller that pinned a commit SHA is unaffected, which is the reason the README offers that too.
+
 ### 7.12 A "New AI crawlers to weigh" advisory
 
 The weekly watch (`09` §3.4) found agents on the public list that this repository has never decided about. Nothing was blocked and nothing was changed; the issue lists each name with its operator and stated purpose.
