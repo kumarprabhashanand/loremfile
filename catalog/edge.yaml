@@ -19,7 +19,11 @@ fixtures:
     size_class: free
     mime: application/pdf
     edge_case: true
-    edge: { intended_format: pdf, defect: zero-byte }
+    edge:
+      intended_format: pdf
+      defect: zero-byte
+      compare_with: pdf/minimal.pdf
+      outcome: must-fail
 
   - name: zero-byte.txt
     phase: 1
@@ -29,7 +33,11 @@ fixtures:
     size_class: free
     mime: text/plain
     edge_case: true
-    edge: { intended_format: txt, defect: zero-byte }
+    edge:
+      intended_format: txt
+      defect: zero-byte
+      compare_with: txt/lorem-1kb.txt
+      outcome: varies
 
   - name: zero-byte.json
     phase: 1
@@ -39,7 +47,11 @@ fixtures:
     size_class: free
     mime: application/json
     edge_case: true
-    edge: { intended_format: json, defect: zero-byte }
+    edge:
+      intended_format: json
+      defect: zero-byte
+      compare_with: json/all-types.json
+      outcome: must-fail
 
   - name: zero-byte.png
     phase: 1
@@ -49,7 +61,11 @@ fixtures:
     size_class: free
     mime: image/png
     edge_case: true
-    edge: { intended_format: png, defect: zero-byte }
+    edge:
+      intended_format: png
+      defect: zero-byte
+      compare_with: png/100x100.png
+      outcome: must-fail
 
   - name: zero-byte.zip
     phase: 1
@@ -59,7 +75,11 @@ fixtures:
     size_class: free
     mime: application/zip
     edge_case: true
-    edge: { intended_format: zip, defect: zero-byte }
+    edge:
+      intended_format: zip
+      defect: zero-byte
+      compare_with: zip/3-text-files.zip
+      outcome: must-fail
 
   - name: zero-byte.csv
     phase: 1
@@ -69,7 +89,11 @@ fixtures:
     size_class: free
     mime: text/csv
     edge_case: true
-    edge: { intended_format: csv, defect: zero-byte }
+    edge:
+      intended_format: csv
+      defect: zero-byte
+      compare_with: csv/people-10.csv
+      outcome: must-fail
 
   - name: zero-byte.mp4
     phase: 1
@@ -79,7 +103,11 @@ fixtures:
     size_class: free
     mime: video/mp4
     edge_case: true
-    edge: { intended_format: mp4, defect: zero-byte }
+    edge:
+      intended_format: mp4
+      defect: zero-byte
+      compare_with: mp4/720p-5s.mp4
+      outcome: must-fail
 
   - name: pdf-truncated-60pct.pdf
     phase: 1
@@ -94,6 +122,8 @@ fixtures:
     edge:
       intended_format: pdf
       defect: truncated
+      compare_with: pdf/a4-3pages.pdf
+      outcome: may-recover
       source_fixture: pdf/a4-3pages.pdf
       fraction: 0.6
 
@@ -110,6 +140,8 @@ fixtures:
     edge:
       intended_format: jpg
       defect: truncated
+      compare_with: jpg/640x480.jpg
+      outcome: may-recover
       source_fixture: jpg/640x480.jpg
       fraction: 0.5
 
@@ -126,6 +158,8 @@ fixtures:
     edge:
       intended_format: mp4
       defect: truncated
+      compare_with: mp4/720p-5s.mp4
+      outcome: varies
       source_fixture: mp4/720p-5s.mp4
       fraction: 0.5
 
@@ -142,6 +176,8 @@ fixtures:
     edge:
       intended_format: zip
       defect: truncated
+      compare_with: zip/3-text-files.zip
+      outcome: may-recover
       source_fixture: zip/3-text-files.zip
       fraction: 0.5
 
@@ -158,6 +194,8 @@ fixtures:
     edge:
       intended_format: png
       defect: mismatched-extension
+      compare_with: pdf/minimal.pdf
+      outcome: varies
       source_fixture: png/100x100.png
 
   - name: pdf-with-png-extension.png
@@ -173,6 +211,8 @@ fixtures:
     edge:
       intended_format: pdf
       defect: mismatched-extension
+      compare_with: png/100x100.png
+      outcome: varies
       source_fixture: pdf/a4-1page.pdf
 
   - name: json-trailing-comma.json
@@ -183,7 +223,11 @@ fixtures:
     size_class: free
     mime: application/json
     edge_case: true
-    edge: { intended_format: json, defect: invalid-syntax }
+    edge:
+      intended_format: json
+      defect: invalid-syntax
+      compare_with: json/all-types.json
+      outcome: must-fail
 
   - name: json-bom.json
     phase: 1
@@ -193,7 +237,11 @@ fixtures:
     size_class: free
     mime: application/json
     edge_case: true
-    edge: { intended_format: json, defect: bom }
+    edge:
+      intended_format: json
+      defect: bom
+      compare_with: json/all-types.json
+      outcome: varies
 
   - name: csv-ragged-rows.csv
     phase: 1
@@ -203,7 +251,11 @@ fixtures:
     size_class: free
     mime: text/csv
     edge_case: true
-    edge: { intended_format: csv, defect: invalid-syntax }
+    edge:
+      intended_format: csv
+      defect: invalid-syntax
+      compare_with: csv/people-10.csv
+      outcome: varies
 
   - name: xml-unclosed-tag.xml
     phase: 1
@@ -213,7 +265,11 @@ fixtures:
     size_class: free
     mime: application/xml
     edge_case: true
-    edge: { intended_format: xml, defect: invalid-syntax }
+    edge:
+      intended_format: xml
+      defect: invalid-syntax
+      compare_with: xml/people-10.xml
+      outcome: must-fail
 
   - name: utf8-invalid-bytes.txt
     phase: 1
@@ -223,7 +279,11 @@ fixtures:
     size_class: free
     mime: text/plain
     edge_case: true
-    edge: { intended_format: txt, defect: invalid-encoding }
+    edge:
+      intended_format: txt
+      defect: invalid-encoding
+      compare_with: txt/utf8-multilingual.txt
+      outcome: may-recover
 
   - name: zip-directory-traversal-name.zip
     phase: 1
@@ -235,4 +295,8 @@ fixtures:
     size_class: free
     mime: application/zip
     edge_case: true
-    edge: { intended_format: zip, defect: hostile-name }
+    edge:
+      intended_format: zip
+      defect: hostile-name
+      compare_with: zip/3-text-files.zip
+      outcome: varies

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-from catalog_helpers import minimal_fixture, minimal_format, write_format
+from catalog_helpers import minimal_edge, minimal_fixture, minimal_format, write_format
 from pydantic import ValidationError
 
 from loremfile.catalog import Catalog, CatalogError, Fixture, FormatCatalog
@@ -160,9 +160,7 @@ def test_edge_fixture_needs_an_edge_block() -> None:
 
 def test_non_edge_fixture_may_not_carry_an_edge_block() -> None:
     with pytest.raises(ValidationError, match="only fixtures under edge/"):
-        Fixture.model_validate(
-            minimal_fixture(format="pdf", edge={"intended_format": "pdf", "defect": "zero-byte"})
-        )
+        Fixture.model_validate(minimal_fixture(format="pdf", edge=minimal_edge()))
 
 
 def test_edge_fixture_must_set_edge_case() -> None:
@@ -171,7 +169,7 @@ def test_edge_fixture_must_set_edge_case() -> None:
             minimal_fixture(
                 format="edge",
                 name="zero-byte.png",
-                edge={"intended_format": "png", "defect": "zero-byte"},
+                edge=minimal_edge(intended_format="png", compare_with="png/100x100.png"),
             )
         )
 
@@ -184,11 +182,7 @@ def test_truncated_requires_a_fraction() -> None:
                 name="pdf-truncated-60pct.pdf",
                 edge_case=True,
                 expect=None,
-                edge={
-                    "intended_format": "pdf",
-                    "defect": "truncated",
-                    "source_fixture": "pdf/a4-3pages.pdf",
-                },
+                edge=minimal_edge(defect="truncated", source_fixture="pdf/a4-3pages.pdf"),
             )
         )
 
@@ -201,7 +195,9 @@ def test_magic_prefix_requires_magic() -> None:
                 name="exe-header-with-txt-extension.txt",
                 edge_case=True,
                 expect=None,
-                edge={"intended_format": "txt", "defect": "magic-prefix"},
+                edge=minimal_edge(
+                    intended_format="txt", defect="magic-prefix", compare_with="txt/lf.txt"
+                ),
             )
         )
 

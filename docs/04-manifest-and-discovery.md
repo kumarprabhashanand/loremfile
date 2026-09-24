@@ -103,7 +103,39 @@ Field rules:
 | epub | `version`, `chapters`, `images` |
 | pem, der | `kind` (`certificate`/`csr`), `algorithm`, `not_before`, `not_after` |
 | wasm | `sections`, `exports` |
-| edge/* | `intended_format`, `defect`, `source_fixture` (path or null). `defect` is a closed enum, and it tells the validator what to assert: `zero-byte` (bytes == 0), `truncated` (bytes == floor(`fraction` × source bytes) with `fraction` from the catalog's `edge` block, default 0.5 — `pdf-truncated-60pct.pdf` uses 0.6 — and prefix-equal to the source), `mismatched-extension` (bytes equal the source fixture; magic bytes match the *source* format, not the extension), `magic-prefix` (bytes == the `magic` value from the `edge` block followed by the source fixture's bytes; used by `exe-header-with-txt-extension.txt`), `invalid-syntax` (the format's parser raises), `invalid-encoding` (strict decode with the declared charset raises), `nonstandard` (strict parser raises, lenient parser succeeds), `bom` (decodes after stripping the BOM; parser succeeds on the stripped text), `stress` (parses; the recorded `props` document the depth/size), `hostile-name` (parses; at least one entry name contains `../`). Only fixtures under `edge/` carry `intended_format`/`defect`; unusual-but-valid fixtures elsewhere (`txt/control-characters.txt`, `txt/nul-bytes.txt`) have `edge_case: true` and ordinary props |
+| edge/* | `defect`, `intended_format`, `bytes`, `damage`, `outcome`, `compare_with`, and `derived_from` for the six that were cut or copied from a published fixture; plus `fraction` (truncated) and `hostile_entries` (hostile-name). §1.3.1 describes the four that are about the breakage. `defect` is a closed enum, and it tells the validator what to assert: `zero-byte` (bytes == 0), `truncated` (bytes == floor(`fraction` × source bytes) with `fraction` from the catalog's `edge` block, default 0.5 — `pdf-truncated-60pct.pdf` uses 0.6 — and prefix-equal to the source), `mismatched-extension` (bytes equal the source fixture; magic bytes match the *source* format, not the extension), `magic-prefix` (bytes == the `magic` value from the `edge` block followed by the source fixture's bytes), `invalid-syntax` (the format's parser raises), `invalid-encoding` (strict decode with the declared charset raises), `nonstandard` (strict parser raises, lenient parser succeeds), `bom` (decodes after stripping the BOM; parser succeeds on the stripped text), `stress` (parses; the recorded `props` document the depth/size), `hostile-name` (parses; at least one entry name contains `../`). Only fixtures under `edge/` carry these; unusual-but-valid fixtures elsewhere (`txt/control-characters.txt`, `txt/nul-bytes.txt`) have `edge_case: true` and ordinary props |
+
+#### 1.3.1 The four edge props (what is wrong, and what to expect)
+
+A broken file is only useful if you know how it is broken. Four props say so, and none of
+them is written by hand — `loremfile validate` measures or derives each one from the bytes
+and refuses the fixture when the answer disagrees with the catalog.
+
+| Prop | What it is |
+|---|---|
+| `damage` | One sentence about the bytes: where the file stops, which structure is missing, where a parser gives up. Composed from what the validator measured, so every number in it was counted on the file it describes. |
+| `outcome` | `must-fail`, `may-recover` or `varies` — see below. |
+| `compare_with` | The valid fixture of the same announced type. Feed your reader both: a reader that refuses everything is not the same as one that refuses this. |
+| `derived_from` | The published fixture this one was cut or copied from, present on the six that have one and absent on the other thirteen. The validator reads that file and checks the relationship: a truncation's length must equal the recorded fraction of it and be a prefix of it, and a mislabelled file must equal it byte for byte. |
+
+`outcome` describes the file, not your reader. It is derived by offering the bytes to the
+reader for the type the file announces and, when that refuses them, to a tolerant reading
+the format itself permits:
+
+- **`must-fail`** — nothing conforming gets anything out of it. An empty JSON file has no
+  value to return, and a trailing comma has no reading RFC 8259 allows. A parser that
+  succeeds here is wrong.
+- **`may-recover`** — part of the content survives and a conforming reader may return it: a
+  PDF reader rebuilding a lost cross-reference table, a JPEG decoder painting the scan lines
+  that arrived, U+FFFD substitution for ill-formed UTF-8.
+- **`varies`** — some conforming reader takes the file whole while another refuses it: a
+  mislabelled file read by content rather than by name, a BOM that RFC 8259 lets a parser
+  ignore, a cut MP4 whose header still describes a complete video.
+
+**`may-recover` and `varies` mean a parser that recovers is not wrong.** Only `must-fail`
+says failure is the required behaviour, so only `must-fail` belongs in a test that asserts
+your code refuses the file. For the other two, assert that your code does not crash, lose
+data silently or hang — not that it fails.
 
 ### 1.4 JSON Schema
 

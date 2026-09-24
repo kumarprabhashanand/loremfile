@@ -240,9 +240,40 @@ def human_bytes(count: int) -> str:
     return f"{count} B"
 
 
+#: What each outcome means to somebody testing a reader (docs/04 §1.3.1). Only
+#: `must-fail` says failure is required; the other two say a reader that copes is right.
+OUTCOME_NOTES = {
+    "must-fail": "every conforming reader must refuse it",
+    "may-recover": "part of it can still be read, and a reader that does is not wrong",
+    "varies": "readers disagree, and neither outcome is guaranteed",
+}
+
+
+def edge_facts(props: dict[str, Any]) -> dict[str, str] | None:
+    """The measured description of a broken file, for the format page (docs/04 §1.3.1).
+
+    Read straight from the published props, so the page cannot say anything about a
+    fixture that the validators did not measure on its bytes.
+    """
+    if "damage" not in props:
+        return None
+    outcome = str(props.get("outcome", ""))
+    return {
+        "damage": str(props["damage"]),
+        "outcome": outcome,
+        "note": OUTCOME_NOTES.get(outcome, ""),
+        "compare_with": str(props.get("compare_with", "")),
+        "derived_from": str(props.get("derived_from", "")),
+    }
+
+
 def key_props(props: dict[str, Any]) -> str:
     """At most four measured properties worth reading in a table cell."""
     shown: list[str] = []
+    if "defect" in props:  # an edge case: what is wrong with it comes first
+        shown.append(str(props["defect"]))
+        if props.get("outcome"):
+            shown.append(str(props["outcome"]))
     if "width" in props and "height" in props:
         shown.append(f"{props['width']}x{props['height']}")
     for name in ("pages", "slides", "sheets", "chapters", "segments", "features"):
@@ -370,6 +401,7 @@ def format_pages(root: Path, manifest: Manifest, catalogs: dict[str, FormatCatal
                 "size": human_bytes(e["bytes"]),
                 "exact": f"{e['bytes']:,} bytes",
                 "props": key_props(e.get("props") or {}),
+                "edge": edge_facts(e.get("props") or {}),
                 "description": e["description"],
                 "curl": f"curl -O {config.BASE_URL}{e['path']}",
                 "embed": embed_snippet(info.family.value, f"{config.BASE_URL}{e['path']}"),

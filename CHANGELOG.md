@@ -6,6 +6,9 @@
 
 - `csv/people-10-quoted-commas.csv`: ten people rows with a comma inside a
   quoted field, for parsers that split on commas.
+- The 19 broken files now say what is wrong with them, in manifest.json and on the site: one
+  sentence about the damage, a valid file of the same type to compare against, and whether a
+  reader must fail, may recover, or may do either.
 
 ## [1.2.0] - 2026-09-22
 

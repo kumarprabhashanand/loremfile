@@ -280,6 +280,10 @@ M3.1, not estimated.
 | `pdf-no-eof-marker.pdf`, `pdf-xref-offset-wrong.pdf` | 2 | invalid-syntax | |
 | `svg-with-script.svg` | — | **excluded** (see policy §5) | |
 
+Every published row also carries `compare_with` (the valid fixture of the same announced
+type) and `outcome` (`must-fail`, `may-recover` or `varies`) in its `edge` block, and its
+manifest entry carries a measured `damage` sentence: `04-manifest-and-discovery.md` §1.3.1.
+
 ## 4. Tag vocabulary (`catalog/_tags.yaml`)
 
 `document`, `image`, `video`, `audio`, `data`, `archive`, `font`, `text`, `binary`, `mail`, `calendar`, `geo`, `web`, `multi-page`, `animated`, `transparent`, `sized`, `boundary`, `encoding`, `unicode`, `large`, `stress`, `invalid`, `truncated`, `mismatched`, `encrypted`, `dataset-people`, `dataset-orders`, `dataset-products`, `codec-h264`, `codec-vp9`, `codec-aac`, `codec-opus`, `codec-mp3`.
