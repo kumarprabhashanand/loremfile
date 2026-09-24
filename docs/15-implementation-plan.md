@@ -103,7 +103,7 @@ Fallback if M3.9 exceeds the CI budget: matrix `--group`; if still over, defer t
 
 | ID | Task | DoD |
 |---|---|---|
-| M6.1 | Draft posts (Show HN, dev.to article "sample files you can hotlink", r/webdev, r/QualityAssurance, a short X/Bluesky thread); the owner publishes them. **The post texts are not committed.** After publication, `docs/launch/README.md` gets one line per post — date, venue, link — and nothing else; the first-month review matches those dates against referrer traffic. **Posting constraints:** r/webdev allows project posts only on Showoff Saturday; r/QualityAssurance's rules were **not verified** and must be read from its sidebar before posting | Posted |
+| M6.1 | Draft posts (Show HN, dev.to article "sample files you can hotlink", r/webdev, r/QualityAssurance, a short X/Bluesky thread); the owner publishes them. **Nothing about the posts is recorded here** — not the texts, not the venues, not the links. The row is ticked on publication. **Posting constraints:** r/webdev allows project posts only on Showoff Saturday; r/QualityAssurance's rules were **not verified** and must be read from its sidebar before posting | Posted |
 | M6.2 | README badge snippet and "Used by" section; answer the most common Stack Overflow questions **only if they are to be posted** (agent drafts; the owner posts) | Drafts ready |
 | M6.3 | Weekly sessions per runbook; first monthly review; record metrics | `ops-log.md` on the `ops-log` branch has 4 automated weekly lines and 1 monthly line |
 | M6.4 | Retrospective: update `17-risks.md` likelihoods, pick Phase 2 batch 1, and answer **Q-22** (whether `MAX_FIXTURE_BYTES` should become 104,857,600) from six months of real request and cost data | Issue created; Q-22 answered or explicitly deferred again |

@@ -50,4 +50,4 @@ macOS runners; the action downloads one file at a time and backs off if it is ra
 
 [manifest.json](/manifest.json) lists every file with its size, hash, MIME type and measured
 properties, and each format has its own list at `/{format}/index.json`. Keep automated
-traffic under 30 requests per second per IP; in CI, download once and cache.
+traffic under 30 requests per second per IP; the action above paces its downloads for you.
