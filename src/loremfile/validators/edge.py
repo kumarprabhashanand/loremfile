@@ -323,8 +323,33 @@ def _recover_txt(data: bytes) -> Recovery | None:
     )
 
 
+def _tolerant_reading(subject: Subject) -> Recovery | None:
+    """What the reading the format itself permits gets out of these bytes."""
+    reader = RECOVERIES.get(subject.claimed_format)
+    if reader is None:
+        raise ValidationError(
+            f"has no tolerant reading defined for {subject.claimed_format}, so its outcome "
+            "cannot be checked (validators/edge.py RECOVERIES)"
+        )
+    return reader(subject.data)
+
+
 def _recovery(subject: Subject) -> Recovery | None:
-    """The best reading any conforming reader gets of these bytes."""
+    """The best reading any conforming reader gets of these bytes.
+
+    The order of the branches is the substance. Asking the format's own reader first
+    looks right and is wrong for a file with bytes missing: ffprobe reads a truncated
+    MP4 without complaint — the header is intact and the streams are described, which
+    is why `_walk_boxes` exists at all — and that answer would make a damaged file
+    `varies`. Truncation is settled before any reader is asked.
+    """
+    if subject.edge.defect is Defect.TRUNCATED:
+        # Bytes are missing. Whatever a reader makes of what arrived, it is not the
+        # whole file, so this can never be the reading that means `varies`.
+        recovery = _tolerant_reading(subject)
+        if recovery is None:
+            return None
+        return Recovery(whole=False, evidence=recovery.evidence)
     if subject.edge.defect is Defect.MISMATCHED_EXTENSION:
         # The name is the only thing wrong: a reader that identifies by content rather
         # than by extension or Content-Type gets the file entire.
@@ -346,13 +371,7 @@ def _recovery(subject: Subject) -> Recovery | None:
                 "takes these bytes as they are"
             ),
         )
-    reader = RECOVERIES.get(subject.claimed_format)
-    if reader is None:
-        raise ValidationError(
-            f"has no tolerant reading defined for {subject.claimed_format}, so its outcome "
-            "cannot be checked (validators/edge.py RECOVERIES)"
-        )
-    return reader(subject.data)
+    return _tolerant_reading(subject)
 
 
 def derive_outcome(subject: Subject) -> tuple[Outcome, str]:

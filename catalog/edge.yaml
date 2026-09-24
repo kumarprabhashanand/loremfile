@@ -159,7 +159,7 @@ fixtures:
       intended_format: mp4
       defect: truncated
       compare_with: mp4/720p-5s.mp4
-      outcome: varies
+      outcome: may-recover
       source_fixture: mp4/720p-5s.mp4
       fraction: 0.5
 

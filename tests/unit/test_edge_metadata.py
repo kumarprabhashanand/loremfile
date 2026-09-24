@@ -22,7 +22,7 @@ from typing import Any
 import pytest
 from catalog_helpers import minimal_edge, minimal_fixture, minimal_format, write_format
 
-from loremfile.catalog import Catalog, CatalogError, Fixture, Outcome
+from loremfile.catalog import Catalog, CatalogError, Defect, Fixture, Outcome
 from loremfile.validators import ValidationError, validate
 from loremfile.validators import edge as edge_validator
 from loremfile.validators import load as load_validators
@@ -352,6 +352,35 @@ def test_the_bytes_overrule_the_catalog(sources: dict[str, bytes]) -> None:
     sources["pdf/a4-3pages.pdf"] = WHOLE_PDF
     failures = refused(wrong, WHOLE_PDF[: int(len(WHOLE_PDF) * 0.6)])
     assert "declares outcome 'must-fail' and the bytes say 'may-recover'" in failures
+
+
+TRUNCATED = [f for f in EDGE if f.edge is not None and f.edge.defect is Defect.TRUNCATED]
+
+
+@pytest.mark.parametrize("fixture", TRUNCATED, ids=lambda f: f.path)
+def test_a_truncated_file_is_never_varies_whatever_a_reader_says(
+    monkeypatch: pytest.MonkeyPatch, fixture: Fixture
+) -> None:
+    """Bytes are missing, so nothing gets the whole file — and `varies` means something
+    does. This is about the order of the branches, not about any one format: both
+    readings are made to claim the file entire, and the answer still may not be `varies`.
+
+    ffprobe reads a truncated MP4 without complaint, so mp4 is the format that found
+    this. The rule is the one the next truncated fixture needs.
+    """
+    assert {"edge/pdf-truncated-60pct.pdf", "edge/mp4-truncated-50pct.mp4"} <= {
+        f.path for f in TRUNCATED
+    }, "control: the truncated fixtures were found"
+    assert fixture.edge is not None
+    monkeypatch.setattr(edge_validator.Subject, "accepts", lambda *_args: True)
+    monkeypatch.setitem(
+        edge_validator.RECOVERIES,
+        fixture.ext,
+        lambda _data: edge_validator.Recovery(whole=True, evidence="all of it, allegedly"),
+    )
+    outcome, _why = edge_validator.derive_outcome(subject(fixture, b"whatever arrived"))
+    assert outcome is not Outcome.VARIES
+    assert fixture.edge.outcome is not Outcome.VARIES, "and the catalog says so too"
 
 
 def test_nothing_readable_is_must_fail() -> None:
