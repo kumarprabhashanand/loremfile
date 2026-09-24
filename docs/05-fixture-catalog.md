@@ -191,7 +191,7 @@ Sources: `sine` 440 Hz; `stereo-lr` (L 440 Hz, R 880 Hz); `sweep` 20 Hz→20 kHz
 
 ### 3.7 Data
 
-`csv/` (`text/csv; charset=utf-8`): `people-10.csv`, `people-1000.csv`, `people-100k.csv`, `orders-10k.csv`, `people-10-semicolon.csv`, `people-10-crlf.csv`, `people-10-no-header.csv`, `people-10-quoted-newlines.csv`, `people-10-utf8-bom.csv`, `people-10-latin1.csv` (`charset=iso-8859-1`), `people-10-utf16le.csv` (`charset=utf-16`), `wide-1000-columns-10-rows.csv`, `header-only.csv`, `1mb.csv`, `10mb.csv`, `50mb.csv` — P1. `100mb.csv`, `people-1m.csv.gz` (under `gz/`) — P2.
+`csv/` (`text/csv; charset=utf-8`): `people-10.csv`, `people-1000.csv`, `people-100k.csv`, `orders-10k.csv`, `people-10-semicolon.csv`, `people-10-crlf.csv`, `people-10-no-header.csv`, `people-10-quoted-newlines.csv`, `people-10-quoted-commas.csv`, `people-10-utf8-bom.csv`, `people-10-latin1.csv` (`charset=iso-8859-1`), `people-10-utf16le.csv` (`charset=utf-16`), `wide-1000-columns-10-rows.csv`, `header-only.csv`, `1mb.csv`, `10mb.csv`, `50mb.csv` — P1. `100mb.csv`, `people-1m.csv.gz` (under `gz/`) — P2.
 `tsv/` (`text/tab-separated-values`): `people-1000.tsv` P1.
 `json/` (`application/json`): `people-10.json`, `people-1000.json`, `people-100k.json`, `products-100.json`, `object-nested-5-levels.json`, `nested-100-levels.json`, `all-types.json` (null/bool/int/float/exponent/2^63/negative zero/unicode escapes/surrogate pairs/empty containers), `unicode-escaped.json`, `pretty-printed.json`, `minified.json`, `empty-object.json`, `empty-array.json`, `top-level-string.json`, `large-numbers.json` (integers beyond 2^53), `1mb.json`, `10mb.json` — P1. `100mb.json` P2.
 `ndjson/` (`application/x-ndjson`): `people-1000.ndjson`, `people-100k.ndjson` — P1.
@@ -368,7 +368,7 @@ Everything else marked phase 1 in §3 (188 files) is P1b. Chosen for search dema
 
 P1b stays **188**: `100mib.bin` moved out of phase 1 entirely, so it left both the phase-1 total (417 → 416) and the launch set (229 → 228), and 416 − 228 = 188. Deferring a launch row to phase 2 does not add it to P1b.
 
-**Where the 228 stands (M4.4).** The number is held fixed; what moves is which bucket a fixture is in.
+**Where the 228 stands.** The launch set is a historical number — what had to exist on launch day — and it is held fixed. What moves is which bucket a fixture is in, and what the catalog adds afterwards.
 
 | Bucket | Count | |
 |---|---|---|
@@ -376,6 +376,7 @@ P1b stays **188**: `100mib.bin` moved out of phase 1 entirely, so it left both t
 | Catalogued, **awaiting publication** | 0 | |
 | Still to catalogue | 0 | M3.7 and M3.8 catalogued all 62: archives, fonts, mail, calendar, cert, wasm, web, and the edge cases |
 | **Launch set (ADR-024)** | **228** | |
+| Added after launch | 1 | `csv/people-10-quoted-commas` (1.3.0), from launch feedback. Each one is listed here, so the catalog can grow without the launch number drifting |
 
 `tests/unit/test_deploy_path.py` asserts this arithmetic, with the outstanding rows as a named constant — now zero, so the next fixture added outside this list has to change the list itself. It is the one figure that cannot be derived from the repository, so it is checked rather than remembered: fixtures added without accounting for the launch scope become a failing build instead of a slow drift away from 228.
 
@@ -392,7 +393,7 @@ P1b stays **188**: `100mib.bin` moved out of phase 1 entirely, so it left both t
 | docx, xlsx, pptx, rtf, epub | `docx/1page`, `docx/with-images`, `docx/with-table`, `docx/1mb`, `docx/10mb`, `xlsx/1sheet-10rows`, `xlsx/1sheet-1000rows`, `xlsx/with-formulas`, `xlsx/with-types-and-formats`, `xlsx/1mb`, `xlsx/10mb`, `pptx/1slide`, `pptx/10slides`, `pptx/1mb`, `rtf/simple`, `epub/epub3-3chapters` |
 | txt | `lorem-1kb`, `lorem-100kb`, `lorem-1mb`, `lorem-10mb`, `lorem-1mib`, `lorem-10mib`, `lf`, `crlf`, `utf8-bom`, `utf16le-bom`, `latin1`, `windows-1252`, `shift-jis`, `utf8-multilingual`, `emoji-only`, `very-long-line-1mb` |
 | md, html, css, js, webmanifest, srt, vtt, log, ipynb, har, ini | `md/readme-style`, `md/all-elements`, `html/basic`, `html/all-elements`, `html/with-inline-css`, `html/with-inline-js`, `css/basic`, `js/hello-console`, `webmanifest/site.webmanifest`, `srt/3-cues`, `vtt/3-cues`, `log/nginx-access-1000-lines`, `log/json-lines-app-1000`, `ipynb/simple-with-outputs`, `har/simple-3-requests`, `ini/config` |
-| csv, tsv, json, ndjson | `csv/people-10`, `csv/people-1000`, `csv/people-100k`, `csv/people-10-semicolon`, `csv/people-10-quoted-newlines`, `csv/people-10-utf8-bom`, `csv/1mb`, `csv/10mb`, `tsv/people-1000`, `json/people-10`, `json/people-1000`, `json/all-types`, `json/nested-100-levels`, `json/1mb`, `json/10mb`, `ndjson/people-1000` |
+| csv, tsv, json, ndjson | `csv/people-10`, `csv/people-1000`, `csv/people-100k`, `csv/people-10-semicolon`, `csv/people-10-quoted-newlines`, `csv/people-10-quoted-commas`, `csv/people-10-utf8-bom`, `csv/1mb`, `csv/10mb`, `tsv/people-1000`, `json/people-10`, `json/people-1000`, `json/all-types`, `json/nested-100-levels`, `json/1mb`, `json/10mb`, `ndjson/people-1000` |
 | xml, yaml, toml, parquet, avro, arrow, sqlite, sql, geojson, gpx, kml, kmz | `xml/people-10`, `xml/with-namespaces`, `xml/rss2-feed`, `yaml/config-all-types`, `toml/config`, `parquet/people-1000`, `parquet/people-100k`, `avro/people-1000`, `arrow/people-1000`, `sqlite/people-1000`, `sqlite/multi-table-with-fk-indexes-views`, `sql/people-1000-inserts-portable`, `geojson/points-100`, `gpx/track-100-points`, `kml/placemarks-10`, `kmz/placemarks-10` |
 | zip, tar, gz, bz2, xz, zst, 7z | `zip/3-text-files`, `zip/nested-directories`, `zip/empty`, `zip/mixed-fixtures`, `zip/aes256-password-loremfile`, `zip/1mb`, `zip/10mb`, `zip/100mb`, `tar/3-text-files.tar`, `tar/3-text-files.tar.gz`, `tar/3-text-files.tar.xz`, `gz/lorem-1mb.txt.gz`, `gz/multi-member-3`, `bz2/lorem-1mb.txt.bz2`, `xz/lorem-1mb.txt.xz`, `zst/lorem-1mb.txt.zst`, `7z/3-text-files` |
 | ttf, otf, woff, woff2 | all four `loremfile-sans` files |

@@ -71,10 +71,13 @@ def _delimited_props(data: bytes, mime: str, fixture: Fixture) -> dict[str, Any]
     if len(widths) != 1:
         raise ValidationError(f"ragged rows: differing column counts {sorted(widths)}")
 
-    # A field needed quoting if it contains the delimiter, a quote or a line break.
-    quoted = any(
-        any(ch in cell for ch in (delimiter, '"', "\n", "\r")) for r in records for cell in r
-    )
+    # A field needed quoting if it contains the delimiter, a quote or a line break. The
+    # two causes are reported separately: they break different naive parsers, and a fixture
+    # exists for each, so "quoted_fields" alone cannot tell them apart.
+    cells = [cell for r in records for cell in r]
+    quoted_delimiter = any(delimiter in cell for cell in cells)
+    quoted_newline = any("\n" in cell or "\r" in cell for cell in cells)
+    quoted = quoted_delimiter or quoted_newline or any('"' in cell for cell in cells)
     props.update(
         {
             "rows": len(body),
@@ -82,6 +85,8 @@ def _delimited_props(data: bytes, mime: str, fixture: Fixture) -> dict[str, Any]
             "delimiter": delimiter,
             "has_header": has_header,
             "quoted_fields": quoted,
+            "quoted_delimiter": quoted_delimiter,
+            "quoted_newline": quoted_newline,
         }
     )
     return props

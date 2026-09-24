@@ -37,7 +37,7 @@ SCHEMA_VERSION: Final = 1
 #: descriptions, tags, notes or site-only changes; major = a manifest schema or URL
 #: contract change. This is the source; manifest.json is generated from it, and a new
 #: fixture records it as `added_in`.
-CATALOG_VERSION: Final = "1.2.0"
+CATALOG_VERSION: Final = "1.3.0"
 SCHEMA_URL: Final = f"{BASE_URL}schema/manifest-v{SCHEMA_VERSION}.json"
 
 

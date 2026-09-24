@@ -86,7 +86,7 @@ Field rules:
 | xlsx | `sheets`, `rows` (first sheet, incl. header), `columns`, `has_formulas`, `has_charts` |
 | pptx | `slides`, `has_notes`, `aspect` (`16:9`/`4:3`) |
 | txt, md, html, css, js, rtf, srt, vtt, log, sql, ini | `encoding`, `bom`, `line_ending` (`lf`/`crlf`/`cr`/`mixed`/`none`), `lines`, `max_line_bytes` |
-| csv, tsv | plus `rows` (data rows), `columns`, `delimiter`, `has_header`, `quoted_fields` |
+| csv, tsv | plus `rows` (data rows), `columns`, `delimiter`, `has_header`, `quoted_fields`, and the two causes of quoting reported apart: `quoted_delimiter` (a field holds the delimiter) and `quoted_newline` (a field holds a line break) |
 | json, ndjson, geojson, har, ipynb, jsonld | `top_type` (`object`/`array`/`string`…), `items` (array length or ndjson lines), `max_depth` |
 | xml, rss, atom, kml, gpx | `root_element`, `encoding`, `has_dtd`, `namespaces` |
 | yaml, toml | `documents` (yaml), `top_keys` |

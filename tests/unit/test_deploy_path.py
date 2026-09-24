@@ -198,14 +198,19 @@ LAUNCH_SET = 228
 #: set itself is changing, which is a `05` §9 and ADR-024 decision.
 REMAINING_M37_M38 = 0  # M3.7 and M3.8 are catalogued; §9 is fully enumerated
 
+#: Fixtures catalogued after launch day, listed one by one in `05` §9. The launch set is
+#: a historical number and does not move; this is how the catalog grows without blurring it.
+AFTER_LAUNCH = ("csv/people-10-quoted-commas.csv",)
+
 
 def test_the_launch_set_still_adds_up() -> None:
-    catalogued = len(list(CATALOG.fixtures()))
-    assert catalogued + REMAINING_M37_M38 == LAUNCH_SET, (
-        f"{catalogued} catalogued + {REMAINING_M37_M38} remaining != {LAUNCH_SET}. "
-        "Adding fixtures means decrementing REMAINING_M37_M38 by the same number; if "
-        "the launch set itself is meant to change, that is a docs/05 §9 and ADR-024 "
-        "decision, not a test edit."
+    catalogued = {f.path for f in CATALOG.fixtures()}
+    assert set(AFTER_LAUNCH) <= catalogued, "control: the post-launch rows are catalogued"
+    assert len(catalogued) - len(AFTER_LAUNCH) + REMAINING_M37_M38 == LAUNCH_SET, (
+        f"{len(catalogued)} catalogued less {len(AFTER_LAUNCH)} added after launch, plus "
+        f"{REMAINING_M37_M38} remaining != {LAUNCH_SET}. A fixture added after launch is "
+        "named in AFTER_LAUNCH and listed in docs/05 §9; the launch set itself is a "
+        "docs/05 §9 and ADR-024 decision, not a test edit."
     )
 
 
@@ -217,7 +222,7 @@ def test_every_catalogued_fixture_is_in_the_manifest() -> None:
     catalogued = {f.path for f in CATALOG.fixtures()}
 
     assert published == catalogued
-    assert len(published) + REMAINING_M37_M38 == LAUNCH_SET
+    assert len(published) - len(AFTER_LAUNCH) + REMAINING_M37_M38 == LAUNCH_SET
     assert not [f.path for f in CATALOG.fixtures() if f.awaiting_publication]
     assert {f.path for f in CATALOG.fixtures() if f.expected_drift} <= published
 

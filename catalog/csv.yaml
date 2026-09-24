@@ -4,7 +4,8 @@ family: data
 mime: text/csv
 description: >-
   The people dataset as comma-separated values, plus the variants that break naive
-  splitters: a semicolon delimiter, a BOM, and a real newline inside a quoted field.
+  splitters: a semicolon delimiter, a BOM, a real newline inside a quoted field, and a
+  comma inside one.
 seo_title: "Sample CSV files for testing parsers and imports — free, CC0"
 related: [tsv, json, ndjson, sql]
 fixtures:
@@ -47,6 +48,14 @@ fixtures:
     description: "Ten people rows where the bio field contains a real newline inside a quoted field, which is where line-by-line splitting goes wrong."
     tags: [data, dataset-people]
     expect: { rows: 10, columns: 14, has_header: true, quoted_fields: true }
+    size_class: free
+  - name: people-10-quoted-commas.csv
+    phase: 1
+    generator: data.csv_people
+    params: { rows: 10, quoted_delimiters: true }
+    description: "Ten people rows where the bio field contains a comma inside a quoted field. The field-level twin of people-10-quoted-newlines.csv: that one breaks splitting on lines, this one breaks splitting on commas."
+    tags: [data, dataset-people]
+    expect: { rows: 10, columns: 14, has_header: true, quoted_fields: true, quoted_delimiter: true }
     size_class: free
   - name: people-10-utf8-bom.csv
     phase: 1
