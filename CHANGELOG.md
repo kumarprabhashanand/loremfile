@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-24
+
+- `csv/people-10-quoted-commas.csv`: ten people rows with a comma inside a
+  quoted field, for parsers that split on commas.
+
 ## [1.2.0] - 2026-09-22
 
 - 5 more media files: H.264 MP4 at 1080p for 10 seconds, at 10 MB and at 50 MB, a 30-second Opus

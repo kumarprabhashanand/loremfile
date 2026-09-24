@@ -1,15 +1,15 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.2.0",
-  "generated_at": "2026-09-22T06:59:34Z",
+  "catalog_version": "1.3.0",
+  "generated_at": "2026-09-24T21:19:24Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:1d66d83de2483700858745a9d27120af001588019882098eb67a301fdd2f2ad6",
-  "count": 228,
-  "total_bytes": 595163271,
+  "count": 229,
+  "total_bytes": 595165977,
   "formats": [
     "7z",
     "aac",
@@ -1137,7 +1137,9 @@
         "columns": 14,
         "delimiter": ",",
         "has_header": true,
-        "quoted_fields": false
+        "quoted_fields": false,
+        "quoted_delimiter": false,
+        "quoted_newline": false
       },
       "generator": "data.csv_sized",
       "generator_params": {
@@ -1175,13 +1177,55 @@
         "columns": 14,
         "delimiter": ",",
         "has_header": true,
-        "quoted_fields": false
+        "quoted_fields": false,
+        "quoted_delimiter": false,
+        "quoted_newline": false
       },
       "generator": "data.csv_sized",
       "generator_params": {
         "size": 1000000
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "csv/people-10-quoted-commas.csv",
+      "url": "https://loremfile.dev/csv/people-10-quoted-commas.csv",
+      "format": "csv",
+      "ext": "csv",
+      "mime": "text/csv; charset=utf-8",
+      "bytes": 2706,
+      "sha256": "ceff4f4cede74e64ed2af13fe3115ceb321da4644de96d6b8fe9c8ab78fcbf08",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Ten people rows where the bio field contains a comma inside a quoted field. The field-level twin of people-10-quoted-newlines.csv: that one breaks splitting on lines, this one breaks splitting on commas.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 11,
+        "max_line_bytes": 345,
+        "rows": 10,
+        "columns": 14,
+        "delimiter": ",",
+        "has_header": true,
+        "quoted_fields": true,
+        "quoted_delimiter": true,
+        "quoted_newline": false
+      },
+      "generator": "data.csv_people",
+      "generator_params": {
+        "rows": 10,
+        "quoted_delimiters": true
+      },
+      "added_in": "1.3.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -1212,7 +1256,9 @@
         "columns": 14,
         "delimiter": ",",
         "has_header": true,
-        "quoted_fields": true
+        "quoted_fields": true,
+        "quoted_delimiter": false,
+        "quoted_newline": true
       },
       "generator": "data.csv_people",
       "generator_params": {
@@ -1250,7 +1296,9 @@
         "columns": 14,
         "delimiter": ";",
         "has_header": true,
-        "quoted_fields": false
+        "quoted_fields": false,
+        "quoted_delimiter": false,
+        "quoted_newline": false
       },
       "generator": "data.csv_people",
       "generator_params": {
@@ -1289,7 +1337,9 @@
         "columns": 14,
         "delimiter": ",",
         "has_header": true,
-        "quoted_fields": false
+        "quoted_fields": false,
+        "quoted_delimiter": false,
+        "quoted_newline": false
       },
       "generator": "data.csv_people",
       "generator_params": {
@@ -1327,7 +1377,9 @@
         "columns": 14,
         "delimiter": ",",
         "has_header": true,
-        "quoted_fields": false
+        "quoted_fields": false,
+        "quoted_delimiter": false,
+        "quoted_newline": false
       },
       "generator": "data.csv_people",
       "generator_params": {
@@ -1364,7 +1416,9 @@
         "columns": 14,
         "delimiter": ",",
         "has_header": true,
-        "quoted_fields": false
+        "quoted_fields": false,
+        "quoted_delimiter": false,
+        "quoted_newline": false
       },
       "generator": "data.csv_people",
       "generator_params": {
@@ -1401,7 +1455,9 @@
         "columns": 14,
         "delimiter": ",",
         "has_header": true,
-        "quoted_fields": false
+        "quoted_fields": false,
+        "quoted_delimiter": false,
+        "quoted_newline": false
       },
       "generator": "data.csv_people",
       "generator_params": {
@@ -6251,7 +6307,9 @@
         "columns": 14,
         "delimiter": "\t",
         "has_header": true,
-        "quoted_fields": false
+        "quoted_fields": false,
+        "quoted_delimiter": false,
+        "quoted_newline": false
       },
       "generator": "data.csv_people",
       "generator_params": {

@@ -81,6 +81,7 @@ def _delimited(
     *,
     header: bool,
     quoted_newlines: bool,
+    quoted_delimiters: bool = False,
 ) -> str:
     buffer = io.StringIO(newline="")
     writer = csv_module.writer(buffer, delimiter=delimiter, lineterminator="\n")
@@ -93,6 +94,10 @@ def _delimited(
             if quoted_newlines and column == "bio" and text:
                 # A real embedded newline, so the reader has to honour RFC 4180 quoting.
                 text = text.replace(" ", "\n", 1)
+            if quoted_delimiters and column == "bio" and text:
+                # The same break one level down: the delimiter itself inside a quoted
+                # field, which is what defeats a split on the delimiter.
+                text = text.replace(" ", f"{delimiter} ", 1)
             values.append(text)
         writer.writerow(values)
     return buffer.getvalue()
@@ -108,14 +113,20 @@ def csv_people(
     bom: bool = False,
     encoding: str = "utf-8",
     quoted_newlines: bool = False,
+    quoted_delimiters: bool = False,
 ) -> bytes:
     """The people dataset as delimited text.
 
-    ``delimiter`` covers the TSV and semicolon variants; ``quoted_newlines`` puts a real
-    newline inside a quoted field, which is where naive splitters break.
+    ``delimiter`` covers the TSV and semicolon variants. ``quoted_newlines`` puts a real
+    newline inside a quoted field, which breaks splitting on lines; ``quoted_delimiters``
+    puts the delimiter there, which breaks splitting on the delimiter.
     """
     text = _delimited(
-        ctx.dataset("people", rows), delimiter, header=header, quoted_newlines=quoted_newlines
+        ctx.dataset("people", rows),
+        delimiter,
+        header=header,
+        quoted_newlines=quoted_newlines,
+        quoted_delimiters=quoted_delimiters,
     )
     prefix = b"\xef\xbb\xbf" if bom and encoding == "utf-8" else b""
     return prefix + text.encode(encoding)

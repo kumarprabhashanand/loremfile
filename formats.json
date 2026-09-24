@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.2.0",
+  "catalog_version": "1.3.0",
   "formats": [
     {
       "format": "7z",
@@ -91,8 +91,8 @@
     },
     {
       "format": "csv",
-      "count": 8,
-      "total_bytes": 36370708,
+      "count": 9,
+      "total_bytes": 36373414,
       "url": "https://loremfile.dev/csv",
       "index": "https://loremfile.dev/csv/index.json",
       "mime_default": "text/csv"
