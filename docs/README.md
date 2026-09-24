@@ -64,7 +64,7 @@ loremfile/                      # public GitHub repository kumarprabhashanand/lo
 ├── tests/                      # pytest suites
 ├── tools/                      # Dockerfile for the pinned toolchain; requirements files
 ├── THIRD_PARTY.md              # tools and libraries used to generate fixtures, with licences
-└── docs/                       # this documentation set (00–19) plus launch/ (post drafts); weekly numbers live in ops-log.md on the unprotected `ops-log` branch
+└── docs/                       # this documentation set (00–19); weekly numbers live in ops-log.md on the unprotected `ops-log` branch
 ```
 
 ## Placeholders you must fill in
