@@ -90,6 +90,23 @@ class Defect(StrEnum):
     HOSTILE_NAME = "hostile-name"
 
 
+class Outcome(StrEnum):
+    """What a broken file does to a reader, as a property of the file (docs/04 §1.3.1).
+
+    Declared per fixture and **derived independently** by the edge validator from two
+    readings of the bytes; the two must agree or the fixture fails. The derivation is
+    the definition: whether any conforming reader gets the whole content, part of it,
+    or nothing.
+    """
+
+    #: Nothing conforming reads anything out of it. A reader that succeeds is wrong.
+    MUST_FAIL = "must-fail"
+    #: Part of the content survives and a conforming reader may return it.
+    MAY_RECOVER = "may-recover"
+    #: Some conforming reader takes the file whole while another refuses it.
+    VARIES = "varies"
+
+
 SIZE_CLASSES_NEEDING_NOMINAL = {SizeClass.EXACT, SizeClass.BOUNDARY, SizeClass.APPROX}
 
 
@@ -111,6 +128,13 @@ class Edge(BaseModel):
 
     intended_format: str = Field(pattern=FORMAT_RE.pattern)
     defect: Defect
+    #: The valid fixture of the same type to test a reader against, so that "it
+    #: refused" can be told apart from "it refuses everything". Cross-checked in
+    #: :meth:`Catalog._check_edge_comparisons`.
+    compare_with: str = Field(min_length=1)
+    #: What the file does to a reader. The validator derives it again from the bytes
+    #: and fails the fixture if the two disagree.
+    outcome: Outcome
     source_fixture: str | None = None
     fraction: float | None = Field(default=None, gt=0, lt=1)
     magic: str | None = None
@@ -307,6 +331,7 @@ class Catalog:
         self._check_tags()
         self._check_related()
         self._check_dependencies()
+        self._check_edge_comparisons()
 
     def _check_unique_paths(self) -> None:
         seen: set[str] = set()
@@ -350,6 +375,49 @@ class Catalog:
                         f"{target.path} (phase {target.phase})"
                     )
         self._check_acyclic()
+
+    def _check_edge_comparisons(self) -> None:
+        """``edge.compare_with`` must name a valid, published fixture of the same type.
+
+        "Valid" needs no separate proof: an active fixture only reaches the manifest
+        once its own validator has measured it (`manifest update`), so naming one is
+        naming something that passed. What is checked here is that the comparison is
+        the right one — same announced type, not another broken file, and the twin
+        itself when the edge case was cut from a file of that type.
+        """
+        by_path = self.by_path
+        for fixture in self.fixtures():
+            if fixture.edge is None:
+                continue
+            target = by_path.get(fixture.edge.compare_with)
+            if target is None:
+                raise CatalogError(
+                    f"{fixture.path}: compare_with unknown path '{fixture.edge.compare_with}'"
+                )
+            if target.format != fixture.ext:
+                raise CatalogError(
+                    f"{fixture.path}: compare_with is {target.path} (format {target.format}), "
+                    f"but this one announces itself as {fixture.ext}"
+                )
+            if target.edge_case or target.status is not Status.ACTIVE:
+                raise CatalogError(
+                    f"{fixture.path}: compare_with must name a valid, active fixture, "
+                    f"and {target.path} is not one"
+                )
+            if target.phase > fixture.phase:
+                raise CatalogError(
+                    f"{fixture.path} (phase {fixture.phase}) compares with "
+                    f"{target.path} (phase {target.phase})"
+                )
+            source = fixture.edge.source_fixture
+            if source is not None and source not in by_path:
+                raise CatalogError(f"{fixture.path}: source_fixture unknown path '{source}'")
+            same_type_source = source is not None and by_path[source].format == fixture.ext
+            if same_type_source and source != fixture.edge.compare_with:
+                raise CatalogError(
+                    f"{fixture.path}: it was cut from {source}, which is the file to "
+                    f"compare with, not {target.path}"
+                )
 
     def _check_acyclic(self) -> None:
         by_path = self.by_path

@@ -26,6 +26,22 @@ def minimal_fixture(**overrides: Any) -> dict[str, Any]:
     return {k: v for k, v in row.items() if v is not None or k in overrides}
 
 
+def minimal_edge(**overrides: Any) -> dict[str, Any]:
+    """An ``edge`` block that passes every rule, before overrides are applied.
+
+    ``compare_with`` and ``outcome`` are required of every edge fixture, so a test that
+    is about some other rule states them here rather than repeating them.
+    """
+    block: dict[str, Any] = {
+        "intended_format": "pdf",
+        "defect": "zero-byte",
+        "compare_with": "pdf/a4-3pages.pdf",
+        "outcome": "must-fail",
+    }
+    block.update(overrides)
+    return block
+
+
 def minimal_format(**overrides: Any) -> dict[str, Any]:
     doc: dict[str, Any] = {
         "format": "pdf",

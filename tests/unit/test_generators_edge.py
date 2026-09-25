@@ -19,10 +19,12 @@ import zipfile
 from pathlib import Path
 
 import pytest
+from PIL import Image
 
 from loremfile.catalog import Catalog, Fixture
 from loremfile.generators.base import REGISTRY, GeneratorContext
 from loremfile.util.determinism import deterministic
+from loremfile.validators import edge as edge_validator
 from loremfile.validators import load as load_validators
 from loremfile.validators import validate
 
@@ -30,8 +32,28 @@ load_validators()  # the edge validator runs other formats' validators as contro
 
 CATALOG = Catalog.load()
 WORKDIR = Path(tempfile.gettempdir())
-PNG_HEADER = b"\x89PNG\r\n\x1a\n" + b"\x00\x00\x00\rIHDR"
 PDF_HEADER = b"%PDF-1.7\n%\xc7\xec\x8f\xa2\n"
+
+
+def whole_png() -> bytes:
+    """A complete, readable PNG. The mislabelled fixture carries one, and a header on
+    its own would be refused for being truncated rather than for being mislabelled."""
+    out = io.BytesIO()
+    Image.new("RGB", (2, 2), "red").save(out, format="PNG")
+    return out.getvalue()
+
+
+@pytest.fixture(autouse=True)
+def sources(monkeypatch: pytest.MonkeyPatch) -> dict[str, bytes]:
+    """The bytes a derived fixture is checked against.
+
+    The validator reads them from ``build/fixtures/``; these tests hand it bytes they
+    chose instead, so the arithmetic is checked against a source they control rather
+    than against whatever the last build happened to leave on disk.
+    """
+    supplied: dict[str, bytes] = {}
+    monkeypatch.setattr(edge_validator, "SOURCE_READER", supplied.__getitem__)
+    return supplied
 
 
 def fixture(path: str) -> Fixture:
@@ -157,8 +179,12 @@ def test_a_truncated_fixture_that_still_parses_is_refused() -> None:
 # --- mismatched extension ---------------------------------------------------
 
 
-def test_the_mislabelled_file_carries_the_intended_format_bytes() -> None:
-    props = check("edge/png-with-pdf-extension.pdf", PNG_HEADER)
+def test_the_mislabelled_file_carries_the_intended_format_bytes(
+    sources: dict[str, bytes],
+) -> None:
+    png = whole_png()
+    sources["png/100x100.png"] = png
+    props = check("edge/png-with-pdf-extension.pdf", png)
     assert props["intended_format"] == "png"
     assert props["defect"] == "mismatched-extension"
 

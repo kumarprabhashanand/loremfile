@@ -116,6 +116,15 @@ button.copy {
 
 .index li, .related li, .removed li { margin: 0.4rem 0; }
 
+/* What is wrong with a broken file, under its description on /edge. */
+dl.edge { margin: 0.4rem 0 0; font-size: 0.9rem; }
+dl.edge dt { color: var(--muted); float: left; clear: left; width: 7.5rem; }
+dl.edge dd { margin: 0 0 0.2rem 7.5rem; }
+@media (max-width: 40rem) {
+  dl.edge dt { float: none; width: auto; }
+  dl.edge dd { margin-left: 0; }
+}
+
 .site-footer {
   padding-top: 1.5rem; padding-bottom: 2rem; border-top: 1px solid var(--line);
   color: var(--muted); font-size: 0.9rem;

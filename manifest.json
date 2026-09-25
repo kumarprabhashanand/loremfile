@@ -2,7 +2,7 @@
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
   "catalog_version": "1.3.0",
-  "generated_at": "2026-09-24T21:19:24Z",
+  "generated_at": "2026-09-24T22:43:33Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
@@ -1689,7 +1689,10 @@
       "props": {
         "defect": "invalid-syntax",
         "intended_format": "csv",
-        "bytes": 65
+        "bytes": 65,
+        "damage": "The header names 3 fields; of 5 rows, row 3 carries 2 and row 4 carries 4.",
+        "outcome": "varies",
+        "compare_with": "csv/people-10.csv"
       },
       "generator": "edge.csv_ragged_rows",
       "generator_params": {},
@@ -1718,7 +1721,11 @@
         "defect": "truncated",
         "intended_format": "jpg",
         "bytes": 7496,
-        "fraction": 0.5
+        "derived_from": "jpg/640x480.jpg",
+        "fraction": 0.5,
+        "damage": "Cut to 7,496 of 14,992 bytes, the first 50% of jpg/640x480.jpg: the scan stops mid-row and the FFD9 end-of-image marker never arrives.",
+        "outcome": "may-recover",
+        "compare_with": "jpg/640x480.jpg"
       },
       "generator": "edge.truncated",
       "generator_params": {
@@ -1749,7 +1756,10 @@
       "props": {
         "defect": "bom",
         "intended_format": "json",
-        "bytes": 80
+        "bytes": 80,
+        "damage": "The first 3 bytes are EF BB BF, a byte-order mark, before an otherwise valid JSON document of 77 bytes.",
+        "outcome": "varies",
+        "compare_with": "json/all-types.json"
       },
       "generator": "edge.json_bom",
       "generator_params": {},
@@ -1777,7 +1787,10 @@
       "props": {
         "defect": "invalid-syntax",
         "intended_format": "json",
-        "bytes": 64
+        "bytes": 64,
+        "damage": "2 commas stand directly before a closing bracket (at bytes 58 and 60), and a JSON parser stops at byte 59, line 4 column 25.",
+        "outcome": "must-fail",
+        "compare_with": "json/all-types.json"
       },
       "generator": "edge.json_trailing_comma",
       "generator_params": {},
@@ -1806,7 +1819,11 @@
         "defect": "truncated",
         "intended_format": "mp4",
         "bytes": 987287,
-        "fraction": 0.5
+        "derived_from": "mp4/720p-5s.mp4",
+        "fraction": 0.5,
+        "damage": "Cut to 987,287 of 1,974,574 bytes, the first 50% of mp4/720p-5s.mp4: it ends inside the 'mdat' box at offset 6,704, which declares 1,967,870 bytes and has 980,583.",
+        "outcome": "may-recover",
+        "compare_with": "mp4/720p-5s.mp4"
       },
       "generator": "edge.truncated",
       "generator_params": {
@@ -1838,7 +1855,11 @@
         "defect": "truncated",
         "intended_format": "pdf",
         "bytes": 2610,
-        "fraction": 0.6
+        "derived_from": "pdf/a4-3pages.pdf",
+        "fraction": 0.6,
+        "damage": "Cut to 2,610 of 4,351 bytes, the first 60% of pdf/a4-3pages.pdf: the cross-reference table, the trailer and the %%EOF marker are all past the end.",
+        "outcome": "may-recover",
+        "compare_with": "pdf/a4-3pages.pdf"
       },
       "generator": "edge.truncated",
       "generator_params": {
@@ -1869,7 +1890,11 @@
       "props": {
         "defect": "mismatched-extension",
         "intended_format": "pdf",
-        "bytes": 1795
+        "bytes": 1795,
+        "derived_from": "pdf/a4-1page.pdf",
+        "damage": "The bytes are pdf/a4-1page.pdf unchanged, starting with the PDF signature 25 50 44 46, while the file name and the Content-Type announce png.",
+        "outcome": "varies",
+        "compare_with": "png/100x100.png"
       },
       "generator": "edge.copied",
       "generator_params": {
@@ -1899,7 +1924,11 @@
       "props": {
         "defect": "mismatched-extension",
         "intended_format": "png",
-        "bytes": 1387
+        "bytes": 1387,
+        "derived_from": "png/100x100.png",
+        "damage": "The bytes are png/100x100.png unchanged, starting with the PNG signature 89 50 4E 47, while the file name and the Content-Type announce pdf.",
+        "outcome": "varies",
+        "compare_with": "pdf/minimal.pdf"
       },
       "generator": "edge.copied",
       "generator_params": {
@@ -1929,7 +1958,10 @@
       "props": {
         "defect": "invalid-encoding",
         "intended_format": "txt",
-        "bytes": 143
+        "bytes": 143,
+        "damage": "2 byte sequences are not UTF-8: C3 at offset 121 (invalid continuation byte) and A0 at offset 136 (invalid start byte).",
+        "outcome": "may-recover",
+        "compare_with": "txt/utf8-multilingual.txt"
       },
       "generator": "edge.utf8_invalid_bytes",
       "generator_params": {},
@@ -1957,7 +1989,10 @@
       "props": {
         "defect": "invalid-syntax",
         "intended_format": "xml",
-        "bytes": 122
+        "bytes": 122,
+        "damage": "2 <item> elements are opened and 1 closed, so an XML parser stops at line 5, column 11.",
+        "outcome": "must-fail",
+        "compare_with": "xml/people-10.xml"
       },
       "generator": "edge.xml_unclosed_tag",
       "generator_params": {},
@@ -1985,7 +2020,10 @@
       "props": {
         "defect": "zero-byte",
         "intended_format": "csv",
-        "bytes": 0
+        "bytes": 0,
+        "damage": "The file holds no bytes at all: no header row and no record, and RFC 4180 requires at least one.",
+        "outcome": "must-fail",
+        "compare_with": "csv/people-10.csv"
       },
       "generator": "edge.zero_byte",
       "generator_params": {},
@@ -2013,7 +2051,10 @@
       "props": {
         "defect": "zero-byte",
         "intended_format": "json",
-        "bytes": 0
+        "bytes": 0,
+        "damage": "The file holds no bytes at all: no JSON value, and RFC 8259 requires one.",
+        "outcome": "must-fail",
+        "compare_with": "json/all-types.json"
       },
       "generator": "edge.zero_byte",
       "generator_params": {},
@@ -2041,7 +2082,10 @@
       "props": {
         "defect": "zero-byte",
         "intended_format": "mp4",
-        "bytes": 0
+        "bytes": 0,
+        "damage": "The file holds no bytes at all: no ftyp box, so nothing declares what the container is.",
+        "outcome": "must-fail",
+        "compare_with": "mp4/720p-5s.mp4"
       },
       "generator": "edge.zero_byte",
       "generator_params": {},
@@ -2069,7 +2113,10 @@
       "props": {
         "defect": "zero-byte",
         "intended_format": "pdf",
-        "bytes": 0
+        "bytes": 0,
+        "damage": "The file holds no bytes at all: no %PDF- header, and nothing after it to read.",
+        "outcome": "must-fail",
+        "compare_with": "pdf/minimal.pdf"
       },
       "generator": "edge.zero_byte",
       "generator_params": {},
@@ -2097,7 +2144,10 @@
       "props": {
         "defect": "zero-byte",
         "intended_format": "png",
-        "bytes": 0
+        "bytes": 0,
+        "damage": "The file holds no bytes at all: no eight-byte PNG signature, so nothing identifies it as an image.",
+        "outcome": "must-fail",
+        "compare_with": "png/100x100.png"
       },
       "generator": "edge.zero_byte",
       "generator_params": {},
@@ -2125,7 +2175,10 @@
       "props": {
         "defect": "zero-byte",
         "intended_format": "txt",
-        "bytes": 0
+        "bytes": 0,
+        "damage": "The file holds no bytes at all: no text to read.",
+        "outcome": "varies",
+        "compare_with": "txt/lorem-1kb.txt"
       },
       "generator": "edge.zero_byte",
       "generator_params": {},
@@ -2153,7 +2206,10 @@
       "props": {
         "defect": "zero-byte",
         "intended_format": "zip",
-        "bytes": 0
+        "bytes": 0,
+        "damage": "The file holds no bytes at all: no local file header and no end-of-central-directory record.",
+        "outcome": "must-fail",
+        "compare_with": "zip/3-text-files.zip"
       },
       "generator": "edge.zero_byte",
       "generator_params": {},
@@ -2184,7 +2240,10 @@
         "bytes": 782,
         "hostile_entries": [
           "../evil.txt"
-        ]
+        ],
+        "damage": "The archive itself is well formed and reads; entry 2 of 2 is named '../evil.txt', which climbs out of the directory it is extracted into.",
+        "outcome": "varies",
+        "compare_with": "zip/3-text-files.zip"
       },
       "generator": "edge.zip_traversal_name",
       "generator_params": {},
@@ -2213,7 +2272,11 @@
         "defect": "truncated",
         "intended_format": "zip",
         "bytes": 911,
-        "fraction": 0.5
+        "derived_from": "zip/3-text-files.zip",
+        "fraction": 0.5,
+        "damage": "Cut to 911 of 1,822 bytes, the first 50% of zip/3-text-files.zip: 2 local file headers survive, and the central directory that lists them is past the end.",
+        "outcome": "may-recover",
+        "compare_with": "zip/3-text-files.zip"
       },
       "generator": "edge.truncated",
       "generator_params": {
