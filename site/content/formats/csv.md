@@ -3,7 +3,7 @@ records as the JSON, Parquet and SQLite people files, plus the variants that bre
 parsers.
 
 The plain files come in three row counts, `csv/people-10.csv`, `csv/people-1000.csv` and
-`csv/people-100k.csv`, each with a header row. Three variants carry ten rows each:
+`csv/people-100k.csv`, each with a header row. Each variant carries ten rows:
 `csv/people-10-semicolon.csv` uses semicolons, as European locales export;
 `csv/people-10-quoted-newlines.csv` has a real newline inside a quoted field, which is where
 splitting on line breaks goes wrong; `csv/people-10-quoted-commas.csv` puts a comma there
