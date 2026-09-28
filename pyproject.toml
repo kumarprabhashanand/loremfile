@@ -82,6 +82,7 @@ ignore = [
                                                  # determinism tests must call directly
 "src/loremfile/cli.py" = ["T20"]          # the CLI is the one place that prints
 "tools/licences.py" = ["T20"]             # a reporting script: printing is the whole point
+"tools/check_lock.py" = ["T20"]           # a CI guard: its output is what a reader acts on
 
 [tool.ruff.lint.isort]
 known-first-party = ["loremfile"]

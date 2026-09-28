@@ -500,12 +500,38 @@ updates:
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
 ```
 
+**A rebuild is not a change.** An image build is not reproducible: the same inputs
+produce a different digest every time, and `toolchain.yml` read that as a new image and
+opened a digest-bump pull request after every change under `tools/` (old PR #29 and the
+three before it). The image now carries `dev.loremfile.toolchain-inputs`, the sha256 of
+the Dockerfile, the apt pins and the lock (`tools/inputs-sha.sh`), and the bump is
+proposed only when that label differs from the pinned image's. `tools/smoke.sh` is
+deliberately not an input: it is mounted at test time and changes no image.
+
 A minor or major Python move changes the interpreter that writes every zip container, PDF
 and dataset, so it is one deliberate pull request with a determinism audit
 (`gh workflow run audit.yml --ref <branch> -f determinism=true`, §3.4) rather than a
 Dependabot update. 3.12 → 3.14 was taken that way.
 
-Python updates change `requirements.in`; the PR must also regenerate `requirements.lock` (`pip-compile --generate-hashes`) and bump the toolchain digest — `tools/check_lock.sh` in `ci.yml` fails if `requirements.in` differs from the merge-base while `requirements.lock` or `TOOLCHAIN_DIGEST` do not.
+Python updates change `requirements.in`; the pull request regenerates `requirements.lock`
+(`pip-compile --generate-hashes`) and, when the lock moves, bumps the toolchain digest.
+
+`tools/check_lock.sh` in `ci.yml` asks three things, two of them of the artifacts rather
+than of the diff (rewritten 2026-09-28):
+
+- **Every constraint in `requirements.in` is satisfied by what the lock pins.**
+- **Regenerating the lock reproduces it**, with the flags its own header records. This is
+  not a tamper check: pip-compile reuses an existing entry wholesale when the pin still
+  satisfies the constraints, so a hand-edited version regenerates to itself — measured,
+  not assumed (`tools/check_lock.py`). A hash that does not belong to its version is
+  caught by `pip install --require-hashes` at image build.
+- **A changed lock comes with a changed digest**, which is the one question only the diff
+  can answer: nothing in the files says which image a workflow will pull.
+
+What it no longer asserts: that the lock must differ whenever `requirements.in` does. A
+floor raised to a version the lock already pins is a legitimate no-op — Dependabot
+proposes exactly that — and the old rule turned it into a failure that could only be
+satisfied by inventing a diff (old PR #30).
 
 ## 5. Uploader contract (`loremfile upload`)
 
