@@ -1,13 +1,15 @@
 # Edge-case fixtures (docs/05 §3.13). Every row declares its defect in `edge:`, and
-# validators/edge.py asserts that defect instead of the format's usual structure: these
-# files exist to be rejected, so "it parses" would be the wrong test.
+# validators/edge.py asserts that defect instead of the format's usual structure. For most
+# rows that means the file exists to be rejected, so "it parses" would be the wrong test;
+# for a `polyglot` it is the opposite — two readers must both accept it.
 format: edge
 family: edge
 mime: application/octet-stream
 description: >-
-  Deliberately wrong files: empty, truncated, mislabelled, or malformed. Each one is
-  served as the type its extension claims, so you can test what your code does with
-  input it should refuse.
+  Files that are wrong on purpose, or ambiguous on purpose: empty, truncated, mislabelled,
+  malformed, or valid as two formats at once. Each is served as the type its extension
+  claims, so you can test what your code does with input it should refuse — and with input
+  nothing in the bytes can classify.
 seo_title: "Corrupt and malformed test files for error handling — free, CC0"
 related: [pdf, png, jpg, mp4, zip, json, csv, xml, txt]
 fixtures:

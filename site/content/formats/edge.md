@@ -1,6 +1,7 @@
-Most test files are meant to be read successfully. These are not. Every file under `edge/`
-is wrong on purpose, in one declared way: empty, cut short, malformed, or carrying bytes
-that do not match the name and content type it is served with.
+Most test files are meant to be read successfully. These are not, or not unambiguously.
+Every file under `edge/` is wrong on purpose, or ambiguous on purpose, in one declared way:
+empty, cut short, malformed, carrying bytes that do not match the name and content type it
+is served with, or valid as two formats at once so that nothing decides which it is.
 
 Each is served as the type its extension claims, because that is the situation worth
 testing. `edge/png-with-pdf-extension.pdf` arrives as `application/pdf` and is a PNG;
@@ -12,9 +13,8 @@ valid file to `compare_with`, and an `outcome` — `must-fail` when every confor
 must refuse it, `may-recover` when part of it still reads, `varies` when readers disagree.
 Only `must-fail` means a reader that copes is wrong.
 
-Two are valid twice over: `edge/pdf-zip-polyglot.pdf` is a PDF *and* a zip archive,
-`edge/gif-zip-polyglot.gif` a GIF and a zip. Nothing in the bytes decides which, which is
-what makes them worth feeding to type detection. That shape is also how malware travels, so
+The two polyglots are `edge/pdf-zip-polyglot.pdf`, a PDF *and* a zip archive, and
+`edge/gif-zip-polyglot.gif`, a GIF and a zip. That shape is also how malware travels, so
 scanners and corporate proxies sometimes refuse a polyglot or strip the archive in transit:
 if a download arrives short, check [sha256sums.txt](/sha256sums.txt) first.
 

@@ -1,8 +1,9 @@
 """Edge-case fixtures — files that are deliberately wrong (docs/05 §3.13).
 
 Every fixture here declares its defect in the catalog's `edge` block, and the validator
-asserts that defect rather than the format's usual structure: these files exist to be
-rejected by whatever reads them, so "it parses" would be the wrong test.
+asserts that defect rather than the format's usual structure. Most of these files exist to
+be rejected by whatever reads them, so "it parses" would be the wrong test — with one
+exception: a `polyglot` is valid twice over, and both readers have to accept it.
 
 The derived ones read their source through `ctx.dependency`, so a truncation is always a
 prefix of the bytes that were actually published, not of a fresh build.
