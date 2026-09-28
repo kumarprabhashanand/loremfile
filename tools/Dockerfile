@@ -83,3 +83,10 @@ RUN pip install --no-cache-dir --require-hashes -r /tmp/requirements.lock \
 
 # The repository is mounted here by every workflow job and by local development.
 WORKDIR /work
+
+# What went into this image: sha256 of the Dockerfile, the apt pins and the lock
+# (tools/inputs-sha.sh). Two builds of the same inputs produce different image digests —
+# a build is not reproducible — so this label, not the digest, is how toolchain.yml tells
+# a real change from a rebuild. Last, so it costs no layer cache.
+ARG TOOLCHAIN_INPUTS_SHA=unknown
+LABEL dev.loremfile.toolchain-inputs="${TOOLCHAIN_INPUTS_SHA}"

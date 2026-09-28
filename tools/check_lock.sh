@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
-# Fails when tools/requirements.in changed against the merge base without
-# tools/requirements.lock and tools/TOOLCHAIN_DIGEST changing too (docs/09 §4).
+# Is the dependency lock the faithful resolution of tools/requirements.in (docs/09 §4)?
 #
-# Adding a dependency without regenerating the lock produces an image whose contents no
-# longer match the recorded inputs; adding it without a new digest means CI keeps running
-# the old image and the change silently does nothing.
+# The question used to be asked of the diff — "requirements.in changed, so the lock and
+# the digest must have changed too" — and that gets the common case backwards: a floor
+# raised to a version the lock already pins is a legitimate no-op, and the rule turned it
+# into a failure nobody could fix honestly (old PR #30). check_lock.py now asks the
+# artifacts instead: regenerating must reproduce the lock byte for byte, and every
+# constraint must be satisfied by what is pinned.
+#
+# This script keeps the one question that is genuinely about the diff: a change to the
+# lock has to come with a new image, or CI keeps running an image whose contents no
+# longer match the recorded inputs.
 #
 # Run by ci.yml inside the toolchain container. Takes the base ref as $1, or reads
 # GITHUB_BASE_REF, defaulting to origin/main.
@@ -37,29 +43,22 @@ changed="$(git diff --name-only "$merge_base" HEAD -- tools/)"
 
 changed_in() { grep -qx "$1" <<<"$changed"; }
 
-if ! changed_in tools/requirements.in; then
-  echo "check_lock: tools/requirements.in unchanged since $merge_base — nothing to check"
-  exit 0
-fi
-
-missing=()
-changed_in tools/requirements.lock || missing+=("tools/requirements.lock")
-changed_in tools/TOOLCHAIN_DIGEST  || missing+=("tools/TOOLCHAIN_DIGEST")
-
-if ((${#missing[@]})); then
-  echo "check_lock: tools/requirements.in changed but these did not:" >&2
-  printf '  %s\n' "${missing[@]}" >&2
+# A lock that changed without a new image means CI keeps running the old contents. This
+# one *is* about the diff: no artifact can tell you which image a workflow will pull.
+if changed_in tools/requirements.lock && ! changed_in tools/TOOLCHAIN_DIGEST; then
+  echo "check_lock: tools/requirements.lock changed but tools/TOOLCHAIN_DIGEST did not." >&2
   cat >&2 <<'HINT'
 
-Regenerate the lock inside the toolchain container:
+Let toolchain.yml publish an image from the new lock and record its digest:
 
-  pip-compile --generate-hashes --strip-extras --allow-unsafe \
-    --output-file=tools/requirements.lock tools/requirements.in
+  gh workflow run toolchain.yml --ref <this branch>
 
-then let toolchain.yml publish a new image and record its digest in
-tools/TOOLCHAIN_DIGEST. Both belong in this same pull request.
+then copy the digest from the run summary into tools/TOOLCHAIN_DIGEST, in this same
+pull request. Without it every job keeps pulling the image built from the old lock.
 HINT
   exit 1
 fi
 
-echo "check_lock: requirements.in, requirements.lock and TOOLCHAIN_DIGEST all changed — OK"
+# Everything else is a question about the files themselves, so it is asked on every run
+# rather than only when the diff touches them.
+python3 "$(dirname "$0")/check_lock.py" "$(pwd)"
