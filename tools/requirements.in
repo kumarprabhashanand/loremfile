@@ -19,7 +19,7 @@ python-pptx
 Pillow>=12.3              # AVIF support in the published wheels starts at 11.3.0
 
 # --- data ------------------------------------------------------------------
-pyarrow>=25
+pyarrow>=25.0.1
 fastavro
 ijson
 lxml
@@ -45,7 +45,7 @@ vobject
 cryptography
 
 # --- framework -------------------------------------------------------------
-pydantic>=2.13
+pydantic>=2.13.5
 click
 Jinja2
 boto3
