@@ -67,7 +67,7 @@ Field rules:
 | `description` | string | One or two sentences a human or agent can use to decide fit. ≤ 300 chars. |
 | `tags` | string[] | Lowercase; controlled vocabulary in `catalog/_tags.yaml`. |
 | `edge_case` | boolean | `true` for anything under `edge/` and for format-dir fixtures flagged as unusual (e.g. `txt/control-characters.txt`). |
-| `props` | object | Measured by validators, format-specific (see §1.3). Frozen. |
+| `props` | object | Measured by validators, format-specific (see §1.3). The measured *values* cannot change, because the bytes they were measured on cannot: `sha256` is frozen, so `pages` or `rows` is settled for good. What a prop is called, and the wording of one that is a sentence, may be corrected — a correction is a changelog entry and a new catalog version, never a silent rewrite. |
 | `generator`, `generator_params` | string, object | Enough to regenerate. Informational; may change if a generator is refactored (bytes must not). |
 | `added_in` | semver | Catalog version that introduced it. |
 | `status` | enum | `active`, `removed` (legal takedown tombstone, see §1.5). |

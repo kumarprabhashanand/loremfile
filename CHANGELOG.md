@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-09-28
+
+- Three of the broken files describe their damage in terms of their own bytes rather than
+  one parser's error message. The files are unchanged.
+
 ## [1.3.0] - 2026-09-24
 
 - `csv/people-10-quoted-commas.csv`: ten people rows with a comma inside a
