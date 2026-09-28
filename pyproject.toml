@@ -80,9 +80,13 @@ ignore = [
 "tests/**" = ["S101", "ANN", "PLR2004", "S311"]  # asserts, loose annotations, magic
                                                  # numbers, and random.* — which the
                                                  # determinism tests must call directly
+"client/tests/**" = ["S101", "ANN", "PLR2004", "ARG001"]  # the client's suite,
+                                                 # same reasons, plus fixtures
+                                                 # asked for by effect (server)
 "src/loremfile/cli.py" = ["T20"]          # the CLI is the one place that prints
 "tools/licences.py" = ["T20"]             # a reporting script: printing is the whole point
 "tools/check_lock.py" = ["T20"]           # a CI guard: its output is what a reader acts on
+"client/src/loremfile_client/cli.py" = ["T20"]   # the client's output is the client
 
 [tool.ruff.lint.isort]
 known-first-party = ["loremfile"]
@@ -97,7 +101,8 @@ quote-style = "double"
 # The floor from `requires-python`, not the 3.14 the image runs: typeshed then hides the
 # 3.14-only APIs, so code that would break on the floor fails here instead of in the wild.
 python_version = "3.12"
-files = ["src"]
+# The published client is checked with the same strictness as the repository tooling.
+files = ["src", "client/src"]
 strict = true
 warn_unreachable = true
 show_error_codes = true
