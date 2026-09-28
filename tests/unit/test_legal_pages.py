@@ -38,6 +38,14 @@ AI_TOKENS = {
     "Diffbot",
     "MistralAI-User",
     "DuckAssistBot",
+    # Weighed 2026-09-28. Only Cloudflare documents its own (`…Crawler/1.0`, not
+    # customizable); the other four are the list's spelling, and docs/04 §6 says so for
+    # each rather than implying they were all checked the same way.
+    "AgentDataBot",
+    "BixelBot",
+    "CloudflareBrowserRenderingCrawler",
+    "Kimi-Agent",
+    "qodercli",
     "Google-Extended",
     "Applebot-Extended",
 }

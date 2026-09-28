@@ -429,12 +429,15 @@ def check_preflight(entry: dict[str, Any], response: Response) -> list[Finding]:
     return findings or [Finding(name, Status.OK)]
 
 
-#: Two of the agents `loremfile_legal_pages_ai_agents` refuses, in the user agent each
-#: operator publishes (docs/04 §6). The rule asks for the two pages that name the operator
-#: and nothing else, so this is checked against production rather than inferred from the rule.
+#: Two of the agents `loremfile_legal_pages_ai_agents` refuses (docs/04 §6), checked
+#: against production rather than inferred from the rule. **The sample rotates onto the
+#: newest clauses** with each batch of tokens: an old clause has been answering 403 for
+#: weeks, and a clause added yesterday is the one that might be misspelt. Where the
+#: operator publishes a user agent it is used verbatim; where nobody publishes one, the
+#: bare token is sent, because the bare token is what the rule matches.
 REFUSED_AGENTS = (
-    "CCBot/2.0 (https://commoncrawl.org/faq/)",
-    "Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://www.perplexity.ai/perplexitybot)",
+    "CloudflareBrowserRenderingCrawler/1.0",
+    "qodercli",
 )
 
 
