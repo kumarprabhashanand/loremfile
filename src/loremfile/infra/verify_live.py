@@ -86,13 +86,12 @@ def expected_disposition(path: str) -> str:
     return f'inline; filename="{path.rsplit("/", 1)[-1]}"'
 
 
-#: `daily` GETs and hashes every fixture below this; `full` hashes everything. The line
-#: exists because hashing the whole catalog daily is not a daily job. **`daily` does not
-#: yet sample above it**: docs/12 §4 specifies a 5 % rotating sample of larger fixtures,
-#: and this comment used to claim it existed. It does not — a fixture of 1 MB or more is
-#: never hashed by `daily`, only by `full`. Recorded in docs/12 §4 with the other checks
-#: that table promised and this module does not perform.
-DAILY_HASH_LIMIT_BYTES = 1_000_000
+#: `daily` hashes this many rotating shares of the catalog — one a day, so every fixture
+#: is hashed within ten days. It replaces the old "everything under 1 MB" rule, which
+#: never hashed a large fixture at all and grew with the catalog in the one direction
+#: that matters: run time. Contract checks still cover **every** fixture every day; only
+#: the downloads rotate (docs/12 §4).
+HASH_ROTATION_SHARES = 10
 
 #: Markup is sandboxed; a PDF or a video must **not** carry a CSP, or viewers break.
 MARKUP_SUFFIXES = (".html", ".htm", ".xhtml", ".svg", ".xml")
@@ -290,6 +289,48 @@ def smallest_per_format(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
         fmt = entry["path"].split("/", 1)[0]
         chosen.setdefault(fmt, entry)
     return [chosen[fmt] for fmt in sorted(chosen)]
+
+
+# --- what `daily` downloads (docs/12 §4) -------------------------------------------------
+
+
+def hash_share(path: str, *, shares: int = HASH_ROTATION_SHARES) -> int:
+    """Which share a fixture belongs to: stable for its whole life.
+
+    From the sha256 of the path, not `hash()`: the share has to be the same number on
+    every machine and in every interpreter, and `hash()` is neither. Keying on the path
+    rather than on position also means a new fixture joins one share instead of shifting
+    every fixture into a different one.
+    """
+    return int.from_bytes(hashlib.sha256(path.encode()).digest()[:4], "big") % shares
+
+
+def rotation_day(today: dt.date | None = None, *, shares: int = HASH_ROTATION_SHARES) -> int:
+    """Which share today hashes. Derived from the date, so two runs on one day agree."""
+    return (today or dt.datetime.now(dt.UTC).date()).toordinal() % shares
+
+
+def newest_release(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Every fixture the most recent release published.
+
+    These are hashed every day regardless of their share: they are the bytes that have
+    been live the shortest time, and the ones a mistake in the last deploy would be in.
+    """
+    versions = {str(entry["added_in"]) for entry in entries if entry.get("added_in")}
+    if not versions:
+        return []
+    newest = max(versions, key=lambda v: tuple(int(part) for part in v.split(".")))
+    return [entry for entry in entries if str(entry.get("added_in")) == newest]
+
+
+def daily_hash_set(
+    entries: list[dict[str, Any]], *, day: int | None = None
+) -> list[dict[str, Any]]:
+    """What `daily` downloads: today's share, plus everything from the newest release."""
+    share = rotation_day() if day is None else day % HASH_ROTATION_SHARES
+    wanted = {entry["path"] for entry in newest_release(entries)}
+    wanted |= {entry["path"] for entry in entries if hash_share(entry["path"]) == share}
+    return [entry for entry in entries if entry["path"] in wanted]
 
 
 # --- the rest of smoke: count, preflight, Range, www (every mode, docs/12 §4) ------------
