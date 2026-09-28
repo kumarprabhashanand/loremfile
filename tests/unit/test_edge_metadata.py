@@ -318,6 +318,18 @@ def test_the_bom_sentence_needs_what_follows_the_mark_to_be_valid() -> None:
         edge_validator.DAMAGE[fixture.edge.defect](subject(fixture, b'\xef\xbb\xbf{"a": '))
 
 
+def test_the_polyglot_sentence_needs_both_signatures() -> None:
+    """It says where each format's signature is. A file with only one of them is not the
+    file the sentence describes."""
+    fixture = entry("edge/pdf-zip-polyglot.pdf")
+    assert fixture.edge is not None
+    writer = edge_validator.DAMAGE[fixture.edge.defect]
+    with pytest.raises(ValidationError, match="carries no zip signature"):
+        writer(subject(fixture, b"%PDF-1.4\nno archive here\n"))
+    with pytest.raises(ValidationError, match="does not open with pdf magic"):
+        writer(subject(fixture, b"PK\x03\x04 and nothing that opens a pdf"))
+
+
 def test_a_format_with_no_sentence_for_an_empty_file_is_refused() -> None:
     """The gap is the point: adding an edge case for a new format without saying what
     that format's reader looks for first stops the build rather than publishing "it is

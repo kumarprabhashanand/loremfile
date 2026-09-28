@@ -389,7 +389,10 @@ def test_xhtml_is_not_auto_charset() -> None:
 
 
 def test_shipped_tag_vocabulary_loads() -> None:
-    """catalog/_tags.yaml must stay loadable and match docs/05 §4's count."""
+    """catalog/_tags.yaml must stay loadable and match docs/05 §4's list."""
     catalog = Catalog.load()
-    assert len(catalog.tags) == 34
-    assert "dataset-people" in catalog.tags
+    # Named, not counted: a count says nothing about which tag arrived or left, and the
+    # vocabulary grows a term at a time with the family that needs it.
+    assert {"dataset-people", "truncated", "mismatched", "polyglot"} <= set(catalog.tags)
+    assert len(catalog.tags) == len(set(catalog.tags)), "no duplicates"
+    assert catalog.tags == [tag.lower() for tag in catalog.tags]

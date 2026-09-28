@@ -200,7 +200,11 @@ REMAINING_M37_M38 = 0  # M3.7 and M3.8 are catalogued; §9 is fully enumerated
 
 #: Fixtures catalogued after launch day, listed one by one in `05` §9. The launch set is
 #: a historical number and does not move; this is how the catalog grows without blurring it.
-AFTER_LAUNCH = ("csv/people-10-quoted-commas.csv",)
+AFTER_LAUNCH = (
+    "csv/people-10-quoted-commas.csv",
+    "edge/pdf-zip-polyglot.pdf",
+    "edge/gif-zip-polyglot.gif",
+)
 
 
 def test_the_launch_set_still_adds_up() -> None:

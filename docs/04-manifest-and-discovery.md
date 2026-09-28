@@ -103,7 +103,7 @@ Field rules:
 | epub | `version`, `chapters`, `images` |
 | pem, der | `kind` (`certificate`/`csr`), `algorithm`, `not_before`, `not_after` |
 | wasm | `sections`, `exports` |
-| edge/* | `defect`, `intended_format`, `bytes`, `damage`, `outcome`, `compare_with`, and `derived_from` for the six that were cut or copied from a published fixture; plus `fraction` (truncated) and `hostile_entries` (hostile-name). §1.3.1 describes the four that are about the breakage. `defect` is a closed enum, and it tells the validator what to assert: `zero-byte` (bytes == 0), `truncated` (bytes == floor(`fraction` × source bytes) with `fraction` from the catalog's `edge` block, default 0.5 — `pdf-truncated-60pct.pdf` uses 0.6 — and prefix-equal to the source), `mismatched-extension` (bytes equal the source fixture; magic bytes match the *source* format, not the extension), `magic-prefix` (bytes == the `magic` value from the `edge` block followed by the source fixture's bytes), `invalid-syntax` (the format's parser raises), `invalid-encoding` (strict decode with the declared charset raises), `nonstandard` (strict parser raises, lenient parser succeeds), `bom` (decodes after stripping the BOM; parser succeeds on the stripped text), `stress` (parses; the recorded `props` document the depth/size), `hostile-name` (parses; at least one entry name contains `../`). Only fixtures under `edge/` carry these; unusual-but-valid fixtures elsewhere (`txt/control-characters.txt`, `txt/nul-bytes.txt`) have `edge_case: true` and ordinary props |
+| edge/* | `defect`, `intended_format`, `bytes`, `damage`, `outcome`, `compare_with`, and `derived_from` for the six that were cut or copied from a published fixture; plus `fraction` (truncated) and `hostile_entries` (hostile-name). §1.3.1 describes the four that are about the breakage. `defect` is a closed enum, and it tells the validator what to assert: `zero-byte` (bytes == 0), `truncated` (bytes == floor(`fraction` × source bytes) with `fraction` from the catalog's `edge` block, default 0.5 — `pdf-truncated-60pct.pdf` uses 0.6 — and prefix-equal to the source), `mismatched-extension` (bytes equal the source fixture; magic bytes match the *source* format, not the extension), `magic-prefix` (bytes == the `magic` value from the `edge` block followed by the source fixture's bytes), `invalid-syntax` (the format's parser raises), `invalid-encoding` (strict decode with the declared charset raises), `nonstandard` (strict parser raises, lenient parser succeeds), `bom` (decodes after stripping the BOM; parser succeeds on the stripped text), `stress` (parses; the recorded `props` document the depth/size), `hostile-name` (parses; at least one entry name contains `../`), `polyglot` (**both** the announced format's reader and the one named by `edge.also_valid_as` accept the bytes; the prop `also_valid_as` records the second format). Only fixtures under `edge/` carry these; unusual-but-valid fixtures elsewhere (`txt/control-characters.txt`, `txt/nul-bytes.txt`) have `edge_case: true` and ordinary props |
 
 #### 1.3.1 The four edge props (what is wrong, and what to expect)
 
@@ -128,9 +128,10 @@ the format itself permits:
 - **`may-recover`** — part of the content survives and a conforming reader may return it: a
   PDF reader rebuilding a lost cross-reference table, a JPEG decoder painting the scan lines
   that arrived, U+FFFD substitution for ill-formed UTF-8.
-- **`varies`** — some conforming reader takes the file whole while another refuses it: a
-  mislabelled file read by content rather than by name, a BOM that RFC 8259 lets a parser
-  ignore, a cut MP4 whose header still describes a complete video.
+- **`varies`** — readers legitimately disagree. Either one takes the file whole while
+  another refuses it (a mislabelled file read by content rather than by name, a BOM that
+  RFC 8259 lets a parser ignore), or two take it whole and disagree about what it *is* —
+  a polyglot, where nothing in the bytes decides the type.
 
 **`may-recover` and `varies` mean a parser that recovers is not wrong.** Only `must-fail`
 says failure is the required behaviour, so only `must-fail` belongs in a test that asserts

@@ -88,6 +88,9 @@ class Defect(StrEnum):
     BOM = "bom"
     STRESS = "stress"
     HOSTILE_NAME = "hostile-name"
+    #: Valid as two formats at once. Nothing is broken; what the file *is* cannot be
+    #: decided from its bytes, which is the thing being tested.
+    POLYGLOT = "polyglot"
 
 
 class Outcome(StrEnum):
@@ -103,7 +106,8 @@ class Outcome(StrEnum):
     MUST_FAIL = "must-fail"
     #: Part of the content survives and a conforming reader may return it.
     MAY_RECOVER = "may-recover"
-    #: Some conforming reader takes the file whole while another refuses it.
+    #: Readers legitimately disagree: one takes the file whole while another refuses
+    #: it, or two take it whole and disagree about what it is (a polyglot).
     VARIES = "varies"
 
 
@@ -138,6 +142,9 @@ class Edge(BaseModel):
     source_fixture: str | None = None
     fraction: float | None = Field(default=None, gt=0, lt=1)
     magic: str | None = None
+    #: The second format a polyglot satisfies. `intended_format` is the one it announces
+    #: by name and Content-Type; this is the other one, and the validator runs both.
+    also_valid_as: str | None = Field(default=None, pattern=FORMAT_RE.pattern)
 
     @model_validator(mode="after")
     def _defect_specific_fields(self) -> Self:
@@ -149,6 +156,12 @@ class Edge(BaseModel):
             raise ValueError("edge.fraction is only meaningful for defect 'truncated'")
         if self.magic is not None and self.defect is not Defect.MAGIC_PREFIX:
             raise ValueError("edge.magic is only meaningful for defect 'magic-prefix'")
+        if self.defect is Defect.POLYGLOT and not self.also_valid_as:
+            raise ValueError("edge.also_valid_as is required when defect is 'polyglot'")
+        if self.also_valid_as is not None and self.defect is not Defect.POLYGLOT:
+            raise ValueError("edge.also_valid_as is only meaningful for defect 'polyglot'")
+        if self.also_valid_as is not None and self.also_valid_as == self.intended_format:
+            raise ValueError("edge.also_valid_as names the same format as intended_format")
         return self
 
 

@@ -21,13 +21,15 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
+from loremfile.build import load_generators
 from loremfile.catalog import Catalog, Fixture
 from loremfile.generators.base import REGISTRY, GeneratorContext
 from loremfile.util.determinism import deterministic
 from loremfile.validators import edge as edge_validator
 from loremfile.validators import load as load_validators
-from loremfile.validators import validate
+from loremfile.validators import validate, validator_for
 
+load_generators()  # every test here builds a fixture, so the registry must be populated
 load_validators()  # the edge validator runs other formats' validators as controls
 
 CATALOG = Catalog.load()
@@ -267,6 +269,68 @@ def test_a_clean_archive_is_refused_under_that_name() -> None:
         archive.writestr("readme.txt", "nothing hostile here")
     failures = refused("edge/zip-directory-traversal-name.zip", out.getvalue())
     assert "escapes the extraction directory" in failures
+
+
+# --- polyglots --------------------------------------------------------------
+
+
+def polyglots() -> list[str]:
+    return [p for p in edge_fixtures() if fixture(p).edge.defect.value == "polyglot"]
+
+
+def test_the_polyglot_set_is_the_files_these_tests_think_it_is() -> None:
+    assert set(polyglots()) == {"edge/pdf-zip-polyglot.pdf", "edge/gif-zip-polyglot.gif"}
+
+
+@pytest.mark.parametrize("path", polyglots())
+def test_a_polyglot_is_valid_as_both_formats(path: str) -> None:
+    """Asserted through each format's own reader, not only through the edge validator:
+    the claim is that two independent readers accept the same bytes."""
+    entry = fixture(path)
+    assert entry.edge is not None
+    data = build(path)
+    props = check(path, data)
+    assert props["also_valid_as"] == entry.edge.also_valid_as
+    for fmt in (entry.edge.intended_format, entry.edge.also_valid_as):
+        assert fmt is not None
+        validator_for(fmt)(data, entry, CATALOG.mime_for(entry))
+
+
+def test_only_the_first_half_is_refused() -> None:
+    """The negative control: everything before the archive is a perfectly good PDF, and
+    a perfectly good PDF is not a polyglot."""
+    data = build("edge/pdf-zip-polyglot.pdf")
+    half = data[: data.index(b"PK\x03\x04")]
+    assert "not also a valid zip" in refused("edge/pdf-zip-polyglot.pdf", half)
+
+
+def test_an_archive_that_is_not_also_a_document_is_refused() -> None:
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w") as archive:
+        archive.writestr("readme.txt", "an ordinary archive")
+    assert "not also a valid pdf" in refused("edge/pdf-zip-polyglot.pdf", out.getvalue())
+
+
+def test_both_formats_get_the_end_of_the_file() -> None:
+    """The whole difficulty of a PDF/zip polyglot: a zip is found by scanning back from
+    the end, and a PDF ends with its trailer. The trailer lives in the zip comment, so
+    the last bytes satisfy both."""
+    data = build("edge/pdf-zip-polyglot.pdf")
+    assert data.rstrip(b"\n").endswith(b"%%EOF")
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        assert b"startxref" in archive.comment
+    # The same offset twice: the trailer in the middle and the one in the comment.
+    offsets = {int(part.split(b"\n")[0]) for part in data.split(b"startxref\n")[1:]}
+    assert len(offsets) == 1, f"two different startxref offsets: {offsets}"
+
+
+def test_the_archive_half_records_absolute_offsets() -> None:
+    """A central directory whose offsets are shifted by the prefix only reads in tools
+    that correct for it. These are real offsets, so the local header is where it says."""
+    data = build("edge/pdf-zip-polyglot.pdf")
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        info = archive.getinfo("readme.txt")
+    assert data[info.header_offset : info.header_offset + 4] == b"PK\x03\x04"
 
 
 # --- determinism ------------------------------------------------------------

@@ -140,6 +140,10 @@ class Recovery:
     evidence: str
 
 
+#: What a reading of the bytes looks like: everything about the file in, what a
+#: conforming reader gets out.
+Reading = Callable[["Subject"], Recovery | None]
+
 #: One tolerant reading per announced format, tried when the strict reader refuses.
 #: Each is a reading the format itself permits — not "some tool can scrape this".
 RECOVERIES: dict[str, Callable[[bytes], Recovery | None]] = {}
@@ -334,35 +338,68 @@ def _tolerant_reading(subject: Subject) -> Recovery | None:
     return reader(subject.data)
 
 
-def _recovery(subject: Subject) -> Recovery | None:
-    """The best reading any conforming reader gets of these bytes.
+#: Defects whose reading is **not** the generic "ask the announced format's reader".
+#: The order matters and is the substance: asking that reader first looks right and is
+#: wrong whenever the bytes are not simply damaged. ffprobe reads a truncated MP4
+#: without complaint, and a polyglot is read happily by two readers at once.
+SPECIAL_READINGS: dict[Defect, Callable[[Subject], Recovery | None]] = {}
 
-    The order of the branches is the substance. Asking the format's own reader first
-    looks right and is wrong for a file with bytes missing: ffprobe reads a truncated
-    MP4 without complaint — the header is intact and the streams are described, which
-    is why `_walk_boxes` exists at all — and that answer would make a damaged file
-    `varies`. Truncation is settled before any reader is asked.
-    """
-    if subject.edge.defect is Defect.TRUNCATED:
-        # Bytes are missing. Whatever a reader makes of what arrived, it is not the
-        # whole file, so this can never be the reading that means `varies`.
-        recovery = _tolerant_reading(subject)
-        if recovery is None:
-            return None
-        return Recovery(whole=False, evidence=recovery.evidence)
-    if subject.edge.defect is Defect.MISMATCHED_EXTENSION:
-        # The name is the only thing wrong: a reader that identifies by content rather
-        # than by extension or Content-Type gets the file entire.
-        intended = subject.edge.intended_format
-        if not subject.accepts(intended):
-            return None
-        return Recovery(
-            whole=True,
-            evidence=(
-                f"the whole file, as the {intended} it really is, by any reader that "
-                "identifies content by its bytes rather than by its name"
-            ),
-        )
+
+def _reads(defect: Defect) -> Callable[[Reading], Reading]:
+    def decorate(func: Reading) -> Reading:
+        SPECIAL_READINGS[defect] = func
+        return func
+
+    return decorate
+
+
+@_reads(Defect.TRUNCATED)
+def _read_truncated(subject: Subject) -> Recovery | None:
+    """Bytes are missing. Whatever a reader makes of what arrived, it is not the whole
+    file, so this can never be the reading that means `varies`."""
+    recovery = _tolerant_reading(subject)
+    if recovery is None:
+        return None
+    return Recovery(whole=False, evidence=recovery.evidence)
+
+
+@_reads(Defect.MISMATCHED_EXTENSION)
+def _read_mislabelled(subject: Subject) -> Recovery | None:
+    """The name is the only thing wrong: a reader that identifies by content rather than
+    by extension or Content-Type gets the file entire."""
+    intended = subject.edge.intended_format
+    if not subject.accepts(intended):
+        return None
+    return Recovery(
+        whole=True,
+        evidence=(
+            f"the whole file, as the {intended} it really is, by any reader that "
+            "identifies content by its bytes rather than by its name"
+        ),
+    )
+
+
+@_reads(Defect.POLYGLOT)
+def _read_polyglot(subject: Subject) -> Recovery | None:
+    """Nothing here is damaged. Two readers take the file entire and disagree about what
+    it is, which is the disagreement `varies` is for."""
+    other = subject.edge.also_valid_as or ""
+    if not (subject.accepts(subject.claimed_format) and subject.accepts(other)):
+        return None
+    return Recovery(
+        whole=True,
+        evidence=(
+            f"the whole file twice over: a {subject.claimed_format} reader and a "
+            f"{other} reader both take it, and neither is wrong"
+        ),
+    )
+
+
+def _recovery(subject: Subject) -> Recovery | None:
+    """The best reading any conforming reader gets of these bytes."""
+    special = SPECIAL_READINGS.get(subject.edge.defect)
+    if special is not None:
+        return special(subject)
     if subject.accepts(subject.claimed_format):
         return Recovery(
             whole=True,
@@ -755,6 +792,33 @@ def _damage_bom(subject: Subject) -> str:
     )
 
 
+@_damage(Defect.POLYGLOT)
+def _damage_polyglot(subject: Subject) -> str:
+    """Where each format's signature is. Nothing is broken, so nothing is described as
+    broken: what the sentence has to say is why the bytes cannot decide their own type."""
+    edge = subject.edge
+    other = edge.also_valid_as or ""
+    announced, second = MAGIC.get(edge.intended_format), MAGIC.get(other)
+    if announced is None or second is None:
+        raise ValidationError(
+            f"is a {edge.intended_format}/{other} polyglot, and one of those formats has no "
+            "magic bytes here to point at (validators/__init__.py MAGIC)"
+        )
+    if not subject.data.startswith(announced):
+        raise ValidationError(f"does not open with {edge.intended_format} magic")
+    at = min((subject.data.find(prefix) for prefix in second if prefix in subject.data), default=-1)
+    if at <= 0:
+        raise ValidationError(f"carries no {other} signature after its first byte")
+    opens = subject.data[: len(announced[0])].hex(" ").upper()
+    found = subject.data[at : at + 4].hex(" ").upper()
+    return (
+        f"Both grammars match these {len(subject.data):,} bytes: it opens with the "
+        f"{edge.intended_format.upper()} signature {opens} at byte 0 and carries the "
+        f"{other.upper()} signature {found} at byte {at:,}, so nothing in the file decides "
+        "which of the two it is."
+    )
+
+
 @_damage(Defect.HOSTILE_NAME)
 def _damage_hostile_name(subject: Subject) -> str:
     names = _archive_names(subject.data)
@@ -850,6 +914,17 @@ def _bom(subject: Subject) -> dict[str, Any]:
     if not subject.data.startswith(BOMS):
         raise ValidationError("starts with no byte-order mark")
     return {}
+
+
+@_checks(Defect.POLYGLOT)
+def _polyglot(subject: Subject) -> dict[str, Any]:
+    """Both readers must accept. One that does not makes this an ordinary file with a
+    surprising tail, and the fixture would be teaching the wrong lesson."""
+    other = subject.edge.also_valid_as or ""
+    for fmt in (subject.edge.intended_format, other):
+        if not subject.accepts(fmt):
+            raise ValidationError(f"is not also a valid {fmt}, so it is not a polyglot")
+    return {"also_valid_as": other}
 
 
 @_checks(Defect.HOSTILE_NAME)
