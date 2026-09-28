@@ -69,7 +69,19 @@ def test_the_health_check_hashes_everything_weekly_and_a_share_daily() -> None:
     mode = next(s for s in steps() if s.get("id") == "mode")
     assert "date -u +%u" in mode["run"], "the day of the week decides"
     assert '= "1" ]' in mode["run"], "Monday, the audit's day"
-    assert "mode=full" in mode["run"] and "mode=daily" in mode["run"]
+    assert "CHOSEN=full" in mode["run"] and "CHOSEN=daily" in mode["run"]
+
+
+def test_a_dispatch_can_override_the_day_for_an_incident() -> None:
+    """During an incident the whole catalog has to be hashable on demand, and the rule is
+    a schedule, not a policy. `auto` and an empty value both fall back to the rule."""
+    document = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
+    override = document[True]["workflow_dispatch"]["inputs"]["mode"]
+    assert override["options"] == ["auto", "daily", "full"]
+    assert override["default"] == "auto"
+    mode = next(s for s in steps() if s.get("id") == "mode")
+    assert mode["env"]["CHOSEN"] == "${{ inputs.mode }}"
+    assert '-z "${CHOSEN:-}" ] || [ "$CHOSEN" = "auto" ]' in mode["run"], "schedule sends neither"
 
     verify = next(s for s in steps() if s.get("id") == "verify")
     assert "--mode ${{ steps.mode.outputs.mode }}" in verify["run"]

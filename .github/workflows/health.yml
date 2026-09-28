@@ -21,6 +21,13 @@ on:
           can trust.
         type: string
         default: ""
+      mode:
+        description: >-
+          Override the day-of-week rule for one run. `auto` is the rule: `full` on Monday
+          beside the audit, `daily` otherwise. Pick `full` during an incident.
+        type: choice
+        options: [auto, daily, full]
+        default: auto
       force_ops_log:
         description: >-
           Write the ops-log rows now, regardless of the day. The Monday commit is gated
@@ -89,12 +96,14 @@ jobs:
       # Monday is the audit's day (audit.yml, 05:43 UTC): the full hash runs beside it, so
       # the week's two heavy reads of production land together rather than one a day.
       - id: mode
+        env:
+          CHOSEN: ${{ inputs.mode }}
         run: |
-          if [ "$(date -u +%u)" = "1" ]; then
-            echo "mode=full" >> "$GITHUB_OUTPUT"
-          else
-            echo "mode=daily" >> "$GITHUB_OUTPUT"
+          # Empty on a schedule; `auto` unless a dispatch asked for one mode by name.
+          if [ -z "${CHOSEN:-}" ] || [ "$CHOSEN" = "auto" ]; then
+            [ "$(date -u +%u)" = "1" ] && CHOSEN=full || CHOSEN=daily
           fi
+          echo "mode=$CHOSEN" >> "$GITHUB_OUTPUT"
 
       # Needs no credentials: it reads production over HTTPS like any visitor.
       #
