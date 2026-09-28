@@ -148,8 +148,11 @@ def test_a_push_trigger_always_names_its_branches_or_tags() -> None:
         on = document[True] if True in document else document["on"]
         if isinstance(on, dict) and "push" in on:
             triggered[path.name] = on["push"] or {}
-    assert set(triggered) == {"deploy.yml", "release.yml", "toolchain.yml"}, (
-        "control: these are the workflows that run on a push"
-    )
+    assert set(triggered) == {
+        "deploy.yml",
+        "release.yml",
+        "toolchain.yml",
+        "publish-client.yml",
+    }, "control: these are the workflows that run on a push"
     for name, push in triggered.items():
         assert "branches" in push or "tags" in push, f"{name}: a push trigger with neither"

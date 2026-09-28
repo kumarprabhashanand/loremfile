@@ -86,6 +86,7 @@ ignore = [
 "src/loremfile/cli.py" = ["T20"]          # the CLI is the one place that prints
 "tools/licences.py" = ["T20"]             # a reporting script: printing is the whole point
 "tools/check_lock.py" = ["T20"]           # a CI guard: its output is what a reader acts on
+"tools/inspect_client_wheel.py" = ["T20"]  # the same: what it prints is the refusal
 "client/src/loremfile_client/cli.py" = ["T20"]   # the client's output is the client
 
 [tool.ruff.lint.isort]

@@ -480,6 +480,33 @@ Two further reasons the automated pull request cannot simply be merged: GitHub d
 
 Run it once in M1.3 before enabling `ci.yml`.
 
+### 3.7 `publish-client.yml` — on tag `client-v*`
+
+Publishes the client package to PyPI. **No token exists anywhere**: PyPI's pending
+publisher for the project `loremfile` trusts an OIDC identity minted for this repository,
+the `pypi` environment and this workflow's *filename*, so `publish-client.yml` cannot be
+renamed without breaking the trust relationship — and the failure would arrive at the
+upload step of a tag that can never be published again.
+
+Two jobs, and the split is the point:
+
+- **`build`** has no environment and no `id-token`, so `workflow_dispatch` can rehearse
+  it on a branch. It builds the sdist and wheel from `client/` only, then runs
+  `tools/inspect_client_wheel.py`, which refuses a wheel holding a module outside
+  `loremfile_client/`, one whose path names `infra`, `generators`, `validators`, `site`,
+  `upload` or `release`, or a version that is not the tag's with `client-v` stripped.
+- **`publish`** carries `environment: pypi` (restricted to `client-v*` tags) and
+  `id-token: write`, and does nothing but upload with attestations.
+
+**The inspection runs before the upload, never after.** PyPI does not allow re-uploading a
+version: a wheel published with the deploy tooling inside it can only be yanked, and a
+yanked release is still installable by anyone who pins it. A check that runs afterwards has
+nothing left to protect.
+
+Versions are the client's own, not the catalog's (`client/CHANGELOG.md`). The tag is
+`client-vX.Y.Z`, deliberately outside `v*`: those name a catalog version, are frozen by the
+tag ruleset and fire `release.yml`.
+
 ## 4. Dependabot — `.github/dependabot.yml`
 
 ```yaml
