@@ -92,6 +92,11 @@ User-agent: Amazonbot
 User-agent: Diffbot
 User-agent: MistralAI-User
 User-agent: DuckAssistBot
+User-agent: AgentDataBot
+User-agent: BixelBot
+User-agent: CloudflareBrowserRenderingCrawler
+User-agent: Kimi-Agent
+User-agent: qodercli
 User-agent: Google-Extended
 User-agent: Applebot-Extended
 Content-Signal: search=yes, ai-input=yes, ai-train=yes
