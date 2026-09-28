@@ -49,12 +49,15 @@ echo '  ok  qpdf avifenc git gh'
 
 echo "== python imports and zstd =="
 python - <<'PY'
-import sys, tarfile, importlib
+import sys, importlib
 mods = ["zstandard", "fpdf", "pypdf", "PIL", "docx", "openpyxl", "pptx", "pyarrow",
         "fastavro", "py7zr", "pyzipper", "fontTools", "brotli", "mutagen", "lxml",
         "yaml", "tomli_w", "jsonschema", "pydantic", "click", "jinja2", "boto3",
         "requests", "icalendar", "vobject", "cryptography", "markdown_it", "ijson",
-        "html5lib", "pytest", "responses"]
+        "html5lib", "pytest", "responses",
+        # New in 3.14 (PEP 784). Asserted here so the document that says the stdlib can
+        # now write zstd is checked on every image build rather than believed.
+        "compression.zstd"]
 bad = []
 for m in mods:
     try:
@@ -65,14 +68,12 @@ if bad:
     sys.exit("SMOKE FAIL: imports failed:\n  " + "\n  ".join(bad))
 print(f"  ok  {len(mods)} modules import")
 
-# .tar.zst goes through the zstandard package: this Python has no zstd tarfile mode.
-try:
-    tarfile.open("/tmp/smoke.tar.zst", "w:zst")
-except tarfile.CompressionError:
-    print("  ok  tarfile has no zstd mode, as expected (use zstandard)")
-else:
-    sys.exit("SMOKE FAIL: tarfile grew a zstd mode — revisit the .tar.zst generator")
-
+# .tar.zst goes through the zstandard package, at a fixed level and with the content
+# checksum off (generators/archive.py). Until 3.14 this was also the only way: the
+# stdlib had no zstd. That tripwire has now fired and been answered — the stdlib gained
+# `compression.zstd`, and the fixture still does not use it, because its bytes are
+# published and only zstandard's framing reproduces them (docs/03 §7.1). So what is
+# checked here is the package the generator actually calls.
 import zstandard
 payload = b"lorem" * 1000
 if zstandard.ZstdDecompressor().decompress(
