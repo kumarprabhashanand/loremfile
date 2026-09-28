@@ -82,7 +82,7 @@ def test_a_format_page_is_120_to_250_words_and_names_its_own_files(page: Path) -
     assert not text.startswith("#"), "the template supplies the H1"
 
 
-@pytest.mark.parametrize("name", ["getting-started", "naming", "faq"])
+@pytest.mark.parametrize("name", ["getting-started", "naming", "faq", "languages"])
 def test_a_documentation_page_is_at_least_120_words(name: str) -> None:
     assert words((CONTENT / "pages" / f"{name}.md").read_text(encoding="utf-8")) >= 120
 

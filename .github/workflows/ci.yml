@@ -108,6 +108,34 @@ jobs:
       - name: It runs as an installed command
         run: loremfile --version
 
+  # Every snippet on /docs/languages, executed against this site. The page includes these
+  # files at build time, so what a reader copies is what ran here — and a snippet nobody
+  # runs is a bug report waiting to be filed by a stranger.
+  #
+  # No setup actions: ubuntu-24.04 already ships sh, python3, node, go and java. If this
+  # job ever needs one per language, the page has stopped being documentation and become
+  # maintenance, and the language should come off the page instead.
+  snippets:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: examples
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: The runtimes this job may use, and their versions
+        run: sh --version 2>/dev/null | head -1; python3 -V; node -v; go version; java -version
+      - name: Shell
+        run: sh verify.sh
+      - name: Python
+        run: python3 verify.py
+      - name: JavaScript
+        run: node verify.mjs
+      - name: Go
+        run: go run verify.go
+      - name: Java
+        run: java Verify.java
+
   build-and-validate:
     runs-on: ubuntu-24.04
     container:
