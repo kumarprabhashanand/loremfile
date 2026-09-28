@@ -1,0 +1,27 @@
+{
+  "command": "build --audit",
+  "ok": true,
+  "summary": {
+    "regenerated": 229,
+    "drifted": 0,
+    "expected_drift": 3
+  },
+  "items": [
+    {
+      "path": "mp4/1080p-10s.mp4",
+      "status": "expected",
+      "detail": "manifest d47a9f351638 vs rebuilt cc9a8051d072"
+    },
+    {
+      "path": "mp4/10mb.mp4",
+      "status": "expected",
+      "detail": "manifest 75b9fa17ad73 vs rebuilt c4fe88eaf3e3"
+    },
+    {
+      "path": "mp4/50mb.mp4",
+      "status": "expected",
+      "detail": "manifest 509e34f369aa vs rebuilt 21ebf9345c71"
+    }
+  ],
+  "errors": []
+}

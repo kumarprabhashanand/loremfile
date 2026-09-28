@@ -453,18 +453,41 @@ def _escaping(names: list[str]) -> list[str]:
     return [name for name in names if name.startswith(("/", "../")) or "/../" in name]
 
 
+#: How many bytes each UTF-8 lead byte promises (RFC 3629). Anything outside these
+#: ranges, and outside the continuation range, is a byte UTF-8 never uses.
+UTF8_LEAD_LENGTHS = ((0xC2, 0xDF, 2), (0xE0, 0xEF, 3), (0xF0, 0xF4, 4))
+UTF8_CONTINUATION = (0x80, 0xBF)
+
+
+def _why_not_utf8(sequence: bytes, *, at_end: bool) -> str:
+    """Why this run of bytes is not UTF-8, read off the bytes themselves.
+
+    Not `UnicodeDecodeError.reason`: that wording belongs to the interpreter, and an
+    interpreter's wording moves. CPython 3.14 reworded `json`'s messages, which is how
+    this whole class of dependency came to light.
+    """
+    lead = sequence[0]
+    if UTF8_CONTINUATION[0] <= lead <= UTF8_CONTINUATION[1]:
+        return "a continuation byte with nothing before it"
+    for low, high, length in UTF8_LEAD_LENGTHS:
+        if low <= lead <= high:
+            ending = "the file ends inside it" if at_end else "the byte after it cannot continue it"
+            return f"the start of a {length}-byte sequence, and {ending}"
+    return "a byte UTF-8 never uses"
+
+
 def _decode_errors(data: bytes) -> list[tuple[int, bytes, str]]:
-    """Every place the bytes are not UTF-8: offset, the bytes, and the codec's reason."""
+    """Every place the bytes are not UTF-8: offset, the bytes, and why."""
     found: list[tuple[int, bytes, str]] = []
     offset = 0
     while offset <= len(data):
         try:
             data[offset:].decode("utf-8")
         except UnicodeDecodeError as exc:
-            found.append(
-                (offset + exc.start, data[offset + exc.start : offset + exc.end], exc.reason)
-            )
-            offset += exc.end
+            start, end = offset + exc.start, offset + exc.end
+            sequence = data[start:end]
+            found.append((start, sequence, _why_not_utf8(sequence, at_end=end >= len(data))))
+            offset = end
         else:
             break
     return found
@@ -617,11 +640,17 @@ def _text(subject: Subject) -> str:
 
 
 def _damage_json_syntax(subject: Subject) -> str:
+    """The commas, not the complaint.
+
+    This sentence used to quote the position and message `json` reported, and those are
+    the reader's, not the file's: CPython 3.14 moved the stop from the bracket to the
+    comma and reworded the message, so identical bytes described themselves differently
+    under two interpreters. What is written down now is measured from the bytes.
+    """
     text = _text(subject)
     try:
         json.loads(text)
     except json.JSONDecodeError as exc:
-        stop = len(text[: exc.pos].encode())
         offsets = [
             len(text[: match.start()].encode()) for match in re.finditer(r",(\s*[}\]])", text)
         ]
@@ -631,8 +660,8 @@ def _damage_json_syntax(subject: Subject) -> str:
             ) from exc
         where = _and(f"{offset:,}" for offset in offsets)
         return (
-            f"{len(offsets)} commas stand directly before a closing bracket (at bytes {where}), "
-            f"and a JSON parser stops at byte {stop:,}, line {exc.lineno} column {exc.colno}."
+            f"{len(offsets)} commas stand directly before a closing bracket, at bytes {where}; "
+            "RFC 8259 allows no comma after the last member of an object or array."
         )
     raise ValidationError("parses as JSON, so nothing about its syntax is invalid")
 
@@ -656,7 +685,6 @@ def _damage_xml_syntax(subject: Subject) -> str:
     try:
         etree.fromstring(subject.data, parser=_xml_parser())
     except etree.XMLSyntaxError as exc:
-        line, column = exc.position
         opened = re.findall(rb"<([A-Za-z][\w.-]*)(?=[\s>])", subject.data)
         closed = re.findall(rb"</([A-Za-z][\w.-]*)\s*>", subject.data)
         unclosed = sorted(
@@ -668,10 +696,11 @@ def _damage_xml_syntax(subject: Subject) -> str:
             ) from exc
         counted = _and(
             f"{opened.count(name.encode())} <{name}> elements are opened and "
-            f"{closed.count(name.encode())} closed"
+            f"{closed.count(name.encode())} closed, the last opening at byte "
+            f"{subject.data.rfind(b'<' + name.encode()):,}"
             for name in unclosed
         )
-        return f"{counted}, so an XML parser stops at line {line}, column {column}."
+        return f"{counted}; XML 1.0 requires every element to be closed."
     raise ValidationError("is well-formed XML, so nothing about its syntax is invalid")
 
 
