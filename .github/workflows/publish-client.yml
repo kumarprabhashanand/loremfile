@@ -1,0 +1,83 @@
+# Publishes the client to PyPI (docs/09 §3.7, the CLI spec).
+#
+# THE NAME OF THIS FILE IS PART OF THE CREDENTIAL. PyPI's pending publisher for the
+# project `loremfile` names the repository, the environment `pypi` and this workflow's
+# filename; renaming it breaks the trust relationship rather than any code, and the
+# failure arrives at the upload step of a tag that can never be published again.
+#
+# There is no token anywhere. The upload authenticates with a short-lived OIDC identity
+# minted for this workflow in this repository, which is why `id-token: write` is the only
+# permission the publishing job asks for, and why it asks on that job alone.
+name: publish-client
+
+on:
+  push:
+    tags:
+      - client-v*
+  workflow_dispatch:     # builds and inspects; the upload job is skipped without a tag
+
+permissions:
+  contents: read
+
+jobs:
+  # No environment and no id-token: this job is the inspection, and a dispatch has to be
+  # able to run it. The `pypi` environment is restricted to `client-v*` tags, so asking
+  # for it here would make the rehearsal impossible on a branch.
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.version.outputs.expected }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.14"
+
+      - name: Build the sdist and the wheel from client/ only
+        working-directory: client
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --outdir dist
+
+      - id: version
+        run: |
+          # `client-v0.1.0` asks for 0.1.0. Empty on a dispatch, where there is no tag and
+          # the version check has nothing to compare against.
+          case "$GITHUB_REF" in
+            refs/tags/client-v*) echo "expected=${GITHUB_REF#refs/tags/client-v}" >> "$GITHUB_OUTPUT" ;;
+            *) echo "expected=" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      # Before the upload, never after: PyPI does not allow re-uploading a version, so a
+      # wheel that reaches it carrying the deploy tooling can only be yanked, and a yanked
+      # release is still installable by anyone who pins it.
+      - name: Inspect the wheel before anything is published
+        run: python tools/inspect_client_wheel.py client/dist/*.whl ${{ steps.version.outputs.expected }}
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: client-distributions
+          path: client/dist/
+
+  publish:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/client-v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: pypi
+    permissions:
+      id-token: write     # the OIDC identity PyPI trusts; nothing else, and no secrets
+    steps:
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: client-distributions
+          path: dist/
+
+      # PyPA's own action, pinned to the commit its v1.14.2 tag points at. Allowed by
+      # this repository's actions policy because GitHub lists it under a verified creator
+      # (marketplace listing, read 2026-09-28); the policy permits GitHub-owned and
+      # verified-creator actions and nothing else.
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          attestations: true
