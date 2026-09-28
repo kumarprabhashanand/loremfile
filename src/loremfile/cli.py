@@ -920,12 +920,19 @@ def verify_live_command(
             chosen = _restrict(entries, only)
         else:
             chosen = verify_live_module.smallest_per_format(entries) if mode == "smoke" else entries
+        # Every mode checks the contract on what it chose without downloading it; what
+        # differs is which bodies are pulled back and hashed. `daily` takes today's
+        # rotating share plus the newest release, so contract coverage stays complete
+        # while the downloads stay flat as the catalog grows (docs/12 §4).
+        to_hash = {
+            "smoke": set(),
+            "daily": {e["path"] for e in verify_live_module.daily_hash_set(chosen)},
+            "full": {e["path"] for e in chosen},
+        }[mode]
         for entry in chosen:
             response = verify_live_module.fetch(f"/{entry['path']}")
             report.findings += verify_live_module.check_fixture_headers(entry, response)
-            small = entry["bytes"] < verify_live_module.DAILY_HASH_LIMIT_BYTES
-            hash_it = mode == "full" or (mode == "daily" and small)
-            if hash_it:
+            if entry["path"] in to_hash:
                 body = verify_live_module.fetch(f"/{entry['path']}", method="GET")
                 report.findings.append(verify_live_module.check_fixture_bytes(entry, body))
         if not only:

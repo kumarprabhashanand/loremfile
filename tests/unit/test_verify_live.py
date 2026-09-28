@@ -10,6 +10,7 @@ from a probe that cannot see the thing it exists to see.
 from __future__ import annotations
 
 import ast
+import datetime as dt
 import hashlib
 import inspect
 import textwrap
@@ -242,4 +243,89 @@ def test_the_contract_table_matches_the_metadata_the_uploader_writes() -> None:
     assert "no-transform" in FIXTURE_CACHE_CONTROL
     assert verify_live.expected_disposition("pdf/a4-3pages.pdf") == (
         'inline; filename="a4-3pages.pdf"'
+    )
+
+
+# --- what `daily` downloads (docs/12 §4) -------------------------------------------------
+
+
+def catalogue(count: int = 100, *, added_in: str = "1.0.0") -> list[dict[str, Any]]:
+    """Fixtures that all went out in one old release, so the rotation is the only thing
+    deciding when each is hashed. The newest-release rule is tested on its own below."""
+    return [
+        {"path": f"fmt{index % 7}/file-{index}.bin", "bytes": 1000 + index, "added_in": added_in}
+        for index in range(count)
+    ]
+
+
+def test_the_shares_partition_the_catalog() -> None:
+    """The property that makes a tenth a day acceptable: nothing is left out and nothing
+    is done twice. Ten days cover the catalog exactly once."""
+    entries = catalogue()
+    seen: dict[str, int] = {}
+    for day in range(verify_live.HASH_ROTATION_SHARES):
+        for entry in entries:
+            if verify_live.hash_share(entry["path"]) == day:
+                seen[entry["path"]] = seen.get(entry["path"], 0) + 1
+    assert set(seen) == {entry["path"] for entry in entries}, "a fixture is never hashed"
+    assert set(seen.values()) == {1}, "a fixture is in more than one share"
+
+
+def test_a_share_is_a_tenth_give_or_take() -> None:
+    """Not exact: the share comes from the path's digest, so sizes vary. What matters is
+    that a day is a fraction of the catalog rather than most of it."""
+    entries = catalogue(500)
+    for day in range(verify_live.HASH_ROTATION_SHARES):
+        share = [e for e in entries if verify_live.hash_share(e["path"]) == day]
+        assert 20 <= len(share) <= 100, f"share {day} holds {len(share)} of 500"
+
+
+def test_daily_takes_the_share_and_the_newest_release_and_nothing_else() -> None:
+    entries = [
+        *catalogue(60),
+        {"path": "edge/brand-new.bin", "bytes": 10, "added_in": "1.10.0"},
+    ]
+    for day in range(verify_live.HASH_ROTATION_SHARES):
+        wanted = {e["path"] for e in entries if verify_live.hash_share(e["path"]) == day}
+        wanted.add("edge/brand-new.bin")
+        assert {e["path"] for e in verify_live.daily_hash_set(entries, day=day)} == wanted
+
+
+def test_a_fixture_keeps_its_share_when_the_catalog_grows() -> None:
+    """Keyed on the path, not on position: adding fixtures must not reshuffle the rotation
+    into hashing some fixture twice and another not at all."""
+    before = {e["path"]: verify_live.hash_share(e["path"]) for e in catalogue(50)}
+    after = {e["path"]: verify_live.hash_share(e["path"]) for e in catalogue(500)}
+    assert all(after[path] == share for path, share in before.items())
+
+
+def test_the_newest_release_is_hashed_every_day() -> None:
+    """The bytes that went live last are the ones a bad deploy would have broken, so they
+    do not wait for their turn."""
+    entries = [
+        *catalogue(60),
+        {"path": "edge/brand-new.bin", "bytes": 10, "added_in": "1.10.0"},
+        {"path": "edge/also-new.bin", "bytes": 10, "added_in": "1.10.0"},
+    ]
+    for day in range(verify_live.HASH_ROTATION_SHARES):
+        paths = {e["path"] for e in verify_live.daily_hash_set(entries, day=day)}
+        assert {"edge/brand-new.bin", "edge/also-new.bin"} <= paths, f"missing on day {day}"
+
+
+def test_the_newest_release_is_compared_as_numbers_not_strings() -> None:
+    """`1.10.0` is newer than `1.9.0`, which sorting as text gets backwards."""
+    entries = [
+        {"path": "a/one.bin", "bytes": 1, "added_in": "1.9.0"},
+        {"path": "a/two.bin", "bytes": 1, "added_in": "1.10.0"},
+    ]
+    assert [e["path"] for e in verify_live.newest_release(entries)] == ["a/two.bin"]
+
+
+def test_the_day_comes_from_the_date_so_two_runs_agree() -> None:
+    monday = dt.date(2026, 9, 28)
+    assert verify_live.rotation_day(monday) == verify_live.rotation_day(monday)
+    following = verify_live.rotation_day(monday + dt.timedelta(days=1))
+    assert following != verify_live.rotation_day(monday)
+    assert verify_live.rotation_day(monday + dt.timedelta(days=10)) == verify_live.rotation_day(
+        monday
     )

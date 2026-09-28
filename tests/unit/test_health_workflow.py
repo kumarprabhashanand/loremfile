@@ -63,13 +63,31 @@ def test_every_check_the_verdict_reads_records_its_state() -> None:
         assert run.index("GITHUB_OUTPUT") < run.index("loremfile.gh_issue"), check
 
 
-def test_the_daily_health_check_runs_full_mode_within_its_bound() -> None:
+def test_the_health_check_hashes_everything_weekly_and_a_share_daily() -> None:
+    """`full` reads 595 MB; running it every day is what this replaced. The contract is
+    still checked on every fixture every day — only the downloads rotate (docs/12 §4)."""
+    mode = next(s for s in steps() if s.get("id") == "mode")
+    assert "date -u +%u" in mode["run"], "the day of the week decides"
+    assert '= "1" ]' in mode["run"], "Monday, the audit's day"
+    assert "mode=full" in mode["run"] and "mode=daily" in mode["run"]
+
     verify = next(s for s in steps() if s.get("id") == "verify")
-    assert "--mode full" in verify["run"]
-    assert "--mode daily" not in verify["run"]
+    assert "--mode ${{ steps.mode.outputs.mode }}" in verify["run"]
     # 10 minutes for the checks, plus the one 600-second wait for a deploy still publishing.
     assert "--site-retry-seconds 600" in verify["run"]
     assert verify["timeout-minutes"] == 20
+
+
+def test_the_mode_is_decided_before_the_check_and_changes_nothing_else() -> None:
+    """The alerting is the part that must not move: the same step id is still what the
+    issue automation reads, and it still records `failed=true` itself."""
+    order = names()
+    assert order.index("mode") < order.index("verify")
+    verify = next(s for s in steps() if s.get("id") == "verify")
+    assert 'echo "failed=true" >> "$GITHUB_OUTPUT"' in verify["run"]
+    issue = next(s for s in steps() if "health issue" in str(s.get("name", "")))
+    assert "steps.verify.outputs.failed" in issue["run"]
+    assert "steps.verify.outcome" in issue["run"]
 
 
 def test_the_defacement_check_compares_with_a_rebuild_that_has_the_legal_values() -> None:

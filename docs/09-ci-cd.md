@@ -318,8 +318,10 @@ jobs:
       - uses: actions/checkout@<SHA-v4>
       - run: pip install -e . --no-deps
       - run: loremfile site build                       # deterministic for a given commit; its hashes are the site-integrity baseline (never read from the bucket)
+      - id: mode
+        run: '[ "$(date -u +%u)" = "1" ] && echo mode=full >> "$GITHUB_OUTPUT" || echo mode=daily >> "$GITHUB_OUTPUT"'   # full on the audit's day, daily the rest of the week (12 §4)
       - id: verify
-        run: loremfile verify-live --mode full --json ${{ inputs.inject_failure != '' && format('--inject-failure {0}', inputs.inject_failure) || '' }} > health.json || echo "failed=true" >> "$GITHUB_OUTPUT"
+        run: loremfile verify-live --mode ${{ steps.mode.outputs.mode }} --json ${{ inputs.inject_failure != '' && format('--inject-failure {0}', inputs.inject_failure) || '' }} > health.json || echo "failed=true" >> "$GITHUB_OUTPUT"
       - name: Open or update issue on failure, close on recovery
         env: { GH_TOKEN: ${{ github.token }} }
         run: python -m loremfile.gh_issue --label health --title "Health check failing" --report health.json --state ${{ steps.verify.outputs.failed == 'true' && 'failing' || 'ok' }}
