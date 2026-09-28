@@ -45,7 +45,7 @@ jobs:
 
       - name: Build and push
         id: build
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: tools/Dockerfile
@@ -107,9 +107,9 @@ jobs:
             echo "Put that line in \`tools/TOOLCHAIN_DIGEST\` (one line, no trailing text)."
           } >> "$GITHUB_STEP_SUMMARY"
 
-  # On main, propose the digest bump as a pull request so the change is reviewed and CI
-  # can run the determinism tests against the new image. On any other branch the author
-  # is already in a pull request, so the digest is copied in by hand from the summary.
+  # On main, propose the digest bump as a pull request so the change is reviewed. On any
+  # other branch the author is already in a pull request, so the digest is copied in by
+  # hand from the summary.
   propose-digest-bump:
     needs: build
     if: github.ref == 'refs/heads/main'
@@ -156,8 +156,16 @@ jobs:
             echo '```'
             echo
             echo "The smoke test passed against this exact digest before the pull"
-            echo "request was opened. CI on this pull request runs the determinism"
-            echo "tests against the new image."
+            echo "request was opened."
+            echo
+            echo "This digest is the image every fixture and every CI job is built in,"
+            echo "so it needs a determinism audit rather than a glance:"
+            echo "\`gh workflow run audit.yml --ref <this branch> -f determinism=true\`"
+            echo "rebuilds every fixture in it and reports any that no longer match."
+            echo
+            echo "CI does not run on this pull request until the run is approved: a"
+            echo "pull request opened by the Actions bot sits at \"action required\"."
+            echo "The owner approves the run, then reads it."
           } > /tmp/pr-body.md
           gh pr create --base main --head "$branch" \
             --title "toolchain: bump image digest" \

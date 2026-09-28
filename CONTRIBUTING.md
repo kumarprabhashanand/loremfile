@@ -93,7 +93,7 @@ pull request. `tools/check_lock.sh` fails the build otherwise.
 
 ## Code style
 
-Python 3.12, type hints everywhere, `ruff` for lint and format, `mypy --strict` on `src/`.
+Python 3.12 is the floor (the image runs 3.14), type hints everywhere, `ruff` for lint and format, `mypy --strict` on `src/`.
 Generators are pure functions of `(ctx, params)` with no global state, and their docstrings
 state the exact output properties they produce.
 

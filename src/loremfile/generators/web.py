@@ -295,6 +295,9 @@ def ipynb(ctx: GeneratorContext) -> bytes:
         ],
         "metadata": {
             "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+            # Frozen, and not the interpreter's own version: this string is inside a
+            # published fixture, and `sha256` at a published path can never change
+            # (docs/03 §7.1). It stayed 3.12.14 when the image moved to 3.14.
             "language_info": {"name": "python", "version": "3.12.14"},
         },
         "nbformat": 4,

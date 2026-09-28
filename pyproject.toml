@@ -7,13 +7,18 @@ name = "loremfile"
 version = "0.1.0"
 description = "Generators, validators and tooling for loremfile.dev — CC0 sample files for every file type"
 readme = "README.md"
-requires-python = "==3.12.*"
+# The toolchain image runs 3.14 (tools/Dockerfile) and CI runs only there. 3.12 stays
+# the floor because docs/06 §11 documents generating on a plain host against the lock
+# file; what a published client would support is a separate question, and the CLI spec
+# settles it rather than this file.
+requires-python = ">=3.12"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "the loremfile.dev contributors" }]
 keywords = ["fixtures", "test-data", "sample-files", "cc0"]
 classifiers = [
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Software Development :: Testing",
 ]
 # Runtime dependencies are pinned with hashes in tools/requirements.lock, which is
@@ -88,6 +93,8 @@ quote-style = "double"
 # mypy — strict on src/ (docs/06 §13)
 # ---------------------------------------------------------------------------
 [tool.mypy]
+# The floor from `requires-python`, not the 3.14 the image runs: typeshed then hides the
+# 3.14-only APIs, so code that would break on the floor fails here instead of in the wild.
 python_version = "3.12"
 files = ["src"]
 strict = true

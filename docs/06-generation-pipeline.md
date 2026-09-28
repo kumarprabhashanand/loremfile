@@ -1,6 +1,6 @@
 # 06 — Generation Pipeline
 
-Everything here runs inside the pinned toolchain container (§9), locally or in GitHub Actions. Language: Python 3.12. Package: `src/loremfile/` installed with `pip install -e .`. Entry point: `loremfile` CLI (`python -m loremfile`).
+Everything here runs inside the pinned toolchain container (§9), locally or in GitHub Actions. Language: Python 3.14 in the image; `pyproject.toml` states 3.12 as the floor, which is the version the type checker and the linter hold the code to. Package: `src/loremfile/` installed with `pip install -e .`. Entry point: `loremfile` CLI (`python -m loremfile`).
 
 ## 1. Repository layout (source)
 
@@ -266,7 +266,7 @@ The report has **two sections**. A fixture whose catalog entry sets `expected_dr
 ## 9. Toolchain container (`tools/Dockerfile`)
 
 ```dockerfile
-FROM python:3.12-slim-bookworm@sha256:782412e8…  # pinned by index digest; Dependabot bumps it
+FROM python:3.14-slim-bookworm@sha256:82bc3c53…  # pinned by index digest; Dependabot bumps the patch level
 ENV DEBIAN_FRONTEND=noninteractive TZ=UTC LANG=C.UTF-8 LC_ALL=C.UTF-8 PYTHONHASHSEED=0 SOURCE_DATE_EPOCH=1577836800
 RUN apt-get update && apt-get install -y --no-install-recommends \
       git=<ver> ca-certificates=<ver> curl=<ver> \
@@ -286,8 +286,8 @@ WORKDIR /work
 - Tools that run on the host, not in the image: `actionlint` (workflow lint), `gitleaks` (secret scan), Lighthouse (`npx lighthouse https://loremfile.dev/ --only-categories=accessibility,performance,seo --preset=desktop`) — all informational except gitleaks, which must be clean once in M1.8.
 - `fonts-dejavu-core` is installed **only** for rendering label text inside images/PDF test cards where Pillow's default font is too small; it is a Debian package under the Bitstream Vera licence, which permits embedding and redistribution. The generated font family is not derived from it.
 - The image is built and pushed to `ghcr.io/kumarprabhashanand/loremfile-toolchain` by `toolchain.yml`; workflows reference it by `@sha256:` digest recorded in `tools/TOOLCHAIN_DIGEST`. Changing the digest is a reviewed PR.
-- **Verified in M1.2 on 2026-09-07** (linux/amd64, `python:3.12-slim-bookworm@sha256:782412e8…` = python 3.12.14 on Debian 12.15, ffmpeg `7:5.1.9-0+deb12u1`). `ffmpeg -encoders` lists every P1 encoder — `libx264`, `libvpx` (VP8), `libvpx-vp9`, `libopus`, `libvorbis`, `libmp3lame`, `aac` (native), `flac`, `libtheora`, `prores_ks` — and **also `libx265` and `libsvtav1`**, so the P2 HEVC/AV1 fixtures need no rebuild of the image. Two naming details the generators must use: the Theora encoder is **`libtheora`**, not `theora`; ProRes ships as three encoders (`prores`, `prores_aw`, `prores_ks`) and the catalog means **`prores_ks`**. AVIF is produced with `avifenc` from `libavif-bin` 0.11.1 (aom 3.6.0 encoder, dav1d 1.0.0 decoder), not through ffmpeg.
-- **Verified in M1.2 on 2026-09-07**: the image's SQLite is 3.40.1 and `sqlite3 :memory: "PRAGMA compile_options;"` lists `ENABLE_FTS5` (also FTS3/FTS4). `.tar.zst` is produced by piping through the `zstandard` Python package: the image's Python 3.12.14 raises `CompressionError: unknown compression type 'zst'` for `tarfile.open(..., "w:zst")` and has no `compression.zstd` module.
+- **Verified in M1.2 on 2026-09-07** (linux/amd64, `python:3.12-slim-bookworm@sha256:782412e8…` = python 3.12.14 on Debian 12.15, ffmpeg `7:5.1.9-0+deb12u1`). The base image moved to `python:3.14-slim-bookworm@sha256:82bc3c53…` (python 3.14.7) on 2026-09-28 and **every apt pin below is unchanged**, which is why these encoder facts carry over rather than needing a new date; `tools/smoke.sh` asserts the pinned apt versions and the whole encoder list on every image build. `ffmpeg -encoders` lists every P1 encoder — `libx264`, `libvpx` (VP8), `libvpx-vp9`, `libopus`, `libvorbis`, `libmp3lame`, `aac` (native), `flac`, `libtheora`, `prores_ks` — and **also `libx265` and `libsvtav1`**, so the P2 HEVC/AV1 fixtures need no rebuild of the image. Two naming details the generators must use: the Theora encoder is **`libtheora`**, not `theora`; ProRes ships as three encoders (`prores`, `prores_aw`, `prores_ks`) and the catalog means **`prores_ks`**. AVIF is produced with `avifenc` from `libavif-bin` 0.11.1 (aom 3.6.0 encoder, dav1d 1.0.0 decoder), not through ffmpeg.
+- **Verified in M1.2 on 2026-09-07**: the image's SQLite is 3.40.1 and `sqlite3 :memory: "PRAGMA compile_options;"` lists `ENABLE_FTS5` (also FTS3/FTS4). `.tar.zst` is produced by piping through the `zstandard` Python package, at a fixed level with the content checksum off. On 3.12 that was also the only way: `tarfile.open(..., "w:zst")` raised `CompressionError: unknown compression type 'zst'`. **Verified on 2026-09-28** against the CPython 3.14 release notes: PEP 784 adds `compression.zstd`, and "support for reading and writing Zstandard compressed archives has been added to the `tarfile`, `zipfile` and `shutil` modules". The fixture still does not use it — those bytes are published, and only `zstandard`'s framing reproduces them (docs/03 §7.1) — so the generator is unchanged and `tools/smoke.sh` now imports `compression.zstd` to keep this paragraph checked in the image.
 - `tools/TOOLCHAIN_DIGEST` contains exactly one line: the full image reference `ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:<64 hex>`; workflows and `docker pull` read it verbatim.
 
 ## 10. CLI
@@ -330,7 +330,7 @@ loremfile manifest update            # adds the new entry; commit manifest.json 
 loremfile site build && loremfile site serve   # http://localhost:8080 with production-like routing
 ```
 
-Without Docker, most text/data/image/office generators run on a plain Python 3.12 with the lock file; media generators need ffmpeg on `PATH` and the results will differ from the pinned image (the lock check will tell you). Only Docker output is authoritative.
+Without Docker, most text/data/image/office generators run on a plain Python 3.12 or newer with the lock file; media generators need ffmpeg on `PATH` and the results will differ from the pinned image (the lock check will tell you). Only Docker output is authoritative.
 
 ### Adding a media fixture takes two round trips, by design
 
@@ -367,7 +367,7 @@ If the full build exceeds budget, split video generation into a matrix job (see 
 
 ## 13. Coding standards
 
-- Python 3.12, type hints everywhere, `ruff` (lint + format) with the config in `pyproject.toml`; `mypy --strict` on `src/`.
+- Python 3.12 is the floor the linter and `mypy --strict` hold `src/` to, whatever the image runs; type hints everywhere, `ruff` (lint + format) with the config in `pyproject.toml`.
 - No global state; generators are pure functions of `(ctx, params)`.
 - Every generator has a unit test that runs it twice and asserts identical bytes (`tests/unit/test_determinism.py` parametrised over the catalog, phase 1, with small params where the catalog params would be slow).
 - Every validator has a negative test (a corrupted input must fail).

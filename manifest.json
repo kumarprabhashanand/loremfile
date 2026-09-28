@@ -1,13 +1,13 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.3.0",
-  "generated_at": "2026-09-24T22:43:33Z",
+  "catalog_version": "1.3.1",
+  "generated_at": "2026-09-28T08:22:25Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
-  "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:1d66d83de2483700858745a9d27120af001588019882098eb67a301fdd2f2ad6",
+  "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:0157a7dfd8b2c71245ffa56a5a17393a77584ab70f2500814a54f8a31ce3de6f",
   "count": 229,
   "total_bytes": 595165977,
   "formats": [
@@ -1788,7 +1788,7 @@
         "defect": "invalid-syntax",
         "intended_format": "json",
         "bytes": 64,
-        "damage": "2 commas stand directly before a closing bracket (at bytes 58 and 60), and a JSON parser stops at byte 59, line 4 column 25.",
+        "damage": "2 commas stand directly before a closing bracket, at bytes 58 and 60; RFC 8259 allows no comma after the last member of an object or array.",
         "outcome": "must-fail",
         "compare_with": "json/all-types.json"
       },
@@ -1959,7 +1959,7 @@
         "defect": "invalid-encoding",
         "intended_format": "txt",
         "bytes": 143,
-        "damage": "2 byte sequences are not UTF-8: C3 at offset 121 (invalid continuation byte) and A0 at offset 136 (invalid start byte).",
+        "damage": "2 byte sequences are not UTF-8: C3 at offset 121 (the start of a 2-byte sequence, and the byte after it cannot continue it) and A0 at offset 136 (a continuation byte with nothing before it).",
         "outcome": "may-recover",
         "compare_with": "txt/utf8-multilingual.txt"
       },
@@ -1990,7 +1990,7 @@
         "defect": "invalid-syntax",
         "intended_format": "xml",
         "bytes": 122,
-        "damage": "2 <item> elements are opened and 1 closed, so an XML parser stops at line 5, column 11.",
+        "damage": "2 <item> elements are opened and 1 closed, the last opening at byte 78; XML 1.0 requires every element to be closed.",
         "outcome": "must-fail",
         "compare_with": "xml/people-10.xml"
       },

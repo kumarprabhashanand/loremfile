@@ -44,7 +44,7 @@ hashes; regenerate the table with `tools/licences.py` after any dependency chang
 | `jsonschema` | 4.26.0 | MIT | Manifest schema checks |
 | `py7zr` | 1.1.3 | LGPL-2.1-or-later | 7z archives |
 | `pyzipper` | 0.4.0 | MIT | Encrypted zip |
-| `zstandard` | 0.25.0 | BSD-3-Clause | `.tar.zst` (Python 3.12's `tarfile` has no zstd mode) |
+| `zstandard` | 0.25.0 | BSD-3-Clause | writes the `.tar.zst` fixture, whatever the stdlib gains |
 | `fonttools` | 4.64.0 | MIT | The generated font family, WOFF/WOFF2 |
 | `brotli` | 1.2.0 | MIT | WOFF2 compression |
 | `mutagen` | 1.48.1 | GPL-2.0-or-later | Audio tag validation |

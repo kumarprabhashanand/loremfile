@@ -493,7 +493,15 @@ updates:
   - package-ecosystem: docker
     directory: /tools
     schedule: { interval: weekly }
+    ignore:                       # patch-level Python base images only
+      - dependency-name: "python"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
 ```
+
+A minor or major Python move changes the interpreter that writes every zip container, PDF
+and dataset, so it is one deliberate pull request with a determinism audit
+(`gh workflow run audit.yml --ref <branch> -f determinism=true`, §3.4) rather than a
+Dependabot update. 3.12 → 3.14 was taken that way.
 
 Python updates change `requirements.in`; the PR must also regenerate `requirements.lock` (`pip-compile --generate-hashes`) and bump the toolchain digest — `tools/check_lock.sh` in `ci.yml` fails if `requirements.in` differs from the merge-base while `requirements.lock` or `TOOLCHAIN_DIGEST` do not.
 
