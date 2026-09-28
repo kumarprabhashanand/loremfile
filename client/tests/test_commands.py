@@ -119,3 +119,66 @@ def test_a_fixture_path_that_would_escape_the_destination_is_refused(dest: Path)
         api.target(dest, "../elsewhere.txt")
     with pytest.raises(api.Refused, match="not the shape of a fixture path"):
         api.target(dest, "/etc/passwd")
+
+
+# --- how the bytes arrive (a 100 MB fixture must not be a 100 MB process) ----------------
+
+
+def test_the_body_is_streamed_rather_than_held_in_memory(
+    server: str, dest: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`fetch` reads a whole body at once and is for the manifest only. If a fixture ever
+    goes through it again, the largest ones are 100 MB of a 512 MB container."""
+    whole = api.fetch
+
+    def only_the_manifest(path: str) -> bytes:
+        if path != "manifest.json":
+            raise AssertionError(f"{path} was read into memory instead of streamed")
+        return whole(path)
+
+    monkeypatch.setattr(api, "fetch", only_the_manifest)
+    assert run("get", "pdf/small.pdf", "--dest", str(dest)) == cli.OK
+    assert (dest / "pdf" / "small.pdf").read_bytes() == BODIES["pdf/small.pdf"]
+
+
+def test_a_mismatch_leaves_nothing_behind(server: str, dest: Path) -> None:
+    """Not only nothing at the published path: nothing at all. A half-verified file under
+    another name is still a file somebody's glob will pick up."""
+    Handler.corrupt = {"pdf/small.pdf"}
+    assert run("get", "pdf/small.pdf", "--dest", str(dest)) == cli.FAILED
+    assert sorted((dest / "pdf").iterdir()) == [], "a partial file survived the mismatch"
+
+
+def test_an_interrupted_download_leaves_nothing_behind(
+    server: str, dest: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The same promise when the network drops rather than when the hash differs."""
+
+    def cut_off(_path: str) -> object:
+        yield b"%PDF-1.4 par"
+        raise api.Unreachable("the connection went away")
+
+    monkeypatch.setattr(api, "stream", cut_off)
+    assert run("get", "pdf/small.pdf", "--dest", str(dest)) == cli.UNREACHABLE
+    assert sorted((dest / "pdf").iterdir()) == []
+
+
+def test_the_partial_file_is_written_beside_its_destination(
+    server: str, dest: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """In the destination directory, so the final move is a rename on one filesystem and
+    not a copy from /tmp — and so a crash cannot leave a stray file somewhere else."""
+    seen: list[list[str]] = []
+    streaming = api.stream
+
+    def watching(path: str):
+        for chunk in streaming(path):
+            seen.append(sorted(p.name for p in (dest / "pdf").iterdir()))
+            yield chunk
+
+    monkeypatch.setattr(api, "stream", watching)
+    assert run("get", "pdf/small.pdf", "--dest", str(dest)) == cli.OK
+    assert any(
+        names and names[0].startswith(".small.pdf") and names[0].endswith(".part") for names in seen
+    ), seen
+    assert sorted(p.name for p in (dest / "pdf").iterdir()) == ["small.pdf"]

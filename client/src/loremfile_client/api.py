@@ -15,14 +15,17 @@ way to make `loremfile get` fetch from somewhere else entirely.
 from __future__ import annotations
 
 import hashlib
+import http.client
 import json
 import os
+import tempfile
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any
+from typing import Any, cast
 
 #: The only host this client talks to.
 BASE_URL = "https://loremfile.dev/"
@@ -37,6 +40,9 @@ PAUSE_SECONDS = 0.5
 BACKOFF_SECONDS = (2, 4, 8)
 TIMEOUT_SECONDS = 300
 USER_AGENT = "loremfile-client"
+
+#: Read and hashed a megabyte at a time, so a 100 MB fixture costs a megabyte of memory.
+CHUNK_BYTES = 1024 * 1024
 
 
 class Refused(Exception):
@@ -64,16 +70,18 @@ def base_url() -> str:
     return override if override.endswith("/") else override + "/"
 
 
-def fetch(path: str) -> bytes:
-    """One GET, retrying only a 429 — our own rate limit asking for patience."""
+def _open(path: str) -> http.client.HTTPResponse:
+    """An open response, retrying only a 429 — our own rate limit asking for patience.
+
+    The retry is here, around opening, because that is where a 429 arrives. A stream
+    that fails halfway is not retried: the caller would have to decide what to do with
+    the bytes it already has, and this client's answer to a half-file is to delete it.
+    """
     url = base_url() + path.lstrip("/")
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})  # noqa: S310
     for pause in (*BACKOFF_SECONDS, None):
         try:
-            with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:  # noqa: S310
-                if response.geturl().split("/")[2] != url.split("/")[2]:
-                    raise Refused(f"{url} redirected off loremfile.dev, which is never followed")
-                return bytes(response.read())
+            response = urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS)  # noqa: S310
         except urllib.error.HTTPError as exc:
             if exc.code == 429 and pause is not None:  # noqa: PLR2004 - the HTTP status
                 time.sleep(pause)
@@ -81,7 +89,32 @@ def fetch(path: str) -> bytes:
             raise Unreachable(f"{url} answered {exc.code}") from exc
         except urllib.error.URLError as exc:
             raise Unreachable(f"{url} could not be read: {exc.reason}") from exc
+        if response.geturl().split("/")[2] != url.split("/")[2]:
+            response.close()
+            raise Refused(f"{url} redirected off loremfile.dev, which is never followed")
+        # urlopen is typed as returning Any for non-HTTP schemes; this client only ever
+        # opens http(s), which `base_url` is the single gate for. A cast rather than an
+        # assert: `python -O` strips asserts, and shipped code should not depend on a
+        # statement that may not be there.
+        return cast("http.client.HTTPResponse", response)
     raise Unreachable(f"{url} is still answering 429")
+
+
+def fetch(path: str) -> bytes:
+    """The whole body at once. For the manifest, which is JSON and has to be parsed."""
+    with _open(path) as response:
+        return bytes(response.read())
+
+
+def stream(path: str) -> Iterator[bytes]:
+    """The body in chunks, for fixtures — which run to 100 MB.
+
+    Reading one of those into memory to hash it would be 100 MB of a CI container's
+    often 512 MB, for no benefit: sha256 is happy to be fed a chunk at a time.
+    """
+    with _open(path) as response:
+        while chunk := response.read(CHUNK_BYTES):
+            yield bytes(chunk)
 
 
 def manifest(*, catalog_version: str | None = None) -> dict[str, Any]:
@@ -161,19 +194,44 @@ class Result:
 
 
 def download(entry: dict[str, Any], dest: Path, *, force: bool = False) -> Result:
-    """Fetch one fixture, hash it, and write it only if the hash is the published one."""
+    """Fetch one fixture, hashing as it arrives, and put it at its path only if it matches.
+
+    The bytes go to a temporary file **in the destination directory**, not to memory and
+    not to the system temporary directory: the first would cost 100 MB of RAM for the
+    largest fixtures, and the second could be on another filesystem, where the final move
+    would be a copy rather than a rename. `Path.replace` within one directory is atomic,
+    so a reader of that directory sees either no file or the whole verified one.
+
+    The guarantee is unchanged: nothing unverified is ever at the published path. What is
+    new is that nothing unverified survives anywhere — the temporary file is removed on a
+    mismatch, on an interrupted download, and on any other failure.
+    """
     destination = target(dest, entry["path"])
     if destination.exists() and not force:
         return Result(entry["path"], "skipped", "already here; --force overwrites")
-    body = fetch(entry["path"])
-    digest = hashlib.sha256(body).hexdigest()
-    if digest != entry["sha256"]:
-        raise Mismatch(
-            f"{entry['path']}: downloaded sha256 {digest}, the manifest says {entry['sha256']}"
-        )
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_bytes(body)
-    return Result(entry["path"], "written", f"{len(body):,} bytes")
+
+    digest = hashlib.sha256()
+    written = 0
+    handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - closed by the `with` below
+        dir=destination.parent, prefix=f".{destination.name}.", suffix=".part", delete=False
+    )
+    partial = Path(handle.name)
+    try:
+        with handle:
+            for chunk in stream(entry["path"]):
+                digest.update(chunk)
+                written += handle.write(chunk)
+        if digest.hexdigest() != entry["sha256"]:
+            raise Mismatch(
+                f"{entry['path']}: downloaded sha256 {digest.hexdigest()}, "
+                f"the manifest says {entry['sha256']}"
+            )
+        partial.replace(destination)
+    finally:
+        # A no-op once the rename has happened, and the whole point otherwise.
+        partial.unlink(missing_ok=True)
+    return Result(entry["path"], "written", f"{written:,} bytes")
 
 
 def verify(entry: dict[str, Any], dest: Path) -> Result:
