@@ -278,15 +278,25 @@ M3.1, not estimated.
 | `yaml-billion-laughs-safe-10-levels.yaml` (bounded, expands to < 1 MB) | 1 | stress | |
 | `zip-directory-traversal-name.zip` (entry named `../evil.txt` containing lorem; extractors must sanitise; description explains) | 1 | hostile-name | |
 | `pdf-no-eof-marker.pdf`, `pdf-xref-offset-wrong.pdf` | 2 | invalid-syntax | |
+| `pdf-zip-polyglot.pdf`, `gif-zip-polyglot.gif` | 1 | polyglot (valid as two formats at once; `also_valid_as: zip`) | |
 | `svg-with-script.svg` | — | **excluded** (see policy §5) | |
 
 Every published row also carries `compare_with` (the valid fixture of the same announced
 type) and `outcome` (`must-fail`, `may-recover` or `varies`) in its `edge` block, and its
 manifest entry carries a measured `damage` sentence: `04-manifest-and-discovery.md` §1.3.1.
 
+**The polyglots carry a caveat, not a warning about the files themselves.** Both are inert
+— a page of text and a 4x4 image, each with one text entry in the archive half — but the
+*shape* is the shape malware delivery uses, so scanners, mail gateways and corporate
+proxies sometimes refuse a polyglot on sight, and some strip the trailing archive on the
+way through. A download that arrives short or not at all is that, not a broken fixture:
+`sha256sums.txt` distinguishes the two. The caveat is stated in each fixture's
+`description` and on the `/edge` page, because the person who needs it is the one fetching
+the file, not the one reading this document.
+
 ## 4. Tag vocabulary (`catalog/_tags.yaml`)
 
-`document`, `image`, `video`, `audio`, `data`, `archive`, `font`, `text`, `binary`, `mail`, `calendar`, `geo`, `web`, `multi-page`, `animated`, `transparent`, `sized`, `boundary`, `encoding`, `unicode`, `large`, `stress`, `invalid`, `truncated`, `mismatched`, `encrypted`, `dataset-people`, `dataset-orders`, `dataset-products`, `codec-h264`, `codec-vp9`, `codec-aac`, `codec-opus`, `codec-mp3`.
+`document`, `image`, `video`, `audio`, `data`, `archive`, `font`, `text`, `binary`, `mail`, `calendar`, `geo`, `web`, `multi-page`, `animated`, `transparent`, `sized`, `boundary`, `encoding`, `unicode`, `large`, `stress`, `invalid`, `truncated`, `mismatched`, `encrypted`, `polyglot`, `dataset-people`, `dataset-orders`, `dataset-products`, `codec-h264`, `codec-vp9`, `codec-aac`, `codec-opus`, `codec-mp3`.
 
 ## 5. Phase 1 totals (row counts from §3; bytes are estimates until M3.9 records actuals)
 
@@ -380,7 +390,7 @@ P1b stays **188**: `100mib.bin` moved out of phase 1 entirely, so it left both t
 | Catalogued, **awaiting publication** | 0 | |
 | Still to catalogue | 0 | M3.7 and M3.8 catalogued all 62: archives, fonts, mail, calendar, cert, wasm, web, and the edge cases |
 | **Launch set (ADR-024)** | **228** | |
-| Added after launch | 1 | `csv/people-10-quoted-commas` (1.3.0), from launch feedback. Each one is listed here, so the catalog can grow without the launch number drifting |
+| Added after launch | 3 | `csv/people-10-quoted-commas` (1.3.0), from launch feedback; `edge/pdf-zip-polyglot` and `edge/gif-zip-polyglot` (1.4.0). Each one is listed here, so the catalog can grow without the launch number drifting |
 
 `tests/unit/test_deploy_path.py` asserts this arithmetic, with the outstanding rows as a named constant — now zero, so the next fixture added outside this list has to change the list itself. It is the one figure that cannot be derived from the repository, so it is checked rather than remembered: fixtures added without accounting for the launch scope become a failing build instead of a slow drift away from 228.
 

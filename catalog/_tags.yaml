@@ -31,6 +31,7 @@ tags:
   - invalid
   - truncated
   - mismatched
+  - polyglot
   # shared datasets
   - dataset-people
   - dataset-orders

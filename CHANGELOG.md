@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-28
+
+- Two polyglots: `edge/pdf-zip-polyglot.pdf` and `edge/gif-zip-polyglot.gif` are each valid
+  as two formats at once, for testing what your type detection does when the bytes do not
+  decide. Scanners and proxies sometimes refuse polyglots — the `/edge` page says so.
+
 ## [1.3.1] - 2026-09-28
 
 - Three of the broken files describe their damage in terms of their own bytes rather than

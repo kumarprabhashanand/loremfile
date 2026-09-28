@@ -1,13 +1,15 @@
 # Edge-case fixtures (docs/05 §3.13). Every row declares its defect in `edge:`, and
-# validators/edge.py asserts that defect instead of the format's usual structure: these
-# files exist to be rejected, so "it parses" would be the wrong test.
+# validators/edge.py asserts that defect instead of the format's usual structure. For most
+# rows that means the file exists to be rejected, so "it parses" would be the wrong test;
+# for a `polyglot` it is the opposite — two readers must both accept it.
 format: edge
 family: edge
 mime: application/octet-stream
 description: >-
-  Deliberately wrong files: empty, truncated, mislabelled, or malformed. Each one is
-  served as the type its extension claims, so you can test what your code does with
-  input it should refuse.
+  Files that are wrong on purpose, or ambiguous on purpose: empty, truncated, mislabelled,
+  malformed, or valid as two formats at once. Each is served as the type its extension
+  claims, so you can test what your code does with input it should refuse — and with input
+  nothing in the bytes can classify.
 seo_title: "Corrupt and malformed test files for error handling — free, CC0"
 related: [pdf, png, jpg, mp4, zip, json, csv, xml, txt]
 fixtures:
@@ -284,6 +286,42 @@ fixtures:
       defect: invalid-encoding
       compare_with: txt/utf8-multilingual.txt
       outcome: may-recover
+
+  - name: pdf-zip-polyglot.pdf
+    phase: 1
+    generator: edge.pdf_zip_polyglot
+    description: >-
+      One file that is a valid PDF and a valid zip archive at once: a PDF reader shows a
+      page, a zip reader extracts readme.txt. Scanners and proxies sometimes refuse
+      polyglots outright — see the notes on the page.
+    tags: [document, archive, polyglot]
+    size_class: free
+    mime: application/pdf
+    edge_case: true
+    edge:
+      intended_format: pdf
+      defect: polyglot
+      compare_with: pdf/minimal.pdf
+      outcome: varies
+      also_valid_as: zip
+
+  - name: gif-zip-polyglot.gif
+    phase: 1
+    generator: edge.gif_zip_polyglot
+    description: >-
+      One file that is a valid GIF image and a valid zip archive at once: the archive is
+      everything after the GIF trailer. Scanners and proxies sometimes refuse polyglots
+      outright — see the notes on the page.
+    tags: [image, archive, polyglot]
+    size_class: free
+    mime: image/gif
+    edge_case: true
+    edge:
+      intended_format: gif
+      defect: polyglot
+      compare_with: gif/1x1.gif
+      outcome: varies
+      also_valid_as: zip
 
   - name: zip-directory-traversal-name.zip
     phase: 1

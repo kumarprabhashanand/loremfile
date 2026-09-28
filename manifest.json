@@ -1,15 +1,15 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.3.1",
-  "generated_at": "2026-09-28T08:22:25Z",
+  "catalog_version": "1.4.0",
+  "generated_at": "2026-09-28T08:48:59Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:0157a7dfd8b2c71245ffa56a5a17393a77584ab70f2500814a54f8a31ce3de6f",
-  "count": 229,
-  "total_bytes": 595165977,
+  "count": 231,
+  "total_bytes": 595166977,
   "formats": [
     "7z",
     "aac",
@@ -1702,6 +1702,39 @@
       "supersededBy": null
     },
     {
+      "path": "edge/gif-zip-polyglot.gif",
+      "url": "https://loremfile.dev/edge/gif-zip-polyglot.gif",
+      "format": "edge",
+      "ext": "gif",
+      "mime": "image/gif",
+      "bytes": 200,
+      "sha256": "9b282e8b0b248bcc4bfbd2e9cc45013c5e13f7e9b0bd9f281719ca244d3ee897",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One file that is a valid GIF image and a valid zip archive at once: the archive is everything after the GIF trailer. Scanners and proxies sometimes refuse polyglots outright — see the notes on the page.",
+      "tags": [
+        "image",
+        "archive",
+        "polyglot"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "polyglot",
+        "intended_format": "gif",
+        "bytes": 200,
+        "also_valid_as": "zip",
+        "damage": "Both grammars match these 200 bytes: it opens with the GIF signature 47 49 46 38 37 61 at byte 0 and carries the ZIP signature 50 4B 03 04 at byte 42, so nothing in the file decides which of the two it is.",
+        "outcome": "varies",
+        "compare_with": "gif/1x1.gif"
+      },
+      "generator": "edge.gif_zip_polyglot",
+      "generator_params": {},
+      "added_in": "1.4.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "edge/jpg-truncated-50pct.jpg",
       "url": "https://loremfile.dev/edge/jpg-truncated-50pct.jpg",
       "format": "edge",
@@ -1901,6 +1934,39 @@
         "source": "pdf/a4-1page.pdf"
       },
       "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "edge/pdf-zip-polyglot.pdf",
+      "url": "https://loremfile.dev/edge/pdf-zip-polyglot.pdf",
+      "format": "edge",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 800,
+      "sha256": "759337b3a30d123993fb473cb06ed5ced212cb0dbec147eb9b4d812d779e177a",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One file that is a valid PDF and a valid zip archive at once: a PDF reader shows a page, a zip reader extracts readme.txt. Scanners and proxies sometimes refuse polyglots outright — see the notes on the page.",
+      "tags": [
+        "document",
+        "archive",
+        "polyglot"
+      ],
+      "edge_case": true,
+      "props": {
+        "defect": "polyglot",
+        "intended_format": "pdf",
+        "bytes": 800,
+        "also_valid_as": "zip",
+        "damage": "Both grammars match these 800 bytes: it opens with the PDF signature 25 50 44 46 2D at byte 0 and carries the ZIP signature 50 4B 03 04 at byte 589, so nothing in the file decides which of the two it is.",
+        "outcome": "varies",
+        "compare_with": "pdf/minimal.pdf"
+      },
+      "generator": "edge.pdf_zip_polyglot",
+      "generator_params": {},
+      "added_in": "1.4.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
