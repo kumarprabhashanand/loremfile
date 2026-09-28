@@ -140,8 +140,12 @@ jobs:
         # branch, which is not always `main` when pull requests are stacked.
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git fetch --no-tags origin \
-            "+refs/heads/${GITHUB_BASE_REF}:refs/remotes/origin/${GITHUB_BASE_REF}"
+          # Empty on a workflow_dispatch, which has no base branch — and an empty value
+          # made the refspec `+refs/heads/:refs/remotes/origin/`, which git refuses, so
+          # the one job that cannot run under dispatch was the one nobody could dispatch.
+          # `main` is the same default `build --new` and check_lock.sh already use.
+          base="${GITHUB_BASE_REF:-main}"
+          git fetch --no-tags origin "+refs/heads/${base}:refs/remotes/origin/${base}"
 
       - name: Generate the fixtures this pull request adds
         # On a pull request that touches no catalog entry this correctly generates
