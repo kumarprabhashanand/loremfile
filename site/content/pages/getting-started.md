@@ -46,6 +46,12 @@ curl -fsSL https://loremfile.dev/sha256sums.txt | shasum -a 256 -c --ignore-miss
 Files land in `loremfile-fixtures/`, each checked against its hash in the manifest. Linux and
 macOS runners; the action downloads one file at a time and backs off if it is rate limited.
 
+## From your own code
+
+[Use it from your language](/docs/languages) has the same fetch-and-verify in shell,
+Python, JavaScript, Go and Java, each a complete program of a dozen lines, and states the
+contract for any language not on that list.
+
 ## Find files without a browser
 
 [manifest.json](/manifest.json) lists every file with its size, hash, MIME type and measured

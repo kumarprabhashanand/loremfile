@@ -137,6 +137,13 @@ DOCS = (
         "docs/04-manifest-and-discovery.md",
     ),
     (
+        "docs/languages",
+        "Use it from your language",
+        "Fetching a fixture and verifying its hash, in shell, Python, JavaScript, Go and Java.",
+        "content",
+        "pages/languages.md",
+    ),
+    (
         "docs/faq",
         "FAQ",
         "Hotlinking, rate limits, why files are not indexed, mirroring and accessibility.",
@@ -343,11 +350,32 @@ def quoted(text: str) -> tuple[str, str]:
     return title.group(1), text.strip("\n") + "\n"
 
 
+#: `<!-- include: examples/verify.py -->` on a line of its own becomes that file, fenced.
+INCLUDE = re.compile(r"^<!-- include: (\S+) -->$", re.M)
+#: The fence language for each file a page may include.
+FENCE = {".sh": "sh", ".py": "python", ".mjs": "javascript", ".go": "go", ".java": "java"}
+
+
 def content(root: Path, relative: str) -> str:
+    """A content page, with any `include` replaced by the file it names.
+
+    The snippets on `/docs/languages` are real files that CI executes. Including them at
+    build time rather than pasting them in is what stops the page from drifting away from
+    the code that is actually run — a page of examples nobody runs is the bug report a
+    stranger files.
+    """
     path = root / "site" / "content" / relative
     if not path.is_file():
         raise SiteError(f"site/content/{relative} is missing (docs/07 §5)")
-    return path.read_text(encoding="utf-8")
+
+    def embed(match: re.Match[str]) -> str:
+        source = root / match.group(1)
+        if not source.is_file():
+            raise SiteError(f"{relative} includes {match.group(1)}, which does not exist")
+        body = source.read_text(encoding="utf-8").rstrip()
+        return f"```{FENCE.get(source.suffix, '')}\n{body}\n```"
+
+    return INCLUDE.sub(embed, path.read_text(encoding="utf-8"))
 
 
 def inline_svg(mark: bytes) -> str:
@@ -670,6 +698,7 @@ def llms(manifest: Manifest, catalogs: dict[str, FormatCatalog], *, full: bool) 
         "bytes, mime, measured properties)",
         f"- Per-format lists: {base}{{format}}/index.json",
         f"- Verify: {base}sha256sums.txt",
+        f"- Working examples in five languages: {base}docs/languages",
         "",
         "## Formats",
     ]
