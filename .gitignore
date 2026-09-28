@@ -21,3 +21,6 @@ htmlcov/
 .DS_Store
 .idea/
 .vscode/
+client/dist/
+client/build/
+client/src/*.egg-info/

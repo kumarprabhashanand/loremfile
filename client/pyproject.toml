@@ -1,0 +1,51 @@
+# The published client, built from this directory alone.
+#
+# The split is the point: the repository's own tooling — generators, validators, the
+# uploader, the infrastructure client — lives in `src/loremfile/` at the repository root
+# and is never published. This tree holds the client and nothing else, so the wheel
+# cannot carry the deploy tooling by accident; `tests/test_packaging.py` reads the built
+# wheel and says so.
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "loremfile"
+version = "0.1.0"
+description = "Download CC0 sample files from loremfile.dev and verify every byte"
+readme = "README.md"
+# A range, and a policy: the floor is the oldest CPython still receiving security fixes
+# when a release is cut. 3.10 reaches end of life on 2026-10-31 and starts out rather
+# than shipping and immediately going; every version below is tested in CI, on Linux,
+# macOS and Windows. A version nobody tests is not supported.
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "the loremfile.dev contributors" }]
+keywords = ["fixtures", "test-data", "sample-files", "cc0", "download"]
+classifiers = [
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Software Development :: Testing",
+  "Environment :: Console",
+]
+# Deliberately empty, and a decision rather than an omission: the client is standard
+# library only. A request that needs a dependency is a conversation, not a patch.
+dependencies = []
+
+[project.scripts]
+loremfile = "loremfile_client.cli:main"
+
+[project.urls]
+Homepage = "https://loremfile.dev"
+Source = "https://github.com/kumarprabhashanand/loremfile"
+Issues = "https://github.com/kumarprabhashanand/loremfile/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# So that `pytest` inside this directory is this package's suite, not the repository's.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
