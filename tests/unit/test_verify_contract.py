@@ -158,9 +158,13 @@ def test_a_redirect_that_is_missing_or_loses_the_path_fails(
 
 
 def test_a_403_to_a_declared_ai_agent_passes() -> None:
+    """Named from the constant, not from a token written out here: the sample rotates onto
+    the newest clauses with each batch of agents, and a test that has to be edited when it
+    rotates is a test that will be edited without being read."""
     agent = verify_live.REFUSED_AGENTS[0]
     finding = verify_live.check_agent_refused(agent, "/legal/imprint", Response(403, {}))
-    assert (finding.status, finding.path) == (Status.OK, "ai-agent:CCBot /legal/imprint")
+    expected = f"ai-agent:{verify_live.agent_token(agent)} /legal/imprint"
+    assert (finding.status, finding.path) == (Status.OK, expected)
 
 
 @pytest.mark.parametrize("status", [200, 404, 429, 500])
@@ -169,8 +173,28 @@ def test_anything_but_a_403_fails(status: int) -> None:
     agent = verify_live.REFUSED_AGENTS[1]
     finding = verify_live.check_agent_refused(agent, "/legal/privacy", Response(status, {}))
     assert finding.status is Status.STATUS
-    assert finding.path == "ai-agent:PerplexityBot /legal/privacy"
+    assert finding.path == f"ai-agent:{verify_live.agent_token(agent)} /legal/privacy"
     assert str(status) in finding.detail
+
+
+@pytest.mark.parametrize(
+    ("agent", "token"),
+    [
+        ("CCBot/2.0 (https://commoncrawl.org/faq/)", "CCBot"),
+        (
+            "Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://www.perplexity.ai/perplexitybot)",
+            "PerplexityBot",
+        ),
+        ("CloudflareBrowserRenderingCrawler/1.0", "CloudflareBrowserRenderingCrawler"),
+        ("qodercli", "qodercli"),
+    ],
+)
+def test_the_token_is_read_out_of_whatever_shape_the_agent_sends(agent: str, token: str) -> None:
+    """The finding names the agent, so the name has to survive every shape an operator
+    publishes: a bare token, `Name/1.0`, and a token buried in a `compatible;` string.
+    Fixed examples on purpose — this is the one place the extraction itself is pinned,
+    and it must not move when `REFUSED_AGENTS` does."""
+    assert verify_live.agent_token(agent) == token
 
 
 def test_the_agents_are_asked_for_both_legal_pages_by_name(
