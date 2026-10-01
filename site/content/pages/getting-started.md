@@ -46,6 +46,25 @@ curl -fsSL https://loremfile.dev/sha256sums.txt | shasum -a 256 -c --ignore-miss
 Files land in `loremfile-fixtures/`, each checked against its hash in the manifest. Linux and
 macOS runners; the action downloads one file at a time and backs off if it is rate limited.
 
+## From the command line
+
+The same small client is published for Python and for Node: `get`, `list` and `verify`, with
+the same flags and exit codes.
+
+```bash
+# Python 3.11 or newer
+pip install loremfile
+loremfile get pdf/minimal.pdf
+
+# Node 20 or newer, no install step
+npx loremfile get pdf/minimal.pdf
+```
+
+Each file is checked against its hash in the manifest before it is written, and one that does
+not match is not written at all. Exit codes: `0` fine, `1` a file failed verification or is
+missing, `2` the request was wrong, `3` loremfile.dev could not be read. Both install a command
+named `loremfile`; on a machine with both, whichever comes first on `PATH` runs.
+
 ## From your own code
 
 [Use it from your language](/docs/languages) has the same fetch-and-verify in shell,
