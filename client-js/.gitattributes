@@ -1,0 +1,3 @@
+# LF on every checkout, Windows included: the tarball must be the same bytes whichever OS packs
+# it, and a CRLF after the shebang makes the command fail on Linux and macOS.
+* text eol=lf
