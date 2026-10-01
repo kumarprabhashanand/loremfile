@@ -35,6 +35,9 @@ def test_with_no_override_it_is_production(monkeypatch: pytest.MonkeyPatch) -> N
         "https://loremfile.dev.evil.test/",  # the host name as a prefix
         "https://evil.test/loremfile.dev/",  # and as a path
         "http://127.0.0.1.evil.test:8080/",  # and the loopback address as a prefix
+        "http://127.0.0.1:1@evil.test/",  # a loopback prefix that is only the userinfo
+        "http://localhost:80@evil.test/",  # the same with the name
+        "http://[::1]:1@evil.test/",  # and with the IPv6 address
         "https://example.com/",
         "file:///etc/passwd",
         "http://169.254.169.254/",  # the cloud metadata address

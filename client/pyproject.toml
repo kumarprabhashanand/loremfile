@@ -11,7 +11,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "loremfile"
-version = "0.1.0"
+version = "0.1.1"
 description = "Download CC0 sample files from loremfile.dev and verify every byte"
 readme = "README.md"
 # A range, and a policy: the floor is the oldest CPython still receiving security fixes

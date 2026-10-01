@@ -7,7 +7,7 @@ the published manifest.
 $ pip install loremfile
 $ loremfile get pdf/minimal.pdf mp4/720p-5s.mp4
   written  mp4/720p-5s.mp4  1,974,574 bytes
-  written  pdf/minimal.pdf  317 bytes
+  written  pdf/minimal.pdf  586 bytes
 files=2, dest=loremfile-fixtures
 ```
 
