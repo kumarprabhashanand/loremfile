@@ -1,0 +1,103 @@
+# Publishes the npm client (docs/09 §3.8).
+#
+# THE NAME OF THIS FILE IS PART OF THE CREDENTIAL. npm's trusted publisher for the package
+# `loremfile` names the repository, the environment `npm` and this workflow's filename;
+# renaming it breaks the trust relationship rather than any code, and the failure arrives at
+# the publish step of a tag.
+#
+# There is no token anywhere. `npm publish` exchanges a short-lived OIDC identity minted for
+# this workflow in this repository for a publish token scoped to this one package, which is
+# why `id-token: write` is asked for on the publishing job alone. npm can trust a publisher
+# only for a package that already exists, so the first version is published by hand from
+# this workflow's tarball (docs/09 §3.8).
+name: publish-npm
+
+on:
+  push:
+    tags:
+      - npm-v*
+  workflow_dispatch:     # packs and inspects; the publish job is skipped without a tag
+
+permissions:
+  contents: read
+
+jobs:
+  # No environment and no id-token: this job is the inspection, and a dispatch has to be able
+  # to run it. The `npm` environment is restricted to `npm-v*` tags.
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Pack the tarball from client-js/ only
+        working-directory: client-js
+        run: npm pack
+
+      - id: version
+        run: |
+          # `npm-v0.1.1` asks for 0.1.1. Empty on a dispatch, where there is no tag and the
+          # version check has nothing to compare against.
+          case "$GITHUB_REF" in
+            refs/tags/npm-v*) echo "expected=${GITHUB_REF#refs/tags/npm-v}" >> "$GITHUB_OUTPUT" ;;
+            *) echo "expected=" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      # Before the publish, never after: npm does not allow publishing a version twice, so a
+      # tarball that reaches it carrying the deploy tooling or an install script can only be
+      # deprecated, and a deprecated version is still installable by anyone who pins it.
+      - name: Inspect the tarball before anything is published
+        run: python3 tools/inspect_client_tarball.py client-js/loremfile-*.tgz ${{ steps.version.outputs.expected }}
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: npm-tarball
+          path: client-js/loremfile-*.tgz
+
+  publish:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/npm-v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write     # the OIDC identity npm trusts; nothing else, and no secrets
+    steps:
+      # No registry-url: npm's own OIDC exchange sets the token for the default registry, and
+      # an .npmrc written for NODE_AUTH_TOKEN would only be a second, empty way in.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: npm-tarball
+          path: dist/
+
+      - name: Node and npm are new enough for trusted publishing
+        run: |
+          # npm's documented floor; below it the OIDC exchange is never attempted and the
+          # publish fails as an anonymous one.
+          at_least() {
+            if [ "$(printf '%s\n' "$2" "$3" | sort -V | head -n 1)" != "$2" ]; then
+              echo "::error::$1 $3 is older than $2, the minimum for trusted publishing"
+              exit 1
+            fi
+            echo "$1 $3 (trusted publishing needs $2 or later)"
+          }
+          at_least node 22.14.0 "$(node -p process.versions.node)"
+          at_least npm 11.5.1 "$(npm --version)"
+
+      # The inspected tarball, not a fresh pack. --provenance although trusted publishing turns
+      # it on by itself: npm enables it after a lookup that, if it fails, it logs and skips, and
+      # this makes a release without its attestation a failed job instead of a quiet one.
+      # The leading ./ is load-bearing: npm reads `dist/loremfile-0.1.1.tgz` as the GitHub
+      # repository `dist/loremfile-0.1.1.tgz`, not as this file.
+      - name: Publish the inspected tarball
+        run: npm publish --provenance ./dist/loremfile-*.tgz

@@ -87,6 +87,7 @@ ignore = [
 "tools/licences.py" = ["T20"]             # a reporting script: printing is the whole point
 "tools/check_lock.py" = ["T20"]           # a CI guard: its output is what a reader acts on
 "tools/inspect_client_wheel.py" = ["T20"]  # the same: what it prints is the refusal
+"tools/inspect_client_tarball.py" = ["T20"]  # and its npm sibling
 "client/src/loremfile_client/cli.py" = ["T20"]   # the client's output is the client
 "examples/**" = ["S310", "T20"]           # published snippets: they fetch and they print,
                                           # and a `# noqa` in an example a reader copies
