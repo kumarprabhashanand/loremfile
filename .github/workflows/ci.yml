@@ -108,6 +108,40 @@ jobs:
       - name: It runs as an installed command
         run: loremfile --version
 
+  # The npm client, the same way: Node built-ins only, tested where users run it. Nine legs,
+  # and they are the support claim — the README says Node 20, 22 and 24 on Linux, macOS and
+  # Windows. The tarball is packed first because test/packaging.test.js reads it.
+  client-js:
+    needs: setup
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-14, windows-2022]
+        node: ["20", "22", "24"]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: client-js
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+      - name: Pack the tarball a user would install
+        run: npm pack
+      - name: The client's own suite
+        # Named files, not discovery: a run that discovered nothing would pass with 0 tests.
+        run: node --test test/commands.test.js test/only-loremfile-dev.test.js test/packaging.test.js
+      - name: It runs from the tarball under npx, then installs from it
+        shell: bash
+        run: |
+          npx --yes --package "./$(ls loremfile-*.tgz)" -- loremfile --version
+          npm install --global ./loremfile-*.tgz
+      - name: It runs as an installed command
+        run: loremfile --version
+
   # Every snippet on /docs/languages, executed against this site. The page includes these
   # files at build time, so what a reader copies is what ran here — and a snippet nobody
   # runs is a bug report waiting to be filed by a stranger.

@@ -24,3 +24,4 @@ htmlcov/
 client/dist/
 client/build/
 client/src/*.egg-info/
+client-js/*.tgz
