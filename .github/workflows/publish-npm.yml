@@ -5,11 +5,15 @@
 # renaming it breaks the trust relationship rather than any code, and the failure arrives at
 # the publish step of a tag.
 #
-# There is no token anywhere. `npm publish` exchanges a short-lived OIDC identity minted for
-# this workflow in this repository for a publish token scoped to this one package, which is
-# why `id-token: write` is asked for on the publishing job alone. npm can trust a publisher
-# only for a package that already exists, so the first version is published by hand from
-# this workflow's tarball (docs/09 §3.8).
+# There is no token anywhere. `npm stage publish` exchanges a short-lived OIDC identity minted
+# for this workflow in this repository for a token scoped to this one package, which is why
+# `id-token: write` is asked for on the publishing job alone.
+#
+# THIS WORKFLOW STAGES; A PERSON PUBLISHES. The trusted publisher allows `npm stage publish`
+# and not `npm publish`, so a green run leaves the version in npm's staging area, invisible to
+# installs, until a maintainer approves it with two-factor authentication on npmjs.com or with
+# `npm stage approve` — which no OIDC token can do (runbook §7.13). `npm-v*` tags are not
+# protected by a ruleset; this gate is what stands between a pushed tag and a live release.
 name: publish-npm
 
 on:
@@ -80,24 +84,25 @@ jobs:
           name: npm-tarball
           path: dist/
 
-      - name: Node and npm are new enough for trusted publishing
+      - name: Node and npm are new enough to stage over OIDC
         run: |
-          # npm's documented floor; below it the OIDC exchange is never attempted and the
-          # publish fails as an anonymous one.
+          # npm's documented floors: 22.14.0 and 11.5.1 for trusted publishing, and npm 11.15.0
+          # for `npm stage`, which an older npm rejects as an unknown command.
           at_least() {
             if [ "$(printf '%s\n' "$2" "$3" | sort -V | head -n 1)" != "$2" ]; then
-              echo "::error::$1 $3 is older than $2, the minimum for trusted publishing"
+              echo "::error::$1 $3 is older than $2, the minimum for staged trusted publishing"
               exit 1
             fi
-            echo "$1 $3 (trusted publishing needs $2 or later)"
+            echo "$1 $3 (staged trusted publishing needs $2 or later)"
           }
           at_least node 22.14.0 "$(node -p process.versions.node)"
-          at_least npm 11.5.1 "$(npm --version)"
+          at_least npm 11.15.0 "$(npm --version)"
 
       # The inspected tarball, not a fresh pack. --provenance although trusted publishing turns
       # it on by itself: npm enables it after a lookup that, if it fails, it logs and skips, and
       # this makes a release without its attestation a failed job instead of a quiet one.
       # The leading ./ is load-bearing: npm reads `dist/loremfile-0.1.1.tgz` as the GitHub
-      # repository `dist/loremfile-0.1.1.tgz`, not as this file.
-      - name: Publish the inspected tarball
-        run: npm publish --provenance ./dist/loremfile-*.tgz
+      # repository `dist/loremfile-0.1.1.tgz`, not as this file. The log carries
+      # `+ loremfile@X.Y.Z (staged with id …)`: the id the approver needs.
+      - name: Stage the inspected tarball for approval
+        run: npm stage publish --provenance ./dist/loremfile-*.tgz

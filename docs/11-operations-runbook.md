@@ -254,6 +254,39 @@ The weekly watch (`09` §3.4) found agents on the public list that this reposito
 3. **To record as weighed:** add the name to `infra/crawlers-seen.json`.
 4. Either way the next run reports nothing and the issue closes itself.
 
+### 7.13 Release the npm client
+
+CI stages a version; a person makes it live (`09` §3.8). The trusted publisher for `loremfile`
+allows `npm stage publish` and not `npm publish`, and approving a staged version needs a
+two-factor sign-in that no OIDC token can provide. `npm-v*` tags have no ruleset, so this
+approval is the only gate between a pushed tag and a live release.
+
+1. In a pull request, bump `version` in `client-js/package.json` and add the line to
+   `client-js/CHANGELOG.md`. Merge it.
+2. Tag the merge commit:
+
+   ```sh
+   git tag npm-vX.Y.Z <merge commit> && git push origin npm-vX.Y.Z
+   ```
+
+3. Wait for `publish-npm.yml` to go green. Its `publish` job's log carries
+   `+ loremfile@X.Y.Z (staged with id <stage-id>)`. Green means **staged, not live**:
+   `npm view loremfile versions` does not list X.Y.Z yet, and no install can fetch it.
+4. Approve it, with 2FA: on npmjs.com, in the package's Staged Packages tab, review it and
+   click Approve. Or, from a terminal, `npm stage approve <stage-id>` and then `npm logout`,
+   since the sign-in is a local credential (AGENTS.md rule 4). To withdraw a version instead,
+   `npm stage reject <stage-id>`, which also prompts for 2FA.
+5. Check what went live:
+
+   ```sh
+   npm view loremfile@X.Y.Z dist.attestations.provenance.predicateType
+   ```
+
+   It must print `https://slsa.dev/provenance/v1`. **The first staged release answers an open
+   question** (`09` §3.8 [VERIFY]): npm does not document whether an attestation made at
+   staging survives approval. Record what the registry shows in `09` §3.8 either way; an empty
+   result reopens the choice of staged publishing.
+
 ## 8. `ops-log.md` format (on the `ops-log` branch)
 
 **One row per day, backfilled weekly.** The Monday `health.yml` run (or a dispatch with `force_ops_log`) writes a row for every day in its usage report — the last 32 days — and **replaces** a date already present rather than adding a second row, so overlapping windows converge (`09` §3.3, `19` §3.2).
