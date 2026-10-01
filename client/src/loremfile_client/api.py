@@ -21,6 +21,7 @@ import os
 import tempfile
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -33,6 +34,7 @@ BASE_URL = "https://loremfile.dev/"
 #: Injected by this project's tests so they never touch production. Loopback only.
 OVERRIDE = "LOREMFILE_BASE_URL"
 LOOPBACK = ("http://127.0.0.1:", "http://localhost:", "http://[::1]:")
+LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
 
 #: The published rate limit is 30 requests a second per client; one file at a time with a
 #: pause between them is well under it, and a 429 is answered with patience.
@@ -61,13 +63,30 @@ def base_url() -> str:
     override = os.environ.get(OVERRIDE, "").strip()
     if not override:
         return BASE_URL
-    if not override.startswith(LOOPBACK):
+    if not _is_loopback(override):
         raise Refused(
             f"{OVERRIDE} accepts a loopback address only, so that this project's tests can "
             f"run without touching production; {override!r} is not one. There is no way to "
             "point this client at another host, by design."
         )
     return override if override.endswith("/") else override + "/"
+
+
+def _is_loopback(value: str) -> bool:
+    """The prefix and the parsed host must agree: a prefix alone accepts a URL whose loopback
+    address is only the userinfo in front of an `@`, and whose real host is somewhere else."""
+    if not value.startswith(LOOPBACK):
+        return False
+    try:
+        parts = urllib.parse.urlsplit(value)
+    except ValueError:
+        return False
+    return (
+        parts.scheme == "http"
+        and parts.hostname in LOOPBACK_HOSTS
+        and parts.username is None
+        and parts.password is None
+    )
 
 
 def _open(path: str) -> http.client.HTTPResponse:
@@ -234,12 +253,21 @@ def download(entry: dict[str, Any], dest: Path, *, force: bool = False) -> Resul
     return Result(entry["path"], "written", f"{written:,} bytes")
 
 
+def _sha256_of(file: Path) -> str:
+    """A file's hash, read a chunk at a time as `download` reads the network."""
+    digest = hashlib.sha256()
+    with file.open("rb") as handle:
+        while chunk := handle.read(CHUNK_BYTES):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def verify(entry: dict[str, Any], dest: Path) -> Result:
     """Check a fixture already on disk against the published manifest."""
     destination = target(dest, entry["path"])
     if not destination.is_file():
         return Result(entry["path"], "missing", f"not in {dest}")
-    digest = hashlib.sha256(destination.read_bytes()).hexdigest()
+    digest = _sha256_of(destination)
     if digest != entry["sha256"]:
         expected = str(entry["sha256"])[:12]
         return Result(entry["path"], "changed", f"sha256 {digest[:12]}, expected {expected}")

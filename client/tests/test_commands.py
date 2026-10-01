@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import tracemalloc
 from pathlib import Path
 
 import pytest
@@ -139,6 +141,29 @@ def test_the_body_is_streamed_rather_than_held_in_memory(
     monkeypatch.setattr(api, "fetch", only_the_manifest)
     assert run("get", "pdf/small.pdf", "--dest", str(dest)) == cli.OK
     assert (dest / "pdf" / "small.pdf").read_bytes() == BODIES["pdf/small.pdf"]
+
+
+def test_verify_hashes_a_file_without_reading_it_whole(dest: Path) -> None:
+    """The promise `get` keeps, kept by `verify` too: a 100 MB fixture must not be a 100 MB
+    process. Measured rather than read off the code — the peak Python allocation while
+    checking a file 32 reads long stays within a few reads."""
+    size = 32 * api.CHUNK_BYTES
+    expected = hashlib.sha256()
+    for _ in range(32):
+        expected.update(bytes(api.CHUNK_BYTES))
+    (dest / "bin").mkdir(parents=True)
+    with (dest / "bin" / "large.bin").open("wb") as handle:
+        handle.truncate(size)
+    entry = {"path": "bin/large.bin", "sha256": expected.hexdigest(), "bytes": size}
+
+    tracemalloc.start()
+    try:
+        result = api.verify(entry, dest)
+        _current, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert result.status == "ok", result
+    assert peak < 4 * api.CHUNK_BYTES, f"a peak of {peak:,} bytes to check {size:,}"
 
 
 def test_a_mismatch_leaves_nothing_behind(server: str, dest: Path) -> None:
