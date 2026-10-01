@@ -507,6 +507,50 @@ Versions are the client's own, not the catalog's (`client/CHANGELOG.md`). The ta
 `client-vX.Y.Z`, deliberately outside `v*`: those name a catalog version, are frozen by the
 tag ruleset and fire `release.yml`.
 
+### 3.8 `publish-npm.yml` — on tag `npm-v*`
+
+Publishes the Node client, `client-js/`, to npm as `loremfile`. **No token exists anywhere**:
+npm's trusted publisher for `loremfile` names this repository, the `npm` environment and this
+workflow's *filename*, and `npm publish` exchanges the job's OIDC identity for a token scoped
+to that one package. Renaming the file breaks the trust relationship.
+
+Two jobs, split as in §3.7:
+
+- **`build`** has no environment and no `id-token`, so `workflow_dispatch` can rehearse it. It
+  runs `npm pack` in `client-js/`, then `tools/inspect_client_tarball.py`, which refuses an
+  entry that is not a plain file or is not `package.json`, the README or under `bin/` or
+  `src/`; a path naming `infra`, `generators`, `validators`, `site`, `upload` or `release`; a
+  `package.json` declaring dependencies, `scripts` or `gypfile`, or a name other than
+  `loremfile`; and a version that is not the tag's with `npm-v` stripped.
+- **`publish`** carries `environment: npm` (restricted to `npm-v*` tags), `contents: read` and
+  `id-token: write`. It refuses Node older than 22.14.0 and npm older than 11.5.1, npm's
+  documented floor for trusted publishing, then publishes the inspected tarball with
+  `--provenance`. Trusted publishing turns provenance on by itself, but only after a lookup
+  whose failure npm logs and skips (`lib/utils/oidc.js`, read at npm 11.20.0); the flag makes a
+  release without its attestation a failed job. The tarball's path keeps its leading `./`:
+  without it npm reads `dist/loremfile-X.Y.Z.tgz` as a GitHub repository.
+
+**The first version is published by hand, once.** npm attaches a trusted publisher only to a
+package that already exists — *"The package you're configuring must already exist on the npm
+registry"* (`npm trust` documentation, read 2026-10-01) — so `0.1.0` cannot come from this
+workflow's `publish` job:
+
+1. Dispatch this workflow on `main` and download its `npm-tarball` artifact: the tarball the
+   inspection passed.
+2. Publish that file with `npm publish ./loremfile-0.1.0.tgz`, signed in with two-factor
+   authentication, then `npm logout`. That sign-in is the one exception to AGENTS.md rule 4,
+   and `npm logout` revokes its token after the one command. A version published this way
+   carries no provenance.
+3. On npmjs.com, `loremfile` → Settings → Trusted publisher → GitHub Actions: repository
+   `kumarprabhashanand/loremfile`, workflow `publish-npm.yml`, environment `npm`, and allow
+   `npm publish` — a publisher created after 2026-09-03 allows only `npm stage publish` until
+   that is ticked.
+
+No `npm-v0.1.0` tag: its `publish` job would fail on a version that already exists. Every later
+version is a `client-js/package.json` bump and a `client-js/CHANGELOG.md` line in a pull
+request, then a tag `npm-vX.Y.Z` on the merge commit, outside `v*` for the reason given in
+§3.7.
+
 ## 4. Dependabot — `.github/dependabot.yml`
 
 ```yaml

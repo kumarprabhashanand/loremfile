@@ -52,6 +52,7 @@ loremfile/                      # public GitHub repository kumarprabhashanand/lo
 ├── SECURITY.md  CONTRIBUTING.md  CHANGELOG.md  CODEOWNERS
 ├── .github/
 │   ├── workflows/  ci.yml  deploy.yml  infra.yml  health.yml  audit.yml  release.yml  toolchain.yml
+│   │               publish-client.yml  publish-npm.yml
 │   ├── ISSUE_TEMPLATE/  fixture-request.yml  bug.yml  config.yml
 │   ├── PULL_REQUEST_TEMPLATE.md
 │   └── dependabot.yml
