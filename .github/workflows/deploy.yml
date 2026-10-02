@@ -227,11 +227,17 @@ jobs:
           FORBIDDEN_STRINGS: ${{ secrets.FORBIDDEN_STRINGS }}
         run: loremfile site build --legal-values-from-env
 
+      # The report goes to a file for the IndexNow step after verify-live, which announces
+      # the pages it names. Printed either way: with --json the errors are in it, and a
+      # failed upload must still say why in this log.
       - name: Publish the site
         run: |
-          loremfile upload --site \
+          status=0
+          loremfile upload --site --json \
             ${{ inputs.force_site && '--force-site' || '' }} \
-            ${{ env.MODE == 'dry-run' && '--dry-run' || '' }}
+            ${{ env.MODE == 'dry-run' && '--dry-run' || '' }} > build/site-upload.json || status=$?
+          cat build/site-upload.json
+          exit "$status"
 
       - name: Purge the site from the cache
         if: env.MODE == 'deploy'
@@ -279,3 +285,12 @@ jobs:
         if: env.MODE == 'deploy'
         run: |
           loremfile verify-live --mode smoke --site-dir build/site ${{ steps.only.outputs.flags }}
+
+      # IndexNow (docs/04 §12): the pages this deploy changed, announced only once verify-live
+      # has seen them served — the default `success()` skips this step otherwise. It cannot
+      # fail the deploy, twice over: the command always exits 0, and the step may not either
+      # way. An engine refusing a notification changes nothing about what was published.
+      - name: Tell IndexNow which pages changed
+        if: env.MODE == 'deploy'
+        continue-on-error: true
+        run: loremfile indexnow --changed-from build/site-upload.json

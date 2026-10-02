@@ -177,7 +177,7 @@ jobs:
       - run: loremfile site build
       - run: loremfile upload --fixtures                 # missing keys only; refuses to overwrite an existing key with different bytes
       - run: loremfile upload --apply-removals           # only objects whose manifest entry is status: removed (takedown flow); no-op otherwise
-      - run: loremfile upload --site ${{ inputs.force_site && '--force-site' || '' }}
+      - run: loremfile upload --site --json ${{ inputs.force_site && '--force-site' || '' }} > build/site-upload.json   # the report names the keys written
       - run: loremfile purge --site
       - id: infra_changed                              # base: the last successful push deploy on main — not HEAD~1, not event.before (ADR-029)
         env: { GH_TOKEN: "${{ github.token }}" }
@@ -188,9 +188,11 @@ jobs:
         run: loremfile infra apply
       - run: loremfile infra audit
       - run: loremfile verify-live --mode smoke
+      - run: loremfile indexnow --changed-from build/site-upload.json   # the changed pages, to IndexNow (04 §12)
+        continue-on-error: true                          # and the command always exits 0: it cannot fail a deploy
 ```
 
-Ordering rationale: fixtures first (immutable, safe to be early), removals next (rare), then site (references fixtures), then purge, then infra, then verification. A failure at any step stops the job; nothing after "upload --fixtures" can undo a fixture upload, and nothing needs to (immutability).
+Ordering rationale: fixtures first (immutable, safe to be early), removals next (rare), then site (references fixtures), then purge, then infra, then verification, and last the IndexNow announcement, so a page is announced only once `verify-live` has seen it served. A failure at any step stops the job; nothing after "upload --fixtures" can undo a fixture upload, and nothing needs to (immutability).
 
 **When `Apply infra` runs (ADR-029).** On `mode: deploy`, when `apply_infra` is ticked or `infra/` changed since the commit the zone last converged to: the head SHA of the most recent successful `push` run of this workflow on `main`, other than the current run (`loremfile infra changed`). Not `HEAD~1`, and not `github.event.before`, which is the same commit for a squash merge: a pending deploy replaced in the concurrency group never runs, so an `infra/` change in its commit is invisible from a newer commit that does not touch `infra/` itself. No earlier successful push run means changed; a lookup that fails fails the step. It deliberately does not apply on every deploy — an apply converges `security_level` and would switch off Under Attack Mode mid-incident (`11` §7.4).
 

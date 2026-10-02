@@ -888,6 +888,7 @@ def build(out: Path, *, root: Path, committed: dt.datetime) -> BuildReport:
             "sitemap.xml": sitemap(pages, committed),
             "robots.txt": ROBOTS_TXT.encode(),
             ".well-known/security.txt": security_txt(committed),
+            routes.INDEXNOW_KEY_FILE: config.INDEXNOW_KEY.encode("utf-8"),
             routes.API_CATALOG_KEY: api_catalog(formats),
             **agent_skills(root),
         }
