@@ -28,7 +28,7 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 ## 3. Monthly (first weekly session of the month, +30 minutes)
 
 - (A) Review the `determinism` audit result (workflow `audit.yml`, first Monday).
-- (O, 10 minutes; the agent cannot see account settings or billing) Run the hardening checklist from `10-security.md` §5 (read-only spot check: 2FA on, tokens as inventoried, Registrar lock, auto-renew; the readable "must be off" settings via `infra audit`, the manual ones listed in `08` §8 by eye).
+- (O, 10 minutes; the agent cannot see account settings or billing) Run the hardening checklist from `10-security.md` §5 (read-only spot check: 2FA on, tokens as inventoried, Registrar lock, auto-renew; the readable "must be off" settings via `infra audit`, the manual ones listed in `08` §8 and the dashboard-only ones in `08` §8b by eye).
 - (O) Check the card on file is not expiring within 60 days.
 - (A) Verify the latest GitHub Release archive is downloadable and `sha256sum -c` (macOS: `shasum -a 256 -c`) passes for 3 random entries.
 - (A) Add the monthly success-metric line (`00-overview.md` §6: GitHub code-search count, referrer hosts) under the automated weekly lines in `ops-log.md` on the `ops-log` branch (a direct push; the branch is unprotected by design).
