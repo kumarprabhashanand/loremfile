@@ -107,14 +107,31 @@ def test_the_infra_summary_counts_each_state_separately(tmp_path: Path) -> None:
             {"status": "ok"},
             {"status": "warning"},
             {"status": "unreadable"},
+            {"status": "not-applicable"},
             {"status": "drift"},
         ]
     }
     done = run("infra", INFRA, report, tmp_path, "audit.json")
     assert done.returncode == 0, done.stderr
-    for expected in ("checks=5", "ok=2", "warning=1", "unreadable=1", "drift=1"):
-        assert expected in done.stdout, done.stdout
+    expected = ("checks=6", "ok=2", "warning=1", "unreadable=1", "not-applicable=1", "drift=1")
+    for count in expected:
+        assert count in done.stdout, done.stdout
     assert "failing" not in done.stdout
+
+
+def test_every_state_the_audit_reports_is_counted(tmp_path: Path) -> None:
+    """The printed counts add up to `checks`: a state left out of the line would make a
+    clean run's numbers look short, the collapse the line above was written against."""
+    from loremfile.infra import audit  # noqa: PLC0415
+
+    states = [audit.OK, audit.DRIFT, audit.UNREADABLE, audit.WARNING, audit.NOT_APPLICABLE]
+    report = {"items": [{"status": state} for state in states]}
+    done = run("infra", INFRA, report, tmp_path, "audit.json")
+    assert done.returncode == 0, done.stderr
+    counts = dict(pair.split("=") for pair in done.stdout.split()[2:])
+    total = int(counts.pop("checks"))
+    assert total == len(states)
+    assert sum(int(value) for value in counts.values()) == total, done.stdout
 
 
 def test_an_infra_report_without_items_fails_the_step(tmp_path: Path) -> None:

@@ -64,6 +64,9 @@ DRIFT = "drift"
 UNREADABLE = "unreadable"
 #: A custom rule that is not ours (ADR-030): reported, never drift, never deleted.
 WARNING = "warning"
+#: A setting this plan does not offer, read as such from the API: neither ok nor drift,
+#: because there is nothing it could be right or wrong about (docs/08 §9).
+NOT_APPLICABLE = "not-applicable"
 
 
 @dataclass
@@ -95,6 +98,10 @@ class AuditReport:
         return [f for f in self.findings if f.state == WARNING]
 
     @property
+    def not_applicable(self) -> list[Finding]:
+        return [f for f in self.findings if f.state == NOT_APPLICABLE]
+
+    @property
     def ok(self) -> bool:
         """Unreadable is a **warning**, not a failure (docs/09 §3.4).
 
@@ -115,6 +122,9 @@ class AuditReport:
         if self.warnings:
             lines += ["", "Not ours, left in place (warning, not drift):"]
             lines += [f"  {f.resource}: {f.detail}" for f in self.warnings]
+        if self.not_applicable:
+            lines += ["", "Not offered on this plan (neither ok nor drift):"]
+            lines += [f"  {f.resource}: {f.detail}" for f in self.not_applicable]
         return "\n".join(lines)
 
 
@@ -263,7 +273,25 @@ def audit_dns(client: Client, report: AuditReport) -> None:
 
 
 def audit_tiered_cache(client: Client, report: AuditReport) -> None:
-    """Read the topology and compare it; never borrowed from `apply`'s outcome."""
+    """Tiered Cache first, then its topology; never borrowed from `apply`'s outcome.
+
+    The smart-topology flag only means something while Tiered Cache itself is on. On this
+    zone Tiered Cache is off and not editable (docs/08 §9), so the flag reads `on` and does
+    nothing; reporting that as `ok` passed on something the check could not observe. Off and
+    not editable is `not-applicable`. Off and editable is drift: the plan now offers it.
+    """
+    tiered = client.get(f"/zones/{client.zone_id}/argo/tiered_caching")
+    if _unreadable(tiered) or not tiered.ok:
+        report.add("tiered-cache", UNREADABLE, FALLBACKS["tiered-cache"])
+        return
+    setting = tiered.result or {}
+    if setting.get("value") != "on":
+        state = f"tiered caching {setting.get('value')!r}"
+        if setting.get("editable") is False:
+            report.add("tiered-cache", NOT_APPLICABLE, f"{state}, not editable on this plan")
+        else:
+            report.add("tiered-cache", DRIFT, f"{state} and editable: the plan now offers it")
+        return
     path = f"/zones/{client.zone_id}/cache/tiered_cache_smart_topology_enable"
     current = client.get(path)
     if _unreadable(current) or not current.ok:

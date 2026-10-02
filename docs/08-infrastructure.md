@@ -250,7 +250,7 @@ Transform rules now: **4 URL rewrites + 5 header rules = 9 of the 10** (since `f
 
 "Ignore query string" in the cache key is available on all plans (the API form documented for it is `exclude: "*"`; if the API rejects that literal, use `{"all": true}` — M2.3 confirms). With it, `?anything` requests share the cached object and cost no extra R2 read.
 
-Also enable **Tiered Cache → Smart Tiered Cache** (Caching → Tiered Cache) — apply.py does this via `PATCH /zones/{zone_id}/cache/tiered_cache_smart_topology_enable {"value":"on"}` (endpoint and Free-plan availability verified); it reduces R2 reads by funnelling misses through one upper-tier data centre, which matters because every distinct embedding origin has its own cache entry. Dashboard fallback: Caching → Tiered Cache → Smart Tiered Cache → On.
+**Smart Tiered Cache does nothing on this zone (corrected 2026-10-02).** apply.py sets the topology flag with `PATCH /zones/{zone_id}/cache/tiered_cache_smart_topology_enable {"value":"on"}`, and the flag reads `on`. But the topology only applies while Tiered Cache itself is on, and on this zone Tiered Cache (`/argo/tiered_caching`) is off and `editable: false` (checked 2026-10-01; it needs Argo here, although Cloudflare's availability table lists it on Free). So no misses are funnelled through an upper tier and no R2 reads are saved; this section used to claim both. `infra audit` reads Tiered Cache first and reports `tiered-cache` as `not-applicable` while it is off and not editable, and as drift if it ever becomes editable and is still off (§9).
 
 ### 5.5 `http_ratelimit.json` (the single free rule)
 
@@ -363,7 +363,7 @@ Common: read `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_ACCOUNT_I
    - with no entry point, `POST /zones/{id}/rulesets` with our rules;
    - any other rule is reported as a `warning` and left untouched;
    - never `PUT`.
-6. Tiered cache: `GET …/cache/tiered_cache_smart_topology_enable`; `PATCH` it `on` only if it is not already on.
+6. Tiered cache: `GET …/cache/tiered_cache_smart_topology_enable`; `PATCH` it `on` only if it is not already on. On this zone the flag is inert (§5.4): Tiered Cache itself is off and not editable.
 7. URL normalization: `GET`; if not `type: cloudflare, scope: incoming` → write it (or print the dashboard path when the API refuses).
 8. Print a summary table: resource → unchanged / updated / skipped(reason) / manual / warning (a custom rule that is not ours, left in place).
 
@@ -484,7 +484,7 @@ Regex in rules; excluding the `Origin` header from the cache key or adding heade
 **Checked 2026-10-01 and not available on this plan, so nobody spends time on them:**
 
 - **Zone Hold.** Enterprise only; the API refuses with error `1005`.
-- **Tiered Cache.** The setting reports `editable: false` and needs Argo. The smart-topology flag (`tiered_cache_smart_topology_enable`) reads `on` but does nothing on this plan, so `infra audit`'s `tiered-cache ok` reads an inert flag and says nothing about caching.
+- **Tiered Cache.** The setting reports `editable: false` and needs Argo. The smart-topology flag (`tiered_cache_smart_topology_enable`) reads `on` but does nothing on this plan. `infra audit` therefore reports `tiered-cache` as `not-applicable`, read from the API rather than assumed, instead of the `ok` it reported on that inert flag until 2026-10-02.
 - **Certificate Transparency alerts.** Not in the account's list of available alert types.
 
 

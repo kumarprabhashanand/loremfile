@@ -19,7 +19,14 @@ import pytest
 
 from loremfile.infra import apply as apply_module
 from loremfile.infra import audit
-from loremfile.infra.audit import DRIFT, OK, UNREADABLE, AuditReport, compare_rules
+from loremfile.infra.audit import (
+    DRIFT,
+    NOT_APPLICABLE,
+    OK,
+    UNREADABLE,
+    AuditReport,
+    compare_rules,
+)
 from loremfile.infra.cloudflare_api import Client, CloudflareError, ReadOnlyError, Response
 
 
@@ -141,17 +148,59 @@ def test_real_drift_is_not_ok() -> None:
     assert not report.ok
 
 
-def test_tiered_cache_is_read_rather_than_written() -> None:
-    """The audit looks at the value itself rather than borrowing `apply`'s outcome."""
-    zone = FakeZone({"tiered_cache_smart_topology_enable": response({"value": "on"})})
+TIERED = "argo/tiered_caching"
+TOPOLOGY = "tiered_cache_smart_topology_enable"
+
+
+def tiered(value: str, *, editable: bool, topology: str = "on") -> list[Any]:
+    """The tiered-cache finding for a zone whose Tiered Cache is `value`."""
+    zone = FakeZone(
+        {
+            TIERED: response({"id": "tiered_caching", "value": value, "editable": editable}),
+            TOPOLOGY: response({"value": topology}),
+        }
+    )
     report = AuditReport()
     audit.audit_tiered_cache(zone, report)  # type: ignore[arg-type]
-    assert report.findings[0].state == OK
+    return [(f.state, f.detail) for f in report.findings]
 
-    off = FakeZone({"tiered_cache_smart_topology_enable": response({"value": "off"})})
+
+def test_tiered_cache_off_and_not_editable_is_not_applicable_whatever_the_topology() -> None:
+    """This zone, 2026-10-01: Tiered Cache off and not editable, the topology flag `on` and
+    inert. A check reading only that flag reported `ok` on something it could not observe."""
+    for topology in ("on", "off"):
+        [(state, detail)] = tiered("off", editable=False, topology=topology)
+        assert state == NOT_APPLICABLE, topology
+        assert "not editable on this plan" in detail
+
+
+def test_tiered_cache_on_reads_the_topology_rather_than_borrowing_apply() -> None:
+    """The control: where Tiered Cache is on, the topology flag is real and checked."""
+    assert tiered("on", editable=True, topology="on")[0][0] == OK
+    assert tiered("on", editable=True, topology="off")[0][0] == DRIFT
+
+
+def test_tiered_cache_off_but_editable_is_drift() -> None:
+    """Not `not-applicable`: the plan offers it, and it is off."""
+    [(state, detail)] = tiered("off", editable=True)
+    assert state == DRIFT
+    assert "the plan now offers it" in detail
+
+
+def test_unreadable_tiered_cache_is_unreadable_not_applicable() -> None:
+    """A refused read says nothing about the plan, so it is not read as one."""
     report = AuditReport()
-    audit.audit_tiered_cache(off, report)  # type: ignore[arg-type]
-    assert report.findings[0].state == DRIFT
+    audit.audit_tiered_cache(FakeZone({}), report)  # type: ignore[arg-type]
+    assert report.findings[0].state == UNREADABLE
+
+
+def test_not_applicable_is_neither_ok_nor_drift() -> None:
+    report = AuditReport()
+    report.add("tiered-cache", NOT_APPLICABLE, "tiered caching 'off', not editable on this plan")
+    assert report.ok, "it must not fail the audit"
+    assert report.drifted == []
+    assert [f.resource for f in report.not_applicable] == ["tiered-cache"]
+    assert "Not offered on this plan" in report.render()
 
 
 def test_a_wrong_zone_setting_is_named_with_both_values() -> None:

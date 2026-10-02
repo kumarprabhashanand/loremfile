@@ -1208,6 +1208,7 @@ def infra_audit(as_json: bool) -> None:
             "drift": len(report.drifted),
             "unreadable": len(report.unreadable),
             "warnings": len(report.warnings),
+            "not_applicable": len(report.not_applicable),
         }
         items = [
             {"path": f.resource, "status": f.state, "detail": f.detail} for f in report.findings
