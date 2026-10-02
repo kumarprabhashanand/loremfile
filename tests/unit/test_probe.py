@@ -15,7 +15,9 @@ from __future__ import annotations
 
 import ast
 import inspect
+import itertools
 import textwrap
+import threading
 import time as _real_time
 from typing import Any
 
@@ -580,25 +582,81 @@ def test_the_rate_is_held_constant_across_runs() -> None:
     assert probe.RATE_LIMIT_TARGET_RPS > probe.RATE_LIMIT_REQUESTS / probe.RATE_LIMIT_PERIOD_SECONDS
 
 
-def test_a_rate_outside_the_band_is_a_precondition_failure(
+def stepped_clock(monkeypatch: pytest.MonkeyPatch, step: float) -> None:
+    """A clock that advances `step` seconds per reading, whichever thread reads it.
+
+    `_sustained` measures its rate on this clock, so the rate is a function of `step` and
+    the sustain window alone, never of how fast this machine runs the loop. With the real
+    clock and `sleep` stubbed out (the autouse fixture), the "rate" was this CPU's loop
+    speed: idle it sat above the band the test asserted, under load it fell into it (#45).
+    """
+    ticks = itertools.count()
+    lock = threading.Lock()
+
+    def monotonic() -> float:
+        with lock:
+            return next(ticks) * step
+
+    monkeypatch.setattr(probe.time, "monotonic", monotonic)
+
+
+#: One worker on a 0.001 s step: three clock readings a request, 333 requests in the
+#: one-second window, at exactly 333 / 1.001 requests a second.
+STEPPED_RATE = 333 / 1.001
+
+
+def steady_load(monkeypatch: pytest.MonkeyPatch, *, target: float) -> probe.ProbeReport:
+    one_identity(monkeypatch)
+    stepped_clock(monkeypatch, 0.001)
+    monkeypatch.setattr(probe, "RATE_LIMIT_SUSTAIN_SECONDS", 1.0)
+    monkeypatch.setattr(probe, "RATE_LIMIT_WORKERS", 1)
+    monkeypatch.setattr(probe, "RATE_LIMIT_TARGET_RPS", target)
+    responder(monkeypatch, everything_ok)
+    return probe.run_checks({"rate-limit": probe.check_rate_limit_blocks_a_burst})
+
+
+def test_the_measured_rate_is_a_function_of_the_clock_alone(
     monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The control that keeps #45 fixed: the same clock gives the same rate, exactly, on any
+    machine under any load. A real clock creeping back in fails this before it flakes."""
+    stepped_clock(monkeypatch, 0.001)
+    monkeypatch.setattr(probe, "RATE_LIMIT_SUSTAIN_SECONDS", 1.0)
+    monkeypatch.setattr(probe, "RATE_LIMIT_WORKERS", 1)
+    responder(monkeypatch, everything_ok)
+    first = probe._sustained(lambda n: f"/a{n}")
+    stepped_clock(monkeypatch, 0.001)
+    second = probe._sustained(lambda n: f"/b{n}")
+    assert len(first[0]) == len(second[0]) == 333
+    assert first[2] == second[2] == pytest.approx(STEPPED_RATE)
+
+
+@pytest.mark.parametrize(
+    ("target", "side"),
+    [(1_000, "below"), (100, "above")],
+)
+def test_a_rate_outside_the_band_is_a_precondition_failure(
+    monkeypatch: pytest.MonkeyPatch, target: float, side: str
 ) -> None:
     """A different rate is a different experiment, not a result about the rule.
 
     The cross-run comparison is about consistency at 262/s; a run that managed 60/s
-    answers a question nobody asked.
+    answers a question nobody asked. Both sides: 333/s against a band of 800-1,200 and
+    against one of 80-120.
     """
-    one_identity(monkeypatch)
-    monkeypatch.setattr(probe.time, "monotonic", REAL_MONOTONIC)
-    monkeypatch.setattr(probe, "RATE_LIMIT_SUSTAIN_SECONDS", 0.05)
-    monkeypatch.setattr(probe, "RATE_LIMIT_WORKERS", 1)
-    monkeypatch.setattr(probe, "RATE_LIMIT_TARGET_RPS", 100_000)
-    responder(monkeypatch, everything_ok)
+    detail = steady_load(monkeypatch, target=target).results[0].detail
+    assert "precondition unmet" in detail, side
+    assert "different experiment" in detail, side
 
-    report = probe.run_checks({"rate-limit": probe.check_rate_limit_blocks_a_burst})
-    detail = report.results[0].detail
-    assert "precondition unmet" in detail
-    assert "different experiment" in detail
+
+def test_a_rate_inside_the_band_is_not_a_precondition_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The control for the test above: 333/s against a band of 266-400 is the experiment, so
+    the check goes on to the burst, and fails only for the 429 the fake edge never sends."""
+    detail = steady_load(monkeypatch, target=333).results[0].detail
+    assert "precondition unmet" not in detail
+    assert "no 429" in detail
 
 
 # --- legal-pages-ai-agents (ADR-030) -------------------------------------------------
