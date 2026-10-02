@@ -455,11 +455,37 @@ Consequences: `upload --fixtures` can only ever add objects; a leaked T2 cannot 
 
 > **Cloudflare Web Analytics / RUM stays off.** Three independent reasons, any one of which would be enough: (1) the published privacy notice says the site uses "no cookies and no analytics scripts" apart from the strictly necessary `cf_clearance` Cloudflare sets when it shows a security check (`13` §3), and every page's footer says "No tracking cookies, no analytics, no third-party requests" — RUM works by injecting a beacon script, which would make both false; (2) § 25 TDDDG makes access to a visitor's device consent-dependent unless it is strictly necessary, and performance analytics is not; (3) the site CSP is `script-src 'self'` and would block the beacon, so enabling it would also mean weakening a security header. The operational need is already met without a script: `health.yml`'s cost check reads server-side zone analytics with T4. **None of our tokens can read this setting**, so it cannot be audited; it is checked in the dashboard with the other manual items below, and turning it on is a decision that has to reopen all three reasons, not a toggle.
 
-Read and enforced by `infra audit` via zone settings: Rocket Loader, Email Address Obfuscation, Automatic HTTPS Rewrites, Server-side Excludes, Hotlink Protection, Browser Integrity Check, Polish, Mirage, Early Hints, plus (via the bot-management endpoint, if readable) Bot Fight Mode, Block AI Bots, Managed robots.txt, and URL normalization (must stay **on**). Cloudflare Fonts and Speed Brain have zone-setting IDs (`fonts`, `speed_brain`) that M2.3 confirms **[VERIFY]** and then adds to `zone-settings.json` as `off`. Checked manually in the monthly checklist because they are separate products without a simple setting: Zaraz (never enabled), Web Analytics automatic injection (never add the site), Crawler Hints, Under Attack Mode (only during an incident).
+**The ones that matter most, and why.** Each would break something this project promises, and none announces itself when it changes.
+
+| Feature | Held off by | Why it stays off |
+|---|---|---|
+| **Automatic HTTPS Rewrites** | `automatic_https_rewrites: off` in `zone-settings.json`; `infra audit`; `test_the_settings_that_would_rewrite_response_bodies_are_off` | It rewrites `http://` URLs inside HTML response bodies to `https://`, for hosts Cloudflare knows serve HTTPS. HTML fixtures are served as `text/html` and their bytes must hash to the manifest, so a rewrite would break them at the edge, silently: every client's `sha256sum -c` fails, and with it the one promise the project makes, that the bytes served are the bytes published. Its documentation names no exemption for `Cache-Control: no-transform`. **Today the risk is latent, not live:** on 2026-10-02 the four HTML fixtures (`html/basic.html` and its three siblings) contained no `http://` URL. The first one that does is the one that would break. |
+| **Email Obfuscation** | `email_obfuscation: off`, held the same three ways | It replaces email addresses in HTML response bodies with an obfuscated link and injects a decode script: the same corruption of the same fixtures. Cloudflare documents that it skips responses carrying `Cache-Control: no-transform`, which every fixture does (`03` §4.1), and on 2026-10-02 no HTML fixture contained an address. Two safeguards that happen to hold, one header rule and one fixture away from not holding, so the setting stays off. |
+| **Bot Fight Mode** | `fight_mode: false` in `bot-management.json`; `infra audit` reads it (`bot-management ok`) | It challenges clients it judges automated and sets a cookie. Automated clients are the audience: hotlinked pages, curl, CI runners, the GitHub Action and both published clients. A challenge breaks all of them, and the cookie would make the privacy notice's no-cookies statement false. |
+| **Web Analytics / RUM** | nothing can read it; checked by eye | Privacy, and the CSP: the blockquote above. |
+| **`security_level`** | `essentially_off` in `zone-settings.json`; `infra audit` | Not `off`, deliberately `essentially_off`: any higher level challenges by IP reputation, which lands on CI runners and shared egress addresses, the hotlinking reason again. **Under Attack Mode is the incident lever instead** (`11` §7.4): switched on in the dashboard for the incident, and converged away by the next `infra apply`, which is why a deploy applies only when `infra/` changed (ADR-029). |
+
+Read and enforced by `infra audit` via zone settings: Rocket Loader, Email Address Obfuscation, Automatic HTTPS Rewrites, Server-side Excludes, Hotlink Protection, Browser Integrity Check, Polish, Mirage, Early Hints, and via the bot-management endpoint Bot Fight Mode, Block AI Bots and Managed robots.txt. `fonts` and `speed_brain` are not zone settings here (the blockquote above). Checked by eye in the monthly checklist, because they are separate products with no setting the audit can read: Zaraz (never enabled), Web Analytics automatic injection (never add the site), Under Attack Mode (only during an incident), and the dashboard-only settings in §8b.
+
+## 8b. Settings that exist only in the dashboard
+
+No file declares these and `infra audit` cannot see them, so any of them can be switched off without anything noticing. They are on the monthly checklist for that reason (`11` §3).
+
+| Setting | State | Where | What notices if it changes |
+|---|---|---|---|
+| **URL normalization** | on: Cloudflare normalization, incoming URLs | Rules → Settings → Normalize incoming URLs | Not the audit: it asks, and T1 is refused, so every run reports `url-normalization unreadable`. The probe's `url-normalization` check (`infra.yml` → `probe`) observes its effect when someone runs it. Nothing checks it daily, and the sandbox CSP on markup fixtures depends on it (§5.3). |
+| **Crawler Hints** | on since 2026-10-01 | Caching → Configuration | Nothing. It sends IndexNow signals to the participating search engines, inferred from cache misses. |
+| **Universal SSL notification** | created 2026-10-01, policy `aee1e7c044ec4818a56c9b580b847711` | Notifications | Nothing. It emails the account's address. It is account-wide, not limited to this zone, because that alert type rejects a zone filter, so it also fires for the account's other zones. |
 
 ## 9. What the Free plan cannot do (so nobody tries)
 
 Regex in rules; excluding the `Origin` header from the cache key or adding headers/cookies to it (ignoring or sorting the query string **is** available); more than one rate-limiting rule; host-header override; custom error pages; Cache Reserve without paying; caching objects > 512 MB. Purge by URL, hostname, tag, prefix and purge-everything are all available on Free (100 operations per request).
+
+**Checked 2026-10-01 and not available on this plan, so nobody spends time on them:**
+
+- **Zone Hold.** Enterprise only; the API refuses with error `1005`.
+- **Tiered Cache.** The setting reports `editable: false` and needs Argo. The smart-topology flag (`tiered_cache_smart_topology_enable`) reads `on` but does nothing on this plan, so `infra audit`'s `tiered-cache ok` reads an inert flag and says nothing about caching.
+- **Certificate Transparency alerts.** Not in the account's list of available alert types.
 
 
 
