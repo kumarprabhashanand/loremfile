@@ -31,6 +31,8 @@ import urllib.request
 from dataclasses import dataclass, field
 from typing import Any
 
+from loremfile.infra import scanners
+
 GRAPHQL_URL = "https://api.cloudflare.com/client/v4/graphql"
 
 #: Class B in R2's pricing: reads and metadata operations.
@@ -281,3 +283,172 @@ def recent_days(days: int, *, now: dt.datetime | None = None) -> list[Day]:
     """The last N calendar days, N bounded by the API's own window limit."""
     now = now or dt.datetime.now(tz=dt.UTC)
     return daily(now - dt.timedelta(days=days), now, now=now)
+
+
+# --- the scanner paths' share of the zone's requests (docs/08 §5.7) ----------------------
+
+#: The Free plan's zone request analytics: 7 days of history, at most 24 hours per query
+#: (Cloudflare's Security Analytics limits table, read 2026-10-02). Complete UTC days only,
+#: and only those wholly inside the retention, so no day is a truncated one.
+SCANNER_DAYS = 6
+
+SCANNER_QUERY = """
+query Scanners($zoneTag: string!, $start: Time!, $end: Time!) {
+  viewer {
+    zones(filter: {zoneTag: $zoneTag}) {
+      everything: httpRequestsAdaptiveGroups(
+        limit: 1,
+        filter: {datetime_geq: $start, datetime_lt: $end, requestSource: "eyeball"}
+      ) { count }
+      scanners: httpRequestsAdaptiveGroups(
+        limit: 1,
+        filter: {datetime_geq: $start, datetime_lt: $end, requestSource: "eyeball", OR: %s}
+      ) { count }
+    }
+  }
+}
+"""
+
+#: Asked separately, so a field the schema refuses costs only the evidence that the counts
+#: were not sampled, never the counts themselves.
+SAMPLING_QUERY = """
+query Sampling($zoneTag: string!, $start: Time!, $end: Time!) {
+  viewer {
+    zones(filter: {zoneTag: $zoneTag}) {
+      httpRequestsAdaptiveGroups(
+        limit: 1,
+        filter: {datetime_geq: $start, datetime_lt: $end, requestSource: "eyeball"}
+      ) { avg { sampleInterval } }
+    }
+  }
+}
+"""
+
+
+def _zone() -> str:
+    zone = os.environ.get("CLOUDFLARE_ZONE_ID", "")
+    if not zone:
+        raise UsageError("CLOUDFLARE_ZONE_ID is required.")
+    return zone
+
+
+def _graphql_or(terms: list[dict[str, Any]]) -> str:
+    """A list of `{field: "value"}` filters as a GraphQL literal: keys bare, values quoted."""
+    return (
+        "["
+        + ", ".join(
+            "{" + ", ".join(f"{key}: {json.dumps(value)}" for key, value in term.items()) + "}"
+            for term in terms
+        )
+        + "]"
+    )
+
+
+def _zone_groups(body: dict[str, Any], alias: str) -> list[dict[str, Any]]:
+    try:
+        zones = body["data"]["viewer"]["zones"]
+    except (KeyError, TypeError) as exc:
+        raise UsageError(f"unexpected GraphQL shape: {body}") from exc
+    if not zones:
+        raise UsageError("the analytics token can see no zone")
+    return list(zones[0].get(alias) or [])
+
+
+def _count(groups: list[dict[str, Any]]) -> int:
+    return sum(int(group.get("count") or 0) for group in groups)
+
+
+@dataclass(frozen=True)
+class ScannerDay:
+    """One UTC day: every request, and those for a path the scanner rule names."""
+
+    date: str
+    requests: int
+    scanner_requests: int
+    sample_interval: float | None
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "date": self.date,
+            "requests": self.requests,
+            "scanner_requests": self.scanner_requests,
+            "sample_interval": self.sample_interval,
+        }
+
+
+def scanner_days(days: int = SCANNER_DAYS, *, now: dt.datetime | None = None) -> list[ScannerDay]:
+    """Requests for the scanner paths against all requests, one complete UTC day at a time.
+
+    The paths are `scanners.analytics_filter()`, the list the rule's expression is generated
+    from, so this counts exactly what the rule blocks — before it existed and after, since a
+    blocked request is still a request in these analytics.
+    """
+    now = now or dt.datetime.now(tz=dt.UTC)
+    today = now.astimezone(dt.UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+    query = SCANNER_QUERY % _graphql_or(scanners.analytics_filter())
+    found: list[ScannerDay] = []
+    for back in range(days, 0, -1):
+        start = today - dt.timedelta(days=back)
+        variables = {
+            "zoneTag": _zone(),
+            "start": _stamp(start),
+            "end": _stamp(start + dt.timedelta(days=1)),
+        }
+        body = _post(_token(), {"query": query, "variables": variables})
+        try:
+            sampled = _post(_token(), {"query": SAMPLING_QUERY, "variables": variables})
+            groups = _zone_groups(sampled, "httpRequestsAdaptiveGroups")
+            interval = max(
+                (float(group["avg"]["sampleInterval"]) for group in groups), default=None
+            )
+        except (UsageError, KeyError, TypeError, ValueError):
+            interval = None
+        found.append(
+            ScannerDay(
+                date=start.date().isoformat(),
+                requests=_count(_zone_groups(body, "everything")),
+                scanner_requests=_count(_zone_groups(body, "scanners")),
+                sample_interval=interval,
+            )
+        )
+    return found
+
+
+def scanner_summary(found: list[ScannerDay]) -> dict[str, Any]:
+    """The share over exactly the days counted, from one dataset: no extrapolation.
+
+    A sample interval above 1 on any day means Cloudflare estimated that day, so `unsampled`
+    is false; an interval that could not be read makes it None, because unknown is not yes.
+    """
+    requests = sum(day.requests for day in found)
+    scanner = sum(day.scanner_requests for day in found)
+    intervals = [day.sample_interval for day in found]
+    unsampled: bool | None = None
+    if found and all(interval is not None for interval in intervals):
+        unsampled = all(interval == 1 for interval in intervals)
+    return {
+        "days": [day.as_dict() for day in found],
+        "from": found[0].date if found else None,
+        "to": found[-1].date if found else None,
+        "requests": requests,
+        "scanner_requests": scanner,
+        "share": scanner / requests if requests else None,
+        "unsampled": unsampled,
+    }
+
+
+def render_scanners(summary: dict[str, Any]) -> str:
+    share = summary["share"]
+    sampling = {True: "unsampled", False: "SAMPLED, so estimated", None: "sampling unknown"}
+    lines = [
+        f"  scanner paths, {summary['from']} to {summary['to']} "
+        f"({len(summary['days'])} complete UTC days): {summary['scanner_requests']:,} of "
+        f"{summary['requests']:,} requests"
+        + (f" ({share:.3%})" if share is not None else "")
+        + f", {sampling[summary['unsampled']]}"
+    ]
+    lines += [
+        f"    {day['date']}  {day['scanner_requests']:>6,} of {day['requests']:>8,}"
+        for day in summary["days"]
+    ]
+    return "\n".join(lines)

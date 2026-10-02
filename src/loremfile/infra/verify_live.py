@@ -696,7 +696,39 @@ def header_branch_findings(hashes: dict[str, str], responses: dict[str, Response
         if index.header("x-robots-tag") != "noindex" or index.header("content-security-policy"):
             findings.append(Finding(path, Status.HEADER_VALUE, "not served with the file headers"))
     findings += display_asset_findings(responses)
+    home = responses.get("index.html")
+    if home is not None and home.status == 200:  # noqa: PLR2004 - the byte check reports it
+        findings.append(check_hsts("/", home))
     return findings
+
+
+#: docs/08 §3: one year, subdomains included, never preload. `.dev` is on the browser preload
+#: list by its TLD, so this header is defence in depth and an auditor's signal, not what
+#: enforces HTTPS — and a stray `preload` would ask for a listing nobody decided on.
+HSTS_MAX_AGE = 31_536_000
+
+
+def check_hsts(path: str, response: Response) -> Finding:
+    """The zone's `security_header` setting, as the edge actually sends it."""
+    name = f"hsts:{path}"
+    served = response.header("strict-transport-security")
+    if not served:
+        return Finding(name, Status.HEADER_MISSING, "strict-transport-security")
+    directives: dict[str, str] = {}
+    for part in served.split(";"):
+        key, _, value = part.strip().partition("=")
+        if key:
+            directives[key.lower()] = value.strip().strip('"')
+    wrong = []
+    if directives.get("max-age") != str(HSTS_MAX_AGE):
+        wrong.append(f"max-age is {directives.get('max-age')!r}, not {HSTS_MAX_AGE}")
+    if "includesubdomains" not in directives:
+        wrong.append("no includeSubDomains")
+    if "preload" in directives:
+        wrong.append("preload is set")
+    if wrong:
+        return Finding(name, Status.HEADER_VALUE, f"{served!r}: {'; '.join(wrong)}")
+    return Finding(name, Status.OK, served)
 
 
 def display_asset_findings(responses: dict[str, Response]) -> list[Finding]:

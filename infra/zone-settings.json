@@ -20,5 +20,13 @@
   "development_mode": "off",
   "early_hints": "off",
   "polish": "off",
-  "mirage": "off"
+  "mirage": "off",
+  "security_header": {
+    "strict_transport_security": {
+      "enabled": true,
+      "max_age": 31536000,
+      "include_subdomains": true,
+      "preload": false
+    }
+  }
 }

@@ -119,11 +119,21 @@ Do these in order. Each step says how to verify it.
   "development_mode": "off",
   "early_hints": "off",
   "polish": "off",
-  "mirage": "off"
+  "mirage": "off",
+  "security_header": {
+    "strict_transport_security": {
+      "enabled": true,
+      "max_age": 31536000,
+      "include_subdomains": true,
+      "preload": false
+    }
+  }
 }
 ```
 
 Why the "off" list matters: each of `rocket_loader`, `email_obfuscation`, `automatic_https_rewrites`, `server_side_exclude`, `polish`, `mirage` rewrites response bodies, which would change fixture bytes; `hotlink_protection` blocks the product's purpose; `browser_check` and `security_level` challenge non-browser clients (curl, CI, agents). Browser TTL is governed by the cache rule (`browser_ttl.mode: respect_origin`), not by the zone-level `browser_cache_ttl` setting, whose "respect existing headers" value is reported to be rejected by the API on non-Enterprise zones. `polish`/`mirage` are Pro features: apply.py skips settings whose GET reports `editable: false`; audit.py only complains if such a setting is not `off`.
+
+**`security_header` is HSTS: one year, `includeSubDomains`, never `preload`** (enabled 2026-10-02). `.dev` is on the browser preload list as a whole TLD, so no modern browser speaks plain HTTP to this host whether or not it sends the header; the header is defence in depth for clients that ship no preload list, and the signal an auditor looks for. It is not what enforces HTTPS, and `preload` stays false because asking for a per-domain listing would be a decision of its own, with nothing to gain under a preloaded TLD. The object Cloudflare stores also holds `nosniff` (an `X-Content-Type-Options` switch), which the file does not declare: apply and audit compare a nested setting on its declared fields only (`apply.converged`), so the zone keeps its own `nosniff` and an undeclared field is never written and never read as drift. `verify-live` reads the header off the home page on every deploy and every daily check (`check_hsts`).
 
 ## 4. Bot management — `infra/bot-management.json`
 
@@ -277,12 +287,15 @@ So `apply.py` **confirms the managed ruleset is deployed and stops** — a perma
 
 **Two corrections this produced.** The name is **"Cloudflare Managed Free Ruleset"**, not "Cloudflare Free Managed Ruleset" as this section said; a `name ==` match against the old string would never have succeeded. And the lookup is **zone-scoped** (`GET /zones/{id}/rulesets`), not `GET /accounts/{id}/rulesets`: T1 is a zone token, and it failing to list account rulesets is the token working as designed, not a permission to widen. The id in the constant was correct.
 
-### 5.7 `http_request_firewall_custom.json` (1 of the 5 free custom rules; written rule by rule — ADR-030)
+### 5.7 `http_request_firewall_custom.json` (2 of the 5 free custom rules; written rule by rule — ADR-030)
 
 ```json
 { "rules": [
   { "ref": "loremfile_legal_pages_ai_agents", "description": "block self-identifying AI agents on the two legal pages that name the operator (ADR-028, ADR-030)", "enabled": true,
     "expression": "(http.request.uri.path eq \"/legal/imprint\" or http.request.uri.path eq \"/legal/imprint/\" or http.request.uri.path eq \"/legal/privacy\" or http.request.uri.path eq \"/legal/privacy/\") and (cf.verified_bot_category in {\"AI Crawler\" \"AI Assistant\" \"AI Search\" \"Archiver\"} or http.user_agent contains \"GPTBot\" or http.user_agent contains \"OAI-SearchBot\" or http.user_agent contains \"ChatGPT-User\" or http.user_agent contains \"OAI-AdsBot\" or http.user_agent contains \"ClaudeBot\" or http.user_agent contains \"Claude-User\" or http.user_agent contains \"Claude-SearchBot\" or http.user_agent contains \"CCBot\" or http.user_agent contains \"PerplexityBot\" or http.user_agent contains \"Perplexity-User\" or http.user_agent contains \"Bytespider\" or http.user_agent contains \"meta-externalagent\" or http.user_agent contains \"meta-externalfetcher\" or http.user_agent contains \"Amazonbot\" or http.user_agent contains \"Diffbot\" or http.user_agent contains \"MistralAI-User\" or http.user_agent contains \"DuckAssistBot\" or http.user_agent contains \"AgentDataBot\" or http.user_agent contains \"BixelBot\" or http.user_agent contains \"CloudflareBrowserRenderingCrawler\" or http.user_agent contains \"Kimi-Agent\" or http.user_agent contains \"qodercli\")",
+    "action": "block" },
+  { "ref": "loremfile_scanner_paths", "description": "block scanner requests for WordPress, .env and .git paths this site has never served (docs/08 §5.7)", "enabled": true,
+    "expression": "(starts_with(http.request.uri.path, \"/wp-admin/\") or starts_with(http.request.uri.path, \"/.git/\") or http.request.uri.path eq \"/wp-login.php\" or http.request.uri.path eq \"/xmlrpc.php\" or http.request.uri.path eq \"/.env\")",
     "action": "block" }
 ] }
 ```
@@ -327,7 +340,13 @@ So `apply.py` **confirms the managed ruleset is deployed and stops** — a perma
 
 The browser control shows the rule does not refuse everyone; the off-path control shows the `403` comes from the rule's path scope. The pages need not be published for this, because the edge answers before R2 does.
 
-**Budget.** 1 of 5 custom rules, leaving 4 for incidents (`11` §7.4).
+**The scanner rule** (`loremfile_scanner_paths`, 2026-10-02) blocks `/wp-admin/*`, `/wp-login.php`, `/xmlrpc.php`, `/.env` and `/.git/*`: requests from scanners probing for software this site has never run. The paths live in one list, `src/loremfile/infra/scanners.py`; the committed expression is generated from it (tested), with `eq` for whole paths and `starts_with()` for the two prefixes, each prefix ending in `/` so `/wp-admin` and `/.gitignore` stay out. **It never matches `/.well-known/`**, where `security.txt`, the API catalog and the agent skills live: the tests read the committed expression with an evaluator of their own and assert it, and every deploy's `verify-live` fetches each of those keys and would report a `403`.
+
+**What it is for.** Not cost. Each request it blocks would otherwise be a 404 for a missing key, read from R2 unless an earlier 404 for the same path is still cached at the edge: a fraction of a cent per thousand on the paid tier, and nothing inside the free one (`19` §3). The gain is readable analytics: the daily missing-key series in `ops-log.md` is the number the cost model watches, and scanner traffic is noise in it. `loremfile usage`, run daily by `health.yml` with T4, reports the share itself, measured: scanner-path requests against every request over the last six complete UTC days, read from `httpRequestsAdaptiveGroups` (seven days of history on Free, at most 24 hours per query, so one query per day), with the sample interval, so an estimated day is called one. A blocked request is still a request in those analytics, so the number means the same before the rule and after. The measurement is reported, never a failure: a query the schema refuses prints as unavailable beside a cost check it cannot redden.
+
+**What the probe checks.** `infra.yml` → `probe` runs `scanner-paths`: it settles on the first path, then each named path must get `403`, and three controls must not: `/.well-known/security.txt`, `/wp-admin` and `/.gitignore`. It is a probe check, not a per-deploy one, because every request to these paths is counted by the measurement above, and a check repeated on every deploy would become a share of the number it exists to make readable.
+
+**Budget.** 2 of 5 custom rules, leaving 3 for incidents (`11` §7.4).
 
 ## 6. `apply.py` and `audit.py`
 
@@ -382,6 +401,7 @@ Endpoints, expected token permissions and the fallback when the API answers 403 
 | 6 | `/zones/{id}/cache/tiered_cache_smart_topology_enable` | Cache Settings: Edit (endpoint verified) | Caching → Tiered Cache |
 | 7 | `/zones/{id}/url_normalization` (read; write only if off) | Zone Settings: Edit **[VERIFY endpoint]** | Rules → Settings → Normalize incoming URLs |
 | health | GraphQL Analytics `r2OperationsAdaptiveGroups` (T4) | Account → Account Analytics: Read **[VERIFY in M0.4 when T4 is created]** | Read R2 usage in the dashboard |
+| health | GraphQL Analytics `httpRequestsAdaptiveGroups` on the zone (T4), for the scanner-path share (§5.7) | Zone → Analytics: Read | Security → Analytics, filtered on the paths |
 | purge | `/zones/{id}/purge_cache` | Cache Purge | Caching → Configuration → Purge |
 
 `audit.py [--strict]`: performs every GET, diffs against desired state, and additionally runs behavioural probes against production: `GET /` is HTML; `GET /pdf/` equals `GET /pdf`; header rules present on a fixture, a markup fixture and a page; the sandbox CSP is present on `/html/basic%2Ehtml` and `/svg/simple-shapes%2Esvg` (normalization check); a warm-cache CORS check (GET without `Origin`, then with `Origin: https://example.org` → `access-control-allow-origin: *`, `cf-cache-status` MISS then HIT on repeat); `OPTIONS` preflight returns `access-control-allow-origin: *`; `www` redirects; `X-Robots-Tag` absent on `/pdf`; bucket lock rules present for every format prefix (via `GET /accounts/{account_id}/r2/buckets/{bucket}/lock` if T1/T4 may read it, else skipped with a warning); the DNS zone contains only the expected records (apex R2 record, `www`, MX ×3, SPF, DMARC) and lists any others as findings. Settings the token cannot read are reported as warnings and do not fail the run unless `--strict`. Exit 1 on any real difference. Runs after every deploy and weekly.

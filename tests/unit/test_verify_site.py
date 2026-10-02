@@ -24,6 +24,10 @@ FILES = {
 }
 
 
+#: The zone's `security_header` setting (docs/08 §3), which the edge adds to every response.
+ZONE_HSTS = "max-age=31536000; includeSubDomains"
+
+
 class Edge:
     """Production as `fetch` sees it: the built bytes, with the headers the rules set."""
 
@@ -49,6 +53,7 @@ class Edge:
             headers |= {"x-robots-tag": "noindex", "cross-origin-resource-policy": "cross-origin"}
         if key in routes.LEGAL_KEYS:
             headers["x-robots-tag"] = routes.LEGAL_ROBOTS
+        headers["strict-transport-security"] = ZONE_HSTS
         return Response(status=200, headers=headers, body=self.bodies[path])
 
 
@@ -78,6 +83,19 @@ def test_a_site_that_matches_its_build_passes_and_every_key_was_fetched(
     findings = verify_live.site_findings(site)
     assert failures(findings) == []
     assert {routes.public_path(key) for key in FILES} | {"/pdf/", "/docs/"} <= set(edge.calls)
+
+
+def test_a_zone_that_stopped_sending_hsts_is_reported(site: Path, edge: Edge) -> None:
+    """The site check reads the header off the home page it already fetched (docs/08 §3)."""
+    home = edge("/")
+    edge.overrides["/"] = verify_live.Response(
+        status=200,
+        headers={k: v for k, v in home.headers.items() if k != "strict-transport-security"},
+        body=home.body,
+    )
+    assert failures(verify_live.site_findings(site)) == [
+        ("hsts:/", Status.HEADER_MISSING, "strict-transport-security")
+    ]
 
 
 def test_a_defaced_page_is_a_hash_mismatch(site: Path, edge: Edge) -> None:
