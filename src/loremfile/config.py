@@ -40,6 +40,12 @@ SCHEMA_VERSION: Final = 1
 CATALOG_VERSION: Final = "1.4.0"
 SCHEMA_URL: Final = f"{BASE_URL}schema/manifest-v{SCHEMA_VERSION}.json"
 
+#: IndexNow's key (docs/04 §12). **Public by design, never a secret.** IndexNow checks a
+#: submission by fetching `{BASE_URL}{INDEXNOW_KEY}.txt`, which anyone can read; all the key
+#: allows is telling search engines that URLs on this host changed. Moved into a secret, the
+#: build could not emit the file and every submission would come back 403.
+INDEXNOW_KEY: Final = "6f5cebccab35f5982434418d5d001e12"
+
 
 def repo_root() -> Path:
     """The repository root, derived from this file's location.

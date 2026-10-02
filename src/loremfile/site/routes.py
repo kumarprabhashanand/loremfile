@@ -13,6 +13,7 @@ from urllib.parse import urlsplit
 from loremfile.config import (
     ASSET_CACHE_CONTROL,
     BASE_URL,
+    INDEXNOW_KEY,
     OWNER,
     SITE_CACHE_CONTROL,
 )
@@ -32,6 +33,9 @@ LEGAL_TWINS: Final = tuple(
     f"{key}{suffix}" for key in LEGAL_KEYS for suffix in (".html", "/index.html")
 )
 FORMAT_INDEX_DIR: Final = "_formats"
+#: IndexNow's key file (docs/04 §12): at the root, holding the key and nothing else. A site
+#: key like any other, so the upload publishes it and nothing ever deletes it.
+INDEXNOW_KEY_FILE: Final = f"{INDEXNOW_KEY}.txt"
 PROBE_PREFIX: Final = "/_probe/"
 DAY_CACHE_CONTROL: Final = "public, max-age=86400"
 DAY_CACHED: Final = frozenset(

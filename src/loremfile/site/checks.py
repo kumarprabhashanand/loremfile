@@ -18,7 +18,7 @@ from urllib.parse import urlsplit
 import html5lib
 from html5lib.html5parser import ParseError
 
-from loremfile.config import SITE_HOST
+from loremfile.config import INDEXNOW_KEY, SITE_HOST
 from loremfile.site import build, routes
 
 ATTRIBUTE = re.compile(r'\s(href|src|content)="([^"]*)"')
@@ -229,6 +229,24 @@ def _asset_problems(site_dir: Path, keys: set[str]) -> list[str]:
     return problems
 
 
+#: IndexNow's rule for a key: 8 to 128 characters of a-z, A-Z, 0-9 and dashes (docs/04 §12).
+INDEXNOW_KEY_SHAPE = re.compile(r"[A-Za-z0-9-]{8,128}")
+
+
+def _indexnow_problems(text: str, sitemap: str, keys: set[str]) -> list[str]:
+    name = routes.INDEXNOW_KEY_FILE
+    if name not in keys:
+        return [f"{name}: the IndexNow key file is missing, so every submission would be a 403"]
+    problems = []
+    if text != INDEXNOW_KEY:
+        problems.append(f"{name}: holds something other than exactly the key")
+    if not INDEXNOW_KEY_SHAPE.fullmatch(INDEXNOW_KEY):
+        problems.append("the IndexNow key is not 8 to 128 of a-z, A-Z, 0-9 and dashes")
+    if name in sitemap:
+        problems.append(f"sitemap.xml: lists {name}, which is not a page")
+    return problems
+
+
 def discovery_problems(site_dir: Path, keys: set[str]) -> list[str]:
     def read(key: str) -> str:
         path = site_dir / routes.disk_path(key)
@@ -237,6 +255,7 @@ def discovery_problems(site_dir: Path, keys: set[str]) -> list[str]:
     problems = [*_llms_problems("llms.txt", read("llms.txt"))]
     problems += _llms_problems("llms-full.txt", read("llms-full.txt"))
     problems += _sitemap_problems(read("sitemap.xml"), keys)
+    problems += _indexnow_problems(read(routes.INDEXNOW_KEY_FILE), read("sitemap.xml"), keys)
     if any(key.removeprefix("legal/") in read("search-index.json") for key in routes.LEGAL_KEYS):
         problems.append("search-index.json: mentions a legal page (ADR-028)")
     problems += _security_txt_problems(read(".well-known/security.txt"))

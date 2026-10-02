@@ -32,6 +32,7 @@ from loremfile.infra import apply as apply_infra
 from loremfile.infra import audit as audit_infra
 from loremfile.infra import changed as changed_infra
 from loremfile.infra import crawlers as crawlers_module
+from loremfile.infra import indexnow as indexnow_module
 from loremfile.infra import locks
 from loremfile.infra import probe as probe_module
 from loremfile.infra import purge as purge_module
@@ -864,6 +865,39 @@ def purge_command(site: bool, url: str | None, as_json: bool) -> None:
     sys.exit(
         _emit("purge", ok=not errors, summary=summary, items=[], errors=errors, as_json=as_json)
     )
+
+
+@main.command("indexnow")
+@click.option(
+    "--changed-from",
+    "report_path",
+    required=True,
+    type=click.Path(path_type=Path),
+    help="This deploy's `upload --site --json` report.",
+)
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def indexnow_command(report_path: Path, as_json: bool) -> None:
+    """Tell IndexNow which site pages this deploy changed (docs/04 §12).
+
+    Always exits 0. An engine refusing a notification changes nothing about what was
+    published, so it must not fail the deploy that published it; the answer is logged.
+    """
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        outcome = indexnow_module.announce(indexnow_module.uploaded_keys(report))
+    except (OSError, ValueError, AttributeError, TypeError, KeyError) as exc:
+        outcome = indexnow_module.Outcome([], None, f"not sent: no readable upload report ({exc})")
+    click.echo(f"indexnow: {outcome.detail}", err=True)
+    summary = {
+        "submitted": len(outcome.submitted),
+        "status": outcome.status,
+        "accepted": outcome.accepted,
+    }
+    items: list[Item] = [
+        {"path": url, "status": "submitted", "detail": ""} for url in outcome.submitted
+    ]
+    _emit("indexnow", ok=True, summary=summary, items=items, errors=[], as_json=as_json)
+    sys.exit(0)
 
 
 @main.command("verify-live")
