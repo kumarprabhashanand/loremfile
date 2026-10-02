@@ -142,6 +142,19 @@ def no_entry_point(response: Response) -> bool:
     return response.status == HTTP_NOT_FOUND or NO_ENTRY_POINT_CODE in codes
 
 
+def converged(current: Any, desired: Any) -> Any:  # noqa: ANN401 - walks decoded JSON
+    """`desired` laid over `current`: the value a setting must have, and the one a write sends.
+
+    A nested setting carries fields the desired state need not declare — `security_header`
+    also holds `nosniff` beside the HSTS fields. Undeclared fields keep the zone's value, so
+    declaring four of five never flips the fifth, and a comparison never reads the fifth as
+    drift on every run (the shape `tls_1_3` had, docs/08 §8).
+    """
+    if isinstance(current, dict) and isinstance(desired, dict):
+        return {**current, **{key: converged(current.get(key), v) for key, v in desired.items()}}
+    return desired
+
+
 def apply_zone_settings(client: Client, report: Report) -> None:
     desired = load_desired("zone-settings.json")
     current = client.get(f"/zones/{client.zone_id}/settings")
@@ -158,12 +171,13 @@ def apply_zone_settings(client: Client, report: Report) -> None:
             # Pro-only settings (polish, mirage): audit only complains if not off.
             report.add(f"setting:{key}", "skipped", f"read-only, is {found.get('value')!r}")
             continue
-        if found.get("value") == value:
+        wanted = converged(found.get("value"), value)
+        if found.get("value") == wanted:
             report.add(f"setting:{key}", "unchanged")
             continue
-        response = client.patch(f"/zones/{client.zone_id}/settings/{key}", {"value": value})
+        response = client.patch(f"/zones/{client.zone_id}/settings/{key}", {"value": wanted})
         if response.ok:
-            report.add(f"setting:{key}", "updated", f"{found.get('value')!r} → {value!r}")
+            report.add(f"setting:{key}", "updated", f"{found.get('value')!r} → {wanted!r}")
         elif _is_forbidden(response):
             report.add(f"setting:{key}", "manual", FALLBACKS["zone-settings"])
         else:

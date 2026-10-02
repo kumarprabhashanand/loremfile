@@ -46,6 +46,7 @@ from loremfile.infra.apply import (
     MANAGED_PHASE,
     WRITTEN_PHASES,
     compare_rules,
+    converged,
     custom_rules_desired,
     dns_candidates,
     dns_content,
@@ -204,8 +205,8 @@ def audit_zone_settings(client: Client, report: AuditReport) -> None:
         found = by_id.get(key)
         if found is None:
             report.add(f"setting:{key}", UNREADABLE, "not offered on this plan")
-        elif found.get("value") != value:
-            report.add(f"setting:{key}", DRIFT, f"is {found.get('value')!r}, want {value!r}")
+        elif found.get("value") != (wanted := converged(found.get("value"), value)):
+            report.add(f"setting:{key}", DRIFT, f"is {found.get('value')!r}, want {wanted!r}")
         else:
             report.add(f"setting:{key}", OK)
 

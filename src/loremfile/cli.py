@@ -1125,6 +1125,16 @@ def usage_command(days: int, daily_days: int, as_json: bool) -> None:
             series = [day.as_dict() for day in usage_module.recent_days(daily_days)]
         except usage_module.UsageError as exc:
             errors.append(f"daily series: {exc}")
+    # The scanner paths' share (docs/08 §5.7) is a measurement for a decision, not a check:
+    # reported every run, and never an error, so a query the schema refuses reads as
+    # "unavailable" beside a cost check it cannot redden.
+    scanners: dict[str, Any]
+    try:
+        scanners = usage_module.scanner_summary(usage_module.scanner_days())
+        click.echo(usage_module.render_scanners(scanners), err=True)
+    except (usage_module.UsageError, OSError, ValueError) as exc:
+        scanners = {"error": str(exc)}
+        click.echo(f"  scanner paths: unavailable: {exc}", err=True)
     sys.exit(
         _emit(
             "usage",
@@ -1133,7 +1143,7 @@ def usage_command(days: int, daily_days: int, as_json: bool) -> None:
             items=items,
             errors=errors,
             as_json=as_json,
-            extra={"daily": series},
+            extra={"daily": series, "scanner_paths": scanners},
         )
     )
 

@@ -75,6 +75,7 @@ Descriptors are ordered tokens separated by `-`:
 | `Timing-Allow-Origin` | `*` | Rule H1 |
 | `X-Robots-Tag` | `noindex` | Rule `files_noindex` (raw files stay out of search results; pages are indexed instead). It reaches every path containing a dot **except four display assets** — `favicon.ico`, `apple-touch-icon.png`, `/assets/og.png`, `/assets/mark.svg` — which exist to be shown by search engines and social platforms and so carry **no** `X-Robots-Tag` (2026-09-21; they keep `nosniff`, CORP and TAO from H1). `manifest.json`, `sitemap.xml`, `robots.txt`, `llms.txt`, `llms-full.txt` and `security.txt` still carry `noindex`, and that is accepted — see `04` §7 before changing it. |
 | `cf-cache-status` | `HIT`/`MISS`/… informational | Cloudflare |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` — on every HTTPS response, pages included. `.dev` is HSTS-preloaded by its TLD, so this is defence in depth, not what enforces HTTPS | Zone setting `security_header` (`08` §3) |
 
 ### 4.2 Additionally on active-content fixtures (`.html`, `.htm`, `.xhtml`, `.svg`, `.xml`) (stable)
 

@@ -25,9 +25,10 @@ import urllib.error
 import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Final
 
 from loremfile.config import SITE_HOST
+from loremfile.infra import scanners
 from loremfile.infra.apply import CUSTOM_PHASE, custom_rules_desired, infra_dir
 
 BASE = f"https://{SITE_HOST}"
@@ -905,6 +906,53 @@ def check_legal_pages_are_noindex() -> str:
     return f"{len(paths)} legal paths carry {directive!r}; {NOINDEX_CONTROL} carries none"
 
 
+#: One request under each prefix the scanner rule names; the exact paths are asked as they are.
+SCANNER_CHILDREN: Final = {"/wp-admin/": "/wp-admin/install.php", "/.git/": "/.git/config"}
+#: Paths the scanner rule must not refuse. The first is the one it must never match; the
+#: other two sit beside its prefixes and show they are anchored at their slash.
+SCANNER_CONTROLS: Final = ("/.well-known/security.txt", "/wp-admin", "/.gitignore")
+
+
+def check_scanner_paths_are_refused() -> str:
+    """The scanner rule refuses every path it names and none of the controls (docs/08 §5.7).
+
+    **Settles first**, as the legal-pages check does: the first exact path is polled until it
+    is refused, so a rule still propagating reads "never appeared", not as a wrong rule. Then
+    each named path once, unretried, and each control once. Without the controls a rule that
+    refused every request would pass; `/.well-known/security.txt` is the one that matters most.
+    """
+    targets = [*scanners.EXACT, *(SCANNER_CHILDREN[prefix] for prefix in scanners.PREFIXES)]
+    require(
+        all(scanners.matches(path) for path in targets),
+        "a probe target is not a path the scanner rule names",
+    )
+    require(
+        not any(scanners.matches(path) for path in SCANNER_CONTROLS),
+        "a scanner control is a path the rule names, so it cannot show the rule is scoped",
+    )
+    settle(
+        f"a 403 on {targets[0]}",
+        lambda: fetch(targets[0]),
+        lambda response: response.status == HTTP_FORBIDDEN,
+    )
+    for path in targets:
+        response = fetch(path)
+        check(
+            response.status == HTTP_FORBIDDEN,
+            f"{path} answered {response.status}, not 403: the scanner rule does not match it",
+        )
+    for path in SCANNER_CONTROLS:
+        response = fetch(path)
+        check(
+            response.status != HTTP_FORBIDDEN,
+            f"{path} was refused with 403: the scanner rule matches a path it must not",
+        )
+    return (
+        f"{len(targets)} scanner paths refused; {len(SCANNER_CONTROLS)} controls, "
+        f"{SCANNER_CONTROLS[0]} among them, were not"
+    )
+
+
 #: Every check the probe runs against the live site.
 SITE_CHECKS: dict[str, Check] = {
     "url-normalization": check_url_normalization_is_on,
@@ -918,6 +966,7 @@ SITE_CHECKS: dict[str, Check] = {
     "404-caching": check_404s_are_cached,
     "legal-pages-ai-agents": check_legal_pages_refuse_ai_agents,
     "legal-pages-noindex": check_legal_pages_are_noindex,
+    "scanner-paths": check_scanner_paths_are_refused,
     "rate-limit-rule": check_rate_limit_rule_is_deployed,
     "rate-limit": check_rate_limit_blocks_a_burst,
 }
