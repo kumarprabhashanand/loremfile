@@ -99,7 +99,7 @@ jobs:
           print(
               f"infra audit: checks={len(items)} ok={state['ok']} "
               f"warning={state['warning']} unreadable={state['unreadable']} "
-              f"drift={state['drift']}"
+              f"not-applicable={state['not-applicable']} drift={state['drift']}"
           )
           PY
 
