@@ -444,6 +444,7 @@ A further guard covers the whole set: a unit test asserts `audit.CHECKS` covers 
   - `notes.md`.
 
   A patch release usually adds no fixtures, so its archive is empty and no part is attached. The output directory must start empty, because every file in it is attached.
+- **What the archives are for: mirroring the catalog and restoring it** (`11` §7.6). They are not the normal way to get files; that is the URL itself, the action or the client. As of `v1.4.0` they are the `v1.1.0` snapshot plus one delta from each later release, extracted together into one directory and checked as `11` §7.6 does.
 - **Rehearse before the first tag.** Dispatch `release.yml` on `main` before tagging `v1.1.0` (M5.5). It fetches and verifies every published fixture, assembles the snapshot, and publishes nothing.
 
 **The first rehearsal failed, and what it found (2026-09-15).** Run `34982012684` (old commit `d1c4f751c8`) stopped before any download: `git tag --merged HEAD failed: fatal: detected dubious ownership in repository at '/__w/loremfile/loremfile'`.

@@ -28,14 +28,15 @@
         </dl>
 {% endif %}
         <details><summary>Snippets</summary>
-          <pre><code>{{ row.curl }}</code></pre>
           <pre><code>{{ row.embed }}</code></pre>
+          <pre><code>{{ row.curl }}</code></pre>
         </details></td>
     </tr>
 {% endfor %}
   </tbody>
 </table>
 </div>
+<p>Every {{ label }} file in one command, each checked against its hash: <code>npx loremfile get --format {{ format }}</code>, or <code>loremfile get --format {{ format }}</code> after <code>pip install loremfile</code>.</p>
 {% if removed %}
 
 <h2 id="removed">Removed</h2>

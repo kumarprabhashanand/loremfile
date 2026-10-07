@@ -24,7 +24,7 @@
 | Single Redirects | 10 | 1 used (+1 incident rule) | 1 |
 | WAF custom rules | 5 | 0 used (incident use) | 0 |
 | GitHub Actions minutes | unlimited on public repos (standard runners) | build budget 45 min; daily health ≈ 10 min | ≈ 400 min/month |
-| GitHub Release asset | 2 GB per file | delta archives; snapshots ≈ 1 GB | fine |
+| GitHub Release asset | 2 GB per file | the `v1.1.0` snapshot is 526 MB; deltas so far 10 KB to 69 MB (measured 2026-10-07) | fine |
 | GHCR storage for public images | free | one image, few tags | fine |
 
 Alerts: the Free plan has **no** usage-based billing notification (that is a Pro+/pay-as-you-go feature), so the cost control is the daily `health.yml` usage step (read-only analytics token) opening a `cost` issue above 5 M R2 reads month-to-date; plus HTTP DDoS alert (all plans), Registrar expiry mail, GitHub Dependabot alerts and the daily health issue.
