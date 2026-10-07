@@ -11,7 +11,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "loremfile"
-version = "0.1.1"
+version = "0.2.0"
 description = "Download CC0 sample files from loremfile.dev and verify every byte"
 readme = "README.md"
 # A range, and a policy: the floor is the oldest CPython still receiving security fixes
@@ -21,7 +21,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 authors = [{ name = "the loremfile.dev contributors" }]
-keywords = ["fixtures", "test-data", "sample-files", "cc0", "download"]
+keywords = ["fixtures", "test-data", "sample-files", "cc0", "download", "mcp"]
 classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -44,6 +44,10 @@ Issues = "https://github.com/kumarprabhashanand/loremfile/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# The MCP tool surface, the same bytes as client-js/src/tools.json.
+[tool.setuptools.package-data]
+loremfile_client = ["tools.json"]
 
 # So that `pytest` inside this directory is this package's suite, not the repository's.
 [tool.pytest.ini_options]

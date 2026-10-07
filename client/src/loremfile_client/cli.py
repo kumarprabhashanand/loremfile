@@ -1,7 +1,7 @@
-"""`loremfile get | list | verify` (the CLI spec).
+"""`loremfile get | list | verify` (the CLI spec), and `loremfile mcp` (mcp.py).
 
 argparse rather than a framework, because the package has no dependencies and this is
-three subcommands. Exit codes are the contract: 0 fine, 1 a file failed verification or
+four subcommands. Exit codes are the contract: 0 fine, 1 a file failed verification or
 is missing, 2 the request was wrong, 3 loremfile.dev could not be read.
 """
 
@@ -14,7 +14,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from loremfile_client import __version__, api
+from loremfile_client import __version__, api, mcp
 
 OK, FAILED, REFUSED, UNREACHABLE = 0, 1, 2, 3
 DEFAULT_DEST = "loremfile-fixtures"
@@ -63,6 +63,10 @@ def build_parser() -> argparse.ArgumentParser:
     check.add_argument("--format", action="append", default=[], metavar="FMT")
     check.add_argument("--dest", default=DEFAULT_DEST, type=Path, help=f"Default: {DEFAULT_DEST}")
     shared(check)
+
+    subcommands.add_parser(
+        "mcp", help="Serve list, describe and verify to an agent over MCP on stdio."
+    )
     return parser
 
 
@@ -130,9 +134,15 @@ def run_verify(args: argparse.Namespace) -> int:
     return FAILED if failing else OK
 
 
+def run_mcp(_args: argparse.Namespace) -> int:
+    # stdout carries protocol messages only, so this prints nothing of its own there.
+    mcp.serve()
+    return OK
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    runner = {"get": run_get, "list": run_list, "verify": run_verify}[args.command]
+    runner = {"get": run_get, "list": run_list, "verify": run_verify, "mcp": run_mcp}[args.command]
     try:
         return runner(args)
     except api.Refused as exc:

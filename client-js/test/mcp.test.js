@@ -180,6 +180,12 @@ test("a 2025-11-25 client initializes and lists the same documented tools", asyn
   assert.deepEqual((await child.request("ping")).result, {});
 });
 
+test("the paging bounds the schema advertises are the ones the server enforces", () => {
+  const [list] = mcp.TOOLS;
+  assert.equal(list.inputSchema.properties.limit.default, mcp.DEFAULT_LIMIT);
+  assert.equal(list.inputSchema.properties.limit.maximum, mcp.MAX_LIMIT);
+});
+
 test("both eras get identical tool definitions, every one read-only", async () => {
   child = start();
   const now = (await modern("tools/list")).result.tools;
