@@ -49,6 +49,14 @@ fixtures:
     tags: [data, dataset-people]
     expect: { rows: 10, columns: 14, has_header: true, quoted_fields: true }
     size_class: free
+  - name: people-10-crlf.csv
+    phase: 1
+    generator: data.csv_people
+    params: { rows: 10, crlf: true }
+    description: "The same ten people rows with every record ending in CR LF, as RFC 4180 specifies, where people-10.csv ends them in LF. A reader that splits on LF alone leaves a carriage return on the last column."
+    tags: [data, dataset-people]
+    expect: { rows: 10, columns: 14, delimiter: ",", has_header: true, line_ending: crlf }
+    size_class: free
   - name: people-10-quoted-commas.csv
     phase: 1
     generator: data.csv_people

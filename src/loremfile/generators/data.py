@@ -82,9 +82,11 @@ def _delimited(
     header: bool,
     quoted_newlines: bool,
     quoted_delimiters: bool = False,
+    crlf: bool = False,
 ) -> str:
     buffer = io.StringIO(newline="")
-    writer = csv_module.writer(buffer, delimiter=delimiter, lineterminator="\n")
+    terminator = "\r\n" if crlf else "\n"
+    writer = csv_module.writer(buffer, delimiter=delimiter, lineterminator=terminator)
     if header:
         writer.writerow(PEOPLE_COLUMNS)
     for row in rows:
@@ -114,12 +116,14 @@ def csv_people(
     encoding: str = "utf-8",
     quoted_newlines: bool = False,
     quoted_delimiters: bool = False,
+    crlf: bool = False,
 ) -> bytes:
     """The people dataset as delimited text.
 
     ``delimiter`` covers the TSV and semicolon variants. ``quoted_newlines`` puts a real
     newline inside a quoted field, which breaks splitting on lines; ``quoted_delimiters``
-    puts the delimiter there, which breaks splitting on the delimiter.
+    puts the delimiter there, which breaks splitting on the delimiter. ``crlf`` ends every
+    record with CR LF, as RFC 4180 specifies, where the default is LF.
     """
     text = _delimited(
         ctx.dataset("people", rows),
@@ -127,6 +131,7 @@ def csv_people(
         header=header,
         quoted_newlines=quoted_newlines,
         quoted_delimiters=quoted_delimiters,
+        crlf=crlf,
     )
     prefix = b"\xef\xbb\xbf" if bom and encoding == "utf-8" else b""
     return prefix + text.encode(encoding)

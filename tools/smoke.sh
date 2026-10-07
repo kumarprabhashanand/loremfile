@@ -40,12 +40,15 @@ echo '  ok  ENABLE_FTS5 and a MATCH query'
 echo "== other binaries =="
 qpdf --version >/dev/null   || fail 'qpdf missing'
 avifenc --version >/dev/null || fail 'avifenc (libavif-bin) missing'
+# heic/ is encoded by x265 through heif-enc and decoded back by heif-convert (libde265).
+heif-enc --list-encoders 2>/dev/null | grep -q '^- x265 ' || fail 'heif-enc has no x265 HEIC encoder'
+command -v heif-convert >/dev/null || fail 'heif-convert (libheif-examples) missing'
 git --version >/dev/null    || fail 'git missing'
 want_gh="$(sed -n 's/^ARG GH_VERSION=//p' /t/Dockerfile)"
 [ -n "$want_gh" ] || fail 'tools/Dockerfile names no GH_VERSION'
 gh --version | head -n 1 | grep -qF "gh version ${want_gh} " \
   || fail "gh is not ${want_gh}: $(gh --version | head -n 1)"
-echo '  ok  qpdf avifenc git gh'
+echo '  ok  qpdf avifenc heif-enc heif-convert git gh'
 
 echo "== python imports and zstd =="
 python - <<'PY'

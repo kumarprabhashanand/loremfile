@@ -205,6 +205,7 @@ def test_sized_pdf_lands_inside_the_tolerance(path: str, target: int) -> None:
         "pdf/minimal.pdf",
         "pdf/a4-with-table-1page.pdf",
         "pdf/a4-encrypted-1page.pdf",
+        "pdf/form-fields-1page.pdf",
         "pdf/1mb.pdf",
     ],
 )
@@ -212,7 +213,42 @@ def test_running_twice_gives_identical_bytes(path: str) -> None:
     assert build(path) == build(path)
 
 
+def test_the_form_has_six_fields_and_three_are_filled() -> None:
+    props = check("pdf/form-fields-1page.pdf")
+    assert (props["form_fields"], props["filled_fields"]) == (6, 3)
+    reader = pypdf.PdfReader(io.BytesIO(build("pdf/form-fields-1page.pdf")))
+    person = datasets.rows("people", 1)[0]
+    assert {name: field.get("/V") for name, field in reader.get_fields().items()} == {
+        "full_name": f"{person['first_name']} {person['last_name']}",
+        "email": person["email"],
+        "phone": None,
+        "city": None,
+        "newsletter": "/Yes",
+        "terms": "/Off",
+    }
+    assert reader.trailer["/Root"]["/AcroForm"]["/NeedAppearances"].value is False
+
+
+def test_a_pdf_without_a_form_reports_no_form_props() -> None:
+    assert "form_fields" not in check("pdf/a4-1page.pdf")
+
+
 # --- negative tests --------------------------------------------------------
+
+
+def test_a_filled_field_without_its_appearance_is_rejected() -> None:
+    """The control for the appearance check: strip one filled widget's /AP."""
+    writer = pypdf.PdfWriter(
+        clone_from=pypdf.PdfReader(io.BytesIO(build("pdf/form-fields-1page.pdf")))
+    )
+    for annotation in writer.pages[0]["/Annots"]:
+        widget = annotation.get_object()
+        if widget["/T"] == "full_name":
+            del widget["/AP"]
+    out = io.BytesIO()
+    writer.write(out)
+    with pytest.raises(ValidationError, match="full_name"):
+        measure("pdf/form-fields-1page.pdf", out.getvalue())
 
 
 def test_truncated_pdf_is_rejected() -> None:

@@ -14,7 +14,7 @@
 # tools/apt-versions.txt and tools/TOOLCHAIN_DIGEST.
 #
 # Deliberately still bookworm. The apt packages below are half the determinism contract —
-# ffmpeg, qpdf, avifenc and sqlite3 produce most of the bytes that cannot change at a
+# ffmpeg, qpdf, avifenc, heif-enc and sqlite3 produce most of the bytes that cannot change at a
 # published path — so the Python move and a Debian move are two separate decisions, and
 # this is only the first. `python:3.14-slim-trixie` exists and is not used here.
 FROM python:3.14-slim-bookworm@sha256:c8137f4c460908c8763f281c8f22c431eb5c538514ba9553fc3a89c06b7cfb88
@@ -57,6 +57,7 @@ RUN set -eux; \
         ffmpeg=7:5.1.9-0+deb12u1 \
         qpdf=11.3.0-1+deb12u1 \
         libavif-bin=0.11.1-1+deb12u1 \
+        libheif-examples=1.15.1-1+deb12u1 \
         zstd=1.5.4+dfsg2-5 \
         xz-utils=5.4.1-1+deb12u1 \
         bzip2=1.0.8-5+b1 \

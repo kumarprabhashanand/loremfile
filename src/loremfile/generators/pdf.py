@@ -18,6 +18,18 @@ import io
 from fpdf import FPDF
 from fpdf.enums import AccessPermission
 from PIL import Image
+from pypdf import PdfReader, PdfWriter
+from pypdf.generic import (
+    ArrayObject,
+    BooleanObject,
+    DecodedStreamObject,
+    DictionaryObject,
+    FloatObject,
+    IndirectObject,
+    NameObject,
+    NumberObject,
+    TextStringObject,
+)
 
 from loremfile.config import APPROX_TOLERANCE
 from loremfile.generators.base import GeneratorContext, generator
@@ -218,6 +230,175 @@ def encrypted(
         pdf.set_font("helvetica", "", 11)
         pdf.multi_cell(0, 14, lorem.paragraph(rng), new_x="LMARGIN", new_y="NEXT")
     return _render(pdf)
+
+
+#: The form's fields, top to bottom: (name, label, kind). Which are filled is decided
+#: in `form`, from the people dataset's first row.
+FORM_FIELDS = (
+    ("full_name", "Full name", "text"),
+    ("email", "Email", "text"),
+    ("phone", "Phone", "text"),
+    ("city", "City", "text"),
+    ("newsletter", "Send me the newsletter", "check"),
+    ("terms", "I accept the terms", "check"),
+)
+FIELD_X, FIELD_WIDTH, FIELD_HEIGHT, CHECK_SIDE = 170.0, 300.0, 22.0, 14.0
+
+
+def _pdf_string(text: str) -> bytes:
+    """A PDF literal string body: core fonts are Latin-1, and three bytes need escaping."""
+    raw = text.encode(CORE_FONT_ENCODING)
+    return raw.replace(b"\\", b"\\\\").replace(b"(", b"\\(").replace(b")", b"\\)")
+
+
+def _appearance(
+    writer: PdfWriter, content: bytes, width: float, height: float, fonts: DictionaryObject
+) -> IndirectObject:
+    """A form XObject that draws a widget, so no viewer has to regenerate it."""
+    stream = DecodedStreamObject()
+    stream.set_data(content)
+    stream.update(
+        {
+            NameObject("/Type"): NameObject("/XObject"),
+            NameObject("/Subtype"): NameObject("/Form"),
+            NameObject("/BBox"): ArrayObject(
+                [FloatObject(0), FloatObject(0), FloatObject(width), FloatObject(height)]
+            ),
+            NameObject("/Resources"): DictionaryObject({NameObject("/Font"): fonts}),
+        }
+    )
+    return writer._add_object(stream)  # pypdf 6 has no public add_object
+
+
+@generator()
+def form(ctx: GeneratorContext) -> bytes:
+    """One page with an AcroForm: four text fields and two checkboxes, half of them filled.
+
+    fpdf2 draws the page and has no form fields, so pypdf adds them to its output. Every
+    widget carries its own appearance stream and `NeedAppearances` is false, so a viewer
+    shows exactly these values instead of regenerating them its own way.
+    """
+    person = ctx.dataset("people", 1)[0]
+    values: dict[str, str | bool] = {
+        "full_name": f"{person['first_name']} {person['last_name']}",
+        "email": str(person["email"]),
+        "phone": "",
+        "city": "",
+        "newsletter": True,
+        "terms": False,
+    }
+
+    pdf = _document()
+    pdf.add_page()
+    pdf.set_font("helvetica", "B", 18)
+    pdf.cell(0, 24, "loremfile.dev - sample form", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("helvetica", "", 11)
+    rects: dict[str, tuple[float, float, float, float]] = {}
+    top = 110.0
+    for name, label, kind in FORM_FIELDS:
+        width, height = (FIELD_WIDTH, FIELD_HEIGHT) if kind == "text" else (CHECK_SIDE,) * 2
+        pdf.text(56, top + 15, label)
+        pdf.rect(FIELD_X, top, width, height)
+        page_height = pdf.h
+        rects[name] = (FIELD_X, page_height - top - height, FIELD_X + width, page_height - top)
+        top += 40.0
+    writer = PdfWriter(clone_from=PdfReader(io.BytesIO(_render(pdf))))
+    page = writer.pages[0]
+
+    helv = writer._add_object(
+        DictionaryObject(
+            {
+                NameObject("/Type"): NameObject("/Font"),
+                NameObject("/Subtype"): NameObject("/Type1"),
+                NameObject("/BaseFont"): NameObject("/Helvetica"),
+                NameObject("/Encoding"): NameObject("/WinAnsiEncoding"),
+            }
+        )
+    )
+    zadb = writer._add_object(
+        DictionaryObject(
+            {
+                NameObject("/Type"): NameObject("/Font"),
+                NameObject("/Subtype"): NameObject("/Type1"),
+                NameObject("/BaseFont"): NameObject("/ZapfDingbats"),
+            }
+        )
+    )
+    fonts = DictionaryObject({NameObject("/Helv"): helv, NameObject("/ZaDb"): zadb})
+
+    fields = ArrayObject()
+    for name, label, kind in FORM_FIELDS:
+        x1, y1, x2, y2 = rects[name]
+        width, height = x2 - x1, y2 - y1
+        widget = DictionaryObject(
+            {
+                NameObject("/Type"): NameObject("/Annot"),
+                NameObject("/Subtype"): NameObject("/Widget"),
+                NameObject("/Rect"): ArrayObject([FloatObject(v) for v in rects[name]]),
+                NameObject("/F"): NumberObject(4),  # print
+                NameObject("/P"): page.indirect_reference,
+                NameObject("/T"): TextStringObject(name),
+                NameObject("/TU"): TextStringObject(label),
+            }
+        )
+        value = values[name]
+        if kind == "text":
+            text = str(value)
+            body = b"/Tx BMC\nq BT /Helv 11 Tf 0 g 4 7 Td (" + _pdf_string(text) + b") Tj ET Q\nEMC"
+            widget.update(
+                {
+                    NameObject("/FT"): NameObject("/Tx"),
+                    NameObject("/DA"): TextStringObject("/Helv 11 Tf 0 g"),
+                    NameObject("/AP"): DictionaryObject(
+                        {
+                            NameObject("/N"): _appearance(
+                                writer, body if text else b"/Tx BMC EMC", width, height, fonts
+                            )
+                        }
+                    ),
+                }
+            )
+            if text:
+                widget[NameObject("/V")] = TextStringObject(text)
+        else:
+            state = NameObject("/Yes" if value else "/Off")
+            check = b"q BT /ZaDb 11 Tf 0 g 2.5 3 Td (4) Tj ET Q"
+            widget.update(
+                {
+                    NameObject("/FT"): NameObject("/Btn"),
+                    NameObject("/DA"): TextStringObject("/ZaDb 0 Tf 0 g"),
+                    NameObject("/MK"): DictionaryObject({NameObject("/CA"): TextStringObject("4")}),
+                    NameObject("/V"): state,
+                    NameObject("/AS"): state,
+                    NameObject("/AP"): DictionaryObject(
+                        {
+                            NameObject("/N"): DictionaryObject(
+                                {
+                                    NameObject("/Yes"): _appearance(
+                                        writer, check, width, height, fonts
+                                    ),
+                                    NameObject("/Off"): _appearance(
+                                        writer, b"", width, height, fonts
+                                    ),
+                                }
+                            )
+                        }
+                    ),
+                }
+            )
+        fields.append(writer._add_object(widget))
+    page[NameObject("/Annots")] = ArrayObject(list(fields))
+    writer._root_object[NameObject("/AcroForm")] = DictionaryObject(
+        {
+            NameObject("/Fields"): fields,
+            NameObject("/DR"): DictionaryObject({NameObject("/Font"): fonts}),
+            NameObject("/DA"): TextStringObject("/Helv 0 Tf 0 g"),
+            NameObject("/NeedAppearances"): BooleanObject(False),
+        }
+    )
+    out = io.BytesIO()
+    writer.write(out)
+    return out.getvalue()
 
 
 #: One 512-wide plate at quality 90 is about 236 KB, which is the granularity the page

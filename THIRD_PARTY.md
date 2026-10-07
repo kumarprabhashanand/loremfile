@@ -16,6 +16,7 @@ otherwise).
 | ffmpeg and its codec libraries (libx264, libvpx, libopus, libvorbis, libmp3lame, aac, flac, theora, prores_ks) | LGPL-2.1-or-later / GPL-2.0-or-later depending on the build | Generating the audio and video fixtures | **No** — used as a build tool; only its output (which is not copyrightable third-party content) is published |
 | qpdf | Apache-2.0 | PDF linearisation and validation | No |
 | libavif-bin, zstd, xz-utils, bzip2, sqlite3 | BSD-2/3-Clause, Public domain (SQLite) | AVIF, archive and SQLite fixtures | No |
+| libheif-examples, libheif1, libde265-0 (x265 itself comes with ffmpeg) | LGPL-3.0-or-later (libheif, libde265), MIT (`heif-enc`, `heif-convert`), GPL-2.0-or-later (x265), read from each package's copyright file in the image on 2026-10-07 | Encoding the HEIC fixture, and decoding it back to validate it | No |
 | fonts-dejavu-core | Bitstream Vera Fonts Copyright / Arev Fonts Copyright | Rasterising label text into a few images and PDFs. Glyph *outlines* are never embedded as font data in a published fixture; the font itself is not redistributed. The `font/` fixtures are a generated box-glyph font (ADR-018), not DejaVu | No |
 | git, gh, ca-certificates, curl | GPL-2.0, MIT, MPL-2.0, curl licence | CI plumbing inside the image | No |
 

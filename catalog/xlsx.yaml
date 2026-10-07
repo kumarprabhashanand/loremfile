@@ -25,6 +25,14 @@ fixtures:
     tags: [document, data, dataset-people]
     expect: { sheets: 1, rows: 1001, columns: 14, formulas: 0 }
     size_class: free
+  - name: 3sheets-with-formulas.xlsx
+    phase: 1
+    generator: office.xlsx_multisheet_formulas
+    params: { rows: 10 }
+    description: "Three sheets: ten people, ten order lines, and a summary whose COUNTA, SUM, AVERAGE, VLOOKUP and COUNTIF formulas read the other two, each with its result cached. The order sheet's name has a space in it, so every reference to it is quoted, as in 'Order lines'!F2:F11."
+    tags: [document, data, dataset-people]
+    expect: { sheets: 3, sheet_names: "People,Order lines,Summary", rows: 11, columns: 14, formulas: 17, cross_sheet_formulas: 7 }
+    size_class: free
   - name: with-formulas.xlsx
     phase: 1
     generator: office.xlsx_with_formulas

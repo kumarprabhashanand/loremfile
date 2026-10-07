@@ -96,24 +96,27 @@ def validate_xlsx(data: bytes, _fixture: Fixture, _mime: str) -> dict[str, Any]:
 
     sheet = workbook.worksheets[0]
     formulas = [
-        cell
-        for row in sheet.iter_rows()
+        (worksheet.title, cell)
+        for worksheet in workbook.worksheets
+        for row in worksheet.iter_rows()
         for cell in row
         if isinstance(cell.value, str) and cell.value.startswith("=")
     ]
-    if formulas:
-        # The whole point of caching values: a reader that does not calculate must still
-        # see numbers. openpyxl writes an empty <v/> placeholder, which reads back as
-        # None — so an uncached formula fixture is useless without ever failing to parse.
-        values = cached[sheet.title]
-        empty = [cell.coordinate for cell in formulas if values[cell.coordinate].value is None]
-        if empty:
-            raise ValidationError(f"formula cells carry no cached value: {sorted(empty)[:5]}")
+    # The whole point of caching values: a reader that does not calculate must still
+    # see numbers. openpyxl writes an empty <v/> placeholder, which reads back as
+    # None — so an uncached formula fixture is useless without ever failing to parse.
+    empty = [
+        f"{title}!{cell.coordinate}"
+        for title, cell in formulas
+        if cached[title][cell.coordinate].value is None
+    ]
+    if empty:
+        raise ValidationError(f"formula cells carry no cached value: {sorted(empty)[:5]}")
 
     rows = sheet.max_row
     if rows < 1:
         raise ValidationError("the first worksheet has no rows")
-    return {
+    props: dict[str, Any] = {
         "sheets": len(workbook.worksheets),
         "sheet_names": ",".join(workbook.sheetnames),
         "rows": rows,
@@ -121,6 +124,11 @@ def validate_xlsx(data: bytes, _fixture: Fixture, _mime: str) -> dict[str, Any]:
         "formulas": len(formulas),
         "images": sum(len(worksheet._images) for worksheet in workbook.worksheets),
     }
+    # Reported only when present, so the workbooks published before it keep their props.
+    across = sum(1 for _, cell in formulas if "!" in cell.value)
+    if across:
+        props["cross_sheet_formulas"] = across
+    return props
 
 
 @register("pptx")
