@@ -1093,7 +1093,10 @@ def tokens_due_command(as_json: bool) -> None:
         errors = [
             f"{row.name}: expires {row.expires.isoformat()} in {row.days_left} days" for row in due
         ]
-        for row in rows:
+        # Quiet on success; once any token is due, every row prints as before.
+        if not due:
+            click.echo(f"  {len(rows)} tokens, none due", err=True)
+        for row in rows if due else []:
             click.echo(
                 f"  {row.name:24s} {row.expires.isoformat()}  {row.days_left:>4d} days"
                 f"{'  <-- rotate' if row.due else ''}",
@@ -1123,13 +1126,13 @@ def usage_command(days: int, daily_days: int, as_json: bool) -> None:
     summary: dict[str, Any] = {}
     items: list[Item] = []
     series: list[dict[str, Any]] = []
+    counts: usage_module.Operations | None = None
     try:
         if days:
             now = dt.datetime.now(tz=dt.UTC)
             counts = usage_module.operations(now - dt.timedelta(days=days), now)
         else:
             counts = usage_module.month_to_date()
-        click.echo(counts.render(), err=True)
         # docs/09 §4's health.yml step reads `summary.r2_class_b_mtd`, so the key names
         # the metric exactly. A windowed run gets a different key rather than claiming
         # to be month-to-date, because a threshold compared against the wrong window is
@@ -1165,10 +1168,16 @@ def usage_command(days: int, daily_days: int, as_json: bool) -> None:
     scanners: dict[str, Any]
     try:
         scanners = usage_module.scanner_summary(usage_module.scanner_days())
-        click.echo(usage_module.render_scanners(scanners), err=True)
     except (usage_module.UsageError, OSError, ValueError) as exc:
         scanners = {"error": str(exc)}
-        click.echo(f"  scanner paths: unavailable: {exc}", err=True)
+    # Quiet on success: counts only. Any read that failed prints every row, as before.
+    detail = bool(errors)
+    if counts is not None:
+        click.echo(counts.render(detail=detail), err=True)
+    if "error" in scanners:
+        click.echo(f"  scanner paths: unavailable: {scanners['error']}", err=True)
+    else:
+        click.echo(usage_module.render_scanners(scanners, detail=detail), err=True)
     sys.exit(
         _emit(
             "usage",
@@ -1200,10 +1209,10 @@ def infra_audit(as_json: bool) -> None:
         # quietly converging the drift it was sent to report.
         client = Client.from_env(read_only=True)
         report = audit_infra.run(client)
-        click.echo(report.render(), err=True)
+        # Quiet on success; a run with anything drifting or unreadable prints it all.
+        click.echo(report.summary_line() if report.quiet else report.render(), err=True)
         summary = {
             "zone": report.hostname,
-            "zone_id": report.zone_id,
             "checked": len(report.findings),
             "drift": len(report.drifted),
             "unreadable": len(report.unreadable),

@@ -84,7 +84,7 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 
 **"Infra audit could not run"** (exit 2). Nothing is known about drift; the audit did not complete. This is **not** a Cloudflare problem by default — read the error in the issue body first:
 
-1. **`ZONE SCOPE REFUSED`** — the zone id does not resolve to `loremfile.dev`. Do not "fix" it by changing the variable until you know why: this guard exists because the account holds unrelated production zones. Check `CLOUDFLARE_ZONE_ID` against the dashboard and treat a mismatch as an incident, not a typo.
+1. **`ZONE SCOPE REFUSED`** — the zone id does not resolve to `loremfile.dev`. Do not "fix" it by changing the secret until you know why: this guard exists because the account holds unrelated production zones. Check `CLOUDFLARE_ZONE_ID` against the dashboard and treat a mismatch as an incident, not a typo.
 2. **missing or rejected credentials** — T1 expired or was rotated without updating the `production` environment. `infra.yml` → `verify-tokens` says which; `11` §7.3 rotates it.
 3. **API errors or timeouts** — re-run `audit.yml` by dispatch. If it passes, the issue closes itself on that run.
 

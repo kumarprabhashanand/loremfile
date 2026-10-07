@@ -52,6 +52,11 @@ jobs:
     concurrency:
       group: loremfile-zone
       cancel-in-progress: false
+    # Environment secrets, so Actions masks them in the log. Job-level so the issue steps
+    # see them too: `gh_issue` masks these values in every body it posts (docs/09 §4).
+    env:
+      CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -65,8 +70,6 @@ jobs:
       - id: audit
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           # Account-scoped R2 read, kept separate from the zone token on purpose: T1 is
           # zone-only and must stay so (`08` §6). Without it `audit_bucket_locks` reports
           # `unreadable` — never `ok`, because an audit that could not look has learned

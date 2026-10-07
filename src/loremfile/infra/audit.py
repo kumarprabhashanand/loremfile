@@ -110,9 +110,23 @@ class AuditReport:
         """
         return not self.drifted
 
+    @property
+    def quiet(self) -> bool:
+        """Nothing drifting or unreadable: the run log needs the counts and nothing else."""
+        return not self.drifted and not self.unreadable
+
+    def summary_line(self) -> str:
+        """One line of counts. The zone is named by hostname: its id never reaches a log."""
+        ok = sum(1 for f in self.findings if f.state == OK)
+        return (
+            f"zone {self.hostname}: {len(self.findings)} checked, ok={ok} "
+            f"warning={len(self.warnings)} not-applicable={len(self.not_applicable)} "
+            f"unreadable={len(self.unreadable)} drift={len(self.drifted)}"
+        )
+
     def render(self) -> str:
         width = max((len(f.resource) for f in self.findings), default=8)
-        lines = [f"zone {self.zone_id} ({self.hostname})", ""]
+        lines = [f"zone {self.hostname}", ""]
         lines += [
             f"  {f.resource.ljust(width)}  {f.state:<10} {f.detail}".rstrip() for f in self.findings
         ]

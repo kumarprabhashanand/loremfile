@@ -121,7 +121,12 @@ class Operations:
         """GETs for keys that do not exist — 404s, the vector docs/19 §3 models."""
         return self.total(actions=frozenset({MISSING_KEY_ACTION}), status=MISSING_KEY_STATUS)
 
-    def render(self) -> str:
+    def render(self, *, detail: bool = True) -> str:
+        if not detail:
+            return (
+                f"  R2 operations: class A {self.class_a:,}, class B {self.class_b:,}, "
+                f"of which missing-key GETs {self.missing_key_reads:,}"
+            )
         lines = [f"  class A {self.class_a:>10,}", f"  class B {self.class_b:>10,}"]
         lines.append(f"    of which missing-key GETs {self.missing_key_reads:>10,}")
         for row in sorted(self.rows, key=lambda r: -int(r["sum"]["requests"])):
@@ -437,7 +442,7 @@ def scanner_summary(found: list[ScannerDay]) -> dict[str, Any]:
     }
 
 
-def render_scanners(summary: dict[str, Any]) -> str:
+def render_scanners(summary: dict[str, Any], *, detail: bool = True) -> str:
     share = summary["share"]
     sampling = {True: "unsampled", False: "SAMPLED, so estimated", None: "sampling unknown"}
     lines = [
@@ -447,8 +452,28 @@ def render_scanners(summary: dict[str, Any]) -> str:
         + (f" ({share:.3%})" if share is not None else "")
         + f", {sampling[summary['unsampled']]}"
     ]
-    lines += [
-        f"    {day['date']}  {day['scanner_requests']:>6,} of {day['requests']:>8,}"
-        for day in summary["days"]
-    ]
+    if detail:
+        lines += [
+            f"    {day['date']}  {day['scanner_requests']:>6,} of {day['requests']:>8,}"
+            for day in summary["days"]
+        ]
+    return "\n".join(lines)
+
+
+def render_detail(document: dict[str, Any]) -> str:
+    """Every row of a `usage --json` report: what a quiet run left out of the log.
+
+    health.yml prints this when R2 reads cross the cost threshold, so the run that needs
+    the breakdown has it, however quiet the passing ones are.
+    """
+    summary = document.get("summary") or {}
+    lines = [f"  {key}: {value}" for key, value in summary.items()]
+    rows = sorted(document.get("items") or [], key=lambda item: -int(item.get("detail") or 0))
+    lines += [f"    {item['path']:<25} {int(item.get('detail') or 0):>10,}" for item in rows]
+    scanners = document.get("scanner_paths") or {}
+    if "days" in scanners:
+        lines.append(render_scanners(scanners, detail=True))
+    elif scanners:
+        lines.append(f"  scanner paths: unavailable: {scanners.get('error')}")
+    lines += [f"  error: {error}" for error in document.get("errors") or []]
     return "\n".join(lines)
