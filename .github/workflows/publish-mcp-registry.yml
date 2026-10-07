@@ -1,0 +1,96 @@
+# Publishes server.json, the official MCP registry entry for both clients' `loremfile mcp`.
+#
+# Dispatch only, and never from a tag: a catalog release (`v*`) or a client release
+# (`client-v*`, `npm-v*`) must not republish the entry. Run it after both packages named in
+# server.json are live, once per server version; the registry refuses a version twice.
+#
+# There is no token anywhere. `mcp-publisher login github-oidc` exchanges a short-lived OIDC
+# identity minted for this workflow in this repository for a registry token scoped to the
+# io.github.kumarprabhashanand/ namespace, which is why `id-token: write` is asked for on the
+# publishing job alone.
+name: publish-mcp-registry
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcp-registry
+  cancel-in-progress: false
+
+env:
+  # Pinned by version and SHA-256 like gh in tools/Dockerfile: the release's own digest for
+  # the linux_amd64 tarball, checked here again before the binary is unpacked.
+  PUBLISHER_VERSION: "1.8.1"
+  PUBLISHER_SHA256: a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc
+
+jobs:
+  # No id-token: this job is the inspection, and it decides whether the publish job runs.
+  inspect:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install mcp-publisher, pinned by version and SHA-256
+        run: |
+          set -euo pipefail
+          curl -fsSL -o /tmp/mcp-publisher.tar.gz \
+            "https://github.com/modelcontextprotocol/registry/releases/download/v${PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz"
+          echo "${PUBLISHER_SHA256}  /tmp/mcp-publisher.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/mcp-publisher.tar.gz -C /tmp mcp-publisher
+
+      # The registry verifies ownership against the published packages, so an entry that
+      # names a version not yet released fails there; this says which one, before any login.
+      - name: Every package it names is live and claims this server
+        run: |
+          set -euo pipefail
+          name="$(jq -r .name server.json)"
+          jq -r '.packages[] | "\(.registryType) \(.identifier) \(.version)"' server.json |
+          while read -r registry identifier version; do
+            case "$registry" in
+              npm)
+                claimed="$(curl -fsSL "https://registry.npmjs.org/${identifier}/${version}" | jq -r '.mcpName // ""')" ;;
+              pypi)
+                claimed="$(curl -fsSL "https://pypi.org/pypi/${identifier}/${version}/json" |
+                  jq -r '.info.description' | grep -o -F "mcp-name: ${name}" | head -n 1 | cut -d' ' -f2)" || claimed="" ;;
+              *)
+                echo "::error::server.json names a ${registry} package; this workflow checks npm and pypi"; exit 1 ;;
+            esac
+            if [ "$claimed" != "$name" ]; then
+              echo "::error::${registry} ${identifier}@${version} does not claim ${name} (found '${claimed}'); release it first"
+              exit 1
+            fi
+            echo "${registry} ${identifier}@${version} claims ${name}"
+          done
+
+      - name: The registry accepts the entry
+        run: /tmp/mcp-publisher validate
+
+  publish:
+    needs: inspect
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write # the OIDC login below, and nothing else
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install mcp-publisher, pinned by version and SHA-256
+        run: |
+          set -euo pipefail
+          curl -fsSL -o /tmp/mcp-publisher.tar.gz \
+            "https://github.com/modelcontextprotocol/registry/releases/download/v${PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz"
+          echo "${PUBLISHER_SHA256}  /tmp/mcp-publisher.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/mcp-publisher.tar.gz -C /tmp mcp-publisher
+
+      - name: Log in with this workflow's OIDC identity
+        run: /tmp/mcp-publisher login github-oidc
+
+      - name: Publish server.json
+        run: /tmp/mcp-publisher publish

@@ -390,7 +390,7 @@ The cost and rotation thresholds are applied in the workflow rather than inside 
 
 **What the public record shows (2026-10-07).** Run logs, issues and their comments are public. Three rules keep internal state out of them:
 
-- **Quiet on success.** `infra audit` prints one line of counts unless something drifts or cannot be read, and then the full report as before. `usage` prints the R2 counts and the scanner share; every row returns when a read fails, and `health.yml` prints them from `usage.json` when reads cross the cost threshold. `tokens-due` prints one line until a token is due, and the deploy's `infra apply --dry-run` prints its counts unless something would change, needs the dashboard, warns or fails. `verify-live` and the determinism audit were already quiet. While `url-normalization` stays unreadable, the audit and the dry-run print every row by that rule. The test suite uses made-up account and zone ids. Tests in `test_quiet_logs.py` watch each failure path stay verbose.
+- **Quiet on success.** `infra audit` prints one line of counts unless something drifts or cannot be read, and then the full report as before. `usage` prints the R2 counts and the scanner share; every row returns when a read fails, and `health.yml` prints them from `usage.json` when reads cross the cost threshold. `tokens-due` prints one line until a token is due, and the deploy's `infra apply --dry-run` prints its counts unless something would change, needs the dashboard, warns or fails. `verify-live` and the determinism audit were already quiet. While `url-normalization` stays unreadable, the audit and the dry-run print every row by that rule. **The account and zone ids were committed as constants in two test files from 2026-09-09 to 2026-10-07.** The tree now uses made-up ones, and both real values belong in `FORBIDDEN_STRINGS` (the owner's list, §1), whose `git grep` over the whole tree fails the next deploy and the daily health check if either comes back. History is deliberately not rewritten: the ids authorise nothing, logs mask them, and rewriting a public repository's history costs every clone and link more than it would hide. This is decided; do not reopen it. Tests in `test_quiet_logs.py` watch each failure path stay verbose.
 - **Masked in issues, not only in logs.** Actions masks secrets in the log alone, and `gh_issue` copies a report's summary and errors into public text, so it masks `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_ZONE_ID` itself before posting. The audit's summary no longer carries `zone_id`, and the Cloudflare client's errors name the zone by hostname and show API paths as `/zones/{zone}`.
 - **Checked once for every path into public text:** the nine `gh_issue` calls (infra audit, determinism, crawler watch, could-not-run, health, cost, rotation, and the two did-not-complete steps), CI's manifest job summary (catalog entries only), `toolchain.yml`'s summary and digest-bump pull request (the image digest), and release notes and `redact`'s note (the changelog excerpt, a path and a date). Only the audit's summary and the client's error messages carried an id.
 
@@ -584,6 +584,16 @@ No `npm-v0.1.0` tag: its `publish` job would fail on a version that already exis
 version is a `client-js/package.json` bump and a `client-js/CHANGELOG.md` line in a pull
 request, then a tag `npm-vX.Y.Z` on the merge commit, outside `v*` for the reason given in
 §3.7, then the approval above.
+
+### 3.9 `publish-mcp-registry.yml` — on dispatch only
+
+Publishes `server.json`, the official MCP registry entry `io.github.kumarprabhashanand/loremfile`: one server, two packages (`npx loremfile mcp` and `uvx loremfile mcp`, stdio). **Dispatch only, from `main`, never on a tag:** a catalog release or a client release must not republish the entry, and the registry refuses a version twice.
+
+- **No token anywhere.** `mcp-publisher login github-oidc` trades the workflow's OIDC identity for a registry token scoped to the `io.github.kumarprabhashanand/` namespace; `id-token: write` sits on the publishing job alone.
+- **`mcp-publisher` pinned** by version and SHA-256 (the release's own digest, checked before the tarball is unpacked), as `gh` is in `tools/Dockerfile`.
+- **Inspection first, in a job with no identity:** every package `server.json` names must be live at that version and claim this name (npm's `mcpName`, the PyPI description's `mcp-name:` line), and `mcp-publisher validate` must accept the entry. A package not yet released stops the run there, naming it. `tests/unit/test_publish_mcp_registry_workflow.py` pins the trigger, the permissions, the pin and the order, each with a control.
+
+Procedure: release both packages at the version `server.json` names (`npm-v*`, then `client-v*`), then `gh workflow run publish-mcp-registry.yml --ref main`. The entry then resolves at `https://registry.modelcontextprotocol.io/v0/servers?search=io.github.kumarprabhashanand/loremfile`.
 
 ## 4. Dependabot — `.github/dependabot.yml`
 
