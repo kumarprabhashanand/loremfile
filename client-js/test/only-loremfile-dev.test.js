@@ -30,7 +30,11 @@ async function sources() {
     }
   }
   const names = found.map((s) => s.name).sort();
-  assert.deepEqual(names, ["bin/loremfile.js", "src/api.js", "src/cli.js"], "control: the scan");
+  assert.deepEqual(
+    names,
+    ["bin/loremfile.js", "src/api.js", "src/cli.js", "src/mcp.js"],
+    "control: the scan",
+  );
   return found;
 }
 
@@ -120,9 +124,11 @@ test("the client imports nothing but Node's built-ins", async () => {
     "node:http",
     "node:https",
     "node:path",
+    "node:readline",
     "node:timers/promises",
     "node:util",
     "./api.js",
+    "./mcp.js",
     "../src/cli.js",
   ]);
   const imported = new Set();

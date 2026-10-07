@@ -133,7 +133,7 @@ jobs:
         run: npm pack
       - name: The client's own suite
         # Named files, not discovery: a run that discovered nothing would pass with 0 tests.
-        run: node --test test/commands.test.js test/only-loremfile-dev.test.js test/packaging.test.js
+        run: node --test test/commands.test.js test/only-loremfile-dev.test.js test/packaging.test.js test/mcp.test.js
       - name: It runs from the tarball under npx, then installs from it
         shell: bash
         run: |
