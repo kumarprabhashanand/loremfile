@@ -436,8 +436,10 @@ def check_preflight(entry: dict[str, Any], response: Response) -> list[Finding]:
 #: operator publishes a user agent it is used verbatim; where nobody publishes one, the
 #: bare token is sent, because the bare token is what the rule matches.
 REFUSED_AGENTS = (
-    "CloudflareBrowserRenderingCrawler/1.0",
-    "qodercli",
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; KeenableBot/1.0; "
+    "+https://keenable.ai/bot)",
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Keenable-User/1.0; "
+    "+https://keenable.ai/bot)",
 )
 
 
