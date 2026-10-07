@@ -390,7 +390,7 @@ The cost and rotation thresholds are applied in the workflow rather than inside 
 
 **What the public record shows (2026-10-07).** Run logs, issues and their comments are public. Three rules keep internal state out of them:
 
-- **Quiet on success.** `infra audit` prints one line of counts unless something drifts or cannot be read, and then the full report as before. `usage` prints the R2 counts and the scanner share; every row returns when a read fails, and `health.yml` prints them from `usage.json` when reads cross the cost threshold. `tokens-due` prints one line until a token is due. `verify-live` and the determinism audit were already quiet. Tests in `test_quiet_logs.py` watch each failure path stay verbose.
+- **Quiet on success.** `infra audit` prints one line of counts unless something drifts or cannot be read, and then the full report as before. `usage` prints the R2 counts and the scanner share; every row returns when a read fails, and `health.yml` prints them from `usage.json` when reads cross the cost threshold. `tokens-due` prints one line until a token is due, and the deploy's `infra apply --dry-run` prints its counts unless something would change, needs the dashboard, warns or fails. `verify-live` and the determinism audit were already quiet. While `url-normalization` stays unreadable, the audit and the dry-run print every row by that rule. The test suite uses made-up account and zone ids. Tests in `test_quiet_logs.py` watch each failure path stay verbose.
 - **Masked in issues, not only in logs.** Actions masks secrets in the log alone, and `gh_issue` copies a report's summary and errors into public text, so it masks `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_ZONE_ID` itself before posting. The audit's summary no longer carries `zone_id`, and the Cloudflare client's errors name the zone by hostname and show API paths as `/zones/{zone}`.
 - **Checked once for every path into public text:** the nine `gh_issue` calls (infra audit, determinism, crawler watch, could-not-run, health, cost, rotation, and the two did-not-complete steps), CI's manifest job summary (catalog entries only), `toolchain.yml`'s summary and digest-bump pull request (the image digest), and release notes and `redact`'s note (the changelog excerpt, a path and a date). Only the audit's summary and the client's error messages carried an id.
 
@@ -561,6 +561,8 @@ the first staged release: `npm view loremfile@X.Y.Z dist.attestations.provenance
 must print `https://slsa.dev/provenance/v1`, the value a package published with provenance
 shows. Record the answer here; if the attestation does not survive, the choice of staged
 publishing is reopened.
+
+**Resolved 2026-10-07: provenance survives approval.** The first staged release, `loremfile@0.2.0`, prints `https://slsa.dev/provenance/v1`, and its attestation bundle decodes to the same subject digest as the published tarball's `sha512` and to `publish-npm.yml` at `refs/tags/npm-v0.2.0`. Staged publishing costs nothing in verifiability and stays the default.
 
 **The first version is published by hand, once.** npm attaches a trusted publisher only to a
 package that already exists — *"The package you're configuring must already exist on the npm

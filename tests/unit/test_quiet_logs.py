@@ -21,6 +21,8 @@ import yaml
 from click.testing import CliRunner
 
 from loremfile import cli, gh_issue
+from loremfile.infra import apply as apply_module
+from loremfile.infra import audit as audit_module
 from loremfile.infra import tokens as tokens_module
 from loremfile.infra import usage as usage_module
 from loremfile.infra.audit import DRIFT, NOT_APPLICABLE, OK, UNREADABLE, WARNING, AuditReport
@@ -345,3 +347,79 @@ def test_the_zone_guard_names_neither_id_nor_the_other_zone() -> None:
             assert secret not in text, text
     assert "/zones/{another zone}/settings/ssl" in texts[2]
     assert "/zones/{zone}/dns_records" in texts[4]
+
+
+# --- the deploy's infra dry-run ---------------------------------------------------------
+
+
+def run_apply(monkeypatch: pytest.MonkeyPatch, report: apply_module.Report) -> Any:
+    monkeypatch.setattr(cli.Client, "from_env", classmethod(lambda _cls, **_k: object()))
+    monkeypatch.setattr(cli.apply_infra, "run", lambda _client: report)
+    return CliRunner().invoke(cli.main, ["infra", "apply", "--dry-run"])
+
+
+def test_an_apply_with_nothing_to_do_prints_one_line_of_counts(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    report = apply_module.Report(zone_id=ZONE, hostname="loremfile.dev")
+    for index in range(35):
+        report.add(f"setting:s{index}", "unchanged")
+    report.add("setting:polish", "skipped", "read-only, is 'off'")
+    result = run_apply(monkeypatch, report)
+    assert result.exit_code == 0
+    assert result.stderr.strip().splitlines() == [
+        "zone loremfile.dev: 36 resources, unchanged=35 skipped=1 updated=0 manual=0 "
+        "warning=0 failed=0"
+    ]
+    assert ZONE not in result.stdout + result.stderr
+    assert "zone_id" not in result.stdout
+
+
+@pytest.mark.parametrize("state", sorted(apply_module.LOUD))
+def test_an_apply_with_anything_to_do_prints_every_row(
+    monkeypatch: pytest.MonkeyPatch, state: str
+) -> None:
+    """The control: one row in any loud state brings back every row."""
+    report = apply_module.Report(zone_id=ZONE, hostname="loremfile.dev")
+    report.add("setting:ssl", "unchanged")
+    report.add("url-normalization", state, "Rules → Settings → Normalize incoming URLs")
+    stderr = run_apply(monkeypatch, report).stderr
+    assert stderr.startswith(report.render() + "\n")
+    assert "setting:ssl" in stderr
+    assert ZONE not in stderr
+
+
+class Refused:
+    """A zone whose URL normalization endpoint answers `status` with `errors`."""
+
+    zone_id = ZONE
+    account_id = ACCOUNT
+
+    def __init__(self, status: int, errors: list[dict[str, Any]]) -> None:
+        self.reply = Response(status, {"success": False, "errors": errors})
+
+    def get(self, _path: str) -> Response:
+        return self.reply
+
+
+@pytest.mark.parametrize(
+    ("status", "errors", "said"),
+    [
+        (
+            403,
+            [{"code": 10000, "message": "Authentication error"}],
+            "HTTP 403, 10000: Authentication error",
+        ),
+        (404, [], "(HTTP 404)"),
+    ],
+)
+def test_url_normalization_says_how_it_was_refused(
+    status: int, errors: list[dict[str, Any]], said: str
+) -> None:
+    """A 403 is the token's scope and a 404 the endpoint: both readers now say which."""
+    applied = apply_module.Report()
+    apply_module.apply_url_normalization(Refused(status, errors), applied)  # type: ignore[arg-type]
+    audited = AuditReport()
+    audit_module.audit_url_normalization(Refused(status, errors), audited)  # type: ignore[arg-type]
+    assert [(o.state, said in o.detail) for o in applied.outcomes] == [("manual", True)]
+    assert [(f.state, said in f.detail) for f in audited.findings] == [(UNREADABLE, True)]
