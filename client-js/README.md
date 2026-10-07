@@ -30,6 +30,28 @@ refuse to run if loremfile.dev has moved on. `get` also takes `--force` (overwri
 Exit codes: `0` fine, `1` a file failed verification or is missing, `2` the request was
 wrong, `3` loremfile.dev could not be read.
 
+## MCP server
+
+`loremfile mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) server over
+stdio, so an agent can find a fixture, read its URL and metadata, and check a file it already
+has. It returns URLs and metadata, never file bytes: the agent, or your test, fetches the URL.
+
+```json
+{ "mcpServers": { "loremfile": { "command": "npx", "args": ["-y", "loremfile", "mcp"] } } }
+```
+
+It speaks protocol `2026-07-28` (per-request metadata, `server/discover`) and `2025-11-25`
+(the `initialize` handshake), so clients of either era work. All three tools are read-only.
+
+| Tool | Arguments | Returns |
+|---|---|---|
+| `list_fixtures` | `format`, `tag`, `max_bytes`, `limit`, `offset` | One page of published fixtures, each with `path`, `url`, `format`, `mime`, `bytes`, `tags` and `description`, plus `total` and `next_offset`. `format` and `tag` are lists matched as any of; `limit` defaults to 50, at most 250. |
+| `describe_fixture` | `path` (required) | One fixture's manifest entry: `url`, `mime`, `bytes`, `sha256`, `size_class`, `tags`, `description`, `props` and `added_in`. |
+| `verify_file` | `path` (required), `file` (required) | Whether the local `file` is the published `path`: `status` is `ok`, `changed` or `missing`, with both hashes and sizes. The file is read to hash it and goes nowhere. |
+
+The manifest is read once per server process from loremfile.dev, under the same rules as the
+commands above.
+
 ## What it will not do
 
 - **Write a file it could not verify.** Bytes go to a hidden temporary file beside the
