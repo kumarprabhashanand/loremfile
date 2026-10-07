@@ -9,7 +9,7 @@
 # fails the build otherwise (docs/09 §4).
 
 # --- documents -------------------------------------------------------------
-fpdf2>=2.8.8
+fpdf2>=2.8.9
 pypdf>=6.19               # a reader only: no fixture is written with it
 python-docx>=1.2          # comments API
 openpyxl
