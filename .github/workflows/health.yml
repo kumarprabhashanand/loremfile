@@ -64,8 +64,8 @@ jobs:
     timeout-minutes: 30
     env:
       CLOUDFLARE_ANALYTICS_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-      CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -159,6 +159,10 @@ jobs:
           )
           # Recorded before reporting, so the verdict sees it even if reporting fails.
           echo "state=$state" >> "$GITHUB_OUTPUT"
+          # `usage` prints counts only on success; over the threshold, every row again.
+          if [ "$state" = failing ]; then
+            python -m loremfile.infra.usage_detail usage.json
+          fi
           python -m loremfile.gh_issue \
             --label cost \
             --title "R2 operations above threshold" \

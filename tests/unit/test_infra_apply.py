@@ -85,7 +85,7 @@ def test_a_write_to_another_zone_is_refused_even_after_verification() -> None:
     """
     client = FakeClient()
     client.verify_zone()
-    with pytest.raises(ZoneScopeError, match="targets zone"):
+    with pytest.raises(ZoneScopeError, match="targets another zone"):
         client.put(f"/zones/{OTHER_ZONE}/rulesets/phases/http_request_transform/entrypoint", {})
     assert client.writes == []
 

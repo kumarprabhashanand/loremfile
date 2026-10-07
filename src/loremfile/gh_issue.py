@@ -26,9 +26,23 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+#: Values never published in an issue. Actions masks secrets in the run log only; an issue
+#: body built from a report is public text it never sees, so this module masks them itself.
+REDACTED_ENV = ("CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_ZONE_ID")
+MASK = "***"
+
 
 class IssueError(RuntimeError):
     """The gh CLI failed."""
+
+
+def redact(text: str) -> str:
+    """``text`` with the value of every variable in REDACTED_ENV replaced by MASK."""
+    for name in REDACTED_ENV:
+        value = os.environ.get(name, "")
+        if value:
+            text = text.replace(value, MASK)
+    return text
 
 
 @dataclass
@@ -115,7 +129,7 @@ def apply(*, label: str, title: str, report: Path, state: str) -> Outcome:
     """
     existing = find_open(label, title)
     if state == "failing":
-        body = summarise(report)
+        body = redact(summarise(report))
         if existing is None:
             url = _gh(
                 ["issue", "create", "--label", label, "--title", title, "--body", body]

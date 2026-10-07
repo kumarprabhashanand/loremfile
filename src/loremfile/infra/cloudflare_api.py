@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.request
@@ -29,8 +30,8 @@ API_ROOT = "https://api.cloudflare.com/client/v4"
 #: HTTP status at or above which a response is an error.
 HTTP_ERROR = 400
 
-#: `/zones/{id}/...` — the zone id is the third path segment once split on "/".
-ZONE_ID_SEGMENT = 2
+#: The id segment of a `/zones/{id}` or `/accounts/{id}` path, which messages replace.
+ID_SEGMENT = re.compile(r"^/(zones|accounts)/([^/?]+)")
 
 #: Retry on these; anything else is a real answer and is returned to the caller.
 RETRY_STATUS = frozenset({429, 500, 502, 503, 504})
@@ -135,6 +136,16 @@ class Client:
 
     # --- the guard ---------------------------------------------------------
 
+    def _public(self, path: str) -> str:
+        """``path`` for a message: these reach public issues, where no mask applies."""
+
+        def placeholder(match: re.Match[str]) -> str:
+            kind = "zone" if match[1] == "zones" else "account"
+            own = match[2] in (self.zone_id, self.account_id)
+            return f"/{match[1]}/{{{kind if own else 'another ' + kind}}}"
+
+        return ID_SEGMENT.sub(placeholder, path)
+
     def verify_zone(self, expected_hostname: str = SITE_HOST) -> str:
         """Read the zone and refuse to continue unless it is the one we mean.
 
@@ -144,14 +155,14 @@ class Client:
         response = self.get(f"/zones/{self.zone_id}")
         if not response.ok:
             raise ZoneScopeError(
-                f"cannot read zone {self.zone_id}: {response.errors}. Refusing to write "
-                "to a zone whose identity could not be confirmed."
+                f"cannot read the zone CLOUDFLARE_ZONE_ID names: {response.errors}. "
+                "Refusing to write to a zone whose identity could not be confirmed."
             )
         name = str((response.result or {}).get("name", ""))
         if name != expected_hostname:
             raise ZoneScopeError(
-                f"CLOUDFLARE_ZONE_ID {self.zone_id} is zone '{name}', not "
-                f"'{expected_hostname}'. This account holds unrelated production zones "
+                f"CLOUDFLARE_ZONE_ID names a different zone, not '{expected_hostname}'. "
+                "This account holds unrelated production zones "
                 "and ruleset writes are a full PUT, which would replace their rules. "
                 "Nothing has been written."
             )
@@ -164,31 +175,32 @@ class Client:
         refused = [p for p in NEVER_PUT_PHASES if f"/rulesets/phases/{p}/" in f"{path}/"]
         if method == "PUT" and refused:
             raise PhaseWriteRefused(
-                f"PUT {path} would replace every rule in {refused[0]}, including incident "
-                "rules added in the dashboard. Its rules are written one at a time (ADR-030)."
+                f"PUT {self._public(path)} would replace every rule in {refused[0]}, "
+                "including incident rules added in the dashboard. Its rules are written one at "
+                "a time (ADR-030)."
             )
         if self.verified_hostname is None:
             raise ZoneScopeError(
-                f"{method} {path} attempted before verify_zone(). The zone identity must "
-                "be confirmed before any write (docs/08 §6, docs/10 §3)."
+                f"{method} {self._public(path)} attempted before verify_zone(). The zone "
+                "identity must be confirmed before any write (docs/08 §6, docs/10 §3)."
             )
         if path.startswith("/zones/") and not path.startswith(f"/zones/{self.zone_id}"):
-            segments = path.split("/")
-            other = segments[ZONE_ID_SEGMENT] if len(segments) > ZONE_ID_SEGMENT else "?"
             raise ZoneScopeError(
-                f"{method} {path} targets zone {other}, not the verified zone "
-                f"{self.zone_id} ({self.verified_hostname})."
+                f"{method} {self._public(path)} targets another zone, not the verified zone "
+                f"({self.verified_hostname})."
             )
         if path.startswith("/accounts/") and not path.startswith(f"/accounts/{self.account_id}"):
-            raise ZoneScopeError(f"{method} {path} targets an account that is not ours.")
+            raise ZoneScopeError(
+                f"{method} {self._public(path)} targets an account that is not ours."
+            )
 
     # --- transport ---------------------------------------------------------
 
     def request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> Response:
         if self.read_only and method in WRITE_METHODS:
             raise ReadOnlyError(
-                f"{method} {path} attempted through a read-only client. The audit reports "
-                "state; it does not converge it (docs/09 §3.4)."
+                f"{method} {self._public(path)} attempted through a read-only client. The audit "
+                "reports state; it does not converge it (docs/09 §3.4)."
             )
         self._assert_scoped(method, path)
         self.calls.append((method, path))
@@ -253,7 +265,7 @@ class Client:
             joiner = "&" if "?" in path else "?"
             response = self.get(f"{path}{joiner}page={page}&per_page={per_page}")
             if not response.ok:
-                raise CloudflareError(f"GET {path} page {page}: {response.errors}")
+                raise CloudflareError(f"GET {self._public(path)} page {page}: {response.errors}")
             batch = response.result or []
             items.extend(batch)
             info = response.body.get("result_info") or {}

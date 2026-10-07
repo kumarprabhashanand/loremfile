@@ -7,8 +7,8 @@
 | Visibility | Public (Actions minutes are free on standard runners for public repositories) |
 | Default branch | `main`; a second, unprotected branch `ops-log` holds only `ops-log.md`, written by `health.yml` (created once in M4.4 as an orphan branch) |
 | Ruleset on `main` | Require pull request before merging (0 required approvals — single maintainer, but PRs give an audit trail; CODEOWNERS is therefore informational until a second maintainer exists); require status checks — the names GitHub lists are the **job names** `lint-and-test` (added in M1.5) and `build-and-validate` (added to the ruleset in M3.1, the first PR that contains the job, otherwise a never-reporting required check would block every PR); require linear history; block force pushes; block deletions; require conversation resolution |
-| Environment `production` | Deployment branch rule: only `main`; secrets: `CLOUDFLARE_API_TOKEN`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `CLOUDFLARE_ANALYTICS_TOKEN` |
-| Repository variables (not environment-scoped, readable by every workflow) | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_ZONE_ID`, `R2_BUCKET=loremfile-public`, `SITE_HOST=loremfile.dev` |
+| Environment `production` | Deployment branch rule: only `main`; secrets: `CLOUDFLARE_API_TOKEN`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `CLOUDFLARE_ANALYTICS_TOKEN`, and since 2026-10-07 `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_ZONE_ID`, so Actions masks them in the public run logs |
+| Repository variables (not environment-scoped, readable by every workflow) | `R2_BUCKET=loremfile-public`, `SITE_HOST=loremfile.dev`. The account and zone ids were variables until 2026-10-07; a variable prints in clear in every step's environment block |
 | Actions permissions | Allow actions from GitHub and verified creators only (`actions/*`, `docker/*` qualify; no third-party actions are used — the digest-bump PR is opened with `gh`); default `GITHUB_TOKEN` permissions: read-only |
 | Fork PR workflows | Default (no secrets for fork PRs; `pull_request_target` is never used) |
 | Security | Private vulnerability reporting: on; Dependabot alerts + security updates: on; secret scanning + push protection: on |
@@ -33,7 +33,8 @@ Repository variables set in M1.5: `R2_BUCKET=loremfile-public`, `SITE_HOST=lorem
 | `CLOUDFLARE_ANALYTICS_TOKEN` | secret | env `production` | T4 (read-only) | 365 days |
 | `R2_READ_TOKEN` | secret | env `production` | T5 (Admin Read only, `08` §2 step 10c); read by `audit_bucket_locks` alone | 180 days |
 | `FORBIDDEN_STRINGS` | secret, optional | env `production` | the owner — one string per line that must never appear in the tree; the site build's git-grep guard fails if one does. **The list lives only here**: committed, it would publish what it protects | n/a |
-| `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_ZONE_ID`, `R2_BUCKET`, `SITE_HOST` | variables | repository | Cloudflare dashboard (Overview page of the zone) | n/a |
+| `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_ZONE_ID` | secrets | env `production` | Cloudflare dashboard (Overview page of the zone). Only jobs in `production` read them, which a test pins | n/a |
+| `R2_BUCKET`, `SITE_HOST` | variables | repository | fixed values | n/a |
 | `GITHUB_TOKEN` | automatic | per job | GitHub | n/a; permissions declared per job |
 
 PR builds never receive the `production` environment, so they cannot upload or change infrastructure.
@@ -162,8 +163,8 @@ jobs:
     timeout-minutes: 60
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-      CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
       AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
       R2_BUCKET: ${{ vars.R2_BUCKET }}
@@ -315,7 +316,7 @@ jobs:
     environment: production                          # for the read-only analytics token
     container: { image: "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:<DIGEST>" }
     timeout-minutes: 30
-    env: { CLOUDFLARE_ANALYTICS_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}, CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}, CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }} }
+    env: { CLOUDFLARE_ANALYTICS_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}, CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}, CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }} }
     steps:
       - uses: actions/checkout@<SHA-v4>
       - run: pip install -e . --no-deps
@@ -386,6 +387,12 @@ Since M4.1 the daily run rebuilds the checked-out commit and compares every site
 The cost and rotation thresholds are applied in the workflow rather than inside the commands, because a threshold belongs to the check and `usage`/`tokens-due` should stay plain readers.
 
 *(The next paragraph specifies `daily` as designed; `12` §4 records what is implemented, and `health.yml` now runs `full`.)* `verify-live --mode daily` = HEAD every manifest path (parallel, 16 workers, rate ≤ 20 rps to stay under our own limit) comparing `Content-Length` and `Content-Type`; GET + SHA-256 for all fixtures < 1 MB and a rotating 5 % sample of larger ones (rotation = day-of-year modulo); full header contract on one fixture per format (the smallest P1 fixture of that format by bytes, ties broken by path order); the encoded-path and warm-cache CORS probes from `08` §6; every site key hashed against the **rebuild of the checked-out commit** in `build/site/` (defacement check — the baseline must never come from the bucket, because whoever holds T2 can rewrite any site key including any manifest stored there; a mismatch during the few minutes between a merge and its deploy is tolerated by retrying once after 10 minutes); discovery files; `www` redirect; RDAP expiry ≥ 45 days; TLS certificate expiry ≥ 14 days; `security.txt` `Expires` ≥ 30 days; total time reported. `gh_issue.py` de-duplicates by label + title, appends a comment per failing day, and closes with a comment on the first green run.
+
+**What the public record shows (2026-10-07).** Run logs, issues and their comments are public. Three rules keep internal state out of them:
+
+- **Quiet on success.** `infra audit` prints one line of counts unless something drifts or cannot be read, and then the full report as before. `usage` prints the R2 counts and the scanner share; every row returns when a read fails, and `health.yml` prints them from `usage.json` when reads cross the cost threshold. `tokens-due` prints one line until a token is due. `verify-live` and the determinism audit were already quiet. Tests in `test_quiet_logs.py` watch each failure path stay verbose.
+- **Masked in issues, not only in logs.** Actions masks secrets in the log alone, and `gh_issue` copies a report's summary and errors into public text, so it masks `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_ZONE_ID` itself before posting. The audit's summary no longer carries `zone_id`, and the Cloudflare client's errors name the zone by hostname and show API paths as `/zones/{zone}`.
+- **Checked once for every path into public text:** the nine `gh_issue` calls (infra audit, determinism, crawler watch, could-not-run, health, cost, rotation, and the two did-not-complete steps), CI's manifest job summary (catalog entries only), `toolchain.yml`'s summary and digest-bump pull request (the image digest), and release notes and `redact`'s note (the changelog excerpt, a path and a date). Only the audit's summary and the client's error messages carried an id.
 
 ### 3.4 `audit.yml` — weekly (Mondays) and on demand
 
