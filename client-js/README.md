@@ -22,6 +22,7 @@ correctly by default: every file is verified, and a file that fails is not writt
 | `loremfile get --format svg --format pdf` | The same for every published file of a format. |
 | `loremfile list [--format F] [--tag T] [--max-bytes N]` | What is published, without downloading. |
 | `loremfile verify [PATH…]` | Check files already on disk against the manifest. |
+| `loremfile mcp` | Serve the same lookups to an agent over MCP; see below. |
 
 Every command takes `--json` for scripts, `--quiet`, and `--catalog-version X.Y.Z` to
 refuse to run if loremfile.dev has moved on. `get` also takes `--force` (overwrite) and
@@ -88,7 +89,7 @@ support because it needs `sha256sum`.
 ## One name, two clients
 
 The Python client, `pip install loremfile`, installs a command with the same name and the
-same three commands. On a machine with both, `loremfile` runs whichever comes first on
+same `get`, `list` and `verify`. On a machine with both, `loremfile` runs whichever comes first on
 `PATH` — and where the two install into the same directory, whichever was installed last.
 Either one checks every byte the same way.
 

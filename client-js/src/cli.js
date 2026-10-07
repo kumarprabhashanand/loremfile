@@ -1,13 +1,15 @@
-// `loremfile get | list | verify`, the same three commands as the Python client.
+// `loremfile get | list | verify`, the same three commands as the Python client, and
+// `loremfile mcp`, the same tools served to an agent (src/mcp.js).
 //
 // node:util's parseArgs rather than a framework, because the package has no dependencies and
-// this is three subcommands. Exit codes are the contract: 0 fine, 1 a file failed
+// this is four subcommands. Exit codes are the contract: 0 fine, 1 a file failed
 // verification or is missing, 2 the request was wrong, 3 loremfile.dev could not be read.
 
 import { readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 
 import * as api from "./api.js";
+import * as mcp from "./mcp.js";
 
 export const OK = 0;
 export const FAILED = 1;
@@ -64,6 +66,11 @@ export const COMMANDS = {
       ...SHARED,
     },
   },
+  mcp: {
+    summary: "Serve list, describe and verify to an agent over MCP on stdio.",
+    positionals: null,
+    options: { help: SHARED.help },
+  },
 };
 
 class Usage extends Error {}
@@ -73,7 +80,7 @@ function usage() {
     `loremfile ${VERSION}`,
     "Download CC0 sample files from loremfile.dev and check every byte.",
     "",
-    "usage: loremfile {get,list,verify} [options]",
+    "usage: loremfile {get,list,verify,mcp} [options]",
     ...Object.entries(COMMANDS).map(([name, command]) => `  ${name.padEnd(8)}${command.summary}`),
     "",
     "`loremfile COMMAND --help` lists a command's options.",
@@ -97,7 +104,7 @@ function commandHelp(name) {
 function parse(argv) {
   const [name, ...rest] = argv;
   if (name === undefined) {
-    throw new Usage("name a command: get, list or verify");
+    throw new Usage("name a command: get, list, verify or mcp");
   }
   if (!Object.hasOwn(COMMANDS, name)) {
     throw new Usage(`no such command: ${name}`);
@@ -229,9 +236,16 @@ async function runVerify(args, io) {
   return failing.length > 0 ? FAILED : OK;
 }
 
-const RUNNERS = { get: runGet, list: runList, verify: runVerify };
+// stdout carries protocol messages only, so this writes nothing of its own there.
+async function runMcp(_args, io) {
+  await mcp.serve({ input: io.in, write: io.out });
+  return OK;
+}
+
+const RUNNERS = { get: runGet, list: runList, verify: runVerify, mcp: runMcp };
 
 const STDIO = {
+  in: process.stdin,
   out: (text) => process.stdout.write(text),
   err: (text) => process.stderr.write(text),
 };

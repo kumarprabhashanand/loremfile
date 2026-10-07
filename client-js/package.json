@@ -1,8 +1,8 @@
 {
   "name": "loremfile",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Download CC0 sample files from loremfile.dev and verify every byte",
-  "keywords": ["fixtures", "test-data", "sample-files", "cc0", "download"],
+  "keywords": ["fixtures", "test-data", "sample-files", "cc0", "download", "mcp"],
   "homepage": "https://loremfile.dev",
   "bugs": {
     "url": "https://github.com/kumarprabhashanand/loremfile/issues"
@@ -13,6 +13,7 @@
     "directory": "client-js"
   },
   "license": "MIT",
+  "mcpName": "io.github.kumarprabhashanand/loremfile",
   "author": "the loremfile.dev contributors",
   "type": "module",
   "bin": {

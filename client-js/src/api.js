@@ -354,7 +354,8 @@ export async function download(entry, dest, { force = false } = {}) {
   return new Result(entry.path, "written", `${grouped(written)} bytes`);
 }
 
-async function hashFile(file) {
+/** The SHA-256 of a file on disk, read a chunk at a time. */
+export async function hashFile(file) {
   const digest = createHash("sha256");
   for await (const chunk of createReadStream(file)) {
     digest.update(chunk);
@@ -362,7 +363,8 @@ async function hashFile(file) {
   return digest.digest("hex");
 }
 
-async function fileInfo(file) {
+/** A regular file's stat, or null for anything that is not one. */
+export async function fileInfo(file) {
   try {
     const info = await stat(file);
     return info.isFile() ? info : null;
