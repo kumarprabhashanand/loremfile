@@ -66,7 +66,7 @@ Column key: **Name** (path after the format), **P** phase, **Generator** (module
 | `50mb.pdf` | 2 | `pdf.sized` | | approx | 50 MB |
 | `a4-unicode-embedded-font-1page.pdf` | 2 | `pdf.unicode` | embeds `ttf/loremfile-sans` subset; Greek/Cyrillic text | | 30 KB |
 | `pdfa-1b-1page.pdf` | 2 | `pdf.pdfa` | PDF/A-1b with XMP; validate with veraPDF (optional) | | 20 KB |
-| `form-fields-1page.pdf` | 2 | `pdf.form` | AcroForm text/checkbox | | 8 KB |
+| `form-fields-1page.pdf` | 2 | `pdf.form` | AcroForm: four text fields and two checkboxes, three filled (published in 1.5.0) | | 5 KB |
 | `1000pages.pdf` | 2 | `pdf.basic` | | pages=1000 | 2.5 MB |
 
 ### 3.2 Images
@@ -114,7 +114,7 @@ Column key: **Name** (path after the format), **P** phase, **Generator** (module
 `bmp/` (`image/bmp`): `24bit-256x256.bmp` (P1), `8bit-256x256.bmp` (P2).
 `tiff/` (`image/tiff`): `rgb-640x480.tiff` (P1), `lzw-640x480.tiff` (P1), `multipage-3pages.tiff` (P1, frames=3).
 `ico/` (`image/x-icon`): `favicon-16-32-48.ico` (P1, sizes=[16,32,48]), `256x256.ico` (P2).
-`heic/` (`image/heic`): P2 only (`640x480.heic`), requires libheif in the toolchain.
+`heic/` (`image/heic`): `640x480.heic`, P2, published in 1.5.0. The toolchain gained `libheif-examples` for it (`heif-enc` with x265, `heif-convert` with libde265).
 
 ### 3.3 Video
 
@@ -160,7 +160,7 @@ Sources: `sine` 440 Hz; `stereo-lr` (L 440 Hz, R 880 Hz); `sweep` 20 Hz→20 kHz
 ### 3.5 Office documents
 
 `docx/` (`application/vnd.openxmlformats-officedocument.wordprocessingml.document`, python-docx, zip normalised): `1page.docx`, `10pages.docx`, `with-images.docx` (2 PNG), `with-table.docx`, `with-headers-footers.docx`, `with-headings-and-toc.docx` (TOC field, updates on open), `with-comments.docx`, `unicode-multilingual.docx`, `1mb.docx`, `10mb.docx` — P1. `with-tracked-changes.docx`, `with-footnotes.docx`, `50mb.docx` — P2.
-`xlsx/` (`…spreadsheetml.sheet`, openpyxl): `1sheet-10rows.xlsx`, `1sheet-1000rows.xlsx`, `1sheet-100k-rows.xlsx`, `3sheets.xlsx`, `with-formulas.xlsx` (SUM/AVERAGE/IF/VLOOKUP, cached values written), `with-types-and-formats.xlsx` (dates, times, booleans, percentages, currency, scientific, text-that-looks-numeric), `with-merged-cells.xlsx`, `with-frozen-header-and-autofilter.xlsx`, `with-chart.xlsx`, `with-images.xlsx`, `unicode-strings.xlsx`, `1mb.xlsx`, `10mb.xlsx` — P1. `with-data-validation.xlsx`, `with-hyperlinks.xlsx`, `1m-rows.xlsx` (≈ 60 MB) — P2.
+`xlsx/` (`…spreadsheetml.sheet`, openpyxl): `1sheet-10rows.xlsx`, `1sheet-1000rows.xlsx`, `1sheet-100k-rows.xlsx`, `3sheets.xlsx`, `3sheets-with-formulas.xlsx` (published in 1.5.0: a summary sheet whose formulas read the other two, one of them through a quoted sheet name), `with-formulas.xlsx` (SUM/AVERAGE/IF/VLOOKUP, cached values written), `with-types-and-formats.xlsx` (dates, times, booleans, percentages, currency, scientific, text-that-looks-numeric), `with-merged-cells.xlsx`, `with-frozen-header-and-autofilter.xlsx`, `with-chart.xlsx`, `with-images.xlsx`, `unicode-strings.xlsx`, `1mb.xlsx`, `10mb.xlsx` — P1. `with-data-validation.xlsx`, `with-hyperlinks.xlsx`, `1m-rows.xlsx` (≈ 60 MB) — P2.
 `pptx/` (`…presentationml.presentation`, python-pptx): `1slide.pptx`, `10slides.pptx`, `with-images.pptx`, `with-notes.pptx`, `with-table-and-chart.pptx`, `4x3-5slides.pptx`, `1mb.pptx`, `10mb.pptx` — P1.
 `rtf/` (`application/rtf`, hand-written): `simple.rtf`, `with-table-and-formatting.rtf` — P1.
 `odt/`, `ods/`, `odp/` (odfpy) — P2. `xls/` (BIFF via xlwt), `doc/`, `ppt/` — P2 if a maintained writer exists, else excluded.
@@ -390,7 +390,7 @@ P1b stays **188**: `100mib.bin` moved out of phase 1 entirely, so it left both t
 | Catalogued, **awaiting publication** | 0 | |
 | Still to catalogue | 0 | M3.7 and M3.8 catalogued all 62: archives, fonts, mail, calendar, cert, wasm, web, and the edge cases |
 | **Launch set (ADR-024)** | **228** | |
-| Added after launch | 3 | `csv/people-10-quoted-commas` (1.3.0), from launch feedback; `edge/pdf-zip-polyglot` and `edge/gif-zip-polyglot` (1.4.0). Each one is listed here, so the catalog can grow without the launch number drifting |
+| Added after launch | 7 | `csv/people-10-quoted-commas` (1.3.0), from launch feedback; `edge/pdf-zip-polyglot` and `edge/gif-zip-polyglot` (1.4.0); `csv/people-10-crlf`, `heic/640x480`, `pdf/form-fields-1page` and `xlsx/3sheets-with-formulas` (1.5.0). Each one is listed here, so the catalog can grow without the launch number drifting |
 
 `tests/unit/test_deploy_path.py` asserts this arithmetic, with the outstanding rows as a named constant — now zero, so the next fixture added outside this list has to change the list itself. It is the one figure that cannot be derived from the repository, so it is checked rather than remembered: fixtures added without accounting for the launch scope become a failing build instead of a slow drift away from 228.
 

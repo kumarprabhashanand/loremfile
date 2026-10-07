@@ -125,6 +125,21 @@ def test_quoted_newlines_variant_really_contains_a_quoted_newline() -> None:
     assert check("csv/people-10-quoted-newlines.csv")["quoted_fields"] is True
 
 
+def test_crlf_variant_is_people_10_with_crlf_record_ends() -> None:
+    payload = build("csv/people-10-crlf.csv")
+    assert payload.count(b"\r\n") == 11  # the header and ten records
+    assert payload.replace(b"\r\n", b"\n") == build("csv/people-10.csv")
+    assert check("csv/people-10-crlf.csv")["line_ending"] == "crlf"
+
+
+def test_lf_bytes_do_not_satisfy_the_crlf_entry() -> None:
+    """The control: the LF twin, measured against the CRLF entry, must fail on it."""
+    entry = fixture("csv/people-10-crlf.csv")
+    report = validate(build("csv/people-10.csv"), entry, CATALOG.mime_for(entry))
+    assert not report.ok
+    assert any("line_ending" in failure for failure in report.failures), report.failures
+
+
 def test_tsv_is_tab_delimited() -> None:
     assert check("tsv/people-1000.tsv")["delimiter"] == "\t"
 
@@ -251,6 +266,7 @@ def test_sql_escapes_embedded_apostrophes() -> None:
     [
         "csv/people-10.csv",
         "csv/people-10-quoted-newlines.csv",
+        "csv/people-10-crlf.csv",
         "tsv/people-1000.tsv",
         "json/people-10.json",
         "json/all-types.json",

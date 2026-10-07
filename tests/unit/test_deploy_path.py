@@ -204,6 +204,10 @@ AFTER_LAUNCH = (
     "csv/people-10-quoted-commas.csv",
     "edge/pdf-zip-polyglot.pdf",
     "edge/gif-zip-polyglot.gif",
+    "csv/people-10-crlf.csv",
+    "heic/640x480.heic",
+    "pdf/form-fields-1page.pdf",
+    "xlsx/3sheets-with-formulas.xlsx",
 )
 
 

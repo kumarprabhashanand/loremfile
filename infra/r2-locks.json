@@ -185,6 +185,14 @@
       }
     },
     {
+      "id": "lock-heic",
+      "enabled": true,
+      "prefix": "heic/",
+      "condition": {
+        "type": "Indefinite"
+      }
+    },
+    {
       "id": "lock-hls",
       "enabled": true,
       "prefix": "hls/",

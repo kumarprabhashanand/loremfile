@@ -5,15 +5,48 @@ segment and the name says what is inside: `pdf/a4-3pages.pdf` is three A4 pages,
 `csv/people-1000.csv` is a thousand rows of synthetic people. There is nothing to sign up for
 and no key to send. [Naming and sizes](/docs/naming) explains the grammar.
 
-## Fetch a file
+## Use the URL directly
+
+A web page on any origin can fetch a file directly: CORS allows `GET` and `HEAD` from every
+origin, and byte-range requests work, so a media player can seek. Query strings are ignored,
+so `?v=2` neither busts a cache nor changes what you receive. To keep a copy instead:
 
 ```bash
 curl -O https://loremfile.dev/pdf/a4-3pages.pdf
 ```
 
-A web page on any origin can fetch a file directly: CORS allows `GET` and `HEAD` from every
-origin, and byte-range requests work, so a media player can seek. Query strings are ignored,
-so `?v=2` neither busts a cache nor changes what you receive.
+## In a GitHub workflow
+
+```yaml
+- uses: kumarprabhashanand/loremfile/action@action-v1
+  with:
+    paths: pdf/minimal.pdf mp4/720p-5s.mp4
+```
+
+Files land in `loremfile-fixtures/`, each checked against its hash in the manifest. For every
+file of a format, add `formats: pdf` beside or in place of `paths`. Linux and macOS runners;
+the action downloads one file at a time and backs off if it is rate limited.
+
+## From the command line
+
+The same small client is published for Python and for Node: `get`, `list` and `verify`, with
+the same flags and exit codes.
+
+```bash
+# Python 3.11 or newer
+pip install loremfile
+loremfile get pdf/minimal.pdf
+loremfile get --format pdf
+
+# Node 20 or newer, no install step
+npx loremfile get pdf/minimal.pdf
+npx loremfile get --format pdf
+```
+
+Each file is checked against its hash in the manifest before it is written, and one that does
+not match is not written at all. Exit codes: `0` fine, `1` a file failed verification or is
+missing, `2` the request was wrong, `3` loremfile.dev could not be read. Both install a command
+named `loremfile`; on a machine with both, whichever comes first on `PATH` runs.
 
 ## Check the size first
 
@@ -34,36 +67,6 @@ curl -fsSL https://loremfile.dev/sha256sums.txt | sha256sum -c --ignore-missing
 # macOS ships no sha256sum; shasum is preinstalled
 curl -fsSL https://loremfile.dev/sha256sums.txt | shasum -a 256 -c --ignore-missing
 ```
-
-## In a GitHub workflow
-
-```yaml
-- uses: kumarprabhashanand/loremfile/action@action-v1
-  with:
-    paths: pdf/minimal.pdf mp4/720p-5s.mp4
-```
-
-Files land in `loremfile-fixtures/`, each checked against its hash in the manifest. Linux and
-macOS runners; the action downloads one file at a time and backs off if it is rate limited.
-
-## From the command line
-
-The same small client is published for Python and for Node: `get`, `list` and `verify`, with
-the same flags and exit codes.
-
-```bash
-# Python 3.11 or newer
-pip install loremfile
-loremfile get pdf/minimal.pdf
-
-# Node 20 or newer, no install step
-npx loremfile get pdf/minimal.pdf
-```
-
-Each file is checked against its hash in the manifest before it is written, and one that does
-not match is not written at all. Exit codes: `0` fine, `1` a file failed verification or is
-missing, `2` the request was wrong, `3` loremfile.dev could not be read. Both install a command
-named `loremfile`; on a machine with both, whichever comes first on `PATH` runs.
 
 ## From your own code
 

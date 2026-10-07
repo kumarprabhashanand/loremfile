@@ -141,6 +141,8 @@ def basic(ctx: GeneratorContext, *, pages: int, page_size: str = "A4",
 | python-docx | Builds its package in memory, so every entry takes the patched clock. Core properties set explicitly, and the epoch value built at call time — inside the guard `datetime.datetime` is a stand-in class and python-docx type-checks its argument against whichever class is installed | `docx/1page.docx` — python-docx writes it, docProps/core.xml included | 2026-09-08 |
 | openpyxl | **Not reproducible on its own.** It spools each worksheet to a temporary file and adds it with `ZipFile.write`, so that entry is stamped from the filesystem — beyond the reach of any clock patch. Raw output changed on six of eight consecutive runs while every other entry sat at the epoch. `util.zipnorm` is what makes it stable, so it is mandatory here, not cosmetic | `xlsx/1sheet-10rows.xlsx` — has a worksheet, the part openpyxl spools to a temp file | 2026-09-08 (claim corrected) |
 | python-pptx | Builds its package in memory, like python-docx; core properties set explicitly. Slide size is set explicitly too — the bundled template is 4:3, which would otherwise be a silent default | `pptx/1slide.pptx` — python-pptx writes it, docProps/core.xml included | 2026-09-08 |
+| heif-enc (libheif 1.15.1, x265 3.5) | Invoked with `x265:pools=none`, `x265:frame-threads=1` and `x265:asm=0`. Spiked 2026-10-07: the same 5,066 bytes at every SIMD level x265 offers on the spike machine (AVX2, AVX, SSE4.2, SSE2, none), on three runs a second apart and from two different input paths, so nothing time- or path-dependent is embedded. `asm=0` removes the one level the spike could not reach (AVX-512); the fleet audit is still the authority | `heic/640x480.heic`: the only fixture heif-enc encodes | 2026-10-07 |
+| pypdf (as a writer) | Adds the AcroForm to fpdf2's output. The file ID is a checksum of the written structure, not a clock or a random value, and the Info dictionary (producer, dates) is cloned from fpdf2's pinned one; two builds with no guard at all were identical | `pdf/form-fields-1page.pdf`: the only fixture pypdf writes | 2026-10-07 |
 
   **The pinned image is necessary but not sufficient for media.** `libx264`, `libvpx`
   and `libopus` each choose SIMD kernels from the CPU features they find at runtime, and
@@ -270,7 +272,7 @@ FROM python:3.14-slim-bookworm@sha256:c8137f4c…  # pinned by index digest; Dep
 ENV DEBIAN_FRONTEND=noninteractive TZ=UTC LANG=C.UTF-8 LC_ALL=C.UTF-8 PYTHONHASHSEED=0 SOURCE_DATE_EPOCH=1577836800
 RUN apt-get update && apt-get install -y --no-install-recommends \
       git=<ver> ca-certificates=<ver> curl=<ver> \
-      ffmpeg=<ver> qpdf=<ver> libavif-bin=<ver> zstd=<ver> xz-utils=<ver> bzip2=<ver> sqlite3=<ver> fonts-dejavu-core=<ver> \
+      ffmpeg=<ver> qpdf=<ver> libavif-bin=<ver> libheif-examples=<ver> zstd=<ver> xz-utils=<ver> bzip2=<ver> sqlite3=<ver> fonts-dejavu-core=<ver> \
     && rm -rf /var/lib/apt/lists/*
 # Every apt package is pinned to the exact version recorded in tools/apt-versions.txt (first build: install unpinned, run `dpkg -l`, then pin). Recorded in M1.2 — that file is the single source of truth; the real Dockerfile carries the literal versions.
 # Pinned versions disappear from the Debian mirrors after point releases; when that happens, point the sources at snapshot.debian.org for the recorded date.

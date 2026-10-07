@@ -70,6 +70,8 @@ All site copy is drafted by the engineer/agent in M4.2 and lives as Markdown in 
 >
 > `curl -O https://loremfile.dev/pdf/a4-3pages.pdf`
 
+**As changed (2026-10-07).** The first line names downloading after hotlinking, never before it, and the `curl -O` line gave way to the three paths in the order they cost a reader: the URL, the action in a workflow, the client for named files or a whole format. Format pages show the in-place snippet before `curl -O` and follow their table with the client's `--format` command, and `/docs/getting-started` puts the action and the client before the per-file checks. The release archives are for mirroring and restoring (`09` §3.5) and are not on the home page.
+
 Then: format grid → "Popular right now" (static list) → "For agents" box linking `llms.txt` and `manifest.json` → "Rules" (immutability, rate limit, licence, and: "if this host is ever unavailable, the repository README states the current canonical host") → footer (source, security, legal).
 
 ## 7. Analytics

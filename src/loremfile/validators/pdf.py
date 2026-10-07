@@ -56,6 +56,33 @@ def _qpdf_check(data: bytes) -> str | None:
     return output.splitlines()[-1] if output else f"qpdf exited {completed.returncode}"
 
 
+def _form_props(reader: pypdf.PdfReader) -> dict[str, Any]:
+    """Field counts for a PDF with an AcroForm, and nothing for one without.
+
+    A filled field must carry the appearance that shows its value: with `NeedAppearances`
+    false, a viewer that does not regenerate appearances would show it blank.
+    """
+    fields = reader.get_fields() or {}
+    if not fields:
+        return {}
+    filled = 0
+    for page in reader.pages:
+        for annotation in page.get("/Annots") or []:
+            widget = annotation.get_object()
+            if widget.get("/Subtype") != "/Widget":
+                continue
+            value = widget.get("/V")
+            if value in (None, "", "/Off"):
+                continue
+            filled += 1
+            normal = (widget.get("/AP") or {}).get("/N")
+            state = widget.get("/AS")
+            shown = normal is not None and (state is None or state in normal.get_object())
+            if not shown:
+                raise ValidationError(f"field {widget.get('/T')!r} is filled but has no appearance")
+    return {"form_fields": len(fields), "filled_fields": filled}
+
+
 @register("pdf")
 def validate_pdf(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
     password = fixture.params.get(USER_PASSWORD_PARAM)
@@ -77,6 +104,7 @@ def validate_pdf(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
         height = round(float(first.mediabox.height), 2)
         has_images = any("/XObject" in (page.get("/Resources") or {}) for page in reader.pages)
         outline = bool(reader.outline)
+        form = _form_props(reader)
         version = (data[:8].decode("ascii", "replace").strip() or "").removeprefix("%PDF-")
     except ValidationError:
         raise
@@ -96,4 +124,5 @@ def validate_pdf(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
         "pdf_version": version,
         "has_outline": outline,
         "has_images": has_images,
+        **form,
     }

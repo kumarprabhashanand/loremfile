@@ -173,6 +173,9 @@ PROVING_FIXTURES = [
     "zip/aes256-password-loremfile.zip",
     # M3.7: 7z stores a timestamp per entry; the generator stages files at the epoch.
     "7z/3-text-files.7z",
+    # Catalog 1.5.0: x265 through heif-enc, and pypdf as a writer for the first time.
+    "heic/640x480.heic",
+    "pdf/form-fields-1page.pdf",
 ]
 
 DETERMINISM_TABLE_HEADER = "| Library | Claim | Proving fixture | Verified |"

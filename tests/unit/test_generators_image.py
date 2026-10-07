@@ -152,6 +152,32 @@ def test_avif_decodes_and_has_the_right_size() -> None:
     assert (props["width"], props["height"]) == (640, 480)
 
 
+def test_heic_is_hevc_in_heif_and_decodes_to_its_declared_size() -> None:
+    props = check("heic/640x480.heic")
+    assert (props["width"], props["height"], props["mode"]) == (640, 480, "RGB")
+    assert (props["major_brand"], props["primary_item_type"]) == ("heic", "hvc1")
+
+
+def test_a_truncated_heic_is_rejected() -> None:
+    payload = build("heic/640x480.heic")
+    with pytest.raises(ValidationError, match="runs past"):
+        measure("heic/640x480.heic", payload[: len(payload) // 2])
+
+
+def test_an_avif_is_not_accepted_as_heic() -> None:
+    with pytest.raises(ValidationError, match="not an HEVC-coded HEIC"):
+        measure("heic/640x480.heic", build("avif/640x480.avif"))
+
+
+def test_the_container_and_the_decoder_must_agree_on_the_size() -> None:
+    """The control for the two readers: declare 320 wide and the decode must disagree."""
+    payload = bytearray(build("heic/640x480.heic"))
+    at = payload.find(b"ispe")  # then version and flags, then width and height
+    payload[at + 8 : at + 12] = (320).to_bytes(4, "big")
+    with pytest.raises(ValidationError, match="decodes to 640x480"):
+        measure("heic/640x480.heic", bytes(payload))
+
+
 @pytest.mark.parametrize(("path", "target"), [("png/1mb.png", 10**6), ("jpg/1mb.jpg", 10**6)])
 def test_sized_images_land_inside_the_tolerance(path: str, target: int) -> None:
     assert abs(len(build(path)) - target) <= 0.05 * target
@@ -223,6 +249,7 @@ def test_svg_with_a_non_svg_root_is_rejected() -> None:
         "webp/lossy-640x480.webp",
         "webp/alpha-256x256.webp",
         "avif/640x480.avif",
+        "heic/640x480.heic",
         "bmp/24bit-256x256.bmp",
         "tiff/rgb-640x480.tiff",
         "ico/favicon-16-32-48.ico",

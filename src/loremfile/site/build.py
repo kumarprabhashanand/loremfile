@@ -455,6 +455,7 @@ def format_pages(root: Path, manifest: Manifest, catalogs: dict[str, FormatCatal
             template="format.html",
             crumbs=[("Home", "/"), ("Formats", "/formats")],
             context={
+                "format": fmt,
                 "label": label(fmt),
                 "intro": trusted(markdown.render(content(root, f"formats/{fmt}.md"))),
                 "rows": rows,
@@ -509,11 +510,11 @@ def home_page(root: Path, manifest: Manifest, catalogs: dict[str, FormatCatalog]
         raise SiteError(f"popular paths not in the manifest: {', '.join(missing)} (docs/05 §8)")
     return Page(
         key="index.html",
-        h1="Sample files you can hotlink",
-        title="loremfile.dev — sample files you can hotlink",
+        h1="Sample files you can hotlink or download",
+        title="loremfile.dev: sample files you can hotlink or download",
         description=(
-            "Free, CC0 sample files and test fixtures with stable URLs you can hotlink: PDFs, "
-            "images, audio, video, office documents and data files. No signup."
+            "Free, CC0 sample files with stable URLs you can hotlink, or download for offline "
+            "tests: PDFs, images, audio, video, office and data files. No signup."
         ),
         template="home.html",
         context={
@@ -536,7 +537,8 @@ def home_page(root: Path, manifest: Manifest, catalogs: dict[str, FormatCatalog]
                 "@type": "WebSite",
                 "name": config.SITE_HOST,
                 "url": config.BASE_URL,
-                "description": "Free, CC0 sample files and test fixtures you can hotlink.",
+                "description": "Free, CC0 sample files and test fixtures you can hotlink or "
+                "download.",
             },
             {
                 "@context": "https://schema.org",

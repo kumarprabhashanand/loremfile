@@ -1,0 +1,19 @@
+# heic fixtures (docs/05 §3.2).
+format: heic
+family: images
+mime: image/heic
+description: >-
+  A HEIC encoded by heif-enc from the PNG test card: one HEVC-coded image in a HEIF
+  container, the format iPhones save photos in. Single-threaded, with x265's assembly
+  off, so the output reproduces byte for byte.
+seo_title: "Sample HEIC image for testing HEIF decoders and uploads, free and CC0"
+related: [avif, jpg, png, webp]
+fixtures:
+  - name: 640x480.heic
+    phase: 2
+    generator: image.heic_from_png
+    params: { width: 640, height: 480, quality: 60 }
+    description: "The colour-bar test card at 640x480, encoded to HEIC (HEVC in a HEIF container) by heif-enc at quality 60. For testing upload forms, converters and image libraries that have to accept the format iPhones save photos in."
+    tags: [image]
+    expect: { width: 640, height: 480, major_brand: heic, primary_item_type: hvc1 }
+    size_class: free
