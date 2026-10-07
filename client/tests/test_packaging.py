@@ -46,6 +46,13 @@ def test_the_console_script_is_the_client_entry_point() -> None:
     assert "loremfile = loremfile_client.cli:main" in text
 
 
+def test_the_wheel_carries_the_mcp_tool_surface() -> None:
+    """mcp.py reads tools.json at import; a wheel without it is a server that cannot start."""
+    source = CLIENT / "src" / "loremfile_client" / "tools.json"
+    with zipfile.ZipFile(wheel()) as archive:
+        assert archive.read("loremfile_client/tools.json") == source.read_bytes()
+
+
 def test_the_wheel_declares_no_dependencies() -> None:
     with zipfile.ZipFile(wheel()) as archive:
         metadata = next(n for n in archive.namelist() if n.endswith("METADATA"))

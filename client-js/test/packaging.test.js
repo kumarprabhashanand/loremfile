@@ -23,6 +23,7 @@ const SHIPPED = [
   "package/src/api.js",
   "package/src/cli.js",
   "package/src/mcp.js",
+  "package/src/tools.json",
 ];
 /** Nothing whose path contains these may ever be in the tarball. Named, not counted. */
 const NEVER = [

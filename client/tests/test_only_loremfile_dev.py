@@ -96,6 +96,7 @@ def test_the_client_imports_nothing_but_the_standard_library() -> None:
         "dataclasses",
         "hashlib",
         "http",
+        "importlib",
         "json",
         "os",
         "pathlib",
