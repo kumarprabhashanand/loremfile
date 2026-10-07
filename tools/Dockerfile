@@ -9,7 +9,7 @@
 # Built and pushed to ghcr.io/kumarprabhashanand/loremfile-toolchain by .github/workflows/toolchain.yml;
 # every other workflow references it by the digest in tools/TOOLCHAIN_DIGEST.
 
-# python 3.14.7, Debian 12 "bookworm". Pinned by the multi-arch index digest;
+# python 3.14.8, Debian 12 "bookworm". Pinned by the multi-arch index digest;
 # Dependabot bumps the patch level (docs/09 §4), which is a reviewed PR that also re-pins
 # tools/apt-versions.txt and tools/TOOLCHAIN_DIGEST.
 #
@@ -17,7 +17,7 @@
 # ffmpeg, qpdf, avifenc and sqlite3 produce most of the bytes that cannot change at a
 # published path — so the Python move and a Debian move are two separate decisions, and
 # this is only the first. `python:3.14-slim-trixie` exists and is not used here.
-FROM python:3.14-slim-bookworm@sha256:82bc3c539b8813ada9d68c63b40158fa002f7f33de9bf3312a3dfdc0620dff56
+FROM python:3.14-slim-bookworm@sha256:c8137f4c460908c8763f281c8f22c431eb5c538514ba9553fc3a89c06b7cfb88
 
 # Links the GHCR package to this repository (docs/09 §1) and is what makes the
 # package page show the source, README and licence. toolchain.yml overrides SOURCE_URL
