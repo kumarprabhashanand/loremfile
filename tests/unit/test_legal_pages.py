@@ -46,6 +46,10 @@ AI_TOKENS = {
     "CloudflareBrowserRenderingCrawler",
     "Kimi-Agent",
     "qodercli",
+    # Weighed 2026-10-07 (#51). Keenable documents both, with full user-agent strings;
+    # Keenable-User is user-directed and was refused under the same rule as qodercli.
+    "KeenableBot",
+    "Keenable-User",
     "Google-Extended",
     "Applebot-Extended",
 }

@@ -187,6 +187,11 @@ def test_anything_but_a_403_fails(status: int) -> None:
         ),
         ("CloudflareBrowserRenderingCrawler/1.0", "CloudflareBrowserRenderingCrawler"),
         ("qodercli", "qodercli"),
+        (
+            "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; KeenableBot/1.0; "
+            "+https://keenable.ai/bot)",
+            "KeenableBot",
+        ),
     ],
 )
 def test_the_token_is_read_out_of_whatever_shape_the_agent_sends(agent: str, token: str) -> None:
