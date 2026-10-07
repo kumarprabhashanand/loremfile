@@ -450,18 +450,15 @@ def infra_apply(dry_run: bool, as_json: bool) -> None:
     try:
         client = Client.from_env(dry_run=dry_run)
         report = apply_infra.run(client)
-        click.echo(report.render(), err=True)
+        # Quiet on success; anything to change, do by hand or look at prints every row.
+        click.echo(report.summary_line() if report.quiet else report.render(), err=True)
         items = [
             {"path": o.resource, "status": o.state, "detail": o.detail} for o in report.outcomes
         ]
         summary = {
             "zone": report.hostname,
-            "zone_id": report.zone_id,
             "dry_run": dry_run,
-            **{
-                state: sum(1 for o in report.outcomes if o.state == state)
-                for state in ("unchanged", "updated", "skipped", "manual", "warning", "failed")
-            },
+            **{state: report.count(state) for state in apply_infra.STATES},
         }
         errors = [f"{o.resource}: {o.detail}" for o in report.outcomes if o.state == "failed"]
     except ZoneScopeError as exc:

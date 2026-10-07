@@ -20,10 +20,10 @@ from loremfile.config import SITE_HOST
 from loremfile.infra import apply as apply_module
 from loremfile.infra.cloudflare_api import Client, Response, ZoneScopeError
 
-OUR_ZONE = "872580067ef0889f0b978acde39ea205"
-OUR_ACCOUNT = "705c5f1733982ab6df37f715f1bafe56"
+OUR_ZONE = "0123456789abcdef0123456789abcdef"
+OUR_ACCOUNT = "fedcba9876543210fedcba9876543210"
 #: A real, unrelated production zone on the same account. The point of the guard.
-OTHER_ZONE = "0000000000000000000000000000beef"
+OTHER_ZONE = "aaaaaaaabbbbbbbbccccccccdddddddd"
 #: S106: there is no credential here; the fake client never opens a socket.
 NOT_A_TOKEN = "fake"  # noqa: S105
 
@@ -122,7 +122,8 @@ def test_dry_run_writes_nothing_and_names_the_zone() -> None:
     assert report.zone_id == OUR_ZONE
     assert report.hostname == "loremfile.dev"
     rendered = report.render()
-    assert OUR_ZONE in rendered and "loremfile.dev" in rendered
+    # Named by the hostname verify_zone() confirmed; the id never reaches the log.
+    assert "loremfile.dev" in rendered and OUR_ZONE not in rendered
 
 
 def test_dry_run_still_reads_so_the_plan_is_real() -> None:

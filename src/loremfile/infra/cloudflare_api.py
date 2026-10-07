@@ -96,6 +96,13 @@ class Response:
             or f"HTTP {self.status}"
         )
 
+    def why(self) -> str:
+        """The status and Cloudflare's error codes: what tells a scope refusal from a 404."""
+        codes = self.errors
+        return (
+            f"HTTP {self.status}" if codes.startswith("HTTP ") else f"HTTP {self.status}, {codes}"
+        )
+
 
 @dataclass
 class Client:

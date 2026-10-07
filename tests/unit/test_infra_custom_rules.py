@@ -20,8 +20,8 @@ from loremfile.infra.apply import CUSTOM_PHASE, CUSTOM_REF_PREFIX, Report, apply
 from loremfile.infra.audit import DRIFT, OK, UNREADABLE, AuditReport, audit_custom_rules
 from loremfile.infra.cloudflare_api import NEVER_PUT_PHASES, Client, PhaseWriteRefused, Response
 
-ZONE = "872580067ef0889f0b978acde39ea205"
-ACCOUNT = "705c5f1733982ab6df37f715f1bafe56"
+ZONE = "0123456789abcdef0123456789abcdef"
+ACCOUNT = "fedcba9876543210fedcba9876543210"
 RULESET = "5ca1ab1e5ca1ab1e5ca1ab1e5ca1ab1e"
 ENTRY = f"/zones/{ZONE}/rulesets/phases/{CUSTOM_PHASE}/entrypoint"
 RULES = f"/zones/{ZONE}/rulesets/{RULESET}/rules"

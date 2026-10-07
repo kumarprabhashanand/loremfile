@@ -319,7 +319,8 @@ def audit_url_normalization(client: Client, report: AuditReport) -> None:
     path = f"/zones/{client.zone_id}/url_normalization"
     current = client.get(path)
     if _unreadable(current) or not current.ok:
-        report.add("url-normalization", UNREADABLE, FALLBACKS["url-normalization"])
+        detail = f"{FALLBACKS['url-normalization']} ({current.why()})"
+        report.add("url-normalization", UNREADABLE, detail)
         return
     found = current.result or {}
     if found.get("type") == "cloudflare" and found.get("scope") == "incoming":

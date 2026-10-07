@@ -282,10 +282,9 @@ approval is the only gate between a pushed tag and a live release.
    npm view loremfile@X.Y.Z dist.attestations.provenance.predicateType
    ```
 
-   It must print `https://slsa.dev/provenance/v1`. **The first staged release answers an open
-   question** (`09` §3.8 [VERIFY]): npm does not document whether an attestation made at
-   staging survives approval. Record what the registry shows in `09` §3.8 either way; an empty
-   result reopens the choice of staged publishing.
+   It must print `https://slsa.dev/provenance/v1`. It did on the first staged release, 0.2.0
+   (`09` §3.8): the attestation survives approval. An empty result on a later release is a
+   regression to investigate before announcing it.
 
 ## 8. `ops-log.md` format (on the `ops-log` branch)
 

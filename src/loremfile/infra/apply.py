@@ -87,10 +87,15 @@ HTTP_NOT_FOUND = 404
 NO_ENTRY_POINT_CODE = 10003
 
 
+#: Every state an outcome can have; the last four make a run print every row.
+STATES = ("unchanged", "skipped", "updated", "manual", "warning", "failed")
+LOUD = frozenset({"updated", "manual", "warning", "failed"})
+
+
 @dataclass
 class Outcome:
     resource: str
-    state: str  # unchanged | updated | skipped | manual | warning | failed
+    state: str  # one of STATES
     detail: str = ""
 
 
@@ -107,9 +112,21 @@ class Report:
     def add(self, resource: str, state: str, detail: str = "") -> None:
         self.outcomes.append(Outcome(resource, state, detail))
 
+    @property
+    def quiet(self) -> bool:
+        """Nothing to change, to do by hand or to look at: the log needs only the counts."""
+        return not any(o.state in LOUD for o in self.outcomes)
+
+    def summary_line(self) -> str:
+        counts = " ".join(f"{state}={self.count(state)}" for state in STATES)
+        return f"zone {self.hostname}: {len(self.outcomes)} resources, {counts}"
+
+    def count(self, state: str) -> int:
+        return sum(1 for o in self.outcomes if o.state == state)
+
     def render(self) -> str:
         width = max((len(o.resource) for o in self.outcomes), default=8)
-        lines = [f"zone {self.zone_id} ({self.hostname})", ""]
+        lines = [f"zone {self.hostname}", ""]
         lines += [
             f"  {o.resource.ljust(width)}  {o.state:<9} {o.detail}".rstrip() for o in self.outcomes
         ]
@@ -581,7 +598,9 @@ def apply_url_normalization(client: Client, report: Report) -> None:
     path = f"/zones/{client.zone_id}/url_normalization"
     current = client.get(path)
     if _is_forbidden(current) or current.status == HTTP_NOT_FOUND:
-        report.add("url-normalization", "manual", FALLBACKS["url-normalization"])
+        # The status says which: a 403 is the token's scope, a 404 the endpoint.
+        detail = f"{FALLBACKS['url-normalization']} ({current.why()})"
+        report.add("url-normalization", "manual", detail)
         return
     if not current.ok:
         report.add("url-normalization", "failed", current.errors)
