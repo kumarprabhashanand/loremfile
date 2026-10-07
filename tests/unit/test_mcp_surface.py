@@ -7,7 +7,9 @@ Each tree's own suite then checks its server against its README over real stdio.
 
 from __future__ import annotations
 
+import json
 import re
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -35,3 +37,41 @@ def test_both_readmes_document_the_same_table() -> None:
     for name in ("list_fixtures", "describe_fixture", "verify_file"):
         assert f"| `{name}` |" in js, f"control: {name} is in the table"
     assert js == py
+
+
+# --- the registry entry: one server, two packages ---------------------------------------
+
+
+def server_json() -> dict:
+    return json.loads((ROOT / "server.json").read_text())
+
+
+def test_the_registry_name_is_the_one_both_packages_claim() -> None:
+    """The registry checks npm's mcpName and the PyPI README's mcp-name against `name`."""
+    name = server_json()["name"]
+    assert name == "io.github.kumarprabhashanand/loremfile"
+    assert json.loads((ROOT / "client-js" / "package.json").read_text())["mcpName"] == name
+    assert f"mcp-name: {name} " in (ROOT / "client" / "README.md").read_text()
+
+
+def test_every_package_is_the_version_its_tree_will_publish() -> None:
+    entry = server_json()
+    npm = json.loads((ROOT / "client-js" / "package.json").read_text())["version"]
+    pyproject = tomllib.loads((ROOT / "client" / "pyproject.toml").read_text())
+    by_registry = {p["registryType"]: p for p in entry["packages"]}
+    assert set(by_registry) == {"npm", "pypi"}, "control: both packages are listed"
+    assert by_registry["npm"]["version"] == npm
+    assert by_registry["pypi"]["version"] == pyproject["project"]["version"]
+    assert entry["version"] == npm == pyproject["project"]["version"]
+
+
+def test_both_packages_run_the_mcp_command_on_stdio_and_nothing_is_hosted() -> None:
+    entry = server_json()
+    hints = {p["registryType"]: p["runtimeHint"] for p in entry["packages"]}
+    assert hints == {"npm": "npx", "pypi": "uvx"}
+    for package in entry["packages"]:
+        assert package["identifier"] == "loremfile"
+        assert package["transport"] == {"type": "stdio"}
+        assert package["packageArguments"] == [{"type": "positional", "value": "mcp"}]
+    assert "remotes" not in entry, "loremfile runs no hosted MCP endpoint"
+    assert len(entry["description"]) <= 100, "the registry's limit"
