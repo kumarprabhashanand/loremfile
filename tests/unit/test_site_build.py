@@ -214,6 +214,29 @@ def test_the_popular_list_links_every_path(site: Path) -> None:
     assert all(f'href="/{path}"' in home for path in build.POPULAR)
 
 
+def test_the_home_page_names_hotlinking_before_downloading(site: Path) -> None:
+    """docs/07 §6: downloading is named after hotlinking, never before it."""
+    home = text(site, "index.html")
+    places = {
+        "title": re.search(r"<title>(.*?)</title>", home),
+        "description": re.search(r'<meta name="description" content="([^"]*)"', home),
+        "first line": re.search(r'<div class="pitch">\s*<p>(.*?)</p>', home, re.S),
+    }
+    for where, found in places.items():
+        assert found is not None, f"the home page has no {where}"
+        words = found.group(1).lower()
+        assert "hotlink" in words and "download" in words, (where, words)
+        assert words.index("hotlink") < words.index("download"), (where, words)
+    assert len(places["description"].group(1)) < 160  # type: ignore[union-attr]
+
+
+def test_every_format_page_names_the_command_for_its_whole_format(site: Path) -> None:
+    formats = {path.split("/", 1)[0] for path in fixtures()}
+    assert {"pdf", "csv", "png", "edge"} <= formats, "empty-set control"
+    for fmt in sorted(formats):
+        assert f"<code>npx loremfile get --format {fmt}</code>" in text(site, fmt), fmt
+
+
 def test_the_icons_have_the_documented_sizes(site: Path) -> None:
     def png_size(data: bytes) -> tuple[int, int]:
         assert data[:8] == b"\x89PNG\r\n\x1a\n"
