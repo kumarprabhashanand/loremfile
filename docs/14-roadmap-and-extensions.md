@@ -6,7 +6,7 @@ Phase 1 is the launch scope. Everything below is designed now so that Phase 1 de
 
 All P2 fixtures in `05-fixture-catalog.md`, in this order: (1) remaining text encodings and unicode stress; (2) office extras (tracked changes, footnotes, data validation, hyperlinks, ODF via odfpy, legacy `.xls` only if a maintained writer exists); (3) media codecs (HEVC, AV1, ProRes, multi-bitrate HLS master, DASH `mpd`); (4) images (HEIC, 8000×8000, ICC profiles, CMYK TIFF); (5) data at 1 M rows (Parquet, CSV gz); (6) more edge cases (PDF xref/EOF defects). Each batch = one PR, one minor version.
 
-Toolchain additions: `libheif-examples` (HEIC), confirm `libx265`/`libsvtav1` in Debian's ffmpeg, `odfpy`.
+Toolchain additions: `libheif-examples` (HEIC; added for 1.5.0), confirm `libx265`/`libsvtav1` in Debian's ffmpeg, `odfpy`.
 
 ## Phase 3 — Dynamic endpoints on Worker routes (requires Workers Paid, USD 5/month, ADR-003)
 

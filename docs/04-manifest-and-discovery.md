@@ -77,13 +77,14 @@ Field rules:
 
 | Formats | Keys |
 |---|---|
-| pdf | `pages`, `page_width_pt`, `page_height_pt`, `encrypted`, `pdf_version`, `has_outline`, `has_images` |
+| pdf | `pages`, `page_width_pt`, `page_height_pt`, `encrypted`, `pdf_version`, `has_outline`, `has_images`, and for a PDF with an AcroForm only, `form_fields` and `filled_fields` (a filled field must carry its appearance stream) |
 | png, jpg, gif, webp, avif, bmp, tiff, ico | `width`, `height`, `mode` (`RGB`, `RGBA`, `L`, `P`, `CMYK`, `I;16`), `frames`, `animated`, `progressive`, `exif_orientation` (jpg), `sizes` (ico) |
+| heic | `width` and `height` (the primary item's `ispe`, which heif-convert's decode must match), `mode` (decoded), `major_brand`, `compatible_brands`, `primary_item_type` (`hvc1`), `items`, `format` |
 | svg | `width`, `height`, `viewbox` |
 | mp4, webm, mkv, mov, avi, ogv, ts, hls | `duration_ms`, `width`, `height`, `fps`, `vcodec`, `acodec`, `audio_streams`, `subtitle_streams`, `rotation`, `bitrate_kbps` (hls: `segments`, `target_duration_s`) |
 | mp3, wav, flac, ogg, opus, m4a, aac, aiff | `duration_ms`, `sample_rate`, `channels`, `bit_depth` (pcm), `bitrate_kbps`, `codec`, `tags` (bool) |
 | docx | `paragraphs`, `tables`, `images`, `sections`, `has_headers_footers` |
-| xlsx | `sheets`, `rows` (first sheet, incl. header), `columns`, `has_formulas`, `has_charts` |
+| xlsx | `sheets`, `sheet_names`, `rows` and `columns` (first sheet, rows incl. header), `formulas` (every sheet; each must carry a cached value), `images`, and `cross_sheet_formulas` only where a formula reads another sheet |
 | pptx | `slides`, `has_notes`, `aspect` (`16:9`/`4:3`) |
 | txt, md, html, css, js, rtf, srt, vtt, log, sql, ini | `encoding`, `bom`, `line_ending` (`lf`/`crlf`/`cr`/`mixed`/`none`), `lines`, `max_line_bytes` |
 | csv, tsv | plus `rows` (data rows), `columns`, `delimiter`, `has_header`, `quoted_fields`, and the two causes of quoting reported apart: `quoted_delimiter` (a field holds the delimiter) and `quoted_newline` (a field holds a line break) |

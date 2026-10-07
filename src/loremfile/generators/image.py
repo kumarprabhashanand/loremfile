@@ -302,3 +302,31 @@ def avif_from_png(ctx: GeneratorContext, *, width: int, height: int, quality: in
             tail = completed.stderr.decode("utf-8", "replace").strip()[-400:]
             raise FfmpegError(f"avifenc exited {completed.returncode}: {tail}")
         return target.read_bytes()
+
+
+#: x265 parameters for heif-enc. One thread pool and one frame thread, as for every other
+#: encoder here; `asm=0` because the spike gave identical bytes at every SIMD level from
+#: AVX2 down to none, and turning the kernels off removes the one level it could not test.
+X265_PARAMS = ("x265:pools=none", "x265:frame-threads=1", "x265:asm=0")
+
+
+@generator(parallel_safe=False)
+def heic_from_png(ctx: GeneratorContext, *, width: int, height: int, quality: int = 60) -> bytes:
+    """HEIC, encoded by `heif-enc` (libheif with x265) from a PNG test card."""
+    png = testcard(ctx, width=width, height=height, fmt="PNG")
+    ctx.workdir.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=ctx.workdir) as temporary:
+        source = Path(temporary) / "card.png"
+        target = Path(temporary) / "card.heic"
+        source.write_bytes(png)
+        params = [arg for param in X265_PARAMS for arg in ("-p", param)]
+        completed = subprocess.run(  # noqa: S603 - fixed argv, no shell, paths we built
+            [ctx.tool("heif-enc"), "-q", str(quality), *params, "-o", str(target), str(source)],
+            capture_output=True,
+            timeout=300,
+            check=False,
+        )
+        if completed.returncode != 0:
+            tail = completed.stderr.decode("utf-8", "replace").strip()[-400:]
+            raise FfmpegError(f"heif-enc exited {completed.returncode}: {tail}")
+        return target.read_bytes()

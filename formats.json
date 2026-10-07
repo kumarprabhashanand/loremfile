@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.4.0",
+  "catalog_version": "1.5.0",
   "formats": [
     {
       "format": "7z",
@@ -91,8 +91,8 @@
     },
     {
       "format": "csv",
-      "count": 9,
-      "total_bytes": 36373414,
+      "count": 10,
+      "total_bytes": 36376104,
       "url": "https://loremfile.dev/csv",
       "index": "https://loremfile.dev/csv/index.json",
       "mime_default": "text/csv"
@@ -184,6 +184,14 @@
       "url": "https://loremfile.dev/har",
       "index": "https://loremfile.dev/har/index.json",
       "mime_default": "application/json"
+    },
+    {
+      "format": "heic",
+      "count": 1,
+      "total_bytes": 5066,
+      "url": "https://loremfile.dev/heic",
+      "index": "https://loremfile.dev/heic/index.json",
+      "mime_default": "image/heic"
     },
     {
       "format": "hls",
@@ -387,8 +395,8 @@
     },
     {
       "format": "pdf",
-      "count": 12,
-      "total_bytes": 10955016,
+      "count": 13,
+      "total_bytes": 10960015,
       "url": "https://loremfile.dev/pdf",
       "index": "https://loremfile.dev/pdf/index.json",
       "mime_default": "application/pdf"
@@ -587,8 +595,8 @@
     },
     {
       "format": "xlsx",
-      "count": 6,
-      "total_bytes": 11250551,
+      "count": 7,
+      "total_bytes": 11259520,
       "url": "https://loremfile.dev/xlsx",
       "index": "https://loremfile.dev/xlsx/index.json",
       "mime_default": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

@@ -183,6 +183,39 @@ def test_an_uncached_formula_is_rejected() -> None:
         measure("xlsx/with-formulas.xlsx", uncached)
 
 
+def test_the_summary_reads_the_other_two_sheets_with_cached_results() -> None:
+    data = build("xlsx/3sheets-with-formulas.xlsx")
+    formulas = load_workbook(io.BytesIO(data))
+    values = load_workbook(io.BytesIO(data), data_only=True)
+    assert formulas.sheetnames == ["People", "Order lines", "Summary"]
+    assert formulas["Summary"]["B4"].value == "=SUM('Order lines'!D2:D11)"
+    summary = [values["Summary"][f"B{row}"].value for row in range(2, 9)]
+    # Ten people and ten lines; quantities 1..7,1,2,3; person 1 bought lines 1 and 8.
+    assert summary == [10, 10, 34, 287.5, 28.75, "Karin", 2]
+    assert values["Order lines"]["F2"].value == round(1 * 2.5, 2)
+    props = check("xlsx/3sheets-with-formulas.xlsx")
+    assert (props["formulas"], props["cross_sheet_formulas"]) == (17, 7)
+    assert data == build("xlsx/3sheets-with-formulas.xlsx")
+
+
+def test_an_uncached_formula_on_a_later_sheet_is_rejected() -> None:
+    """The control for checking every sheet: this workbook's first sheet has no formulas."""
+    context = GeneratorContext(path="xlsx/3sheets-with-formulas.xlsx", workdir=WORKDIR)
+    with deterministic(context.seed):
+        workbook = office._new_workbook(context)
+        workbook.active.title = "People"
+        workbook.active.append(["id"])
+        workbook.create_sheet("Summary")["A1"] = "=COUNTA(People!A1:A2)"
+        uncached = office._save_workbook(workbook)
+    with pytest.raises(ValidationError, match="Summary!A1"):
+        measure("xlsx/3sheets-with-formulas.xlsx", uncached)
+
+
+def test_a_workbook_without_cross_sheet_formulas_reports_none() -> None:
+    """Published workbooks keep their props: the new prop appears only where it applies."""
+    assert "cross_sheet_formulas" not in check("xlsx/with-formulas.xlsx")
+
+
 def test_epub_mimetype_entry_is_first_and_stored() -> None:
     data = build("epub/epub3-3chapters.epub")
     with zipfile.ZipFile(io.BytesIO(data)) as archive:

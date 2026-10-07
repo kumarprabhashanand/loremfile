@@ -10,7 +10,9 @@ same in both.
 table, each with its result cached in the file, so readers that do not calculate, such as
 pandas, still see values. `xlsx/with-types-and-formats.xlsx` has one row per cell type and
 number format, including dates, percentages, currency and text that only looks numeric, such
-as 007.
+as 007. `xlsx/3sheets-with-formulas.xlsx` has three sheets, and its summary sheet's formulas
+read the other two, with results cached; one sheet name holds a space, so those references are
+quoted, as in `'Order lines'!F2:F11`.
 
 For size limits, `xlsx/1mb.xlsx` and `xlsx/10mb.xlsx` add a sheet of incompressible noise
 images. Related formats: [CSV](/csv), [DOCX](/docx) and [Parquet](/parquet).

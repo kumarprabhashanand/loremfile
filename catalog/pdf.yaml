@@ -33,6 +33,14 @@ fixtures:
     tags: [document, multi-page, text]
     expect: { pages: 10, page_width_pt: 595.28, page_height_pt: 841.89, encrypted: false }
     size_class: free
+  - name: form-fields-1page.pdf
+    phase: 2
+    generator: pdf.form
+    params: {}
+    description: "One A4 page with an AcroForm: four text fields and two checkboxes. Full name, email and the newsletter box are filled; phone, city and the terms box are empty. Every field carries its own appearance, so viewers show the same values. For testing form extraction and filling."
+    tags: [document]
+    expect: { pages: 1, encrypted: false, form_fields: 6, filled_fields: 3 }
+    size_class: free
   - name: letter-1page.pdf
     phase: 1
     generator: pdf.basic

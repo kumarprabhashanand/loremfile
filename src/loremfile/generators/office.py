@@ -320,6 +320,82 @@ def xlsx_with_formulas(ctx: GeneratorContext, *, rows: int = 10) -> bytes:
 
 
 @generator()
+def xlsx_multisheet_formulas(ctx: GeneratorContext, *, rows: int = 10) -> bytes:
+    """Three sheets, the third summarising the other two with formulas that read across.
+
+    The order sheet's name holds a space, so every reference to it must be quoted
+    (`'Order lines'!F2`): the case a formula reader that splits on `!` gets wrong.
+    """
+    people = ctx.dataset("people", rows)
+    workbook = _new_workbook(ctx)
+    first = workbook.active
+    if first is None:  # pragma: no cover
+        raise RuntimeError("the new workbook has no active sheet")
+    first.title = "People"
+    _write_people(first, people)
+
+    orders = workbook.create_sheet("Order lines")
+    orders.append(["order", "person_id", "item", "quantity", "unit_price", "total"])
+    for cell in orders[1]:
+        cell.font = Font(bold=True)
+    # Repeats some customers and skips others, so COUNTIF has something to count.
+    customers = [people[(index * 3) % 7]["id"] for index in range(rows)]
+    quantities = [(index % 7) + 1 for index in range(rows)]
+    prices = [round(2.5 + index * 1.25, 2) for index in range(rows)]
+    for index in range(rows):
+        row = index + 2
+        orders.append(
+            [
+                f"ord-{index + 1:03d}",
+                customers[index],
+                f"item-{index + 1:03d}",
+                quantities[index],
+                prices[index],
+            ]
+        )
+        orders.cell(row=row, column=6).value = f"=D{row}*E{row}"
+    totals = [round(q * p, 2) for q, p in zip(quantities, prices, strict=True)]
+
+    last = rows + 1
+    lines = "'Order lines'"
+    by_id = {person["id"]: person for person in people}
+    summary = workbook.create_sheet("Summary")
+    summary.append(["measure", "value"])
+    for cell in summary[1]:
+        cell.font = Font(bold=True)
+    measures: list[tuple[str, str, object]] = [
+        ("people", f"=COUNTA(People!A2:A{last})", rows),
+        ("order lines", f"=COUNTA({lines}!A2:A{last})", rows),
+        ("quantity total", f"=SUM({lines}!D2:D{last})", sum(quantities)),
+        ("revenue", f"=SUM({lines}!F2:F{last})", round(sum(totals), 2)),
+        ("mean order line", f"=AVERAGE({lines}!F2:F{last})", round(sum(totals) / rows, 10)),
+        (
+            "first order's customer",
+            f"=VLOOKUP({lines}!B2,People!A2:B{last},2,FALSE)",
+            by_id[customers[0]]["first_name"],
+        ),
+        (
+            f"order lines for person {people[0]['id']}",
+            f"=COUNTIF({lines}!B2:B{last},People!A2)",
+            customers.count(people[0]["id"]),
+        ),
+    ]
+    for label, formula, _ in measures:
+        summary.append([label, formula])
+    summary.column_dimensions["A"].width = 28
+
+    data = _save_workbook(workbook)
+    data = _inject_cached_values(
+        data, "xl/worksheets/sheet2.xml", {f"F{i + 2}": totals[i] for i in range(rows)}
+    )
+    return _inject_cached_values(
+        data,
+        "xl/worksheets/sheet3.xml",
+        {f"B{i + 2}": value for i, (_, _, value) in enumerate(measures)},
+    )
+
+
+@generator()
 def xlsx_with_types(ctx: GeneratorContext) -> bytes:
     """One column per Excel type and number format, including the awkward ones."""
     workbook = _new_workbook(ctx)

@@ -1,15 +1,15 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.4.0",
-  "generated_at": "2026-09-28T08:48:59Z",
+  "catalog_version": "1.5.0",
+  "generated_at": "2026-10-07T16:26:52Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
-  "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:0157a7dfd8b2c71245ffa56a5a17393a77584ab70f2500814a54f8a31ce3de6f",
-  "count": 231,
-  "total_bytes": 595166977,
+  "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:e334c50e6e3a68c6a7c2c4d9b824856299f8deeb3782fc104fd888b80e0c736c",
+  "count": 235,
+  "total_bytes": 595188701,
   "formats": [
     "7z",
     "aac",
@@ -34,6 +34,7 @@
     "gpx",
     "gz",
     "har",
+    "heic",
     "hls",
     "html",
     "ico",
@@ -1186,6 +1187,46 @@
         "size": 1000000
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "csv/people-10-crlf.csv",
+      "url": "https://loremfile.dev/csv/people-10-crlf.csv",
+      "format": "csv",
+      "ext": "csv",
+      "mime": "text/csv; charset=utf-8",
+      "bytes": 2690,
+      "sha256": "91a2c4158ea5bb79756bb57e6e6d876aaf27d91adbf9f3f7de15972298d1fcb0",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The same ten people rows with every record ending in CR LF, as RFC 4180 specifies, where people-10.csv ends them in LF. A reader that splits on LF alone leaves a carriage return on the last column.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "crlf",
+        "lines": 11,
+        "max_line_bytes": 342,
+        "rows": 10,
+        "columns": 14,
+        "delimiter": ",",
+        "has_header": true,
+        "quoted_fields": false,
+        "quoted_delimiter": false,
+        "quoted_newline": false
+      },
+      "generator": "data.csv_people",
+      "generator_params": {
+        "rows": 10,
+        "crlf": true
+      },
+      "added_in": "1.5.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -2735,6 +2776,42 @@
       "generator": "web.har",
       "generator_params": {},
       "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "heic/640x480.heic",
+      "url": "https://loremfile.dev/heic/640x480.heic",
+      "format": "heic",
+      "ext": "heic",
+      "mime": "image/heic",
+      "bytes": 5066,
+      "sha256": "61aace709cfad9d9155e2b57b484097f77737536e34932075160fc3da6f87fe7",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The colour-bar test card at 640x480, encoded to HEIC (HEVC in a HEIF container) by heif-enc at quality 60. For testing upload forms, converters and image libraries that have to accept the format iPhones save photos in.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "major_brand": "heic",
+        "compatible_brands": "mif1,heic,miaf",
+        "primary_item_type": "hvc1",
+        "items": 1,
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "format": "heic"
+      },
+      "generator": "image.heic_from_png",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "quality": 60
+      },
+      "added_in": "1.5.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -5437,6 +5514,39 @@
       "supersededBy": null
     },
     {
+      "path": "pdf/form-fields-1page.pdf",
+      "url": "https://loremfile.dev/pdf/form-fields-1page.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 4999,
+      "sha256": "4dea448d54c75b32b6742e63f5ba67d8ece38c7cf05128c6b9a0434676cf1ad0",
+      "size_class": "free",
+      "phase": 2,
+      "description": "One A4 page with an AcroForm: four text fields and two checkboxes. Full name, email and the newsletter box are filled; phone, city and the terms box are empty. Every field carries its own appearance, so viewers show the same values. For testing form extraction and filling.",
+      "tags": [
+        "document"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 1,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.3",
+        "has_outline": false,
+        "has_images": false,
+        "form_fields": 6,
+        "filled_fields": 3
+      },
+      "generator": "pdf.form",
+      "generator_params": {},
+      "added_in": "1.5.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "pdf/letter-1page.pdf",
       "url": "https://loremfile.dev/pdf/letter-1page.pdf",
       "format": "pdf",
@@ -7559,6 +7669,41 @@
         "rows": 10
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "xlsx/3sheets-with-formulas.xlsx",
+      "url": "https://loremfile.dev/xlsx/3sheets-with-formulas.xlsx",
+      "format": "xlsx",
+      "ext": "xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 8969,
+      "sha256": "c06e4e712aad0007262414ee61d4d94957575e0356fbd3dcd978394a231a8b0a",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three sheets: ten people, ten order lines, and a summary whose COUNTA, SUM, AVERAGE, VLOOKUP and COUNTIF formulas read the other two, each with its result cached. The order sheet's name has a space in it, so every reference to it is quoted, as in 'Order lines'!F2:F11.",
+      "tags": [
+        "document",
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "sheets": 3,
+        "sheet_names": "People,Order lines,Summary",
+        "rows": 11,
+        "columns": 14,
+        "formulas": 17,
+        "images": 0,
+        "cross_sheet_formulas": 7
+      },
+      "generator": "office.xlsx_multisheet_formulas",
+      "generator_params": {
+        "rows": 10
+      },
+      "added_in": "1.5.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null

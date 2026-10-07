@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-07
+
+- `heic/640x480.heic`: the colour-bar test card as HEIC, the format iPhones capture photos in,
+  for testing upload forms and converters. A new format.
+- `csv/people-10-crlf.csv`: the ten people rows with every record ending in CR LF.
+- `pdf/form-fields-1page.pdf`: a fillable form of four text fields and two checkboxes, half of
+  them filled.
+- `xlsx/3sheets-with-formulas.xlsx`: three sheets, with summary formulas that read the other
+  two through a quoted sheet name, results cached.
+- New manifest props on these entries: the HEIC container's brands and primary item,
+  `form_fields` and `filled_fields` for a PDF form, and `cross_sheet_formulas` for workbooks.
+
 ## [1.4.0] - 2026-09-28
 
 - Two polyglots: `edge/pdf-zip-polyglot.pdf` and `edge/gif-zip-polyglot.gif` are each valid
