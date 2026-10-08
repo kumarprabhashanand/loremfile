@@ -207,6 +207,23 @@ def basic(ctx: GeneratorContext, *, pages: int, page_size: str = "A4",
 - SQLite: `PRAGMA page_size=4096; PRAGMA journal_mode=DELETE;` run `VACUUM` at the end; the header contains the SQLite library version so the toolchain must be pinned.
 - Fonts (fontTools): set `head.created`/`head.modified` to the epoch explicitly.
 
+### Parser fixture batch, 1.6.0
+
+Spiked in the pinned image on 2026-10-08 before cataloguing: all six new variants
+produced identical bytes twice under the guard, in separate temporary directories.
+Pillow 12.3.0 writes EXIF orientation 8 with its existing `Image.Exif` API. The standard
+library ZIP writer emits a ZIP64 end record for 70,000 entries: the empty-member archive
+is **7,420,098 bytes**, with zero expanded payload and no ratio exception. python-docx
+1.2.0 writes the comment, and raw `w:ins`/`w:del` XML supplies tracked revisions; authors,
+revision ids, dates and the comment date are fixed, then zipnorm normalises the package.
+No library, lock file or toolchain change is needed.
+
+`tests/unit/test_parser_fixtures.py` builds every batch member twice with its full catalog
+parameters. Its controls replace EXIF orientation, substitute faststart media, damage ZIP64
+end records, add a PDF text layer, remove revisions or comment wiring, and replace
+BOM-less big-endian code units with a BOM or little-endian units. The new properties are
+measured only for these variants, so published entries retain their existing props.
+
 ## 5. Dependency resolution and build order
 
 `loremfile build` resolves `depends_on` into a DAG and generates in topological order, parallelising independent fixtures across `-j N` workers (default `os.cpu_count()`); generators marked `parallel_safe=False` run alone. Dataset generation runs once per process and is cached in memory.
@@ -240,8 +257,8 @@ For each generated file, `validators.validate(path, catalog_entry) -> props`:
 2. **Parse with an independent reader** and measure props: pypdf + `qpdf --check` (pdf); Pillow `verify()` + reopen (images); `ffprobe -show_streams -show_format` (media); python-docx/openpyxl/python-pptx reopen (office); `csv` module with the delimiter taken from the catalog entry rather than sniffed — a fixture declares its delimiter, and `Sniffer` can guess wrong on exactly the awkward files these fixtures exist to be (corrected in M3.2a) — plus a `chardet`-free explicit decode (text: decode with the declared charset strictly; count lines and detect line endings by bytes); `json.loads` / `ijson` for large; `lxml` with `resolve_entities=False, no_network=True` (xml); `pyarrow.parquet.read_metadata` / `fastavro.reader` / `pyarrow.ipc`; `sqlite3` `PRAGMA integrity_check` == `ok`; `zipfile.testzip()` is `None`, `tarfile` walk, `py7zr.test()`; fontTools `TTFont` load + glyph count; `email` package parse; `icalendar` / `vobject` parse; `cryptography.x509` load; `wasmtime`? — no: a minimal hand-written wasm parser checks sections (keep the toolchain small).
 3. **Expectations**: every key in `expect` must equal the measured prop (floats within 0.01).
 4. **Size class**: `exact` ⇒ `bytes == nominal_bytes`; `boundary` ⇒ `bytes == nominal_bytes ± 1` as named; `approx` ⇒ within ±5 %; `free` ⇒ `bytes ≤ MAX_FIXTURE_BYTES`.
-5. **Policy scan** (`validators/policy.py`): reject if bytes contain `-----BEGIN` + `PRIVATE KEY`, the EICAR test string, `MZ` at offset 0, ELF/Mach-O magic, `<!ENTITY` with `SYSTEM`/`PUBLIC` (external entities), in SVG: `<script`, `on[a-z]+=` attributes, `javascript:` URLs, `<foreignObject`, `<set`/`<animate` targeting `href`, external `href`/`xlink:href` schemes; in HTML: `on[a-z]+=` attributes and `javascript:` URLs (exception: `html/with-inline-js.html` may contain one `<script>` with `console.log` only, declared as `policy_exceptions: [inline-script-console]`); `/JavaScript` or `/JS` or `/Launch` or `/OpenAction` in PDF, macros in OOXML (`vbaProject.bin`), archive decompression ratio > 1000:1. Exceptions are declared **by path** in the catalog's `policy_exceptions` (`mz-prefix` for `edge/exe-header-with-txt-extension.txt`; `decompression-ratio:<n>` for `zip/zip64-70000-empty-files.zip` with the measured ratio); the manifest records the resulting hash so the exception is auditable.
-6. **Text hygiene**: every `text/*`, `application/json`, `application/xml`, `application/yaml`, `application/toml`, `application/x-ndjson`, `application/geo+json` fixture carries an explicit charset in its `mime` (`; charset=utf-8` by default — the catalog loader appends it when absent; per-fixture overrides for `iso-8859-1`, `windows-1252`, `shift_jis`, `gb2312`, `utf-16`, `utf-32` are listed in `05` §1 rule 7) and the bytes must decode strictly with that charset. Edge fixtures with `defect: invalid-encoding` are exempt.
+5. **Policy scan** (`validators/policy.py`): reject if bytes contain `-----BEGIN` + `PRIVATE KEY`, the EICAR test string, `MZ` at offset 0, ELF/Mach-O magic, `<!ENTITY` with `SYSTEM`/`PUBLIC` (external entities), in SVG: `<script`, `on[a-z]+=` attributes, `javascript:` URLs, `<foreignObject`, `<set`/`<animate` targeting `href`, external `href`/`xlink:href` schemes; in HTML: `on[a-z]+=` attributes and `javascript:` URLs (exception: `html/with-inline-js.html` may contain one `<script>` with `console.log` only, declared as `policy_exceptions: [inline-script-console]`); `/JavaScript` or `/JS` or `/Launch` or `/OpenAction` in PDF, macros in OOXML (`vbaProject.bin`), archive decompression ratio > 1000:1. Exceptions are declared **by path** in the catalog's `policy_exceptions` (`mz-prefix` for `edge/exe-header-with-txt-extension.txt`; `decompression-ratio:<n>` only when an archive actually exceeds the limit; `zip/zip64-70000-empty-files.zip` has zero expanded bytes and needs no exception); the manifest records the resulting hash so the exception is auditable.
+6. **Text hygiene**: every `text/*`, `application/json`, `application/xml`, `application/yaml`, `application/toml`, `application/x-ndjson`, `application/geo+json` fixture carries an explicit charset in its `mime` (`; charset=utf-8` by default — the catalog loader appends it when absent; per-fixture overrides for `utf-16be` (the BOM-less ASCII fixture), `iso-8859-1`, `windows-1252`, `shift_jis`, `gb2312`, `utf-16`, `utf-32` are listed in `05` §1 rule 7) and the bytes must decode strictly with that charset. Edge fixtures with `defect: invalid-encoding` are exempt.
 
 Validation failures are hard errors in CI and print a table of path → failed check.
 

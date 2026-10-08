@@ -14,5 +14,9 @@ owner password `loremfile-owner`. `pdf/blank-1page.pdf` has one page and no cont
 `pdf/form-fields-1page.pdf` has a fillable form of four text fields and two checkboxes, half
 of them filled, for testing form extraction and filling.
 
+`pdf/scanned-1page.pdf` looks like a document but contains one raster image and no text
+layer. Its extracted text is an empty string, the scanned-document case that silently
+breaks text pipelines. Use OCR to read it; the validator measures image and text counts.
+
 For size limits, `pdf/1mb.pdf` and `pdf/10mb.pdf` embed incompressible noise images rather
 than padding. Related formats: [DOCX](/docx), [EPUB](/epub), [PNG](/png) and [JPEG](/jpg).

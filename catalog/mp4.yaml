@@ -4,11 +4,19 @@ family: video
 mime: video/mp4
 description: >-
   H.264 video with AAC audio in MP4, the format every player and upload form accepts.
-  Synthetic test patterns and a 440 Hz tone — no third-party footage. Every file is
-  faststart, so the moov atom is ahead of the media and progressive playback works.
+  Synthetic test patterns and a 440 Hz tone. Faststart files put the moov atom ahead
+  of the media; the non-faststart variant keeps it at the end to test playback delays.
 seo_title: "Sample MP4 video files for testing — free, CC0, hotlinkable"
 related: [webm, mkv, mov, mp3]
 fixtures:
+  - name: non-faststart-720p-5s.mp4
+    phase: 2
+    generator: media_video.mp4
+    params: { width: 1280, height: 720, duration: 5, faststart: false }
+    description: "1280x720 at 30 fps, five seconds, H.264 plus AAC. Unlike mp4/720p-5s.mp4, moov follows mdat at the file end, so sequential progressive playback waits for the whole file."
+    tags: [video, codec-h264, codec-aac]
+    expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, fps: 30.0, video_streams: 1, audio_streams: 1, faststart: false, moov_at_end: true }
+    size_class: free
   - name: 360p-5s.mp4
     phase: 1
     generator: media_video.mp4

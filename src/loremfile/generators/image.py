@@ -258,6 +258,18 @@ def exif_orientation(_ctx: GeneratorContext, *, width: int, height: int, orienta
 
 
 @generator()
+def exif_rotated(_ctx: GeneratorContext, *, width: int, height: int) -> bytes:
+    """Orientation 8: pixels rotated clockwise, displayed counterclockwise by EXIF."""
+    image = test_card(width, height, "RGB", label="UP orientation=8")
+    stored = image.transpose(Image.Transpose.ROTATE_270)
+    exif = Image.Exif()
+    exif[0x0112] = 8
+    exif[0x010E] = "loremfile.dev EXIF orientation fixture"
+    exif[0x0132] = "2020:01:01 00:00:00"
+    return _save(stored, "JPEG", quality=90, exif=exif.tobytes(), subsampling="4:2:0")
+
+
+@generator()
 def ico_multi(_ctx: GeneratorContext, *, sizes: list[int]) -> bytes:
     """A multi-resolution ICO, the shape a real favicon has."""
     largest = max(sizes)

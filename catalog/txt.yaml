@@ -9,6 +9,15 @@ description: >-
 seo_title: "Sample text files for testing encodings and line endings — free, CC0"
 related: [md, log, ini, bin]
 fixtures:
+  - name: utf16be-no-bom.txt
+    phase: 2
+    generator: text.encoded
+    params: { encoding: utf-16be, bom: false }
+    description: "ASCII Lorem Ipsum encoded as UTF-16 big-endian without a BOM. Unlike txt/utf16le-bom.txt, there is no byte-order marker for an encoding detector to follow."
+    tags: [text, encoding, unicode]
+    expect: { encoding: utf-16be, bom: false, byte_order: be }
+    size_class: free
+    mime: "text/plain; charset=utf-16be"
   - name: lorem-1kb.txt
     phase: 1
     generator: text.lorem_sized

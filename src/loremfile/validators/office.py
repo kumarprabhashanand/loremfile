@@ -20,6 +20,7 @@ import zipfile
 from typing import Any
 
 import docx
+from lxml import etree
 from openpyxl import load_workbook
 from pptx import Presentation
 
@@ -35,6 +36,114 @@ MIN_TABLE_ROWS = 2
 
 #: EPUB's Open Container Format requires exactly this, and readers rely on it.
 EPUB_MIMETYPE = b"application/epub+zip"
+
+WORD_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+WORD_NAMESPACES = {"w": WORD_NS}
+COMMENT_REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments"
+COMMENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml"
+
+
+def _word_xml(archive: zipfile.ZipFile, part: str) -> etree._Element:
+    return etree.fromstring(
+        archive.read(part), etree.XMLParser(resolve_entities=False, no_network=True)
+    )
+
+
+def _tracking_enabled(settings: etree._Element) -> bool:
+    track = settings.find("w:trackRevisions", WORD_NAMESPACES)
+    if track is None:
+        return False
+    default_tab = settings.find("w:defaultTabStop", WORD_NAMESPACES)
+    if default_tab is not None and settings.index(track) > settings.index(default_tab):
+        raise ValidationError("trackRevisions follows defaultTabStop, violating settings order")
+    return track.get(f"{{{WORD_NS}}}val", "true") in {"true", "1", "on"}
+
+
+def _revision_props(data: bytes) -> dict[str, Any]:
+    """Read revisions and comment wiring directly, including the accepted text view."""
+    with _archive(data) as archive:
+        tree = _word_xml(archive, "word/document.xml")
+        comments = _word_xml(archive, "word/comments.xml")
+        relations = _word_xml(archive, "word/_rels/document.xml.rels")
+        types = _word_xml(archive, "[Content_Types].xml")
+        settings = _word_xml(archive, "word/settings.xml")
+    if not any(
+        node.get("Type") == COMMENT_REL
+        and node.get("Target") == "comments.xml"
+        and node.get("TargetMode", "Internal") == "Internal"
+        for node in relations
+    ):
+        raise ValidationError("no internal relationship to the comments part")
+    if not any(
+        node.get("PartName") == "/word/comments.xml" and node.get("ContentType") == COMMENT_TYPE
+        for node in types
+    ):
+        raise ValidationError("comments part has no matching content type")
+    insertions = tree.findall(".//w:ins", WORD_NAMESPACES)
+    deletions = tree.findall(".//w:del", WORD_NAMESPACES)
+    ids = []
+    for revision in (*insertions, *deletions):
+        rid = revision.get(f"{{{WORD_NS}}}id")
+        if (
+            not rid
+            or not rid.isdecimal()
+            or not revision.get(f"{{{WORD_NS}}}author")
+            or not revision.get(f"{{{WORD_NS}}}date")
+        ):
+            raise ValidationError("revision lacks an id, author or date")
+        ids.append(rid)
+        deleted = revision.tag == f"{{{WORD_NS}}}del"
+        expected, forbidden = ("delText", "t") if deleted else ("t", "delText")
+        values = revision.findall(f".//w:{expected}", WORD_NAMESPACES)
+        if not any(node.text for node in values) or revision.findall(
+            f".//w:{forbidden}", WORD_NAMESPACES
+        ):
+            raise ValidationError(f"revision must contain {expected}, without {forbidden}")
+    if len(set(ids)) != len(ids):
+        raise ValidationError("duplicate revision ids")
+
+    comment_nodes = comments.findall("w:comment", WORD_NAMESPACES)
+    comment_ids = [node.get(f"{{{WORD_NS}}}id") for node in comment_nodes]
+    if None in comment_ids or len(set(comment_ids)) != len(comment_ids):
+        raise ValidationError("missing or duplicate comment ids")
+    nodes = list(tree.iter())
+    positions = {}
+    for kind in ("commentRangeStart", "commentRangeEnd", "commentReference"):
+        found = [
+            (index, node.get(f"{{{WORD_NS}}}id"))
+            for index, node in enumerate(nodes)
+            if node.tag == f"{{{WORD_NS}}}{kind}"
+        ]
+        if sorted(cid for _, cid in found) != sorted(comment_ids):
+            raise ValidationError(f"comment anchors disagree: {kind}")
+        positions[kind] = {cid: index for index, cid in found}
+    for cid in comment_ids:
+        start, end, reference = (
+            positions[kind][cid]
+            for kind in ("commentRangeStart", "commentRangeEnd", "commentReference")
+        )
+        if not start < end < reference or not any(
+            node.tag == f"{{{WORD_NS}}}t" and node.text for node in nodes[start + 1 : end]
+        ):
+            raise ValidationError("comment range does not enclose text before its reference")
+    if any(not node.xpath(".//w:t/text()", namespaces=WORD_NAMESPACES) for node in comment_nodes):
+        raise ValidationError("empty comment")
+
+    current = "\n".join(
+        "".join(paragraph.xpath(".//w:t[not(ancestor::w:del)]/text()", namespaces=WORD_NAMESPACES))
+        for paragraph in tree.findall(".//w:p", WORD_NAMESPACES)
+    )
+    return {
+        "insertions": len(insertions),
+        "deletions": len(deletions),
+        "comments": len(comment_nodes),
+        "deleted_text": "".join(
+            tree.xpath(".//w:del//w:delText/text()", namespaces=WORD_NAMESPACES)
+        ),
+        "inserted_text": "".join(tree.xpath(".//w:ins//w:t/text()", namespaces=WORD_NAMESPACES)),
+        "current_text": current,
+        "tracking_enabled": _tracking_enabled(settings),
+    }
 
 
 def _archive(data: bytes) -> zipfile.ZipFile:
@@ -76,12 +185,14 @@ def validate_docx(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
     for index, rows in enumerate(table_rows):
         if rows < MIN_TABLE_ROWS:
             raise ValidationError(f"table {index} has {rows} row(s): no header plus data")
+    revisions = _revision_props(data) if fixture.generator == "office.docx_tracked_changes" else {}
     return {
         "paragraphs": len(paragraphs),
         "tables": len(tables),
         "table_rows": table_rows[0] if table_rows else 0,
         "images": len(images),
         "words": sum(len(p.text.split()) for p in paragraphs),
+        **revisions,
     }
 
 

@@ -36,6 +36,8 @@ import zipfile
 from typing import Any
 
 import docx
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 from docx.shared import Inches
 from lxml import etree
 from openpyxl import Workbook
@@ -155,6 +157,36 @@ def docx_with_table(ctx: GeneratorContext, *, rows: int = 10) -> bytes:
         cells = table.add_row().cells
         for cell, column in zip(cells, TABLE_COLUMNS, strict=True):
             cell.text = str(person[column])
+    return _save_docx(document)
+
+
+@generator(parallel_safe=False)
+def docx_tracked_changes(ctx: GeneratorContext) -> bytes:
+    """One deletion, one insertion and one anchored comment, with fixed revision metadata."""
+    document = _new_document(ctx)
+    document.add_heading("Tracked changes", level=1)
+    paragraph = document.add_paragraph("The delivery status is ")
+    for kind, number, text in (("del", 1, "cancelled"), ("ins", 2, "confirmed")):
+        revision = OxmlElement(f"w:{kind}")
+        revision.set(qn("w:id"), str(number))
+        revision.set(qn("w:author"), AUTHOR)
+        revision.set(qn("w:date"), "2020-01-01T00:00:00Z")
+        run = OxmlElement("w:r")
+        value = OxmlElement("w:delText" if kind == "del" else "w:t")
+        value.text = text
+        run.append(value)
+        revision.append(run)
+        paragraph._p.append(revision)
+    paragraph.add_run(".")
+    anchor = document.add_paragraph().add_run("Review the updated delivery status.")
+    comment = document.add_comment(
+        anchor, "The current status is confirmed.", author=AUTHOR, initials="LF"
+    )
+    comment._element.set(qn("w:date"), "2020-01-01T00:00:00Z")
+    track = OxmlElement("w:trackRevisions")
+    # CT_Settings places trackRevisions before defaultTabStop. The pinned template
+    # contains that successor; appending at the end creates out-of-order settings.
+    document.settings.element.insert_element_before(track, "w:defaultTabStop")
     return _save_docx(document)
 
 

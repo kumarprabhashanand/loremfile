@@ -14,4 +14,9 @@ Encodings: `txt/utf8-bom.txt` and `txt/utf16le-bom.txt` start with byte-order ma
 `txt/utf8-multilingual.txt` has a line per script plus emoji, combining marks, bidi controls
 and unusual spaces, and `txt/emoji-only.txt` contains nothing but emoji sequences.
 
+`txt/utf16be-no-bom.txt` encodes ASCII Lorem Ipsum as UTF-16 big-endian without a BOM.
+Unlike `txt/utf16le-bom.txt`, it gives an encoding detector no byte-order marker. The
+declared charset is `utf-16be`; the validator independently measures the byte order from
+the NUL lane in these ASCII code units and rejects little-endian bytes or an added BOM.
+
 Related formats: [Markdown](/md), [log files](/log), [INI](/ini) and [binary files](/bin).

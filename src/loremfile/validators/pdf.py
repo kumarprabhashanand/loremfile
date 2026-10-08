@@ -105,6 +105,15 @@ def validate_pdf(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
         has_images = any("/XObject" in (page.get("/Resources") or {}) for page in reader.pages)
         outline = bool(reader.outline)
         form = _form_props(reader)
+        scan = {}
+        if fixture.generator == "pdf.image_only":
+            image_counts = [len(page.images) for page in reader.pages]
+            text_characters = sum(len(page.extract_text() or "") for page in reader.pages)
+            scan = {
+                "images": sum(image_counts),
+                "text_characters": text_characters,
+                "image_only": all(image_counts) and text_characters == 0,
+            }
         version = (data[:8].decode("ascii", "replace").strip() or "").removeprefix("%PDF-")
     except ValidationError:
         raise
@@ -125,4 +134,5 @@ def validate_pdf(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
         "has_outline": outline,
         "has_images": has_images,
         **form,
+        **scan,
     }

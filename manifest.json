@@ -1,15 +1,15 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.5.0",
-  "generated_at": "2026-10-07T16:26:52Z",
+  "catalog_version": "1.6.0",
+  "generated_at": "2026-10-08T21:00:30Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:e334c50e6e3a68c6a7c2c4d9b824856299f8deeb3782fc104fd888b80e0c736c",
-  "count": 235,
-  "total_bytes": 595188701,
+  "count": 241,
+  "total_bytes": 604747421,
   "formats": [
     "7z",
     "aac",
@@ -1707,6 +1707,43 @@
         "rows": 10
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "docx/with-tracked-changes.docx",
+      "url": "https://loremfile.dev/docx/with-tracked-changes.docx",
+      "format": "docx",
+      "ext": "docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "bytes": 37393,
+      "sha256": "ef532842a716a965962aae701c3840b28137000065ced0630ccc58094df251c4",
+      "size_class": "free",
+      "phase": 2,
+      "description": "One tracked deletion (cancelled), one insertion (confirmed) and one anchored comment. A naive XML text extractor returns deleted text as current; accepting the changes leaves the delivery status confirmed.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "paragraphs": 3,
+        "tables": 0,
+        "table_rows": 0,
+        "images": 0,
+        "words": 12,
+        "insertions": 1,
+        "deletions": 1,
+        "comments": 1,
+        "deleted_text": "cancelled",
+        "inserted_text": "confirmed",
+        "current_text": "Tracked changes\nThe delivery status is confirmed.\nReview the updated delivery status.",
+        "tracking_enabled": true
+      },
+      "generator": "office.docx_tracked_changes",
+      "generator_params": {},
+      "added_in": "1.6.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -3640,6 +3677,43 @@
       "supersededBy": null
     },
     {
+      "path": "jpg/exif-orientation-8-640x480.jpg",
+      "url": "https://loremfile.dev/jpg/exif-orientation-8-640x480.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 16011,
+      "sha256": "765cca26c02abc4bca1f23d2e4d45b63b0fa8056a05eea89b8a5a4ae419f0b0d",
+      "size_class": "free",
+      "phase": 1,
+      "description": "EXIF orientation 8: stored pixels are 480x640 and rotated clockwise. Honouring the tag displays the UP label upright at 640x480; ignoring it shows the image sideways.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 480,
+        "height": 640,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false,
+        "exif_orientation": 8,
+        "display_width": 640,
+        "display_height": 480
+      },
+      "generator": "image.exif_rotated",
+      "generator_params": {
+        "width": 640,
+        "height": 480
+      },
+      "added_in": "1.6.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "jpg/progressive-1920x1080.jpg",
       "url": "https://loremfile.dev/jpg/progressive-1920x1080.jpg",
       "format": "jpg",
@@ -4852,6 +4926,50 @@
       "supersededBy": null
     },
     {
+      "path": "mp4/non-faststart-720p-5s.mp4",
+      "url": "https://loremfile.dev/mp4/non-faststart-720p-5s.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 1974574,
+      "sha256": "62022960a34b9bc00ac6d7a8a83bc244737014545523e85bae5aea547521a1ac",
+      "size_class": "free",
+      "phase": 2,
+      "description": "1280x720 at 30 fps, five seconds, H.264 plus AAC. Unlike mp4/720p-5s.mp4, moov follows mdat at the file end, so sequential progressive playback waits for the whole file.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1,
+        "faststart": false,
+        "moov_at_end": true
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 1280,
+        "height": 720,
+        "duration": 5,
+        "faststart": false
+      },
+      "added_in": "1.6.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "mp4/vertical-1080x1920-5s.mp4",
       "url": "https://loremfile.dev/mp4/vertical-1080x1920-5s.mp4",
       "format": "mp4",
@@ -5608,6 +5726,41 @@
       "generator": "pdf.minimal",
       "generator_params": {},
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/scanned-1page.pdf",
+      "url": "https://loremfile.dev/pdf/scanned-1page.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 107030,
+      "sha256": "626a5b71f8d3d507a8dc48c6df1e85dcae51a24833f83e71a5105cca7a2dff92",
+      "size_class": "free",
+      "phase": 2,
+      "description": "One A4 page with a raster scan of synthetic text and no text layer. Text extraction returns an empty string even though the page looks readable; OCR is required.",
+      "tags": [
+        "document",
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 1,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": true,
+        "images": 1,
+        "text_characters": 0,
+        "image_only": true
+      },
+      "generator": "pdf.image_only",
+      "generator_params": {},
+      "added_in": "1.6.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -6948,6 +7101,41 @@
       "supersededBy": null
     },
     {
+      "path": "txt/utf16be-no-bom.txt",
+      "url": "https://loremfile.dev/txt/utf16be-no-bom.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-16be",
+      "bytes": 3614,
+      "sha256": "c4a356b333a015cdbeda72f0f42e5b61c76df9d35269541ec434485ad2baa6a3",
+      "size_class": "free",
+      "phase": 2,
+      "description": "ASCII Lorem Ipsum encoded as UTF-16 big-endian without a BOM. Unlike txt/utf16le-bom.txt, there is no byte-order marker for an encoding detector to follow.",
+      "tags": [
+        "text",
+        "encoding",
+        "unicode"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-16be",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 5,
+        "max_line_bytes": 1449,
+        "byte_order": "be"
+      },
+      "generator": "text.encoded",
+      "generator_params": {
+        "encoding": "utf-16be",
+        "bom": false
+      },
+      "added_in": "1.6.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "txt/utf16le-bom.txt",
       "url": "https://loremfile.dev/txt/utf16le-bom.txt",
       "format": "txt",
@@ -8233,6 +8421,43 @@
       "generator": "archive.zip_nested",
       "generator_params": {},
       "added_in": "1.1.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "zip/zip64-70000-empty-files.zip",
+      "url": "https://loremfile.dev/zip/zip64-70000-empty-files.zip",
+      "format": "zip",
+      "ext": "zip",
+      "mime": "application/zip",
+      "bytes": 7420098,
+      "sha256": "13185dbd86346b4e5d96624f7c4427b99d55fc67fe31a12af8526b039a03aa36",
+      "size_class": "free",
+      "phase": 1,
+      "description": "70,000 empty text members, forcing ZIP64 central-directory entry counts past 65,535. No large payload: readers that truncate a 16-bit count silently lose members.",
+      "tags": [
+        "archive",
+        "stress"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 70000,
+        "directories": 0,
+        "method": "deflate",
+        "encrypted": false,
+        "zip64": true,
+        "comment": false,
+        "utf8_names": false,
+        "zip64_entries": 70000,
+        "max_member_bytes": 0,
+        "uncompressed_bytes": 0
+      },
+      "generator": "archive.zip64_empty",
+      "generator_params": {
+        "count": 70000
+      },
+      "added_in": "1.6.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null

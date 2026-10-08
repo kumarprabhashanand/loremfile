@@ -8,6 +8,11 @@ Its page count is what Word renders, because a .docx stores no page count of its
 `docx/with-table.docx` holds a ten-row table of the shared people dataset with a bold header
 row.
 
+`docx/with-tracked-changes.docx` has a tracked deletion of “cancelled”, an insertion of
+“confirmed” and one anchored comment. The current delivery status is confirmed. Joining
+all XML text includes the deleted word as well, so an extractor must choose a revision
+view. Its props record the inserted, deleted and current text, plus the comment count.
+
 For size limits, `docx/1mb.docx` and `docx/10mb.docx` reach their size with embedded
 incompressible noise images rather than padding, so a compressing upload path cannot shrink
 them. None of the files contains macros; a .docx cannot carry them.

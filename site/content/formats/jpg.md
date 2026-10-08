@@ -11,6 +11,10 @@ pipelines expecting RGB mishandle. `jpg/exif-orientation-6-640x480.jpg` stores i
 rotated with EXIF orientation 6, so the label reads upright only when the viewer honours the
 tag; a viewer that ignores EXIF shows it sideways.
 
+`jpg/exif-orientation-8-640x480.jpg` stores a clockwise-rotated card at 480x640 with
+orientation 8. Applying the tag rotates it counterclockwise and restores the upright UP
+label at 640x480. Its props distinguish stored and displayed dimensions.
+
 For size limits, `jpg/1mb.jpg` and `jpg/10mb.jpg` are seeded noise at quality 95 with 4:4:4
 sampling, so their size is honest. Related formats: [PNG](/png), [WebP](/webp),
 [AVIF](/avif) and [TIFF](/tiff).

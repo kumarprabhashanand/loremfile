@@ -208,6 +208,12 @@ AFTER_LAUNCH = (
     "heic/640x480.heic",
     "pdf/form-fields-1page.pdf",
     "xlsx/3sheets-with-formulas.xlsx",
+    "jpg/exif-orientation-8-640x480.jpg",
+    "mp4/non-faststart-720p-5s.mp4",
+    "zip/zip64-70000-empty-files.zip",
+    "pdf/scanned-1page.pdf",
+    "docx/with-tracked-changes.docx",
+    "txt/utf16be-no-bom.txt",
 )
 
 

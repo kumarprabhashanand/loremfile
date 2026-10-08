@@ -10,6 +10,14 @@ description: >-
 seo_title: "Sample ZIP files for testing extractors and uploads — free, CC0"
 related: [tar, gz, 7z]
 fixtures:
+  - name: zip64-70000-empty-files.zip
+    phase: 1
+    generator: archive.zip64_empty
+    params: { count: 70000 }
+    description: "70,000 empty text members, forcing ZIP64 central-directory entry counts past 65,535. No large payload: readers that truncate a 16-bit count silently lose members."
+    tags: [archive, stress]
+    expect: { entries: 70000, zip64: true, zip64_entries: 70000, max_member_bytes: 0, uncompressed_bytes: 0, encrypted: false }
+    size_class: free
   - name: 3-text-files.zip
     phase: 1
     generator: archive.zip_text_files
