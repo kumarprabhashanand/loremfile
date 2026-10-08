@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from lxml import etree
-from PIL import Image, ImageFile
+from PIL import Image, ImageFile, ImageOps
 
 from loremfile.catalog import Fixture
 from loremfile.util.ffmpeg import FfmpegError, tool
@@ -76,8 +76,13 @@ def _raster_props(data: bytes) -> dict[str, Any]:
 
 def _register_raster(fmt: str) -> None:
     @register(fmt)
-    def _validate(data: bytes, _fixture: Fixture, _mime: str) -> dict[str, Any]:
-        return _raster_props(data)
+    def _validate(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
+        props = _raster_props(data)
+        if fixture.generator == "image.exif_rotated":
+            with Image.open(io.BytesIO(data)) as image:
+                displayed = ImageOps.exif_transpose(image)
+                props["display_width"], props["display_height"] = displayed.size
+        return props
 
 
 for _format in RASTER_FORMATS:

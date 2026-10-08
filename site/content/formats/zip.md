@@ -14,4 +14,9 @@ useless as a fixture.
 For size limits there are `zip/1mb.zip`, `zip/10mb.zip` and `zip/100mb.zip`, each a single
 incompressible member so the archive's size is honest rather than padded.
 
+`zip/zip64-70000-empty-files.zip` forces ZIP64 through 70,000 central-directory entries,
+past the 65,535 limit, while every member is empty. It occupies 7,420,098 bytes without a
+large expanded payload. The validator checks the ZIP64 end record and locator against the
+members it actually reads, so a truncated count cannot pass as a complete archive.
+
 Related formats: [TAR](/tar), [GZIP](/gz) and [7z](/7z).

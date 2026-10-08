@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-10-08
+
+- `jpg/exif-orientation-8-640x480.jpg`: an EXIF rotation case for viewers that ignore orientation tags.
+- `mp4/non-faststart-720p-5s.mp4`: metadata at the end, so sequential playback waits for the download.
+- `zip/zip64-70000-empty-files.zip`: 70,000 empty members force ZIP64 central-directory handling.
+- `pdf/scanned-1page.pdf`: readable raster text with no text layer, so extraction returns an empty string.
+- `docx/with-tracked-changes.docx`: an insertion, a deletion and one comment for revision-aware extraction.
+- `txt/utf16be-no-bom.txt`: UTF-16 big-endian text without a byte-order marker for encoding detection tests.
+
 ## [1.5.0] - 2026-10-07
 
 - `heic/640x480.heic`: the colour-bar test card as HEIC, the format iPhones capture photos in,

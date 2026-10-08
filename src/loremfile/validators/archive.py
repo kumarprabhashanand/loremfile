@@ -13,6 +13,7 @@ import gzip
 import io
 import lzma
 import posixpath
+import struct
 import tarfile
 import zipfile
 import zlib
@@ -30,6 +31,7 @@ FLAG_ENCRYPTED = 0x1
 FLAG_UTF8_NAME = 0x800
 #: The 16-bit entry count in the end-of-central-directory record: more needs ZIP64.
 ZIP64_ENTRY_LIMIT = 0xFFFF
+ZIP64_END_PAYLOAD_BYTES = 44
 TAR_FORMATS = {tarfile.USTAR_FORMAT: "ustar", tarfile.GNU_FORMAT: "gnu", tarfile.PAX_FORMAT: "pax"}
 
 
@@ -40,6 +42,29 @@ def _ratio_props(fixture: Fixture, compressed: int, uncompressed: int) -> dict[s
     if violations:
         raise ValidationError("; ".join(violation.detail for violation in violations))
     return {"uncompressed_bytes": uncompressed}
+
+
+def _zip64_entries(data: bytes) -> int:
+    """Read the ZIP64 locator and end record, including their central-directory bounds."""
+    end = data.rfind(b"PK\x05\x06", max(0, len(data) - 65_557))
+    locator = end - 20
+    if end < 0 or locator < 0 or data[locator : locator + 4] != b"PK\x06\x07":
+        raise ValidationError("missing ZIP64 end-of-central-directory locator")
+    _, disk, offset, disks = struct.unpack_from("<4sIQI", data, locator)
+    if disk != 0 or disks != 1 or offset + 56 > locator:
+        raise ValidationError("invalid ZIP64 end-record offset or disk count")
+    signature, size, _, _, disk, start_disk, here, total, cd_size, cd_offset = struct.unpack_from(
+        "<4sQHHIIQQQQ", data, offset
+    )
+    if (
+        signature != b"PK\x06\x06"
+        or size < ZIP64_END_PAYLOAD_BYTES
+        or offset + size + 12 != locator
+    ):
+        raise ValidationError("invalid ZIP64 end-of-central-directory record")
+    if disk != 0 or start_disk != 0 or here != total or cd_offset + cd_size != offset:
+        raise ValidationError("ZIP64 central-directory bounds or counts disagree")
+    return int(total)
 
 
 @register("zip")
@@ -68,6 +93,13 @@ def validate_zip(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
         "comment": bool(zipfile.ZipFile(io.BytesIO(data)).comment),
         "utf8_names": any(info.flag_bits & FLAG_UTF8_NAME for info in infos),
     }
+    if len(infos) > ZIP64_ENTRY_LIMIT or (fixture.expect or {}).get("zip64"):
+        total = _zip64_entries(data)
+        if total != len(infos):
+            raise ValidationError(f"ZIP64 declares {total} entries, read {len(infos)}")
+        props["zip64"] = True
+        props["zip64_entries"] = total
+        props["max_member_bytes"] = max((info.file_size for info in infos), default=0)
     return props | _ratio_props(fixture, len(data), uncompressed)
 
 

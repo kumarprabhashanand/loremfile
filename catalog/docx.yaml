@@ -9,6 +9,14 @@ description: >-
 seo_title: "Sample DOCX files for testing — free, CC0, hotlinkable"
 related: [pdf, rtf, xlsx]  # odt joins when M7 adds it
 fixtures:
+  - name: with-tracked-changes.docx
+    phase: 2
+    generator: office.docx_tracked_changes
+    params: {}
+    description: "One tracked deletion (cancelled), one insertion (confirmed) and one anchored comment. A naive XML text extractor returns deleted text as current; accepting the changes leaves the delivery status confirmed."
+    tags: [document, text]
+    expect: { insertions: 1, deletions: 1, comments: 1, deleted_text: cancelled, inserted_text: confirmed, tracking_enabled: true }
+    size_class: free
   - name: 1page.docx
     phase: 1
     generator: office.docx_basic

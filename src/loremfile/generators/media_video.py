@@ -60,6 +60,7 @@ def mp4(
     profile: str | None = None,
     level: str | None = None,
     container: str = "mp4",
+    faststart: bool = True,
 ) -> bytes:
     """H.264 video with AAC audio in MP4, MOV or MPEG-TS."""
     args = _inputs(width, height, fps, duration, audio)
@@ -69,7 +70,7 @@ def mp4(
     if level:
         args += ["-level", level]
     args += ["-c:a", encoder_for("aac"), "-b:a", AUDIO_BITRATE] if audio else ["-an"]
-    if container in {"mp4", "mov"}:
+    if container in {"mp4", "mov"} and faststart:
         # Puts the moov atom first so a player can start before the file has arrived.
         args += ["-movflags", "+faststart"]
     suffix = {"mp4": ".mp4", "mov": ".mov", "mpegts": ".ts", "matroska": ".mkv"}[container]

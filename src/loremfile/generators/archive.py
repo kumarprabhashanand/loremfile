@@ -87,6 +87,14 @@ def zip_text_files(ctx: GeneratorContext, *, count: int = 3) -> bytes:
 
 
 @generator()
+def zip64_empty(_ctx: GeneratorContext, *, count: int = 70_000) -> bytes:
+    """Empty members force a ZIP64 end record by entry count, without a large payload."""
+    if count <= zipfile.ZIP_FILECOUNT_LIMIT:
+        raise ValueError("ZIP64 requires more than 65,535 entries")
+    return _zip_of({f"file-{index:05d}.txt": b"" for index in range(count)})
+
+
+@generator()
 def zip_nested(ctx: GeneratorContext) -> bytes:
     """A zip whose entries are in nested directories."""
     return _zip_of(nested_members(ctx))

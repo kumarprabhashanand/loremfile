@@ -8,6 +8,14 @@ description: >-
 seo_title: "Sample JPEG images for testing uploads and viewers — free, CC0"
 related: [png, webp, avif, tiff]
 fixtures:
+  - name: exif-orientation-8-640x480.jpg
+    phase: 1
+    generator: image.exif_rotated
+    params: { width: 640, height: 480 }
+    description: "EXIF orientation 8: stored pixels are 480x640 and rotated clockwise. Honouring the tag displays the UP label upright at 640x480; ignoring it shows the image sideways."
+    tags: [image]
+    expect: { exif_orientation: 8, width: 480, height: 640, display_width: 640, display_height: 480, mode: RGB }
+    size_class: free
   - name: 100x100.jpg
     phase: 1
     generator: image.testcard

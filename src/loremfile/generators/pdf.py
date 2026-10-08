@@ -14,10 +14,11 @@ from __future__ import annotations
 
 import datetime as dt
 import io
+import textwrap
 
 from fpdf import FPDF
 from fpdf.enums import AccessPermission
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from pypdf import PdfReader, PdfWriter
 from pypdf.generic import (
     ArrayObject,
@@ -197,6 +198,28 @@ def with_images(ctx: GeneratorContext, *, png: str, jpg: str) -> bytes:
         pdf.cell(0, 20, f"Embedded {label}: {path}", new_x="LMARGIN", new_y="NEXT")
         pdf.ln(8)
         pdf.image(io.BytesIO(payload), w=400)
+    return _render(pdf)
+
+
+@generator()
+def image_only(ctx: GeneratorContext) -> bytes:
+    """One A4 page containing a raster scan of synthetic text, with no text layer."""
+    scan = Image.new("RGB", (1190, 1684), "white")
+    draw = ImageDraw.Draw(scan)
+    font = ImageFont.load_default(size=24)
+    draw.text((100, 100), "Loremfile scanned document", fill="black", font=font)
+    top = 200
+    rng = ctx.rng
+    for _ in range(3):
+        for line in textwrap.wrap(lorem.paragraph(rng), width=72):
+            draw.text((100, top), line, fill="black", font=font)
+            top += 34
+        top += 34
+    buffer = io.BytesIO()
+    scan.save(buffer, format="PNG", compress_level=6)
+    pdf = _document()
+    pdf.add_page()
+    pdf.image(io.BytesIO(buffer.getvalue()), x=0, y=0, w=pdf.w, h=pdf.h)
     return _render(pdf)
 
 

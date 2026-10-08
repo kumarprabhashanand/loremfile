@@ -6,11 +6,11 @@ This document is the authoritative list of fixtures. It is transcribed into `cat
 
 1. **Synthetic only.** Text is Lorem Ipsum (public domain) or generated. People data uses fixed fictional name lists, `@example.com` / `@example.org` emails, US `555-01xx` and UK `+44 7700 900xxx` reserved phone ranges, fictional street addresses, real country codes, birth dates between 1950 and 2005. No real names of real people, no real addresses, no card numbers, no IBANs, no government IDs.
 2. **Deterministic.** Every generator receives `ctx.seed = sha256("loremfile:" + path)` (the full fixture path, e.g. `bin/1mb.bin`), sees all clocks fixed at `2020-01-01T00:00:00Z` (`SOURCE_DATE_EPOCH=1577836800`), and never reads the environment or the network (`06` §4).
-3. **Safe.** No scripts in PDFs; no external entity references in XML; no executables (no MZ/ELF/Mach-O magic); no EICAR string; no decompression ratios above 1000:1 in archives (`zip64-70000-empty-files.zip` is the largest ratio and is whitelisted with its ratio recorded); no private keys; no macros (`.xlsm`, `.docm` are excluded).
+3. **Safe.** No scripts in PDFs; no external entity references in XML; no executables (no MZ/ELF/Mach-O magic); no EICAR string; no decompression ratios above 1000:1 in archives (`zip64-70000-empty-files.zip` has zero uncompressed payload and needs no exception); no private keys; no macros (`.xlsm`, `.docm` are excluded).
 4. **Sizes.** ≤ 100,000,000 bytes per fixture. `bin/` and `txt/lorem-*` are exact; `-plus-1`/`-minus-1` are exact boundaries; other size-named fixtures are `approx` (±5 %).
 5. **Every fixture has a one-line description** written for a reader deciding whether it fits, and `tags` from the controlled vocabulary.
 6. **Phases.** Rows marked phase 1 total ≈ 416 files / ≈ 0.96 GB (§5). The **launch set (P1)** is the explicit list in §9 (228 files, **595,170,670 bytes measured** at M3.9, every family represented); the remaining phase-1 rows are **P1b**, added in batches right after launch (`15` M7). Phase 2 (P2) is the roadmap. Anything not in this document needs a catalog PR that also updates this document.
-7. **Charsets.** Every text-like fixture's `mime` carries an explicit charset; the default appended by the catalog loader is `utf-8`. The only overrides are: `txt/utf16le-bom.txt`, `txt/utf16be-bom.txt` → `text/plain; charset=utf-16`; `txt/utf32le-bom.txt` → `text/plain; charset=utf-32`; `txt/latin1.txt` → `text/plain; charset=iso-8859-1`; `txt/windows-1252.txt` → `text/plain; charset=windows-1252`; `txt/shift-jis.txt` → `text/plain; charset=shift_jis`; `txt/gb2312.txt` → `text/plain; charset=gb2312`; `csv/people-10-latin1.csv` → `text/csv; charset=iso-8859-1`; `csv/people-10-utf16le.csv` → `text/csv; charset=utf-16`; `xml/utf16.xml` → `application/xml; charset=utf-16`; `xhtml` → `application/xhtml+xml; charset=utf-8`. Edge fixtures with `defect: invalid-encoding` keep the charset their name claims.
+7. **Charsets.** Every text-like fixture's `mime` carries an explicit charset; the default appended by the catalog loader is `utf-8`. The only overrides are: `txt/utf16le-bom.txt`, `txt/utf16be-bom.txt` → `text/plain; charset=utf-16`; `txt/utf16be-no-bom.txt` → `text/plain; charset=utf-16be`; `txt/utf32le-bom.txt` → `text/plain; charset=utf-32`; `txt/latin1.txt` → `text/plain; charset=iso-8859-1`; `txt/windows-1252.txt` → `text/plain; charset=windows-1252`; `txt/shift-jis.txt` → `text/plain; charset=shift_jis`; `txt/gb2312.txt` → `text/plain; charset=gb2312`; `csv/people-10-latin1.csv` → `text/csv; charset=iso-8859-1`; `csv/people-10-utf16le.csv` → `text/csv; charset=utf-16`; `xml/utf16.xml` → `application/xml; charset=utf-16`; `xhtml` → `application/xhtml+xml; charset=utf-8`. Edge fixtures with `defect: invalid-encoding` keep the charset their name claims.
 8. **Sizes for `-plus-1`/`-minus-1`** exist only in `bin/`. Sizing recipes for every size-named fixture are in §6.
 
 ## 2. Shared synthetic datasets
@@ -58,6 +58,7 @@ Column key: **Name** (path after the format), **P** phase, **Generator** (module
 | `a4-with-outline-5pages.pdf` | 1 | `pdf.with_outline` | bookmarks per page | has_outline=true, pages=5 | 15 KB |
 | `a4-rotated-90-1page.pdf` | 1 | `pdf.rotated` | /Rotate 90 | pages=1 | 5 KB |
 | `a4-encrypted-1page.pdf` | 1 | `pdf.encrypted` | AES-128, user password `loremfile`, owner password `loremfile-owner`; passwords in description | encrypted=true | 6 KB |
+| `scanned-1page.pdf` | 2 | `pdf.image_only` | raster scan of synthetic text, no text layer (1.6.0) | images=1, text_characters=0, image_only=true | 107 KB |
 | `blank-1page.pdf` | 1 | `pdf.blank` | no content stream text | pages=1 | 1 KB |
 | `minimal.pdf` | 1 | `pdf.minimal` | hand-written smallest useful PDF (one page, "Hello") | pages=1 | < 1 KB |
 | `a4-latin1-accents-1page.pdf` | 1 | `pdf.basic` | text with é à ü ñ ø (Latin-1 in core font) | pages=1 | 5 KB |
@@ -126,6 +127,7 @@ Common generation: `ffmpeg -f lavfi -i testsrc2=size=WxH:rate=FPS -f lavfi -i si
 |---|---|---|---|---|
 | `360p-5s.mp4` | 1 | 640×360 30 fps | duration 5000 ms ± 100, vcodec=h264, acodec=aac | 300 KB |
 | `720p-5s.mp4` | 1 | 1280×720 | | 700 KB |
+| `non-faststart-720p-5s.mp4` | 2 | same resolution, duration and codecs as `720p-5s.mp4`, moov after mdat at file end (1.6.0) | faststart=false, moov_at_end=true | 2 MB |
 | `720p-30s.mp4` | 1 | | | 4 MB |
 | `1080p-10s.mp4` | 1 | 1920×1080 | | 3 MB |
 | `1080p-60s.mp4` | 1 | | | 15 MB |
@@ -159,7 +161,7 @@ Sources: `sine` 440 Hz; `stereo-lr` (L 440 Hz, R 880 Hz); `sweep` 20 Hz→20 kHz
 
 ### 3.5 Office documents
 
-`docx/` (`application/vnd.openxmlformats-officedocument.wordprocessingml.document`, python-docx, zip normalised): `1page.docx`, `10pages.docx`, `with-images.docx` (2 PNG), `with-table.docx`, `with-headers-footers.docx`, `with-headings-and-toc.docx` (TOC field, updates on open), `with-comments.docx`, `unicode-multilingual.docx`, `1mb.docx`, `10mb.docx` — P1. `with-tracked-changes.docx`, `with-footnotes.docx`, `50mb.docx` — P2.
+`docx/` (`application/vnd.openxmlformats-officedocument.wordprocessingml.document`, python-docx, zip normalised): `1page.docx`, `10pages.docx`, `with-images.docx` (2 PNG), `with-table.docx`, `with-headers-footers.docx`, `with-headings-and-toc.docx` (TOC field, updates on open), `with-comments.docx`, `unicode-multilingual.docx`, `1mb.docx`, `10mb.docx` — P1. `with-tracked-changes.docx` (published in 1.6.0: one insertion, one deletion and one anchored comment), `with-footnotes.docx`, `50mb.docx` — P2.
 `xlsx/` (`…spreadsheetml.sheet`, openpyxl): `1sheet-10rows.xlsx`, `1sheet-1000rows.xlsx`, `1sheet-100k-rows.xlsx`, `3sheets.xlsx`, `3sheets-with-formulas.xlsx` (published in 1.5.0: a summary sheet whose formulas read the other two, one of them through a quoted sheet name), `with-formulas.xlsx` (SUM/AVERAGE/IF/VLOOKUP, cached values written), `with-types-and-formats.xlsx` (dates, times, booleans, percentages, currency, scientific, text-that-looks-numeric), `with-merged-cells.xlsx`, `with-frozen-header-and-autofilter.xlsx`, `with-chart.xlsx`, `with-images.xlsx`, `unicode-strings.xlsx`, `1mb.xlsx`, `10mb.xlsx` — P1. `with-data-validation.xlsx`, `with-hyperlinks.xlsx`, `1m-rows.xlsx` (≈ 60 MB) — P2.
 `pptx/` (`…presentationml.presentation`, python-pptx): `1slide.pptx`, `10slides.pptx`, `with-images.pptx`, `with-notes.pptx`, `with-table-and-chart.pptx`, `4x3-5slides.pptx`, `1mb.pptx`, `10mb.pptx` — P1.
 `rtf/` (`application/rtf`, hand-written): `simple.rtf`, `with-table-and-formatting.rtf` — P1.
@@ -177,6 +179,7 @@ Sources: `sine` 440 Hz; `stereo-lr` (L 440 Hz, R 880 Hz); `sweep` 20 Hz→20 kHz
 | `lf.txt`, `crlf.txt`, `cr.txt`, `mixed-line-endings.txt` | 1 | 100 lines | line_ending |
 | `utf8-bom.txt` | 1 | | bom=true |
 | `utf16le-bom.txt`, `utf16be-bom.txt` (`text/plain; charset=utf-16`), `utf32le-bom.txt` (`charset=utf-32`) | 1 | | encoding |
+| `utf16be-no-bom.txt` (`charset=utf-16be`) | 2 | ASCII code units, no byte-order marker (1.6.0) | bom=false, byte_order=be |
 | `latin1.txt` (`charset=iso-8859-1`), `windows-1252.txt` (`charset=windows-1252`), `shift-jis.txt` (`charset=shift_jis`), `gb2312.txt` (`charset=gb2312`) | 1 | native-script lorem | encoding |
 | `utf8-multilingual.txt` | 1 | Latin, Greek, Cyrillic, Arabic, Hebrew, Devanagari, Thai, CJK, Hangul, emoji incl. ZWJ sequences and skin tones, combining marks, bidi controls, NBSP, ZWSP | encoding=utf-8 |
 | `emoji-only.txt`, `whitespace-only.txt`, `single-line-no-trailing-newline.txt`, `very-long-line-1mb.txt` (one line), `10k-lines.txt`, `tabs-and-spaces.txt`, `control-characters.txt` (C0 except NUL, LF, CR, TAB; edge_case=true), `nul-bytes.txt` (contains `\0`, edge_case=true) | 1 | | |
@@ -206,7 +209,7 @@ Sources: `sine` 440 Hz; `stereo-lr` (L 440 Hz, R 880 Hz); `sweep` 20 Hz→20 kHz
 
 ### 3.8 Archives
 
-`zip/` (`application/zip`): `3-text-files.zip`, `nested-directories.zip`, `100-files.zip`, `1000-files.zip`, `empty.zip` (22 bytes), `stored-uncompressed.zip`, `unicode-filenames.zip` (UTF-8 flag bit 11), `with-empty-directories.zip`, `mixed-fixtures.zip` (pdf, png, csv, json), `with-archive-comment.zip`, `aes256-password-loremfile.zip` (pyzipper, password `loremfile`), `zip64-70000-empty-files.zip` (forces ZIP64; ratio whitelisted), `1mb.zip`, `10mb.zip`, `100mb.zip` (incompressible payload) — P1.
+`zip/` (`application/zip`): `3-text-files.zip`, `nested-directories.zip`, `100-files.zip`, `1000-files.zip`, `empty.zip` (22 bytes), `stored-uncompressed.zip`, `unicode-filenames.zip` (UTF-8 flag bit 11), `with-empty-directories.zip`, `mixed-fixtures.zip` (pdf, png, csv, json), `with-archive-comment.zip`, `aes256-password-loremfile.zip` (pyzipper, password `loremfile`), `zip64-70000-empty-files.zip` (1.6.0: 70,000 empty members force ZIP64 entry counts; 7,420,098 bytes measured, zero uncompressed payload), `1mb.zip`, `10mb.zip`, `100mb.zip` (incompressible payload) — P1.
 `tar/`: `3-text-files.tar` (`application/x-tar`), `3-text-files.tar.gz` (`application/gzip`), `3-text-files.tar.bz2` (`application/x-bzip2`), `3-text-files.tar.xz` (`application/x-xz`), `3-text-files.tar.zst` (`application/zstd`), `nested-directories.tar`, `with-symlinks.tar` (relative symlinks only), `long-names-pax.tar`, `1000-files.tar`, `10mb.tar.gz` — P1.
 `gz/` (`application/gzip`): `lorem-1mb.txt.gz`, `noise-1mb.bin.gz`, `multi-member-3.gz` (three concatenated members) — P1. `bz2/`, `xz/`, `zst/`: `lorem-1mb.txt.{bz2,xz,zst}` — P1.
 `7z/` (`application/x-7z-compressed`, py7zr): `3-text-files.7z`, `lzma2-1mb.7z` — P1.
@@ -390,7 +393,7 @@ P1b stays **188**: `100mib.bin` moved out of phase 1 entirely, so it left both t
 | Catalogued, **awaiting publication** | 0 | |
 | Still to catalogue | 0 | M3.7 and M3.8 catalogued all 62: archives, fonts, mail, calendar, cert, wasm, web, and the edge cases |
 | **Launch set (ADR-024)** | **228** | |
-| Added after launch | 7 | `csv/people-10-quoted-commas` (1.3.0), from launch feedback; `edge/pdf-zip-polyglot` and `edge/gif-zip-polyglot` (1.4.0); `csv/people-10-crlf`, `heic/640x480`, `pdf/form-fields-1page` and `xlsx/3sheets-with-formulas` (1.5.0). Each one is listed here, so the catalog can grow without the launch number drifting |
+| Added after launch | 13 | `csv/people-10-quoted-commas` (1.3.0), from launch feedback; `edge/pdf-zip-polyglot` and `edge/gif-zip-polyglot` (1.4.0); `csv/people-10-crlf`, `heic/640x480`, `pdf/form-fields-1page` and `xlsx/3sheets-with-formulas` (1.5.0). The six-file 1.6.0 batch adds `jpg/exif-orientation-8-640x480`, `mp4/non-faststart-720p-5s`, `zip/zip64-70000-empty-files`, `pdf/scanned-1page`, `docx/with-tracked-changes` and `txt/utf16be-no-bom`. Each one is listed here, so the catalog can grow without the launch number drifting |
 
 `tests/unit/test_deploy_path.py` asserts this arithmetic, with the outstanding rows as a named constant — now zero, so the next fixture added outside this list has to change the list itself. It is the one figure that cannot be derived from the repository, so it is checked rather than remembered: fixtures added without accounting for the launch scope become a failing build instead of a slow drift away from 228.
 

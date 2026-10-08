@@ -87,8 +87,21 @@ def make_validator(fmt: str) -> None:
     """Register the shared text validator under one format name."""
 
     @register(fmt)
-    def _validate(data: bytes, _fixture: Fixture, mime: str) -> dict[str, Any]:
-        return text_props(data, mime)
+    def _validate(data: bytes, fixture: Fixture, mime: str) -> dict[str, Any]:
+        props = text_props(data, mime)
+        if "byte_order" in (fixture.expect or {}):
+            # The BOM-less fixture contains ASCII code units, so the NUL lane
+            # identifies endianness from bytes. This does not claim to detect an
+            # arbitrary UTF-16 string, whose two byte orders can both decode.
+            even, odd = data[::2], data[1::2]
+            order = "unknown"
+            if data and len(even) == len(odd):
+                if even == bytes(len(even)) and any(odd):
+                    order = "be"
+                elif odd == bytes(len(odd)) and any(even):
+                    order = "le"
+            props["byte_order"] = order
+        return props
 
 
 for _format in TEXT_FORMATS:

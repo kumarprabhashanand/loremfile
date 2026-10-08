@@ -125,10 +125,16 @@ def make_media_validator(fmt: str, suffix: str) -> None:
             order = _atoms(data)
             if "moov" not in order:
                 raise ValidationError(f"no moov atom among {order}")
-            if "mdat" in order and order.index("moov") > order.index("mdat"):
+            if "mdat" not in order:
+                raise ValidationError(f"no mdat atom among {order}")
+            faststart = order.index("moov") < order.index("mdat")
+            if fixture.params.get("faststart", True) and not faststart:
                 raise ValidationError(
                     f"moov comes after mdat ({order}); -movflags +faststart was not applied"
                 )
+            if "faststart" in fixture.params:
+                props["faststart"] = faststart
+                props["moov_at_end"] = order[-1] == "moov"
         return props
 
 

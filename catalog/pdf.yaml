@@ -9,6 +9,14 @@ description: >-
 seo_title: "Sample PDF files for testing — free, CC0, hotlinkable"
 related: [png, jpg, docx, epub, edge]
 fixtures:
+  - name: scanned-1page.pdf
+    phase: 2
+    generator: pdf.image_only
+    params: {}
+    description: "One A4 page with a raster scan of synthetic text and no text layer. Text extraction returns an empty string even though the page looks readable; OCR is required."
+    tags: [document, image]
+    expect: { pages: 1, has_images: true, images: 1, text_characters: 0, image_only: true, encrypted: false }
+    size_class: free
   - name: a4-1page.pdf
     phase: 1
     generator: pdf.basic
