@@ -239,10 +239,10 @@ def noise_sized(ctx: GeneratorContext, *, size: int, fmt: str, quality: int = 95
 
 @generator()
 def exif_orientation(_ctx: GeneratorContext, *, width: int, height: int, orientation: int) -> bytes:
-    """A JPEG whose pixels are stored rotated, with the EXIF tag that corrects it.
+    """Preserve the published orientation-6 recipe, including its inverted display.
 
-    The label reads the right way up **only** when the viewer honours the tag, which is
-    the whole point: a viewer that ignores EXIF shows it sideways.
+    Its stored pixels and tag both rotate clockwise. Use exif_rotated for an upright
+    displayed card; changing this recipe would change bytes at an immutable path.
     """
     image = test_card(width, height, "RGB", label=f"UP orientation={orientation}")
     rotations = {1: 0, 3: 180, 6: 270, 8: 90}

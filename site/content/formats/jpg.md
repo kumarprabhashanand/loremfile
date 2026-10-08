@@ -7,9 +7,9 @@ baseline JPEGs at quality 85 with 4:2:0 chroma subsampling. `jpg/progressive-192
 is the same card saved as a progressive scan, which renders coarse to fine.
 
 Two files target specific bugs. `jpg/cmyk-640x480.jpg` uses the CMYK colour space, which
-pipelines expecting RGB mishandle. `jpg/exif-orientation-6-640x480.jpg` stores its pixels
-rotated with EXIF orientation 6, so the label reads upright only when the viewer honours the
-tag; a viewer that ignores EXIF shows it sideways.
+pipelines expecting RGB mishandle. `jpg/exif-orientation-6-640x480.jpg` carries orientation
+6, but its stored rotation makes the label upside down when the tag is applied. Use the
+orientation-8 fixture for a tag that restores upright pixels.
 
 `jpg/exif-orientation-8-640x480.jpg` stores a clockwise-rotated card at 480x640 with
 orientation 8. Applying the tag rotates it counterclockwise and restores the upright UP
