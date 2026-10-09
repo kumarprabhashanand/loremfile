@@ -1,17 +1,19 @@
+This is a Lorem Ipsum DOCX file: a Word document with a heading and placeholder paragraphs in
+Word's default styles.
+
+<!-- file: docx/1page.docx -->
+
 DOCX is Microsoft Word's format: a ZIP archive of XML parts. These documents were written by
 python-docx and then normalised, so their bytes do not move between builds and the hash in
-the manifest stays true.
+the manifest stays true. The page count of `docx/1page.docx` is what Word renders, because a
+.docx stores no page count of its own.
 
-`docx/1page.docx` is a heading and three paragraphs of Lorem Ipsum in Word's default styles.
-Its page count is what Word renders, because a .docx stores no page count of its own.
 `docx/with-images.docx` embeds two published PNG fixtures as pictures, and
 `docx/with-table.docx` holds a ten-row table of the shared people dataset with a bold header
-row.
-
-`docx/with-tracked-changes.docx` has a tracked deletion of “cancelled”, an insertion of
-“confirmed” and one anchored comment. The current delivery status is confirmed. Joining
-all XML text includes the deleted word as well, so an extractor must choose a revision
-view. Its props record the inserted, deleted and current text, plus the comment count.
+row. `docx/with-tracked-changes.docx` has a tracked deletion of “cancelled”, an insertion of
+“confirmed” and one anchored comment. The current delivery status is confirmed. Joining all
+XML text includes the deleted word as well, so an extractor must choose a revision view. Its
+props record the inserted, deleted and current text, plus the comment count.
 
 For size limits, `docx/1mb.docx` and `docx/10mb.docx` reach their size with embedded
 incompressible noise images rather than padding, so a compressing upload path cannot shrink

@@ -1,7 +1,11 @@
-Apache Arrow's IPC file format stores columnar data the way Arrow holds it in memory, so a
-reader can map the file and use it without parsing. `arrow/people-1000.arrow` contains 1,000
-rows of the shared synthetic people dataset, the same records as the CSV, JSON, Parquet and
-Avro people files, in a single record batch.
+This is a sample Apache Arrow file: the shared synthetic people dataset in Arrow's IPC file
+format, free to hotlink or download.
+
+<!-- file: arrow/people-1000.arrow -->
+
+The IPC file format stores columnar data the way Arrow holds it in memory, so a reader can
+map the file and use it without parsing. `arrow/people-1000.arrow` holds the same records as
+the CSV, JSON, Parquet and Avro people files, in a single record batch.
 
 Two details matter when testing. First, this is the IPC *file* format, with a footer, not
 the streaming format; the two share most of their bytes but are opened by different APIs,

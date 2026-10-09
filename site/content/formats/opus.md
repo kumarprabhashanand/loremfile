@@ -1,10 +1,12 @@
+This is a sample Opus file: stereo Opus audio in an Ogg container, free to hotlink or
+download.
+
+<!-- file: opus/30s.opus -->
+
 Opus is the royalty-free audio codec the IETF standardised in RFC 6716, and the one browsers,
 WebRTC and voice applications settled on. A `.opus` file is Opus inside an Ogg container, as
-RFC 7845 specifies.
-
-`opus/30s.opus` is a 440 Hz sine wave, thirty seconds long, stereo, encoded at 96 kbps. The
-same kind of tone appears across the other audio formats here, so one pipeline can be
-compared across codecs.
+RFC 7845 specifies. `opus/30s.opus` is a sine tone, and the same kind of tone appears across
+the other audio formats here, so one pipeline can be compared across codecs.
 
 One gotcha is built into the format: Opus decoders produce 48 kHz output, and tools report
 48 kHz whatever rate the source had. The original rate survives only as an informational

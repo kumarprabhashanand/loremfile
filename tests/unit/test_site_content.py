@@ -82,6 +82,24 @@ def test_a_format_page_is_120_to_250_words_and_names_its_own_files(page: Path) -
     assert not text.startswith("#"), "the template supplies the H1"
 
 
+#: The pages that rank in search (Search Console, October 2026). Each opens with one
+#: sentence answering the query, then its file and measured facts, then the explanation.
+LEADING_PAGES = {"arrow", "docx", "hls", "m4a", "md", "ogg", "opus", "rtf", "tiff", "wav"}
+FILE_MARKER = re.compile(r"^<!-- file: (\S+) -->$", re.M)
+
+
+def test_the_ranking_pages_open_with_one_sentence_and_then_their_file() -> None:
+    leading = {
+        page.stem for page in FORMAT_PAGES if FILE_MARKER.search(page.read_text(encoding="utf-8"))
+    }
+    assert leading == LEADING_PAGES
+    for name in sorted(LEADING_PAGES):
+        text = (CONTENT / "formats" / f"{name}.md").read_text(encoding="utf-8")
+        opening, marker = re.split(r"\n\s*\n", text)[:2]
+        assert FILE_MARKER.fullmatch(marker.strip()), f"{name}.md: the file follows one paragraph"
+        assert len(re.findall(r"[.!?](?:\s|$)", opening)) == 1, f"{name}.md: one opening sentence"
+
+
 @pytest.mark.parametrize("name", ["getting-started", "naming", "faq", "languages"])
 def test_a_documentation_page_is_at_least_120_words(name: str) -> None:
     assert words((CONTENT / "pages" / f"{name}.md").read_text(encoding="utf-8")) >= 120
