@@ -1,10 +1,15 @@
-Rich Text Format is the document format that survives everywhere: every word processor reads
-it, and it is plain text with control words, so it can be inspected in any editor. That makes
-it a useful control when a DOCX importer misbehaves.
+This is a sample RTF file: a short Lorem Ipsum document that every word processor opens, free
+to hotlink or download.
 
-`rtf/simple.rtf` was written by hand rather than by a library. It holds three paragraphs of
-Lorem Ipsum in Times New Roman, with a font table and paragraph breaks, and every byte is
-ASCII, so no reader has to guess an encoding.
+<!-- file: rtf/simple.rtf -->
+
+Rich Text Format is the document format that survives everywhere: it is plain text with
+control words, so it can be inspected in any editor. That makes it a useful control when a
+DOCX importer misbehaves.
+
+`rtf/simple.rtf` was written by hand rather than by a library. It holds paragraphs of Lorem
+Ipsum in Times New Roman, with a font table and paragraph breaks, and every byte is ASCII, so
+no reader has to guess an encoding.
 
 Because it is so plain, the file isolates the basics: parsing the RTF header and font table,
 turning control words into paragraphs, and extracting text. If a converter handles this file

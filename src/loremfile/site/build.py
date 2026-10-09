@@ -13,6 +13,7 @@ import re
 import shutil
 import subprocess
 from collections import Counter
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -309,6 +310,62 @@ def key_props(props: dict[str, Any]) -> str:
     return ", ".join(shown[:4])
 
 
+def counted(count: int, noun: str) -> str:
+    return f"{count:,} {noun}{'' if count == 1 else 's'}"
+
+
+#: The measured props a format page's lead line shows, in reading order.
+FACTS: tuple[tuple[str, Callable[[Any], str]], ...] = (
+    ("duration_ms", lambda v: f"{v / 1000:g} s"),
+    ("vcodec", str),
+    ("acodec", str),
+    ("sample_rate", lambda v: f"{v / 1000:g} kHz"),
+    ("channels", lambda v: counted(v, "channel")),
+    ("segments", lambda v: counted(v, "segment")),
+    ("target_duration_s", lambda v: f"{v} s target duration"),
+    ("playlist_type", str),
+    ("paragraphs", lambda v: counted(v, "paragraph")),
+    ("words", lambda v: counted(v, "word")),
+    ("rows", lambda v: counted(v, "row")),
+    ("columns", lambda v: counted(v, "column")),
+    ("mode", str),
+    ("encoding", str),
+    ("line_ending", lambda v: str(v).upper()),
+    ("lines", lambda v: counted(v, "line")),
+)
+
+
+def file_facts(entry: dict[str, Any]) -> str:
+    """A fixture's link, size, media type and measured props as one Markdown line.
+
+    Read from the manifest, so the numbers a page leads with are the measured ones: a size
+    or duration typed into prose is a second copy that nobody re-measures.
+    """
+    props = entry.get("props") or {}
+    human, exact = human_bytes(entry["bytes"]), f"{entry['bytes']:,} bytes"
+    facts = [
+        f"[`{config.BASE_URL}{entry['path']}`](/{entry['path']})",
+        exact if human == f"{entry['bytes']} B" else f"{human} ({exact})",
+        f"`{entry['mime']}`",
+    ]
+    if "width" in props and "height" in props:
+        facts.append(f"{props['width']}x{props['height']}")
+    facts += [show(props[name]) for name, show in FACTS if props.get(name) is not None]
+    return " · ".join(facts)
+
+
+def lead_files(text: str, fmt: str, active: list[dict[str, Any]]) -> str:
+    """Replace each `<!-- file: PATH -->` line with that fixture's `file_facts`."""
+    entries = {e["path"]: e for e in active}
+
+    def facts(match: re.Match[str]) -> str:
+        if match.group(1) not in entries:
+            raise SiteError(f"formats/{fmt}.md leads with {match.group(1)}, no active {fmt} file")
+        return file_facts(entries[match.group(1)])
+
+    return FILE.sub(facts, text)
+
+
 def embed_snippet(family: str, url: str) -> str:
     if family == "images":
         return f'<img src="{url}" alt="">'
@@ -356,6 +413,9 @@ def quoted(text: str) -> tuple[str, str]:
 INCLUDE = re.compile(r"^<!-- include: (\S+) -->$", re.M)
 #: The fence language for each file a page may include.
 FENCE = {".sh": "sh", ".py": "python", ".mjs": "javascript", ".go": "go", ".java": "java"}
+#: `<!-- file: m4a/aac-30s.m4a -->` on a line of its own, in a format page, becomes that
+#: fixture's link and measured facts, so the page can show the file before explaining it.
+FILE = re.compile(r"^<!-- file: (\S+) -->$", re.M)
 
 
 def content(root: Path, relative: str) -> str:
@@ -457,7 +517,9 @@ def format_pages(root: Path, manifest: Manifest, catalogs: dict[str, FormatCatal
             context={
                 "format": fmt,
                 "label": label(fmt),
-                "intro": trusted(markdown.render(content(root, f"formats/{fmt}.md"))),
+                "intro": trusted(
+                    markdown.render(lead_files(content(root, f"formats/{fmt}.md"), fmt, active))
+                ),
                 "rows": rows,
                 "removed": [e for e in entries if e.get("status") == "removed"],
                 "related": [

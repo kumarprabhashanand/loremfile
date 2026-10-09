@@ -63,6 +63,8 @@ The site is static HTML rendered at build time from the manifest and stored in t
 
 All site copy is drafted by the engineer/agent in M4.2 and lives as Markdown in the repository: `site/content/formats/{format}.md` (one per format that has at least one P1 fixture; 120–250 words: what the format is, what people test with it, which gotchas the fixtures cover, cross-links), `site/content/pages/{getting-started,naming,faq,security-policy}.md`, `site/content/home.md`. AI-drafted text is acceptable; the acceptance rule is that every factual statement about a fixture matches the catalog (a test cross-checks every fixture path mentioned in content against the manifest) and that no page is shorter than 120 words. The owner may edit any text; edits go through PRs like everything else. **As implemented (M4.2):** `/docs/security-policy` and the legal pages are rendered from `10` §7 and `13`'s quoted texts, so each text has one source; `tests/unit/test_site_content.py` checks word counts and that every fixture path named in content is published.
 
+**As changed (2026-10-09).** The ten format pages that rank in search (`arrow`, `docx`, `hls`, `m4a`, `md`, `ogg`, `opus`, `rtf`, `tiff`, `wav`) open with one sentence that answers the query, then a `<!-- file: PATH -->` line. The build replaces it with that fixture's URL, size, media type and measured props from the manifest, so the numbers above the explanation are the manifest's own. `test_site_content.py` pins which pages lead this way.
+
 ## 6. Copy for the home page (first draft, to be edited during M4)
 
 > **loremfile.dev** — sample files you can hotlink.

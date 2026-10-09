@@ -1,6 +1,10 @@
+This is a sample TIFF file: an uncompressed RGB test card, free to hotlink or download.
+
+<!-- file: tiff/rgb-640x480.tiff -->
+
 TIFF is the format of scanners, print workflows and GIS, and it is flexible enough that
 "supports TIFF" rarely means every TIFF. `tiff/rgb-640x480.tiff` is the common baseline case:
-the loremfile colour-bar test card at 640x480, uncompressed RGB.
+the loremfile colour-bar test card, uncompressed RGB.
 
 An uncompressed baseline TIFF is the file every TIFF reader must handle, so it is the right
 starting point. If a tool fails here, it does not really support TIFF; if it succeeds here and

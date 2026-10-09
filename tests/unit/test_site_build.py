@@ -237,6 +237,54 @@ def test_every_format_page_names_the_command_for_its_whole_format(site: Path) ->
         assert f"<code>npx loremfile get --format {fmt}</code>" in text(site, fmt), fmt
 
 
+def test_a_lead_line_shows_only_what_the_manifest_measured() -> None:
+    wav = {
+        "path": "wav/a.wav",
+        "bytes": 529244,
+        "mime": "audio/wav",
+        "props": {"duration_ms": 3000, "acodec": "pcm_s16le", "sample_rate": 44100, "channels": 1},
+    }
+    assert build.file_facts(wav) == (
+        "[`https://loremfile.dev/wav/a.wav`](/wav/a.wav) · 529.2 KB (529,244 bytes) · "
+        "`audio/wav` · 3 s · pcm_s16le · 44.1 kHz · 1 channel"
+    )
+    small = {
+        "path": "png/b.png",
+        "bytes": 920,
+        "mime": "image/png",
+        "props": {"width": 4, "height": 2},
+    }
+    assert build.file_facts(small) == (
+        "[`https://loremfile.dev/png/b.png`](/png/b.png) · 920 bytes · `image/png` · 4x2"
+    )
+
+
+def test_a_lead_marker_must_name_an_active_file_of_its_own_format() -> None:
+    active = [{"path": "m4a/aac-30s.m4a", "bytes": 1, "mime": "audio/mp4"}]
+    page = "One sentence.\n\n<!-- file: m4a/aac-30s.m4a -->\n\nThe rest.\n"
+    assert "(/m4a/aac-30s.m4a)" in build.lead_files(page, "m4a", active)
+    for wrong in ("mp3/sine-440hz-30s.mp3", "m4a/missing.m4a"):
+        with pytest.raises(build.SiteError, match=wrong):
+            build.lead_files(page.replace("m4a/aac-30s.m4a", wrong), "m4a", active)
+
+
+def test_a_page_with_a_lead_shows_its_file_right_after_its_opening_sentence(site: Path) -> None:
+    entries = {e["path"]: e for e in json.loads((ROOT / "manifest.json").read_text())["fixtures"]}
+    checked: set[str] = set()
+    for page in sorted((ROOT / "site" / "content" / "formats").glob("*.md")):
+        found = build.FILE.search(page.read_text(encoding="utf-8"))
+        if found is None:
+            continue
+        intro = re.search(r'<div class="prose intro">(.*?)</div>', text(site, page.stem), re.S)
+        assert intro is not None, page.stem
+        second = re.findall(r"<p>(.*?)</p>", intro.group(1), re.S)[1]
+        entry = entries[found.group(1)]
+        assert f'href="/{entry["path"]}"' in second, page.stem
+        assert f"{entry['bytes']:,} bytes" in second, page.stem
+        checked.add(page.stem)
+    assert {"m4a", "md", "wav"} <= checked, "empty-set control"
+
+
 def test_the_icons_have_the_documented_sizes(site: Path) -> None:
     def png_size(data: bytes) -> tuple[int, int]:
         assert data[:8] == b"\x89PNG\r\n\x1a\n"
