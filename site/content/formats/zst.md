@@ -1,6 +1,6 @@
 Zstandard is the modern compression stream: close to gzip's ratio at far higher speed, which
 is why it has spread quickly through storage systems, package managers and log pipelines. Like
-gzip it is a stream, not an archive — there is no entry list to enumerate.
+gzip it is a stream, not an archive; there is no entry list to enumerate.
 
 `zst/lorem-1mb.txt.zst` compresses exactly 1,000,000 bytes of Lorem Ipsum, so the ratio you
 measure is the one ordinary prose gives you rather than a figure distorted by random noise or

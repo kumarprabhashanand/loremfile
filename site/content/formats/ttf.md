@@ -1,7 +1,7 @@
 TrueType is the font format with the widest support, which makes it the baseline: if a loader
 handles anything, it handles this.
 
-`ttf/loremfile-sans.ttf` is "Loremfile Sans" — 95 printable ASCII glyphs, each drawn as a
+`ttf/loremfile-sans.ttf` is "Loremfile Sans": 95 printable ASCII glyphs, each drawn as a
 rectangle whose width is computed from the character's codepoint. The family is generated
 rather than derived from any existing typeface, so there is no licence to read and nothing to
 attribute; like everything here it is CC0.

@@ -1,7 +1,7 @@
 WOFF2 is the web font format to serve today: the same outlines as a TrueType or CFF font,
 compressed with Brotli, typically a third smaller than WOFF.
 
-`woff2/loremfile-sans.woff2` is "Loremfile Sans" in that wrapper — 95 printable ASCII glyphs,
+`woff2/loremfile-sans.woff2` is "Loremfile Sans" in that wrapper: 95 printable ASCII glyphs,
 each drawn as a rectangle whose width is computed from the character's codepoint. The family
 is generated rather than derived from any existing typeface, so there is no licence to read
 and nothing to attribute.

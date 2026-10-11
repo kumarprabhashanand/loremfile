@@ -1,5 +1,5 @@
 A web app manifest is the JSON a browser reads to learn a site's name, icons, colours and
-display mode — the file that decides what an installed web app looks like on a home screen.
+display mode: the file that decides what an installed web app looks like on a home screen.
 
 `webmanifest/site.webmanifest` carries a name, short name, start URL, scope, display mode,
 theme and background colours, and two icons. The icons point at published PNG fixtures, so a

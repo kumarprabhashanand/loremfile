@@ -20,7 +20,7 @@
 {% if row.edge %}
         <dl class="edge">
           <dt>Damage</dt><dd>{{ row.edge.damage }}</dd>
-          <dt>Outcome</dt><dd><code>{{ row.edge.outcome }}</code> — {{ row.edge.note }}</dd>
+          <dt>Outcome</dt><dd><code>{{ row.edge.outcome }}</code>: {{ row.edge.note }}</dd>
           <dt>Compare with</dt><dd><a href="/{{ row.edge.compare_with }}"><code>{{ row.edge.compare_with }}</code></a></dd>
 {% if row.edge.derived_from %}
           <dt>Cut from</dt><dd><a href="/{{ row.edge.derived_from }}"><code>{{ row.edge.derived_from }}</code></a></dd>

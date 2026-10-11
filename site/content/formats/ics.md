@@ -1,7 +1,7 @@
 iCalendar files are exchanged between every calendar application, and the corners where
 implementations disagree are well known: time zones, all-day events and recurrence.
 
-`ics/single-event.ics` is the simple case — one timed event of an hour with a summary,
+`ics/single-event.ics` is the simple case: one timed event of an hour with a summary,
 description and location, in UTC. `ics/recurring-weekly-rrule.ics` is the one that finds bugs:
 a weekly series of ten occurrences expressed as a single event plus an `RRULE`, which the
 client has to expand itself. Code that only reads `DTSTART` shows one event where there should

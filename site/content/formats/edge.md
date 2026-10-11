@@ -9,7 +9,7 @@ testing. `edge/png-with-pdf-extension.pdf` arrives as `application/pdf` and is a
 from the extension, or assuming a parser raises a tidy error, are mistakes these files find.
 
 Each also says what is wrong with it: every row below carries a `damage` sentence, the
-valid file to `compare_with`, and an `outcome` — `must-fail` when every conforming reader
+valid file to `compare_with`, and an `outcome`: `must-fail` when every conforming reader
 must refuse it, `may-recover` when part of it still reads, `varies` when readers disagree.
 Only `must-fail` means a reader that copes is wrong.
 
@@ -18,6 +18,6 @@ The two polyglots are `edge/pdf-zip-polyglot.pdf`, a PDF *and* a zip archive, an
 scanners and corporate proxies sometimes refuse a polyglot or strip the archive in transit:
 if a download arrives short, check [sha256sums.txt](/sha256sums.txt) first.
 
-Use them on upload forms, import pipelines, thumbnailers and archive extractors —
+Use them on upload forms, import pipelines, thumbnailers and archive extractors.
 `edge/zip-directory-traversal-name.zip` holds an entry named `../evil.txt` and tells you
 whether yours writes outside the directory it was given. Related: [PDF](/pdf), [ZIP](/zip).

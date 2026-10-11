@@ -135,3 +135,76 @@ def test_every_fixture_path_the_content_names_exists() -> None:
         named |= named_paths(page.read_text(encoding="utf-8"))
     assert len(named) > 100, "empty-set control: the pattern must find the named paths"
     assert sorted(named - active_paths()) == []
+
+
+#: The parsers guide sorts broken files by what a reader must do with them; each heading
+#: is held to the outcome the file's own manifest entry measured.
+OUTCOME_HEADINGS = {
+    "Files that must fail": "must-fail",
+    "Files that may be recovered": "may-recover",
+    "Files readers disagree on": "varies",
+}
+MARKER = re.compile(r"^<!-- file: (\S+) -->$")
+
+
+def misfiled(text: str, outcomes: dict[str, str]) -> list[str]:
+    """Broken files on the parsers guide that sit under no heading, or the wrong one."""
+    problems: list[str] = []
+    heading = ""
+    for line in text.splitlines():
+        if line.startswith("## "):
+            heading = line[3:].strip()
+        elif (found := MARKER.match(line)) and found.group(1) in outcomes:
+            path = found.group(1)
+            if OUTCOME_HEADINGS.get(heading) != outcomes[path]:
+                problems.append(f"{path} ({outcomes[path]}) is under '{heading}'")
+    return problems
+
+
+def edge_outcomes() -> dict[str, str]:
+    document = json.loads((ROOT / "manifest.json").read_text())
+    return {
+        e["path"]: e["props"]["outcome"]
+        for e in document["fixtures"]
+        if e["format"] == "edge" and e.get("status", "active") == "active"
+    }
+
+
+def test_each_broken_file_on_the_parsers_guide_sits_under_its_measured_outcome() -> None:
+    text = (CONTENT / "testing" / "parsers.md").read_text(encoding="utf-8")
+    listed = {m.group(1) for line in text.splitlines() if (m := MARKER.match(line))}
+    outcomes = edge_outcomes()
+    assert {
+        "edge/json-trailing-comma.json",
+        "edge/zip-truncated-50pct.zip",
+        "edge/json-bom.json",
+    } <= listed
+    assert misfiled(text, outcomes) == []
+
+
+def test_a_broken_file_under_the_wrong_heading_is_named() -> None:
+    wrong = "## Files that must fail\n\n<!-- file: edge/json-bom.json -->\n"
+    assert misfiled(wrong, edge_outcomes()) == [
+        "edge/json-bom.json (varies) is under 'Files that must fail'"
+    ]
+
+
+EM_DASH = "\u2014"
+SITE_COPY = sorted([*CONTENT.rglob("*.md"), *(ROOT / "site" / "templates").glob("*.html")])
+
+
+def dashed(paths: list[Path]) -> list[str]:
+    return [p.name for p in paths if EM_DASH in p.read_text(encoding="utf-8")]
+
+
+def test_site_copy_has_no_em_dash() -> None:
+    names = {p.name for p in SITE_COPY}
+    assert {"uploads.md", "edge.md", "languages.md", "format.html"} <= names, "empty-set control"
+    assert dashed(SITE_COPY) == []
+
+
+def test_the_em_dash_check_finds_one(tmp_path: Path) -> None:
+    clean, marked = tmp_path / "clean.md", tmp_path / "marked.md"
+    clean.write_text("A colon: here.\n", encoding="utf-8")
+    marked.write_text(f"A dash {EM_DASH} here.\n", encoding="utf-8")
+    assert dashed([clean, marked]) == ["marked.md"]

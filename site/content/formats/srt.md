@@ -3,7 +3,7 @@ layout: numbered cues, comma-separated milliseconds, and CRLF line endings, sepa
 lines. A stray blank line or a missing cue number breaks parsers that were written against a
 single well-formed example.
 
-`srt/3-cues.srt` is three consecutive cues of three seconds each — the smallest useful
+`srt/3-cues.srt` is three consecutive cues of three seconds each, the smallest useful
 subtitle file, small enough to read in full while you work out what a parser did with it.
 
 The line endings matter more than they look. SubRip files are written with CRLF, and code that

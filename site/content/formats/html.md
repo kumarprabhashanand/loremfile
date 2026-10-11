@@ -2,7 +2,7 @@ HTML is read by far more than browsers: sanitisers, converters, scrapers, email 
 anything that generates a preview. These documents give each of those something valid and
 predictable to work with.
 
-`html/basic.html` is a minimal, valid HTML5 document — a doctype, a declared charset, a
+`html/basic.html` is a minimal, valid HTML5 document: a doctype, a declared charset, a
 heading and two paragraphs. `html/all-elements.html` is the broad one: semantic sections, a
 table with a caption and header cells, a form with no action, lists, a figure and media
 elements. `html/with-inline-css.html` moves the styling into a style block, and

@@ -1,5 +1,5 @@
-A Jupyter notebook is JSON with a specific shape, and the tools that render one — repository
-browsers, documentation sites, review tools — need a file whose outputs already exist so they
+A Jupyter notebook is JSON with a specific shape, and the tools that render one (repository
+browsers, documentation sites, review tools) need a file whose outputs already exist so they
 have something to display without executing anything.
 
 `ipynb/simple-with-outputs.ipynb` is nbformat 4 with three cells: one Markdown cell and two

@@ -259,13 +259,13 @@ def test_a_lead_line_shows_only_what_the_manifest_measured() -> None:
     )
 
 
-def test_a_lead_marker_must_name_an_active_file_of_its_own_format() -> None:
-    active = [{"path": "m4a/aac-30s.m4a", "bytes": 1, "mime": "audio/mp4"}]
+def test_a_lead_marker_must_name_a_file_its_page_may_list() -> None:
+    active = {"m4a/aac-30s.m4a": {"path": "m4a/aac-30s.m4a", "bytes": 1, "mime": "audio/mp4"}}
     page = "One sentence.\n\n<!-- file: m4a/aac-30s.m4a -->\n\nThe rest.\n"
-    assert "(/m4a/aac-30s.m4a)" in build.lead_files(page, "m4a", active)
+    assert "(/m4a/aac-30s.m4a)" in build.lead_files(page, "m4a.md", active)
     for wrong in ("mp3/sine-440hz-30s.mp3", "m4a/missing.m4a"):
         with pytest.raises(build.SiteError, match=wrong):
-            build.lead_files(page.replace("m4a/aac-30s.m4a", wrong), "m4a", active)
+            build.lead_files(page.replace("m4a/aac-30s.m4a", wrong), "m4a.md", active)
 
 
 def test_a_page_with_a_lead_shows_its_file_right_after_its_opening_sentence(site: Path) -> None:
@@ -369,3 +369,44 @@ def test_each_check_fails_when_its_rule_is_broken(
     path.write_text(change(path.read_text(encoding="utf-8")), encoding="utf-8")
     problems = checks.all_problems(copy, fixtures())
     assert any(expected in problem for problem in problems), problems
+
+
+# --- testing guides -------------------------------------------------------------------
+
+
+def test_each_guide_lists_exactly_the_files_its_prose_names(site: Path) -> None:
+    named_any = set()
+    for key, _title, _description, source in build.TESTING:
+        named = list(
+            dict.fromkeys(build.FILE.findall((ROOT / "site/content" / source).read_text()))
+        )
+        page = text(site, key)
+        datasets = [b for b in checks._jsonld(page) if b.get("@type") == "Dataset"]
+        assert len(datasets) == 1, key
+        urls = [d["contentUrl"] for d in datasets[0]["distribution"]]
+        assert urls == [f"https://loremfile.dev/{path}" for path in named], key
+        assert all(f'href="/{path}"' in page for path in named), key
+        named_any |= set(named)
+    assert {"bin/10mb-plus-1.bin", "edge/json-trailing-comma.json", "mp4/50mb.mp4"} <= named_any
+
+
+def test_the_guides_are_linked_listed_and_indexed(site: Path) -> None:
+    keys = [key for key, *_ in build.TESTING]
+    assert len(keys) == 3, "control: three guides are named in build.TESTING"
+    sitemap = text(site, "sitemap.xml")
+    llms_txt = text(site, "llms.txt")
+    home = text(site, "index.html")
+    index = text(site, "testing")
+    for key in keys:
+        assert f"<loc>https://loremfile.dev/{key}</loc>" in sitemap, key
+        assert f"(https://loremfile.dev/{key})" in llms_txt, key
+        assert f'href="/{key}"' in home and f'href="/{key}"' in index, key
+
+
+def test_a_guide_that_names_an_unpublished_file_stops_the_build(tmp_path: Path) -> None:
+    shutil.copytree(ROOT / "site" / "content", tmp_path / "site" / "content")
+    guide = tmp_path / "site" / "content" / "testing" / "uploads.md"
+    guide.write_text(guide.read_text() + "\n<!-- file: bin/never-published.bin -->\n")
+    manifest = build.Manifest.load(ROOT / "manifest.json")
+    with pytest.raises(build.SiteError, match=re.escape("bin/never-published.bin")):
+        build.testing_pages(tmp_path, manifest)

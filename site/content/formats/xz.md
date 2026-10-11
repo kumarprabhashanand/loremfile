@@ -8,7 +8,7 @@ number. That makes it a realistic figure for a progress bar, a quota calculation
 back-of-the-envelope estimate of what compression will buy you.
 
 Because it is a stream and not an archive, it is also a good test of whether your code knows
-the difference — plenty of tools try to list the contents of an xz file and fail confusingly.
+the difference: plenty of tools try to list the contents of an xz file and fail confusingly.
 
 Use it to test decompression, streaming readers and package handling. Related formats:
 [GZIP](/gz), [BZIP2](/bz2), [ZSTD](/zst) and [TAR](/tar), the container these usually wrap.
