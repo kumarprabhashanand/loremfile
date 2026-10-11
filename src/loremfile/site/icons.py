@@ -11,11 +11,12 @@ import zlib
 
 Color = tuple[int, int, int]
 
-#: The light theme's --fg, --accent and --code-bg in site/static/site.css, and a white page;
-#: mark.svg draws with the same colours, and a test keeps all three files in step.
+#: INK and BACKDROP are the light theme's --fg and --code-bg in site/static/site.css. MARK is
+#: not --accent: the mark must clear 3:1 on both themes' backgrounds (docs/07 §2). mark.svg
+#: draws with the same colours, and a test keeps the three files in step.
 INK: Color = (28, 26, 23)
 PAPER: Color = (255, 255, 255)
-ACCENT: Color = (15, 94, 89)
+MARK: Color = (24, 136, 126)
 BACKDROP: Color = (240, 236, 228)
 
 #: 5x7 glyphs for the wordmark, top row first.
@@ -77,7 +78,7 @@ def draw_mark(canvas: Canvas, x: int, y: int, size: int) -> None:
             color,
         )
 
-    box(0, 0, 16, 16, ACCENT)
+    box(0, 0, 16, 16, MARK)
     box(3, 2, 10, 12, PAPER)
     for top, width in ((5, 6), (8, 6), (11, 4)):
         box(5, top, width, 1, INK)
@@ -93,7 +94,7 @@ def draw_text(canvas: Canvas, text: str, x: int, y: int, scale: int, color: Colo
 
 
 def mark_png(size: int) -> bytes:
-    canvas = Canvas(size, size, ACCENT)
+    canvas = Canvas(size, size, MARK)
     draw_mark(canvas, 0, 0, size)
     return canvas.png()
 

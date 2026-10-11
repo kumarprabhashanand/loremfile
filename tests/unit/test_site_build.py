@@ -369,46 +369,65 @@ def test_the_icons_have_the_documented_sizes(site: Path) -> None:
     assert struct.unpack("<HHH", (site / "favicon.ico").read_bytes()[:6]) == (0, 1, 3)
 
 
-def light_tokens() -> dict[str, str]:
+def theme_tokens() -> tuple[dict[str, str], dict[str, str]]:
+    """The light and the dark palette in site/static/site.css."""
     css = (ROOT / "site" / "static" / "site.css").read_text(encoding="utf-8")
-    light = css.split("@media (prefers-color-scheme: dark)", 1)[0]
-    found = re.findall(r"--([\w-]+):\s*(#[0-9a-fA-F]{6})", light)
-    return {name: value.lower() for name, value in found}
+    light, rest = css.split("@media (prefers-color-scheme: dark)", 1)
+    dark = rest.split("}\n}", 1)[0]
+    pattern = r"--([\w-]+):\s*(#[0-9a-fA-F]{6})"
+    return (
+        {name: value.lower() for name, value in re.findall(pattern, light)},
+        {name: value.lower() for name, value in re.findall(pattern, dark)},
+    )
+
+
+#: The mark's square, deliberately not --accent: one colour has to clear 3:1 on both themes'
+#: backgrounds and on browser chrome, while link text needs 4.5:1 on one known background
+#: (docs/07 §2). Matching it to the accent would bring back 2.42:1 in dark mode.
+MARK_SQUARE = "#18887e"
 
 
 def brand_drift(svg: str, drawn: dict[str, icons.Color], tokens: dict[str, str]) -> list[str]:
-    """Where the mark, or the icons and social card drawn from it, leave the site palette."""
-    expected = [tokens["accent"], "#fff", tokens["fg"], tokens["fg"], tokens["fg"]]
+    """Where the mark, or the icons and social card drawn from it, leave their colours."""
+    expected = [MARK_SQUARE, "#fff", tokens["fg"], tokens["fg"], tokens["fg"]]
     fills = [fill.lower() for fill in re.findall(r'fill="(#[0-9a-fA-F]+)"', svg)]
     problems = [] if fills == expected else [f"mark.svg fills {fills}, expected {expected}"]
-    for name, token in (("ACCENT", "accent"), ("INK", "fg"), ("BACKDROP", "code-bg")):
+    wanted = (("MARK", MARK_SQUARE), ("INK", tokens["fg"]), ("BACKDROP", tokens["code-bg"]))
+    for name, want in wanted:
         drawn_hex = "#{:02x}{:02x}{:02x}".format(*drawn[name])
-        if drawn_hex != tokens[token]:
-            problems.append(f"icons.{name} is {drawn_hex}, --{token} is {tokens[token]}")
+        if drawn_hex != want:
+            problems.append(f"icons.{name} is {drawn_hex}, expected {want}")
     return problems
 
 
 MARK = ROOT / "site" / "static" / "mark.svg"
-DRAWN = ("ACCENT", "INK", "BACKDROP")
+DRAWN = ("MARK", "INK", "BACKDROP")
 
 
 def test_the_mark_and_the_drawn_icons_use_the_site_palette() -> None:
-    tokens = light_tokens()
-    assert {"accent", "fg", "code-bg"} <= set(tokens), "the token search found the palette"
+    light, _dark = theme_tokens()
+    assert {"accent", "fg", "code-bg"} <= set(light), "the token search found the palette"
     drawn = {name: getattr(icons, name) for name in DRAWN}
-    assert brand_drift(MARK.read_text(encoding="utf-8"), drawn, tokens) == []
+    assert brand_drift(MARK.read_text(encoding="utf-8"), drawn, light) == []
     assert icons.PAPER == (255, 255, 255)
 
 
-def test_the_brand_check_names_the_old_blue() -> None:
-    tokens = light_tokens()
-    accent, fg = tokens["accent"], tokens["fg"]
-    svg = MARK.read_text(encoding="utf-8").replace(accent, "#2563eb")
-    drawn = {name: getattr(icons, name) for name in DRAWN} | {"ACCENT": (37, 99, 235)}
-    old, new = ["#2563eb", "#fff", fg, fg, fg], [accent, "#fff", fg, fg, fg]
-    assert brand_drift(svg, drawn, tokens) == [
+def test_the_mark_clears_3_to_1_on_both_backgrounds_and_the_accent_would_not() -> None:
+    light, dark = theme_tokens()
+    assert round(_contrast(MARK_SQUARE, light["bg"]), 2) == 4.14
+    assert round(_contrast(MARK_SQUARE, dark["bg"]), 2) == 4.26
+    assert round(_contrast(light["accent"], dark["bg"]), 2) == 2.42
+
+
+def test_the_brand_check_names_a_mark_drawn_in_the_accent() -> None:
+    light, _dark = theme_tokens()
+    accent, fg = light["accent"], light["fg"]
+    svg = MARK.read_text(encoding="utf-8").replace(MARK_SQUARE, accent)
+    drawn = {name: getattr(icons, name) for name in DRAWN} | {"MARK": (15, 94, 89)}
+    old, new = [accent, "#fff", fg, fg, fg], [MARK_SQUARE, "#fff", fg, fg, fg]
+    assert brand_drift(svg, drawn, light) == [
         f"mark.svg fills {old}, expected {new}",
-        f"icons.ACCENT is #2563eb, --accent is {accent}",
+        f"icons.MARK is {accent}, expected {MARK_SQUARE}",
     ]
 
 
