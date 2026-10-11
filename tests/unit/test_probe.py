@@ -488,8 +488,15 @@ def test_the_404_check_carries_its_evidence(monkeypatch: pytest.MonkeyPatch) -> 
 
 
 def cache_status_reads(function: object) -> list[str]:
-    """Calls to `.header("cf-cache-status")` inside a function's own body."""
-    tree = ast.parse(textwrap.dedent(inspect.getsource(function)))
+    """Calls to `.header("cf-cache-status")` inside a function's own body, or in source text.
+
+    The controls below pass their offending code as text. `inspect.getsource` on a function
+    defined in a test module goes through pytest's rewriting loader, which cannot supply the
+    source once the compiled path is stale (a checkout moved or mounted elsewhere), and the
+    control then failed for a reason that had nothing to do with the ban.
+    """
+    source = function if isinstance(function, str) else inspect.getsource(function)
+    tree = ast.parse(textwrap.dedent(source))
     return [
         ast.unparse(node)
         for node in ast.walk(tree)
@@ -528,16 +535,18 @@ def test_no_check_reads_cf_cache_status() -> None:
 def test_the_ban_would_catch_a_reintroduction() -> None:
     """Negative control (AGENTS.md): a guard nobody has seen fail proves nothing."""
 
-    def offending() -> bool:
-        response = probe.fetch("/x")
-        return response.header("cf-cache-status") == "HIT"
-
+    offending = """
+        def offending() -> bool:
+            response = probe.fetch("/x")
+            return response.header("cf-cache-status") == "HIT"
+    """
     assert cache_status_reads(offending), "the ban would not notice a new use"
 
-    def acceptable() -> bool:
-        cached, _evidence = probe.served_from_cache("/x")
-        return cached
-
+    acceptable = """
+        def acceptable() -> bool:
+            cached, _evidence = probe.served_from_cache("/x")
+            return cached
+    """
     assert not cache_status_reads(acceptable)
 
 

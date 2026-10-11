@@ -4,9 +4,9 @@
 
 ## [1.8.0] - 2026-10-11
 
-- Format titles without em dashes: 75 titles, each of which reaches its page's `<title>`,
-  `og:title` and `Dataset.name`. 13 format descriptions and 17 fixture descriptions follow,
-  reworded with the same meaning. The files are unchanged.
+- Format titles without em dashes: all 79 that carried one, each of which reaches its page's
+  `<title>`, `og:title` and `Dataset.name`. 14 format descriptions and 17 fixture descriptions
+  follow, reworded with the same meaning. The files are unchanged.
 - `jpg/cmyk-640x640.jpg` replaces `jpg/cmyk-640x480.jpg`, which has measured 640x640 since it
   was published under a 640x480 name. The old URL keeps serving the same bytes, and its entry
   now carries `supersededBy` and `deprecated`.

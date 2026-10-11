@@ -4,7 +4,7 @@ family: data
 mime: application/vnd.apache.arrow.file
 description: >-
   The people dataset in the Arrow IPC file format.
-seo_title: "Sample Arrow IPC file for testing data pipelines — free, CC0"
+seo_title: "Sample Arrow IPC file for testing data pipelines, free and CC0"
 related: [parquet, avro]
 fixtures:
   - name: people-1000.arrow

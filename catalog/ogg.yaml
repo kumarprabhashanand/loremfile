@@ -3,9 +3,9 @@ format: ogg
 family: audio
 mime: audio/ogg
 description: >-
-  Vorbis in an Ogg container — the older royalty-free codec, still widely supported and
+  Vorbis in an Ogg container: the older royalty-free codec, still widely supported and
   a useful contrast with Opus.
-seo_title: "Sample OGG audio files for testing — free, CC0, hotlinkable"
+seo_title: "Sample OGG audio files for testing, free, CC0 and hotlinkable"
 related: [opus, mp3, flac]
 fixtures:
   - name: vorbis-30s.ogg

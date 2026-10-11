@@ -79,12 +79,34 @@ def _stamp_of(line: str) -> str:
     return line.split("|")[1].strip()
 
 
+#: Notes this module writes itself. Anything else in the notes column was written by a
+#: person (what changed on the site that day, say) and must outlive the next backfill.
+AUTOMATIC_NOTES = frozenset({"check failed", "no daily series"})
+
+
+def _notes_of(line: str) -> str:
+    return line.split("|")[5].strip()
+
+
+def _merged(kept: str, incoming: str) -> str:
+    """A row's new line, keeping a hand-written note the report knows nothing about."""
+    human = [part for part in _notes_of(kept).split("; ") if part and part not in AUTOMATIC_NOTES]
+    if not human:
+        return incoming
+    fresh = _notes_of(incoming)
+    notes = "; ".join([*human, *([fresh] if fresh and fresh not in human else [])])
+    cells = incoming.rstrip("\n").split("|")
+    cells[5] = f" {notes} "
+    return "|".join(cells) + "\n"
+
+
 def append(report_path: Path, log_path: Path, *, today: dt.date | None = None) -> str:
     """Merge the report's rows into the log, creating it with its header if absent.
 
     Idempotent per date: a date already in the log is **replaced**, not added again, so a
     re-run of the scheduled job does not double-count and overlapping backfill windows
-    converge on one row per day. Rows are kept in date order.
+    converge on one row per day. A note written by hand on a date is kept through that
+    replacement; the notes this module writes itself are not. Rows are kept in date order.
     """
     report = json.loads(report_path.read_text(encoding="utf-8"))
     lines = rows(report, today=today)
@@ -95,7 +117,8 @@ def append(report_path: Path, log_path: Path, *, today: dt.date | None = None) -
     for line in existing.splitlines(keepends=True):
         if line.startswith("| ") and _stamp_of(line) not in {"date", "week"}:
             kept.setdefault(_stamp_of(line), line)
-    kept.update(incoming)
+    for stamp, line in incoming.items():
+        kept[stamp] = _merged(kept[stamp], line) if stamp in kept else line
     ordered = [kept[stamp] for stamp in sorted(kept)]
     # Rows are data and are merged; the header is generated and is replaced outright.
     log_path.write_text(HEADER + "".join(ordered), encoding="utf-8")

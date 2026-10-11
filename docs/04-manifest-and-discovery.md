@@ -71,7 +71,7 @@ Field rules:
 | `generator`, `generator_params` | string, object | Enough to regenerate. Informational; may change if a generator is refactored (bytes must not). |
 | `added_in` | semver | Catalog version that introduced it. |
 | `status` | enum | `active`, `removed` (legal takedown tombstone, see §1.5). |
-| `deprecated`, `supersededBy` | boolean, string/null | Set together from the catalog's `superseded_by` (`03` §7.3): `supersededBy` is the replacing path. A superseded entry stays active and served, and stays in `manifest.json`, `sha256sums.txt` and `{format}/index.json`; format pages, the search index and `llms-full.txt` list its replacement instead. |
+| `deprecated`, `supersededBy` | boolean, string/null | Derived, never set here: the catalog's `superseded_by` is the input, and `manifest update` writes both fields from it (`03` §7.3), so a value set by hand in the manifest is overwritten by the next update and `manifest check` reports it until then. `supersededBy` is the replacing path. A superseded entry stays active and served, and stays in `manifest.json`, `sha256sums.txt` and `{format}/index.json`; format pages, the search index and `llms-full.txt` list its replacement instead. |
 
 ### 1.3 `props` by format (what validators measure)
 

@@ -191,6 +191,35 @@ def test_the_em_dash_is_not_a_coincidence_of_the_failure_path(tmp_path: Path) ->
     assert "—" not in line
 
 
+def test_a_note_written_by_hand_survives_the_next_backfill(tmp_path: Path) -> None:
+    """What changed on the site, and when, is recorded in the notes column; a weekly
+    backfill that replaces the day's numbers must not wipe it."""
+    report = tmp_path / "usage.json"
+    log = tmp_path / "ops-log.md"
+    report.write_text(json.dumps(usage_report(daily=[day("2026-10-09", 10)])))
+    ops_log.append(report, log, today=dt.date(2026, 10, 9))
+    log.write_text(log.read_text().replace("| 10 |  |", "| 10 | copy pass on ten pages |"))
+    report.write_text(json.dumps(usage_report(daily=[day("2026-10-09", 12)])))
+    ops_log.append(report, log, today=dt.date(2026, 10, 12))
+
+    (row,) = [line for line in log.read_text().splitlines() if line.startswith("| 2026-10-09")]
+    assert "| 12 |" in row, "the numbers are still replaced"
+    assert row.endswith("| copy pass on ten pages |")
+
+
+def test_an_automatic_note_is_replaced_by_a_clean_read(tmp_path: Path) -> None:
+    """Control for the test above: only hand-written notes are kept, so a day that failed
+    and was later read cleanly loses its `check failed`."""
+    report = tmp_path / "usage.json"
+    log = tmp_path / "ops-log.md"
+    log.write_text(ops_log.HEADER + "| 2026-10-09 | — | — | — | check failed |\n")
+    report.write_text(json.dumps(usage_report(daily=[day("2026-10-09", 12)])))
+    ops_log.append(report, log, today=dt.date(2026, 10, 12))
+
+    (row,) = [line for line in log.read_text().splitlines() if line.startswith("| 2026-10-09")]
+    assert row.endswith("| 12 |  |")
+
+
 # --- gh_issue ---------------------------------------------------------------
 
 
