@@ -131,8 +131,9 @@ def site_files(site_dir: Path) -> dict[str, Path]:
 def public_path(key: str) -> str:
     if key == "index.html":
         return "/"
-    if key.startswith(f"{FORMAT_INDEX_DIR}/") and key.endswith(".json"):
-        return f"/{key[len(FORMAT_INDEX_DIR) + 1 : -len('.json')]}/index.json"
+    if key.startswith(f"{FORMAT_INDEX_DIR}/") and key.endswith((".json", ".md")):
+        stem, suffix = key[len(FORMAT_INDEX_DIR) + 1 :].rsplit(".", 1)
+        return f"/{stem}/index.{suffix}"
     return f"/{key}"
 
 
@@ -141,15 +142,20 @@ def absolute_url(key: str) -> str:
 
 
 def key_for(path: str) -> str:
-    """The key the edge serves for a request path: the four rewrites of docs/08 §5.2."""
+    """The key the edge serves for a request path: the four rewrites of docs/08 §5.2.
+
+    The last one is `wildcard_replace(path, "/*/index.*", "/_formats/${1}.${2}")`: each `*` is
+    lazy and the match ignores case, so it splits at the first "/index." after the leading slash.
+    """
     if path == "/":
         return "index.html"
     if path.endswith("/") and path.startswith(PROBE_PREFIX):
         return f"{path[1:]}index.html"
     if path.endswith("/"):
         return path[1:-1]
-    if path.endswith("/index.json") and not path.startswith(("/_", "/.well-known/")):
-        return f"{FORMAT_INDEX_DIR}{path[: -len('/index.json')]}.json"
+    if path.endswith(("/index.json", "/index.md")) and not path.startswith(("/_", "/.well-known/")):
+        split = path.lower().find("/index.", 1)
+        return f"{FORMAT_INDEX_DIR}{path[:split]}.{path[split + len('/index.') :]}"
     return path[1:]
 
 

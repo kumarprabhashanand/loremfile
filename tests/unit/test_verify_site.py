@@ -173,6 +173,16 @@ def test_a_missing_slash_rewrite_is_reported(site: Path, edge: Edge) -> None:
     )
 
 
+def test_a_broken_index_rewrite_fails_the_site_check(site: Path, edge: Edge) -> None:
+    """The public `/{format}/index.json`, not the `_formats/` key behind it, is what the site
+    check fetches, so a rewrite that stops reaching the key fails the deploy (docs/08 §5.2)."""
+    assert "/pdf/index.json" in {routes.public_path(key) for key in FILES}
+    del edge.bodies["/pdf/index.json"]
+    found = failures(verify_live.site_findings(site))
+    assert ("/pdf/index.json", Status.MISSING_OBJECT, "404") in found
+    assert not any(path.startswith("/_formats/") for path in edge.calls)
+
+
 def test_a_format_index_must_carry_the_file_headers(site: Path, edge: Edge) -> None:
     edge.overrides["/pdf/index.json"] = Response(
         status=200,

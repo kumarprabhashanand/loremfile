@@ -44,14 +44,14 @@
     },
     {
       "ref": "format_index_json",
-      "description": "/{format}/index.json → /_formats/{format}.json (ADR-032)",
+      "description": "/{x}/index.json and /{x}/index.md → /_formats/{x}.json and .md (ADR-032)",
       "enabled": true,
-      "expression": "(ends_with(http.request.uri.path, \"/index.json\") and not starts_with(http.request.uri.path, \"/_\") and not starts_with(http.request.uri.path, \"/.well-known/\"))",
+      "expression": "((ends_with(http.request.uri.path, \"/index.json\") or ends_with(http.request.uri.path, \"/index.md\")) and not starts_with(http.request.uri.path, \"/_\") and not starts_with(http.request.uri.path, \"/.well-known/\"))",
       "action": "rewrite",
       "action_parameters": {
         "uri": {
           "path": {
-            "expression": "concat(\"/_formats\", substring(http.request.uri.path, 0, -11), \".json\")"
+            "expression": "wildcard_replace(http.request.uri.path, \"/*/index.*\", \"/_formats/${1}.${2}\")"
           }
         }
       }
