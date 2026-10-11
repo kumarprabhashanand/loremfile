@@ -5,7 +5,7 @@ mime: audio/flac
 description: >-
   Lossless compressed audio. Useful when you need something that is both compressed and
   bit-identical to its source.
-seo_title: "Sample FLAC audio files for testing — free, CC0, hotlinkable"
+seo_title: "Sample FLAC audio files for testing, free, CC0 and hotlinkable"
 related: [wav, mp3, ogg]
 fixtures:
   - name: sine-440hz-30s.flac

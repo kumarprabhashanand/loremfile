@@ -15,7 +15,7 @@ from pydantic import ValidationError
 
 from loremfile import build, contains
 from loremfile.catalog import Catalog, Fixture
-from loremfile.cli import _contains_text_disagreements
+from loremfile.cli import _catalog_disagreements
 from loremfile.manifest import Manifest
 from loremfile.util import lorem
 from loremfile.validators import extract, load, validate
@@ -161,10 +161,10 @@ def test_a_format_without_a_reader_cannot_carry_it() -> None:
 
 def test_manifest_check_names_a_catalog_edit_that_was_not_rebuilt() -> None:
     catalog = Catalog.load()
-    assert _contains_text_disagreements(MANIFEST, catalog) == []
+    assert _catalog_disagreements(MANIFEST, catalog) == []
     edited = ["edited, never rebuilt", "x" * 9, "y" * 9]
     catalog.by_path["md/all-elements.md"].contains_text = edited
-    assert [e.split(":")[0] for e in _contains_text_disagreements(MANIFEST, catalog)] == [
+    assert [e.split(":")[0] for e in _catalog_disagreements(MANIFEST, catalog)] == [
         "md/all-elements.md"
     ]
 
@@ -189,3 +189,11 @@ def test_recording_leaves_the_lorem_module_as_it_found_it(tmp_path: Path) -> Non
     before = lorem.paragraph
     contains.record(CATALOG.by_path["html/basic.html"], tmp_path)
     assert lorem.paragraph is before
+
+
+def test_manifest_check_names_a_supersession_the_catalog_has_not_published() -> None:
+    catalog = Catalog.load()
+    catalog.by_path["jpg/cmyk-640x480.jpg"].superseded_by = None
+    assert [e.split(":")[0] for e in _catalog_disagreements(MANIFEST, catalog)] == [
+        "jpg/cmyk-640x480.jpg"
+    ]

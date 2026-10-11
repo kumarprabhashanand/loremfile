@@ -3,8 +3,8 @@ format: webm
 family: video
 mime: video/webm
 description: >-
-  VP9 video with Opus audio in WebM — the royalty-free pair browsers decode natively.
-seo_title: "Sample WebM video files for testing — free, CC0, hotlinkable"
+  VP9 video with Opus audio in WebM: the royalty-free pair browsers decode natively.
+seo_title: "Sample WebM video files for testing, free, CC0 and hotlinkable"
 related: [mp4, mkv, ogv]
 fixtures:
   - name: 720p-5s-vp9.webm

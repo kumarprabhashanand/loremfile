@@ -110,6 +110,12 @@ class Manifest:
     def active(self) -> list[dict[str, Any]]:
         return [e for e in self.entries if e.get("status", "active") == "active"]
 
+    @property
+    def current(self) -> list[dict[str, Any]]:
+        """Active and not superseded: what the site lists. A superseded path is still served
+        and still active; it is just no longer the one to recommend (docs/03 §7.3)."""
+        return [e for e in self.active if not e.get("supersededBy")]
+
     def to_document(self) -> dict[str, Any]:
         """The full top-level object, sorted by path (docs/04 §1.1)."""
         entries = sorted(self.entries, key=lambda e: e["path"])
@@ -246,8 +252,8 @@ def build_entry(
         "generator_params": dict(fixture.params),
         "added_in": added_in,
         "status": "active",
-        "deprecated": False,
-        "supersededBy": None,
+        "deprecated": fixture.superseded_by is not None,
+        "supersededBy": fixture.superseded_by,
         **({"notes": fixture.notes} if fixture.notes else {}),
     }
 

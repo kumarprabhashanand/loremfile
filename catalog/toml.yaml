@@ -5,7 +5,7 @@ mime: application/toml
 description: >-
   A configuration file covering TOML's tables, array-of-tables, multi-line and
   literal strings, and all four date-time types.
-seo_title: "Sample TOML config file for testing parsers — free, CC0"
+seo_title: "Sample TOML config file for testing parsers, free and CC0"
 related: [yaml, json, ini]
 fixtures:
   - name: config.toml

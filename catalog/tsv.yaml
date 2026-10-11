@@ -4,7 +4,7 @@ family: data
 mime: text/tab-separated-values
 description: >-
   The people dataset delimited by tabs.
-seo_title: "Sample TSV file for testing parsers — free, CC0"
+seo_title: "Sample TSV file for testing parsers, free and CC0"
 related: [csv, json]
 fixtures:
   - name: people-1000.tsv

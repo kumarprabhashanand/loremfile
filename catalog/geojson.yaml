@@ -5,7 +5,7 @@ mime: application/geo+json
 description: >-
   A GeoJSON FeatureCollection of Point features over open ocean, so no invented
   data sits on top of a real place.
-seo_title: "Sample GeoJSON file for testing mapping tools — free, CC0"
+seo_title: "Sample GeoJSON file for testing mapping tools, free and CC0"
 related: [gpx, kml, json]
 fixtures:
   - name: points-100.geojson

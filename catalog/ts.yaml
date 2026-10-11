@@ -3,9 +3,9 @@ format: ts
 family: video
 mime: video/mp2t
 description: >-
-  An MPEG-2 transport stream carrying H.264 and AAC — the container HLS segments use,
+  An MPEG-2 transport stream carrying H.264 and AAC: the container HLS segments use,
   offered on its own so a demuxer can be tested without a playlist.
-seo_title: "Sample TS video files for testing — free, CC0, hotlinkable"
+seo_title: "Sample TS video files for testing, free, CC0 and hotlinkable"
 related: [hls, mp4]
 fixtures:
   - name: 720p-5s.ts

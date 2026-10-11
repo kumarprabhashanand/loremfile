@@ -30,6 +30,9 @@ HLS_NAME_RE = re.compile(
     rf"|^{DESCRIPTOR}/seg-[0-9]{{3}}\.ts$"
 )
 FORMAT_RE = re.compile(r"^[a-z0-9]+$")
+#: Dimensions a fixture name states: `640x480`, and video heights such as `720p`.
+NAMED_SIZE = re.compile(r"(?:^|[-/])(\d+)x(\d+)(?=[-./]|$)")
+NAMED_HEIGHT = re.compile(r"(?:^|[-/])(\d+)p(?=[-./]|$)")
 
 MAX_DESCRIPTION_CHARS = 300
 #: The shortest `contains_text` string: long enough that a wrong file does not hold it
@@ -207,6 +210,9 @@ class Fixture(BaseModel):
     #: Strings the file is known to contain, taken from its generator's own input and
     #: checked with a real reader before they are published (docs/04 §1.3.2).
     contains_text: list[str] | None = Field(default=None, min_length=3, max_length=5)
+    #: The path that replaces this one (docs/03 §7.3). This path stays served, frozen; its
+    #: entry gains `supersededBy` and `deprecated`, and the site lists the replacement.
+    superseded_by: str | None = Field(default=None, min_length=1)
 
     # The owning format, injected by the loader so a Fixture can compute its own path.
     format: str = Field(pattern=FORMAT_RE.pattern)
@@ -231,7 +237,30 @@ class Fixture(BaseModel):
         if self.status is Status.ACTIVE and self.removed is not None:
             raise ValueError("removed is only allowed when status is 'removed'")
         self._check_contains_text()
+        self._check_named_dimensions()
         return self
+
+    def _check_named_dimensions(self) -> None:
+        """A name that states dimensions must match the params that produce them.
+
+        `jpg/cmyk-640x480.jpg` was declared 640x640 and published that way, its name wrong
+        from the start; caught here, the bytes could still have changed. Only declared
+        dimensions can be compared, and a superseded name is frozen, so both pass; every
+        published name is also held to its measured props (tests/unit/test_path_claims.py).
+        """
+        if self.superseded_by is not None or not {"width", "height"} & set(self.params):
+            return
+        width, height = self.params.get("width"), self.params.get("height")
+        for named_w, named_h in NAMED_SIZE.findall(self.name):
+            if (int(named_w), int(named_h)) != (width, height):
+                raise ValueError(
+                    f"name '{self.name}' says {named_w}x{named_h}; params declare {width}x{height}"
+                )
+        for named_h in NAMED_HEIGHT.findall(self.name):
+            if int(named_h) != height:
+                raise ValueError(
+                    f"name '{self.name}' says {named_h}p; params declare height {height}"
+                )
 
     def _check_contains_text(self) -> None:
         strings = self.contains_text or []
@@ -364,6 +393,19 @@ class Catalog:
         self._check_related()
         self._check_dependencies()
         self._check_edge_comparisons()
+        self._check_supersessions()
+
+    def _check_supersessions(self) -> None:
+        """A replacement must be another catalogued path, and not itself replaced."""
+        by_path = self.by_path
+        for fixture in self.fixtures():
+            target = fixture.superseded_by
+            if target is None:
+                continue
+            if target == fixture.path or target not in by_path:
+                raise CatalogError(f"{fixture.path}: superseded_by {target!r} is not another path")
+            if by_path[target].superseded_by is not None:
+                raise CatalogError(f"{fixture.path}: superseded by {target}, itself superseded")
 
     def _check_unique_paths(self) -> None:
         seen: set[str] = set()

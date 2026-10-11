@@ -7,7 +7,7 @@ description: >-
   event whose DTSTART is a date rather than a datetime, a weekly series expressed as an
   RRULE, an event in a named zone with the VTIMEZONE that defines it, and a hundred-event
   export. Every UID and DTSTAMP is fixed.
-seo_title: "Sample ICS calendar files for testing — free, CC0"
+seo_title: "Sample ICS calendar files for testing, free and CC0"
 related: [vcf, txt]
 fixtures:
   - name: single-event.ics

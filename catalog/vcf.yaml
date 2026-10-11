@@ -6,7 +6,7 @@ description: >-
   vCards in both versions address books still exchange, one carrying an inline photo and
   one holding a hundred contacts. Every line is folded at 75 octets and every REV is
   fixed, so the bytes do not move between builds.
-seo_title: "Sample VCF vCard files for testing address books — free, CC0"
+seo_title: "Sample VCF vCard files for testing address books, free and CC0"
 related: [ics, txt]
 fixtures:
   - name: vcard3-single.vcf

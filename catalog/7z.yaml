@@ -5,7 +5,7 @@ mime: application/x-7z-compressed
 description: >-
   7z archives written by py7zr with LZMA2, the default the format is known for. Entry
   timestamps are set to the project epoch, so the bytes never move.
-seo_title: "Sample 7z archives for testing extractors — free, CC0"
+seo_title: "Sample 7z archives for testing extractors, free and CC0"
 related: [zip, tar]
 fixtures:
   - name: 3-text-files.7z

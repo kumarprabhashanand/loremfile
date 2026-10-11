@@ -4,7 +4,7 @@ family: data
 mime: application/avro
 description: >-
   The people dataset as Avro with an embedded schema, deflate-compressed.
-seo_title: "Sample Avro file for testing schema-aware pipelines — free, CC0"
+seo_title: "Sample Avro file for testing schema-aware pipelines, free and CC0"
 related: [parquet, arrow]
 fixtures:
   - name: people-1000.avro

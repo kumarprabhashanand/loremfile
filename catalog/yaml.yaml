@@ -5,7 +5,7 @@ mime: application/yaml
 description: >-
   A configuration file using the YAML features that trip parsers: anchors, aliases,
   merge keys, block scalars, multiple documents and the full scalar type set.
-seo_title: "Sample YAML config file for testing parsers — free, CC0"
+seo_title: "Sample YAML config file for testing parsers, free and CC0"
 related: [json, toml, ini]
 fixtures:
   - name: config-all-types.yaml

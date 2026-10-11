@@ -5,7 +5,7 @@ mime: application/x-subrip
 description: >-
   SubRip subtitles: numbered cues, comma-separated milliseconds and CRLF line endings.
   The format every player reads and the one where a stray blank line loses a cue.
-seo_title: "Sample SRT subtitle files for testing players — free, CC0"
+seo_title: "Sample SRT subtitle files for testing players, free and CC0"
 related: [vtt, txt]
 fixtures:
   - name: 3-cues.srt

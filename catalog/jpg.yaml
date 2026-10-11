@@ -5,7 +5,7 @@ mime: image/jpeg
 description: >-
   JPEG test cards including a progressive scan, a CMYK colour space and an EXIF
   orientation case that only displays correctly if the tag is honoured.
-seo_title: "Sample JPEG images for testing uploads and viewers — free, CC0"
+seo_title: "Sample JPEG images for testing uploads and viewers, free and CC0"
 related: [png, webp, avif, tiff]
 fixtures:
   - name: exif-orientation-8-640x480.jpg
@@ -60,9 +60,18 @@ fixtures:
     phase: 1
     generator: image.testcard
     params: { width: 640, height: 640, fmt: JPEG, mode: CMYK }
-    description: "A CMYK JPEG, the colour space that trips pipelines expecting RGB."
+    description: "A CMYK JPEG, the colour space that trips pipelines expecting RGB. Its name says 640x480, but it measures 640x640; jpg/cmyk-640x640.jpg replaces it, and this URL keeps serving the same bytes."
     tags: [image]
     expect: { mode: CMYK }
+    size_class: free
+    superseded_by: jpg/cmyk-640x640.jpg
+  - name: cmyk-640x640.jpg
+    phase: 2
+    generator: image.testcard
+    params: { width: 640, height: 640, fmt: JPEG, mode: CMYK }
+    description: "A CMYK JPEG, the colour space that trips pipelines expecting RGB. Replaces jpg/cmyk-640x480.jpg, whose name misstated its size."
+    tags: [image]
+    expect: { mode: CMYK, width: 640, height: 640 }
     size_class: free
   - name: exif-orientation-6-640x480.jpg
     phase: 1
@@ -76,7 +85,7 @@ fixtures:
     phase: 1
     generator: image.noise_sized
     params: { size: 1000000, fmt: JPEG, quality: 95 }
-    description: "About 1MB of seeded noise at quality 95, 4:4:4 — noise does not compress, so the size is honest."
+    description: "About 1MB of seeded noise at quality 95, 4:4:4. Noise does not compress, so the size is honest."
     tags: [image, sized]
     expect: { mode: RGB }
     size_class: approx
@@ -85,7 +94,7 @@ fixtures:
     phase: 1
     generator: image.noise_sized
     params: { size: 10000000, fmt: JPEG, quality: 95 }
-    description: "About 10MB of seeded noise at quality 95, 4:4:4 — noise does not compress, so the size is honest."
+    description: "About 10MB of seeded noise at quality 95, 4:4:4. Noise does not compress, so the size is honest."
     tags: [image, sized]
     expect: { mode: RGB }
     size_class: approx

@@ -3,8 +3,8 @@ format: ndjson
 family: data
 mime: application/x-ndjson
 description: >-
-  One JSON object per line — the shape stream processors and log shippers expect.
-seo_title: "Sample NDJSON file for testing stream processors — free, CC0"
+  One JSON object per line: the shape stream processors and log shippers expect.
+seo_title: "Sample NDJSON file for testing stream processors, free and CC0"
 related: [json, log]
 fixtures:
   - name: people-1000.ndjson

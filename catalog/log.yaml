@@ -5,7 +5,7 @@ mime: text/plain
 description: >-
   Log files in the two shapes tooling actually meets: nginx combined access logs
   and one-JSON-object-per-line application logs.
-seo_title: "Sample log files for testing parsers and shippers — free, CC0"
+seo_title: "Sample log files for testing parsers and shippers, free and CC0"
 related: [txt]
 fixtures:
   - name: nginx-access-1000-lines.log

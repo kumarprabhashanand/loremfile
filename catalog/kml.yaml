@@ -4,7 +4,7 @@ family: data
 mime: application/vnd.google-earth.kml+xml
 description: >-
   A KML document of Point placemarks.
-seo_title: "Sample KML file for testing mapping tools — free, CC0"
+seo_title: "Sample KML file for testing mapping tools, free and CC0"
 related: [kmz, geojson, gpx]
 fixtures:
   - name: placemarks-10.kml

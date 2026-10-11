@@ -5,7 +5,7 @@ mime: text/vtt
 description: >-
   WebVTT: the subtitle format browsers read natively, with dotted milliseconds, an
   optional STYLE block and regions that simpler parsers skip over.
-seo_title: "Sample WebVTT subtitle files for testing browsers — free, CC0"
+seo_title: "Sample WebVTT subtitle files for testing browsers, free and CC0"
 related: [srt, html]
 fixtures:
   - name: 3-cues.vtt

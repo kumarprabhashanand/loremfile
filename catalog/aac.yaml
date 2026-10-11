@@ -3,9 +3,9 @@ format: aac
 family: audio
 mime: audio/aac
 description: >-
-  AAC in a bare ADTS stream with no container around it — the shape broadcast and HLS
+  AAC in a bare ADTS stream with no container around it: the shape broadcast and HLS
   audio arrives in, and a good test of whether a decoder needs a container.
-seo_title: "Sample AAC audio files for testing — free, CC0, hotlinkable"
+seo_title: "Sample AAC audio files for testing, free, CC0 and hotlinkable"
 related: [m4a, mp3, ts]
 fixtures:
   - name: adts-30s.aac
