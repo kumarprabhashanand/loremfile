@@ -156,7 +156,7 @@ def test_an_expected_drift_path_without_carried_bytes_is_blocked(tmp_path: Path)
 
 
 def test_the_gate_names_every_missing_drift_path_not_just_the_first() -> None:
-    """Five paths are marked; a deploy should learn about all of them in one run."""
+    """Six paths are marked; a deploy should learn about all of them in one run."""
     marked = [f.path for f in CATALOG.fixtures() if f.expected_drift]
     blockers = upload.carry_forward_gate(marked, CATALOG, available={})
     assert len(blockers) == len(marked)

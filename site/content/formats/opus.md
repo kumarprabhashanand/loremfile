@@ -13,7 +13,11 @@ One gotcha is built into the format: Opus decoders produce 48 kHz output, and to
 header field. Code that expects the source rate back, or that assumes 44.1 kHz, gets this
 file wrong in a way a quick listen will not reveal.
 
-Use it to test browser playback, transcoders, waveform renderers, audio upload forms and
-handling of the `audio/opus` media type. It is also a check that code reads the codec from
+`opus/cbr-32k-30s.opus` is encoded at a constant 32 kbps. Opus varies its rate by default,
+and on a pure tone it overshoots: `opus/30s.opus` averages 114 kbps. A fixed rate is the case
+for code that limits, budgets or transcodes by bitrate.
+
+Use them to test browser playback, transcoders, waveform renderers, audio upload forms and
+handling of the `audio/opus` media type. They also check that code reads the codec from
 the stream: an Ogg file can carry Opus, Vorbis or FLAC. Related formats: [Ogg Vorbis](/ogg),
 [MP3](/mp3) and [M4A](/m4a).

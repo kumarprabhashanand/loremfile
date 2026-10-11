@@ -420,9 +420,9 @@ A further guard covers the whole set: a unit test asserts `audit.CHECKS` covers 
 
 **First determinism audit on a rebuilt image, 2026-09-16 (run `35135699048`).** The image moved to `1d66d83d` because old PR #67 rebuilt it — `gh` now installs from a SHA-256-pinned release tarball instead of the apt repository — and M3.9's audit had run on `3ba29bb9`, so this was the first audit of the fixtures under the pinned image. It exited 0 and opened no `determinism` issue. **Its counts are unavailable:** `--json` sends the report to `determinism.json` and `_report_audit` suppresses its stderr block under that flag, so the log held a green tick and nothing else — an audit of 0 rows would have looked identical. The job now prints `regenerated`, `drifted` and `expected_drift`, fails when they are absent, and uploads the report; `tests/unit/test_audit_workflow.py` runs those steps rather than reading them.
 
-`build --audit` exits non-zero on **real** drift only; `expected_drift` paths are reported in their own section and exit 0, so the five fixtures known not to reproduce off this fleet do not train anyone to close the issue unread (`06` §8).
+`build --audit` exits non-zero on **real** drift only; `expected_drift` paths are reported in their own section and exit 0, so the six fixtures known not to reproduce off this fleet do not train anyone to close the issue unread (`06` §8).
 
-**`expected_drift` counts the five flagged rows that did not reproduce on the audit's runner.** They are published, so the audit compares them; a non-zero value is expected behaviour, not a regression, and zero means all five reproduced. (Until they were published they were absent from `manifest.json`, `_report_audit` skipped them, and the count was structurally zero.)
+**`expected_drift` counts the six flagged rows that did not reproduce on the audit's runner.** They are published, so the audit compares them; a non-zero value is expected behaviour, not a regression, and zero means all six reproduced. (Until they were published they were absent from `manifest.json`, `_report_audit` skipped them, and the count was structurally zero.)
 
 ### 3.5 `release.yml` — on tag `v*`
 

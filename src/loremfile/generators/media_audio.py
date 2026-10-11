@@ -109,6 +109,7 @@ def encoded(
     bitrate: str | None = None,
     quality: str | None = None,
     container: str | None = None,
+    constant: bool = False,
 ) -> bytes:
     """One compressed audio fixture: mp3, flac, vorbis, opus or AAC."""
     codec_args = ["-c:a", encoder_for(codec)]
@@ -116,6 +117,10 @@ def encoded(
         codec_args += ["-b:a", bitrate]
     if quality:
         codec_args += ["-q:a", quality]
+    if constant:
+        # libopus is variable-rate by default and overshoots on a pure tone, so the rate
+        # asked for is not the rate measured. Constant rate makes them the same.
+        codec_args += ["-vbr", "off"]
     if codec == "mp3":
         # Without a Xing header, players cannot seek a CBR MP3 accurately and every
         # duration readout is an estimate from the file size.

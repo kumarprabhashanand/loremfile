@@ -1638,7 +1638,7 @@ def manifest() -> None:
 def _names_a_path(message: str, paths: set[str]) -> bool:
     """Does this diagnostic concern one of `paths`? Lock diffs lead with `<path>: `.
 
-    Matched exactly, never by prefix. The set is five enumerable paths, so a prefix
+    Matched exactly, never by prefix. The set is six enumerable paths, so a prefix
     match would be broader than the evidence supports and would invite marking `opus/`
     wholesale later — which would silently exempt every future Opus fixture from the
     strongest check the project has.

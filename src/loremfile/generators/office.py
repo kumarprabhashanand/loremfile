@@ -71,6 +71,22 @@ APPROX_PLATE_BYTES = 196_000
 #: The threshold the IF formula tests, published in the fixture as a literal.
 LARGE_ORDER = 10
 
+#: Alt text for the anchored picture: what a screen reader announces in its place.
+ANCHORED_ALT_TEXT = "The loremfile colour-bar test card"
+
+#: A floating picture: aligned right in its column, text wrapping square around it.
+#: CT_Anchor fixes the child order: simplePos, positionH, positionV, extent, a wrap
+#: element, docPr, cNvGraphicFramePr, graphic. The last four move over from the inline.
+ANCHOR_XML = (
+    '<wp:anchor xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"'
+    ' distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="251658240"'
+    ' behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1">'
+    '<wp:simplePos x="0" y="0"/>'
+    '<wp:positionH relativeFrom="column"><wp:align>right</wp:align></wp:positionH>'
+    '<wp:positionV relativeFrom="paragraph"><wp:posOffset>0</wp:posOffset></wp:positionV>'
+    "</wp:anchor>"
+)
+
 #: Columns narrow enough to read in a portrait page.
 TABLE_COLUMNS = ("id", "first_name", "last_name", "city", "country")
 
@@ -187,6 +203,33 @@ def docx_tracked_changes(ctx: GeneratorContext) -> bytes:
     # CT_Settings places trackRevisions before defaultTabStop. The pinned template
     # contains that successor; appending at the end creates out-of-order settings.
     document.settings.element.insert_element_before(track, "w:defaultTabStop")
+    return _save_docx(document)
+
+
+@generator()
+def docx_anchored_image(ctx: GeneratorContext, *, image: str) -> bytes:
+    """One published JPEG anchored to a paragraph, floating right of the text, with alt text.
+
+    python-docx writes only inline pictures, so the inline drawing it makes is moved into a
+    `wp:anchor`. An extractor that walks inline shapes alone never sees this one.
+    """
+    document = _new_document(ctx)
+    document.add_heading("Anchored image", level=1)
+    rng = ctx.rng
+    paragraph = document.add_paragraph()
+    picture = paragraph.add_run().add_picture(io.BytesIO(ctx.dependency(image)), width=Inches(2.5))
+    inline = picture._inline
+    inline.docPr.set("descr", ANCHORED_ALT_TEXT)
+    anchor = etree.fromstring(ANCHOR_XML)
+    anchor.append(inline.extent)
+    anchor.append(OxmlElement("wp:wrapSquare", attrs={"wrapText": "bothSides"}))
+    for child in list(inline):
+        if child.tag in {qn("wp:docPr"), qn("wp:cNvGraphicFramePr"), qn("a:graphic")}:
+            anchor.append(child)
+    inline.getparent().replace(inline, anchor)
+    paragraph.add_run(lorem.paragraph(rng))
+    for _ in range(2):
+        document.add_paragraph(lorem.paragraph(rng))
     return _save_docx(document)
 
 

@@ -19,5 +19,8 @@ For size limits, `docx/1mb.docx` and `docx/10mb.docx` reach their size with embe
 incompressible noise images rather than padding, so a compressing upload path cannot shrink
 them. None of the files contains macros; a .docx cannot carry them.
 
+`docx/anchored-image-with-alt-text.docx` floats one JPEG beside its text, anchored to a
+paragraph and carrying alt text; an extractor that walks only inline pictures misses it.
+
 Use them to test document upload forms, text extraction, converters and previewers. Related
 formats: [PDF](/pdf), [RTF](/rtf) and [XLSX](/xlsx).

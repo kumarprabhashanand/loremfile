@@ -9,6 +9,7 @@ universal newlines.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from loremfile.catalog import Fixture
@@ -83,12 +84,63 @@ def text_props(data: bytes, mime: str) -> dict[str, Any]:
     }
 
 
+#: Markdown structure, measured line by line outside fenced code.
+ATX_HEADING = re.compile(r"^(#{1,6}) +(.+?) *#* *$")
+ANCHOR_LINK = re.compile(r"\]\(#([^)\s]+)\)")
+FOOTNOTE_DEFINITION = re.compile(r"^\[\^([^\]]+)\]:")
+FOOTNOTE_REFERENCE = re.compile(r"\[\^([^\]]+)\](?!:)")
+
+
+def _slug(title: str) -> str:
+    """A heading's anchor as GitHub writes it, built character by character."""
+    kept = [c for c in title.lower() if c.isalnum() or c in " -_"]
+    return "".join(kept).replace(" ", "-")
+
+
+def markdown_props(text: str) -> dict[str, Any]:
+    """Headings, in-page links, and footnotes, each checked against the other end.
+
+    A contents link that names no heading and a footnote reference with no body both
+    render without an error, which is why they are resolved here rather than counted.
+    """
+    headings: list[str] = []
+    links: list[str] = []
+    definitions: list[str] = []
+    references: list[str] = []
+    fenced = False
+    for line in text.splitlines():
+        if line.startswith(("```", "~~~")):
+            fenced = not fenced
+            continue
+        if fenced:
+            continue
+        if match := ATX_HEADING.match(line):
+            headings.append(_slug(match.group(2)))
+        body = line
+        if match := FOOTNOTE_DEFINITION.match(line):
+            definitions.append(match.group(1))
+            body = line[match.end() :]
+        links += ANCHOR_LINK.findall(body)
+        references += FOOTNOTE_REFERENCE.findall(body)
+    if unresolved := sorted(set(links) - set(headings)):
+        raise ValidationError(f"in-page links name no heading: {unresolved[:3]}")
+    if missing := sorted(set(references) ^ set(definitions)):
+        raise ValidationError(f"footnotes without both a reference and a body: {missing[:3]}")
+    return {
+        "headings": len(headings),
+        "anchor_links": len(links),
+        "footnotes": len(definitions),
+    }
+
+
 def make_validator(fmt: str) -> None:
     """Register the shared text validator under one format name."""
 
     @register(fmt)
     def _validate(data: bytes, fixture: Fixture, mime: str) -> dict[str, Any]:
         props = text_props(data, mime)
+        if fmt == "md":
+            props.update(markdown_props(data.decode(charset_of(mime) or "utf-8")))
         if "byte_order" in (fixture.expect or {}):
             # The BOM-less fixture contains ASCII code units, so the NUL lane
             # identifies endianness from bytes. This does not claim to detect an

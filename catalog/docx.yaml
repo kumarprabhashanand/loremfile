@@ -79,3 +79,17 @@ fixtures:
     expect: { tables: 0 }
     size_class: approx
     nominal_bytes: 10000000
+  - name: anchored-image-with-alt-text.docx
+    phase: 2
+    generator: office.docx_anchored_image
+    params: { image: jpg/640x480.jpg }
+    description: "One published JPEG anchored to a paragraph and floating right of the text, with alt text: for extractors and converters that only look for inline pictures."
+    tags: [document, image]
+    expect: { images: 1, inline_images: 0, anchored_images: 1, images_with_alt_text: 1 }
+    size_class: free
+    contains_text:
+      - "Assumenda ad recusandae magna"
+      - "Voluptate laudantium nesciunt rerum"
+      - "Saepe voluptatem nulla proident"
+      - "Possimus laboris tempor quia"
+    depends_on: ["jpg/640x480.jpg"]

@@ -12,7 +12,7 @@ fixtures:
     phase: 1
     generator: media_audio.encoded
     params: { codec: aac, duration: 30, bitrate: 128k, container: adts }
-    description: "A 440 Hz sine wave, thirty seconds, 48 kHz stereo AAC at 128 kbps as a raw ADTS stream."
+    description: "A 440 Hz sine wave, thirty seconds, 48 kHz stereo AAC as a raw ADTS stream: 130.6 kbps counting each frame's ADTS header."
     tags: [audio, codec-aac]
     expect: { acodec: aac, sample_rate: 48000, channels: 2 }
     size_class: free

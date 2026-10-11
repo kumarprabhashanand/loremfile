@@ -12,6 +12,10 @@ every source repository has at its root. 4,096 bytes is a common buffer and memo
 size, so the file lands exactly on a boundary that exposes off-by-one mistakes in code that
 reads text in fixed chunks.
 
+`md/long-with-toc-and-footnotes.md` is a long document whose contents list links every
+section heading by anchor, with numbered footnotes at the end. Every link and footnote
+resolves, so a renderer or converter that drops one shows the failure.
+
 Use them to test Markdown rendering in editors and previews, static site generators, search
 indexers, and upload forms that accept `.md` files. They are UTF-8 with LF line endings and
 are served as `text/markdown`, so they also check how a client handles that MIME type when it

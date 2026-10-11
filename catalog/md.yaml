@@ -3,7 +3,8 @@ format: md
 family: text
 mime: text/markdown
 description: >-
-  Markdown documents: a README-shaped file and one exercising every common element.
+  Markdown documents: a README-shaped file, one exercising every common element, and a
+  long one whose contents links and footnotes all resolve.
 seo_title: "Sample Markdown files for testing parsers — free, CC0"
 related: [txt]
 fixtures:
@@ -36,3 +37,16 @@ fixtures:
       - "hello from a fenced block"
       - "The footnote body, rendered at the end of the document"
       - "A raw HTML block, which Markdown passes through untouched"
+  - name: long-with-toc-and-footnotes.md
+    phase: 2
+    generator: text.markdown_long
+    params: { sections: 16, paragraphs: 3, footnotes: 6 }
+    description: "A long document: a contents list linking all sixteen section headings by anchor, and six numbered footnotes, with every link and every reference resolving."
+    tags: [text, document]
+    expect: { line_ending: lf, headings: 18, anchor_links: 16, footnotes: 6 }
+    size_class: free
+    contains_text:
+      - "Beatae adipisci quisquam voluptatem"
+      - "Debitis consectetur labore incididunt"
+      - "Consequat consectetur quae debitis"
+      - "Ipsum aperiam placeat numquam"
