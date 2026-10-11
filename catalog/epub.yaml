@@ -17,3 +17,8 @@ fixtures:
     tags: [document, text, multi-page]
     expect: { chapters: 3, documents: 4, epub_version: "3.0", has_nav: true }
     size_class: free
+    contains_text:
+      - "Sapiente perferendis architecto quia"
+      - "Dolore nesciunt beatae id"
+      - "Assumenda ex enim deserunt"
+      - "Ipsum itaque do dolor"

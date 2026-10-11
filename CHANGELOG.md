@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-10-11
+
+- `contains_text` in the manifest: three to five strings each text-bearing PDF, DOCX, PPTX,
+  XLSX, EPUB, HTML and Markdown file is known to contain, so a parser test can check what it
+  read, not only that it read something. Compare by containment. The files are unchanged.
+
 ## [1.6.0] - 2026-10-08
 
 - `jpg/exif-orientation-8-640x480.jpg`: an EXIF rotation case for viewers that ignore orientation tags.

@@ -17,6 +17,10 @@ fixtures:
     tags: [document, text]
     expect: { insertions: 1, deletions: 1, comments: 1, deleted_text: cancelled, inserted_text: confirmed, tracking_enabled: true }
     size_class: free
+    contains_text:
+      - "Tracked changes"
+      - "The delivery status is"
+      - "Review the updated delivery status"
   - name: 1page.docx
     phase: 1
     generator: office.docx_basic
@@ -25,6 +29,11 @@ fixtures:
     tags: [document, text]
     expect: { paragraphs: 4, tables: 0, images: 0 }
     size_class: free
+    contains_text:
+      - "Autem aute laborum eaque"
+      - "Amet fuga veniam alias"
+      - "Ea dolor aute cupidatat"
+      - "Explicabo tempora qui sequitur"
   - name: with-images.docx
     phase: 1
     generator: office.docx_with_images
@@ -33,6 +42,11 @@ fixtures:
     tags: [document, image]
     expect: { images: 2, tables: 0 }
     size_class: free
+    contains_text:
+      - "Amet nisi fuga et"
+      - "Veritatis aliquip modi reprehenderit"
+      - "Ex quis dicta esse"
+      - "Architecto vitae sunt irure"
     depends_on: ["png/100x100.png", "png/640x480.png"]
   - name: with-table.docx
     phase: 1
@@ -42,6 +56,11 @@ fixtures:
     tags: [document, dataset-people]
     expect: { tables: 1, table_rows: 11, images: 0 }
     size_class: free
+    contains_text:
+      - "first_name"
+      - "Bucharest"
+      - "Gothenburg"
+      - "Montreal"
   - name: 1mb.docx
     phase: 1
     generator: office.docx_sized

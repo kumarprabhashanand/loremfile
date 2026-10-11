@@ -32,6 +32,9 @@ HLS_NAME_RE = re.compile(
 FORMAT_RE = re.compile(r"^[a-z0-9]+$")
 
 MAX_DESCRIPTION_CHARS = 300
+#: The shortest `contains_text` string: long enough that a wrong file does not hold it
+#: by chance, which a lone "Lorem" would (docs/04 §1.3.2).
+MIN_CONTAINED_CHARS = 8
 
 #: Types that must carry an explicit charset even though they are not ``text/*``
 #: (docs/06 §6). The loader appends ``; charset=utf-8`` when the catalog omits it.
@@ -201,6 +204,9 @@ class Fixture(BaseModel):
     awaiting_publication: str | None = Field(default=None, min_length=1)
     policy_exceptions: list[str] = Field(default_factory=list)
     edge: Edge | None = None
+    #: Strings the file is known to contain, taken from its generator's own input and
+    #: checked with a real reader before they are published (docs/04 §1.3.2).
+    contains_text: list[str] | None = Field(default=None, min_length=3, max_length=5)
 
     # The owning format, injected by the loader so a Fixture can compute its own path.
     format: str = Field(pattern=FORMAT_RE.pattern)
@@ -224,7 +230,20 @@ class Fixture(BaseModel):
             raise ValueError("removed is required when status is 'removed'")
         if self.status is Status.ACTIVE and self.removed is not None:
             raise ValueError("removed is only allowed when status is 'removed'")
+        self._check_contains_text()
         return self
+
+    def _check_contains_text(self) -> None:
+        strings = self.contains_text or []
+        if len(set(strings)) != len(strings):
+            raise ValueError("contains_text repeats a string")
+        for string in strings:
+            if string != " ".join(string.split()):
+                raise ValueError(f"contains_text {string!r} has untidy whitespace")
+            if len(string) < MIN_CONTAINED_CHARS:
+                raise ValueError(
+                    f"contains_text {string!r} is under {MIN_CONTAINED_CHARS} characters"
+                )
 
     def _check_name(self) -> None:
         pattern = HLS_NAME_RE if self.format == "hls" else NAME_RE

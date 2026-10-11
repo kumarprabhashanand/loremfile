@@ -1,8 +1,8 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.6.0",
-  "generated_at": "2026-10-08T21:00:30Z",
+  "catalog_version": "1.6.1",
+  "generated_at": "2026-10-11T09:45:10Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
@@ -1633,7 +1633,13 @@
         "tables": 0,
         "table_rows": 0,
         "images": 0,
-        "words": 170
+        "words": 170,
+        "contains_text": [
+          "Autem aute laborum eaque",
+          "Amet fuga veniam alias",
+          "Ea dolor aute cupidatat",
+          "Explicabo tempora qui sequitur"
+        ]
       },
       "generator": "office.docx_basic",
       "generator_params": {
@@ -1665,7 +1671,13 @@
         "tables": 0,
         "table_rows": 0,
         "images": 2,
-        "words": 167
+        "words": 167,
+        "contains_text": [
+          "Amet nisi fuga et",
+          "Veritatis aliquip modi reprehenderit",
+          "Ex quis dicta esse",
+          "Architecto vitae sunt irure"
+        ]
       },
       "generator": "office.docx_with_images",
       "generator_params": {
@@ -1700,7 +1712,13 @@
         "tables": 1,
         "table_rows": 11,
         "images": 0,
-        "words": 1
+        "words": 1,
+        "contains_text": [
+          "first_name",
+          "Bucharest",
+          "Gothenburg",
+          "Montreal"
+        ]
       },
       "generator": "office.docx_with_table",
       "generator_params": {
@@ -1739,7 +1757,12 @@
         "deleted_text": "cancelled",
         "inserted_text": "confirmed",
         "current_text": "Tracked changes\nThe delivery status is confirmed.\nReview the updated delivery status.",
-        "tracking_enabled": true
+        "tracking_enabled": true,
+        "contains_text": [
+          "Tracked changes",
+          "The delivery status is",
+          "Review the updated delivery status"
+        ]
       },
       "generator": "office.docx_tracked_changes",
       "generator_params": {},
@@ -2530,7 +2553,13 @@
         "chapters": 3,
         "documents": 4,
         "epub_version": "3.0",
-        "has_nav": true
+        "has_nav": true,
+        "contains_text": [
+          "Sapiente perferendis architecto quia",
+          "Dolore nesciunt beatae id",
+          "Assumenda ex enim deserunt",
+          "Ipsum itaque do dolor"
+        ]
       },
       "generator": "office.epub3",
       "generator_params": {
@@ -3120,7 +3149,13 @@
         "dir": "",
         "inline_style": false,
         "inline_script": false,
-        "tables": 1
+        "tables": 1,
+        "contains_text": [
+          "Voluptas do pariatur dicta",
+          "Voluptates exercitation amet anim",
+          "Omnis consectetur similique sequitur",
+          "Eu molestiae maiores in"
+        ]
       },
       "generator": "web.html_all_elements",
       "generator_params": {},
@@ -3152,7 +3187,13 @@
         "dir": "",
         "inline_style": false,
         "inline_script": false,
-        "tables": 0
+        "tables": 0,
+        "contains_text": [
+          "Voluptatem quasi sint exercitation",
+          "Doloribus aut reprehenderit repellendus",
+          "Ipsa ea molestiae aute",
+          "Inventore et neque sapiente"
+        ]
       },
       "generator": "web.html_basic",
       "generator_params": {},
@@ -3184,7 +3225,13 @@
         "dir": "",
         "inline_style": true,
         "inline_script": false,
-        "tables": 0
+        "tables": 0,
+        "contains_text": [
+          "Inline styles",
+          "Numquam quasi explicabo cillum",
+          "Voluptates magnam rerum recusandae",
+          "Sequi quis asperiores aute"
+        ]
       },
       "generator": "web.html_inline_css",
       "generator_params": {},
@@ -3216,7 +3263,13 @@
         "dir": "",
         "inline_style": false,
         "inline_script": true,
-        "tables": 0
+        "tables": 0,
+        "contains_text": [
+          "Aperiam fugit fuga officiis",
+          "Doloribus explicabo sed adipiscing",
+          "Incididunt molestiae laboris omnis",
+          "Quisquam accusantium perferendis modi"
+        ]
       },
       "generator": "web.html_inline_js",
       "generator_params": {},
@@ -4218,7 +4271,13 @@
         "bom": false,
         "line_ending": "lf",
         "lines": 50,
-        "max_line_bytes": 171
+        "max_line_bytes": 171,
+        "contains_text": [
+          "Officiis ipsa amet repudiandae",
+          "hello from a fenced block",
+          "The footnote body, rendered at the end of the document",
+          "A raw HTML block, which Markdown passes through untouched"
+        ]
       },
       "generator": "text.markdown_all_elements",
       "generator_params": {},
@@ -4248,7 +4307,13 @@
         "bom": false,
         "line_ending": "lf",
         "lines": 19,
-        "max_line_bytes": 754
+        "max_line_bytes": 754,
+        "contains_text": [
+          "Necessitatibus assumenda non voluptatem",
+          "Proident reiciendis quae dolor",
+          "Mollit dolor adipiscing veniam",
+          "Ex nostrud tenetur exercitation"
+        ]
       },
       "generator": "text.lorem_sized",
       "generator_params": {
@@ -5375,7 +5440,13 @@
         "encrypted": false,
         "pdf_version": "1.4",
         "has_outline": false,
-        "has_images": false
+        "has_images": false,
+        "contains_text": [
+          "Quae cillum in fuga",
+          "Ea deserunt fugiat non",
+          "Similique ut pariatur ut",
+          "Modi similique elit esse"
+        ]
       },
       "generator": "pdf.basic",
       "generator_params": {
@@ -5410,7 +5481,13 @@
         "encrypted": false,
         "pdf_version": "1.4",
         "has_outline": false,
-        "has_images": false
+        "has_images": false,
+        "contains_text": [
+          "Rerum repellat quia elit",
+          "Saepe enim eu placeat",
+          "Modi debitis necessitatibus qui",
+          "Omnis quia neque elit"
+        ]
       },
       "generator": "pdf.basic",
       "generator_params": {
@@ -5445,7 +5522,13 @@
         "encrypted": false,
         "pdf_version": "1.4",
         "has_outline": false,
-        "has_images": false
+        "has_images": false,
+        "contains_text": [
+          "Lorem sequitur modi debitis",
+          "Do fugiat anim tempor",
+          "Adipiscing maiores minim necessitatibus",
+          "Commodo assumenda voluptas quis"
+        ]
       },
       "generator": "pdf.basic",
       "generator_params": {
@@ -5480,7 +5563,13 @@
         "encrypted": true,
         "pdf_version": "1.5",
         "has_outline": false,
-        "has_images": false
+        "has_images": false,
+        "contains_text": [
+          "Encrypted sample",
+          "Mollit incidunt quia explicabo",
+          "Aliquip proident maiores sequi",
+          "Debitis porro repudiandae esse"
+        ]
       },
       "generator": "pdf.encrypted",
       "generator_params": {
@@ -5516,7 +5605,13 @@
         "encrypted": false,
         "pdf_version": "1.4",
         "has_outline": false,
-        "has_images": false
+        "has_images": false,
+        "contains_text": [
+          "Assumenda cupidatat tenetur laborum",
+          "Consectetur consequat excepteur totam",
+          "Architecto eius doloribus magnam",
+          "Itaque fuga fugiat nostrud"
+        ]
       },
       "generator": "pdf.basic",
       "generator_params": {
@@ -5587,7 +5682,13 @@
         "encrypted": false,
         "pdf_version": "1.4",
         "has_outline": false,
-        "has_images": false
+        "has_images": false,
+        "contains_text": [
+          "first_name",
+          "Bucharest",
+          "Gothenburg",
+          "Montreal"
+        ]
       },
       "generator": "pdf.with_table",
       "generator_params": {
@@ -5655,7 +5756,13 @@
         "has_outline": false,
         "has_images": false,
         "form_fields": 6,
-        "filled_fields": 3
+        "filled_fields": 3,
+        "contains_text": [
+          "loremfile.dev - sample form",
+          "Full name",
+          "Send me the newsletter",
+          "I accept the terms"
+        ]
       },
       "generator": "pdf.form",
       "generator_params": {},
@@ -5687,7 +5794,13 @@
         "encrypted": false,
         "pdf_version": "1.4",
         "has_outline": false,
-        "has_images": false
+        "has_images": false,
+        "contains_text": [
+          "Pariatur dolor cillum temporibus",
+          "Architecto nesciunt maiores earum",
+          "Mollit earum explicabo delectus",
+          "Fugiat consectetur debitis sed"
+        ]
       },
       "generator": "pdf.basic",
       "generator_params": {
@@ -6111,7 +6224,13 @@
         "images": 0,
         "slide_width_emu": 12191695,
         "slide_height_emu": 6858000,
-        "notes": 0
+        "notes": 0,
+        "contains_text": [
+          "Perferendis mollit non fugiat",
+          "Ipsum fuga adipisci voluptate",
+          "Esse incidunt numquam totam",
+          "Aut id eiusmod dolor"
+        ]
       },
       "generator": "office.pptx_basic",
       "generator_params": {
@@ -6178,7 +6297,13 @@
         "images": 0,
         "slide_width_emu": 12191695,
         "slide_height_emu": 6858000,
-        "notes": 0
+        "notes": 0,
+        "contains_text": [
+          "Proident culpa et aliqua",
+          "Proident quia occaecat magna",
+          "Itaque quasi alias fugit",
+          "Sequi nemo irure assumenda"
+        ]
       },
       "generator": "office.pptx_basic",
       "generator_params": {
@@ -7816,7 +7941,13 @@
         "rows": 1001,
         "columns": 14,
         "formulas": 0,
-        "images": 0
+        "images": 0,
+        "contains_text": [
+          "rafael.haas250@example.org",
+          "hannah.okafor500@example.org",
+          "pia.herrera750@example.org",
+          "paulo.achterberg1000@example.org"
+        ]
       },
       "generator": "office.xlsx_people",
       "generator_params": {
@@ -7885,7 +8016,13 @@
         "columns": 14,
         "formulas": 17,
         "images": 0,
-        "cross_sheet_formulas": 7
+        "cross_sheet_formulas": 7,
+        "contains_text": [
+          "order lines",
+          "quantity total",
+          "mean order line",
+          "first order's customer"
+        ]
       },
       "generator": "office.xlsx_multisheet_formulas",
       "generator_params": {
@@ -7918,7 +8055,12 @@
         "rows": 11,
         "columns": 7,
         "formulas": 14,
-        "images": 0
+        "images": 0,
+        "contains_text": [
+          "quantity total",
+          "mean line total",
+          "is a large order"
+        ]
       },
       "generator": "office.xlsx_with_formulas",
       "generator_params": {
@@ -7951,7 +8093,13 @@
         "rows": 17,
         "columns": 2,
         "formulas": 0,
-        "images": 0
+        "images": 0,
+        "contains_text": [
+          "text that looks numeric",
+          "text that looks like a date",
+          "leading apostrophe kept",
+          "+44 20 7946 0000"
+        ]
       },
       "generator": "office.xlsx_with_types",
       "generator_params": {},

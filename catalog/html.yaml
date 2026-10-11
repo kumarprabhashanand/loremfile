@@ -17,6 +17,11 @@ fixtures:
     tags: [web, text]
     expect: { markup: html, lang: en, inline_script: false }
     size_class: free
+    contains_text:
+      - "Voluptatem quasi sint exercitation"
+      - "Doloribus aut reprehenderit repellendus"
+      - "Ipsa ea molestiae aute"
+      - "Inventore et neque sapiente"
   - name: all-elements.html
     phase: 1
     generator: web.html_all_elements
@@ -24,6 +29,11 @@ fixtures:
     tags: [web, text]
     expect: { markup: html, tables: 1 }
     size_class: free
+    contains_text:
+      - "Voluptas do pariatur dicta"
+      - "Voluptates exercitation amet anim"
+      - "Omnis consectetur similique sequitur"
+      - "Eu molestiae maiores in"
   - name: with-inline-css.html
     phase: 1
     generator: web.html_inline_css
@@ -31,6 +41,11 @@ fixtures:
     tags: [web, text]
     expect: { markup: html, inline_style: true }
     size_class: free
+    contains_text:
+      - "Inline styles"
+      - "Numquam quasi explicabo cillum"
+      - "Voluptates magnam rerum recusandae"
+      - "Sequi quis asperiores aute"
   - name: with-inline-js.html
     phase: 1
     generator: web.html_inline_js
@@ -38,3 +53,8 @@ fixtures:
     tags: [web, text]
     expect: { markup: html, inline_script: true }
     size_class: free
+    contains_text:
+      - "Aperiam fugit fuga officiis"
+      - "Doloribus explicabo sed adipiscing"
+      - "Incididunt molestiae laboris omnis"
+      - "Quisquam accusantium perferendis modi"

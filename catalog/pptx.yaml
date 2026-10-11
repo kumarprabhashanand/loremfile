@@ -17,6 +17,11 @@ fixtures:
     tags: [document, text]
     expect: { slides: 1, images: 0, slide_width_emu: 12191695, slide_height_emu: 6858000 }
     size_class: free
+    contains_text:
+      - "Proident culpa et aliqua"
+      - "Proident quia occaecat magna"
+      - "Itaque quasi alias fugit"
+      - "Sequi nemo irure assumenda"
   - name: 10slides.pptx
     phase: 1
     generator: office.pptx_basic
@@ -25,6 +30,11 @@ fixtures:
     tags: [document, multi-page, text]
     expect: { slides: 10, images: 0, slide_width_emu: 12191695, slide_height_emu: 6858000 }
     size_class: free
+    contains_text:
+      - "Perferendis mollit non fugiat"
+      - "Ipsum fuga adipisci voluptate"
+      - "Esse incidunt numquam totam"
+      - "Aut id eiusmod dolor"
   - name: 1mb.pptx
     phase: 1
     generator: office.pptx_sized

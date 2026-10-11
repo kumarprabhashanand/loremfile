@@ -102,6 +102,7 @@ Field rules:
 | vcf | `cards`, `version` |
 | eml, mbox | `messages`, `parts`, `attachments`, `has_html` |
 | epub | `version`, `chapters`, `images` |
+| pdf, docx, pptx, xlsx, epub, html, md | `contains_text` on the fixtures §1.3.2 names: three to five strings a correct reader finds in the file |
 | pem, der | `kind` (`certificate`/`csr`), `algorithm`, `not_before`, `not_after` |
 | wasm | `sections`, `exports` |
 | edge/* | `defect`, `intended_format`, `bytes`, `damage`, `outcome`, `compare_with`, and `derived_from` for the six that were cut or copied from a published fixture; plus `fraction` (truncated) and `hostile_entries` (hostile-name). §1.3.1 describes the four that are about the breakage. `defect` is a closed enum, and it tells the validator what to assert: `zero-byte` (bytes == 0), `truncated` (bytes == floor(`fraction` × source bytes) with `fraction` from the catalog's `edge` block, default 0.5 — `pdf-truncated-60pct.pdf` uses 0.6 — and prefix-equal to the source), `mismatched-extension` (bytes equal the source fixture; magic bytes match the *source* format, not the extension), `magic-prefix` (bytes == the `magic` value from the `edge` block followed by the source fixture's bytes), `invalid-syntax` (the format's parser raises), `invalid-encoding` (strict decode with the declared charset raises), `nonstandard` (strict parser raises, lenient parser succeeds), `bom` (decodes after stripping the BOM; parser succeeds on the stripped text), `stress` (parses; the recorded `props` document the depth/size), `hostile-name` (parses; at least one entry name contains `../`), `polyglot` (**both** the announced format's reader and the one named by `edge.also_valid_as` accept the bytes; the prop `also_valid_as` records the second format). Only fixtures under `edge/` carry these; unusual-but-valid fixtures elsewhere (`txt/control-characters.txt`, `txt/nul-bytes.txt`) have `edge_case: true` and ordinary props |
@@ -138,6 +139,15 @@ the format itself permits:
 says failure is the required behaviour, so only `must-fail` belongs in a test that asserts
 your code refuses the file. For the other two, assert that your code does not crash, lose
 data silently or hang — not that it fails.
+
+#### 1.3.2 `contains_text` (what a correct reader must find)
+
+Three to five strings each file is known to contain, so a parser test can check that a file loaded correctly and not only that it loaded. It is deliberately containment rather than equality: readers differ in whitespace, line breaks and the order of blocks, so the text one reader extracts is right for that reader alone, and no extracted text is published. Each string is in the text a correct reader returns once every run of whitespace is collapsed to one space; nothing here says what else that text holds or in what order.
+
+- **Source.** The strings are taken from the generator's own input (the lorem it drew, the dataset values it read, the literals it wrote), never from a reader's output. They are declared in the catalog, and a validator publishes them only after a real reader has found every one in the bytes.
+- **What CI checks.** CI regenerates every file that carries them, confirms the bytes are the published ones, and checks each string three ways: the generator's input holds it; a real reader finds it (pypdf, python-docx, python-pptx, openpyxl, html5lib for HTML and EPUB, markdown-it-py for Markdown); and no other file of the same format that carries the field holds the whole set, so a wrong file fails. The reader's output is used for that check only.
+- **Encrypted PDF.** The strings are in `pdf/a4-encrypted-1page.pdf` once it is opened with the `user_password` in its `generator_params`.
+- **Where it is absent.** Files with no text layer (`pdf/blank-1page.pdf`, `pdf/scanned-1page.pdf`) or one word (`pdf/minimal.pdf`); the sized files, whose text only fills them to a size; `xlsx/1sheet-10rows.xlsx`, every value of which `xlsx/1sheet-1000rows.xlsx` also holds; `pdf/a4-with-images-2pages.pdf`, whose only text is two labels; RTF, which the toolchain has no reader for; and plain text, CSV and JSON, where the text is the file.
 
 ### 1.4 JSON Schema
 

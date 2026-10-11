@@ -25,6 +25,11 @@ fixtures:
     tags: [document, data, dataset-people]
     expect: { sheets: 1, rows: 1001, columns: 14, formulas: 0 }
     size_class: free
+    contains_text:
+      - "rafael.haas250@example.org"
+      - "hannah.okafor500@example.org"
+      - "pia.herrera750@example.org"
+      - "paulo.achterberg1000@example.org"
   - name: 3sheets-with-formulas.xlsx
     phase: 1
     generator: office.xlsx_multisheet_formulas
@@ -33,6 +38,11 @@ fixtures:
     tags: [document, data, dataset-people]
     expect: { sheets: 3, sheet_names: "People,Order lines,Summary", rows: 11, columns: 14, formulas: 17, cross_sheet_formulas: 7 }
     size_class: free
+    contains_text:
+      - "order lines"
+      - "quantity total"
+      - "mean order line"
+      - "first order's customer"
   - name: with-formulas.xlsx
     phase: 1
     generator: office.xlsx_with_formulas
@@ -41,6 +51,10 @@ fixtures:
     tags: [document, data]
     expect: { sheets: 1, rows: 11, formulas: 14 }
     size_class: free
+    contains_text:
+      - "quantity total"
+      - "mean line total"
+      - "is a large order"
   - name: with-types-and-formats.xlsx
     phase: 1
     generator: office.xlsx_with_types
@@ -49,6 +63,11 @@ fixtures:
     tags: [document, data]
     expect: { sheets: 1, rows: 17, columns: 2, formulas: 0 }
     size_class: free
+    contains_text:
+      - "text that looks numeric"
+      - "text that looks like a date"
+      - "leading apostrophe kept"
+      - "+44 20 7946 0000"
   - name: 1mb.xlsx
     phase: 1
     generator: office.xlsx_sized
