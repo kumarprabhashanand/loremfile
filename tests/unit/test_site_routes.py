@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import re
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -43,6 +45,8 @@ def test_every_kind_of_key_is_reached_by_its_public_path_and_its_disk_name() -> 
         "docs/faq",
         "legal/imprint",
         "_formats/pdf.json",
+        "_formats/pdf.md",
+        "_formats/testing/uploads.md",
         "assets/site.0123456789ab.css",
         ".well-known/security.txt",
     ):
@@ -62,12 +66,84 @@ def test_the_mirror_matches_the_committed_rewrite_rules() -> None:
 
     assert 'starts_with(http.request.uri.path, "/_probe/")' in rules["dir_index"]["expression"]
     assert target("page_slash") == "substring(http.request.uri.path, 0, -1)"
-    assert f'"/{routes.FORMAT_INDEX_DIR}"' in target("format_index_json")
-    assert f"0, -{len('/index.json')}" in target("format_index_json")
+    pattern, replacement = '"/*/index.*"', f'"/{routes.FORMAT_INDEX_DIR}/${{1}}.${{2}}"'
+    assert target("format_index_json") == (
+        f"wildcard_replace(http.request.uri.path, {pattern}, {replacement})"
+    )
+    for suffix in ("/index.json", "/index.md"):
+        clause = f'ends_with(http.request.uri.path, "{suffix}")'
+        assert clause in rules["format_index_json"]["expression"]
     for excluded in ("/_", "/.well-known/"):
         clause = f'not starts_with(http.request.uri.path, "{excluded}")'
         assert clause in rules["format_index_json"]["expression"]
         assert routes.key_for(f"{excluded}x/index.json") == f"{excluded[1:]}x/index.json"
+
+
+def wildcard_replace(source: str, pattern: str, replacement: str) -> str:
+    """Cloudflare's function as its reference describes it, written apart from `routes`: the
+    whole source must match, each `*` lazily, ignoring case; no match returns the source."""
+    regex = "(.*?)".join(re.escape(part) for part in pattern.split("*"))
+    found = re.fullmatch(regex, source, re.IGNORECASE | re.DOTALL)
+    if not found:
+        return source
+    return re.sub(r"\$\{(\d)\}", lambda ref: found.group(int(ref.group(1))), replacement)
+
+
+#: Requests the index rewrite's filter admits, ordinary and awkward: a guide's twin is two
+#: segments deep, and a second "/index." or a capital one is where lazy and greedy differ.
+INDEX_PATHS = (
+    "/pdf/index.json",
+    "/pdf/index.md",
+    "/testing/uploads/index.md",
+    "/a/index.b/index.json",
+    "/a/INDEX.x/index.md",
+)
+
+
+WILDCARD_CALL = re.compile(r'wildcard_replace\(http\.request\.uri\.path, "([^"]+)", "([^"]+)"\)')
+
+
+def disagreements(target: str, mirror: Callable[[str], str]) -> list[tuple[str, str, str]]:
+    """(path, the edge's key, the mirror's key) wherever the rewrite and the mirror differ."""
+    found = WILDCARD_CALL.fullmatch(target)
+    assert found, f"not one wildcard_replace() call: {target}"
+    pattern, replacement = found.groups()
+    return [
+        (path, edge, key)
+        for path in INDEX_PATHS
+        if (edge := wildcard_replace(path, pattern, replacement)[1:]) != (key := mirror(path))
+    ]
+
+
+def index_rule_target() -> str:
+    document = json.loads((ROOT / "infra/rulesets/http_request_transform.json").read_text())
+    rule = next(r for r in document["rules"] if r["ref"] == "format_index_json")
+    return str(rule["action_parameters"]["uri"]["path"]["expression"])
+
+
+def test_the_index_rewrite_and_its_mirror_reach_the_same_keys() -> None:
+    assert routes.key_for("/pdf/index.md") == f"{routes.FORMAT_INDEX_DIR}/pdf.md"
+    assert disagreements(index_rule_target(), routes.key_for) == []
+
+
+def test_the_rewrite_check_fires_on_a_json_only_rule_and_on_a_greedy_mirror() -> None:
+    json_only = index_rule_target().replace('"/*/index.*"', '"/*/index.json"')
+    json_only = json_only.replace("${2}", "json")
+    assert disagreements(json_only, routes.key_for) == [
+        ("/pdf/index.md", "pdf/index.md", "_formats/pdf.md"),
+        ("/testing/uploads/index.md", "testing/uploads/index.md", "_formats/testing/uploads.md"),
+        ("/a/index.b/index.json", "_formats/a/index.b.json", "_formats/a.b/index.json"),
+        ("/a/INDEX.x/index.md", "a/INDEX.x/index.md", "_formats/a.x/index.md"),
+    ]
+
+    def greedy(path: str) -> str:
+        stem, suffix = path.rsplit("/index.", 1)
+        return f"{routes.FORMAT_INDEX_DIR}{stem}.{suffix}"
+
+    assert disagreements(index_rule_target(), greedy) == [
+        ("/a/index.b/index.json", "_formats/a.b/index.json", "_formats/a/index.b.json"),
+        ("/a/INDEX.x/index.md", "_formats/a.x/index.md", "_formats/a/INDEX.x.md"),
+    ]
 
 
 @pytest.mark.parametrize(

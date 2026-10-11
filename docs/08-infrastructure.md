@@ -175,9 +175,9 @@ Pages are stored once, as extensionless keys, and never under a locked format pr
   { "ref": "page_slash", "description": "site pages: trailing slash → the extensionless key (ADR-032)", "enabled": true,
     "expression": "(ends_with(http.request.uri.path, \"/\") and http.request.uri.path ne \"/\" and not starts_with(http.request.uri.path, \"/_probe/\"))",
     "action": "rewrite", "action_parameters": { "uri": { "path": { "expression": "substring(http.request.uri.path, 0, -1)" } } } },
-  { "ref": "format_index_json", "description": "/{format}/index.json → /_formats/{format}.json (ADR-032)", "enabled": true,
-    "expression": "(ends_with(http.request.uri.path, \"/index.json\") and not starts_with(http.request.uri.path, \"/_\") and not starts_with(http.request.uri.path, \"/.well-known/\"))",
-    "action": "rewrite", "action_parameters": { "uri": { "path": { "expression": "concat(\"/_formats\", substring(http.request.uri.path, 0, -11), \".json\")" } } } }
+  { "ref": "format_index_json", "description": "/{x}/index.json and /{x}/index.md → /_formats/{x}.json and .md (ADR-032)", "enabled": true,
+    "expression": "((ends_with(http.request.uri.path, \"/index.json\") or ends_with(http.request.uri.path, \"/index.md\")) and not starts_with(http.request.uri.path, \"/_\") and not starts_with(http.request.uri.path, \"/.well-known/\"))",
+    "action": "rewrite", "action_parameters": { "uri": { "path": { "expression": "wildcard_replace(http.request.uri.path, \"/*/index.*\", \"/_formats/${1}.${2}\")" } } } }
 ] }
 ```
 
@@ -232,7 +232,9 @@ These suffix tests rely on Cloudflare's **URL normalization** (Rules → Setting
 
 **`legal_pages_noindex`** (added 2026-09-15, ADR-028) sets only `X-Robots-Tag` on the two legal pages that name the operator, in both their forms: ADR-032 rewrites `/legal/imprint/` to the page, and whether a later phase sees the rewritten path or the requested one is undocumented, so each rule names both and does not depend on the answer. Both paths are extensionless, so `site_pages_headers` matches them too; it sets no `X-Robots-Tag`, so the two rules never set the same header. The expression uses `eq`, already proven on this zone by the request transform, rather than a set literal. Verified against the published pages when M4.1 first publishes them (`15` M4.1).
 
-Transform rules now: **4 URL rewrites + 5 header rules = 9 of the 10** (since `files_noindex`, 2026-09-21). **Verified 2026-09-21:** Cloudflare's availability table lists 10 active Transform Rules on the Free plan, shared across rule types rather than per phase. **One slot is left.** The optional content-type rule would take the zone to 10, the cap, so it is the last transform rule this zone can add in either phase — any later need has to replace a rule, not join them.
+Transform rules now: **4 URL rewrites + 5 header rules = 9 of the 10** (since `files_noindex`, 2026-09-21). **Verified 2026-09-21:** Cloudflare's availability table lists 10 active Transform Rules on the Free plan, shared across rule types rather than per phase. **One slot is left.** The optional content-type rule would take the zone to 10, the cap, so it is the last transform rule this zone can add in either phase; any later need has to replace a rule, not join them.
+
+**The Markdown twins took no slot (2026-10-11, owner).** Rather than a fifth rewrite, `format_index_json` serves `/{x}/index.md` from `_formats/{x}.md` beside `/{x}/index.json` from `_formats/{x}.json`, through one `wildcard_replace(http.request.uri.path, "/*/index.*", "/_formats/${1}.${2}")`. Each `*` matches lazily and the whole path has to match, so `/pdf/index.json` still becomes `/_formats/pdf.json` and `/testing/uploads/index.md` becomes `/_formats/testing/uploads.md`; `routes.key_for` mirrors it and a test checks the two agree. The count stays 9 of 10 and the slot stays in reserve. Cloudflare's plan table gates regex support (none on Free), not wildcards, and the functions reference limits `wildcard_replace()` by rule type rather than by plan, so Free should accept it. **[VERIFY]** on the first `infra apply` of this rule, which lands before any twin object exists: every format's public `index.json` is fetched through the new expression by the same job's `verify-live --site-dir`, so a broken rewrite fails that deploy. If Cloudflare refuses the function on Free, the PUT changes nothing, the fallback is a separate mirror rule (`concat` and `substring`, as before) at 10 of 10, and the refusal is recorded here so the question is not reopened.
 
 **Self-identifying AI agents are refused on the two legal pages by a WAF custom rule**, in §5.7 (ADR-030). robots.txt only asks (`04` §6).
 

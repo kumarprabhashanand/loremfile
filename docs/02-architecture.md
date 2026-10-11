@@ -34,7 +34,7 @@ flowchart LR
 3. Request phases, in Cloudflare's fixed order (see `08-infrastructure.md` §5 for the exact rules):
    - **Single Redirect** (`http_request_dynamic_redirect`): `www.loremfile.dev/*` → 301 to apex. This phase runs before URL normalization, so the redirect forwards the raw path; the apex request is then normalized and evaluated by every later rule as usual.
    - **URL normalization** (`http_request_sanitize`, Cloudflare-managed, must stay on): percent-decodes and normalizes the path before rules see it.
-   - **URL Rewrite** (`http_request_transform`): path `/` → `/index.html`; a trailing slash → the extensionless key; `/{format}/index.json` → `_formats/{format}.json`; `_probe/` directories → `…/index.html` (ADR-032).
+   - **URL Rewrite** (`http_request_transform`): path `/` → `/index.html`; a trailing slash → the extensionless key; `/{x}/index.json` and `/{x}/index.md` → `_formats/{x}.json` and `_formats/{x}.md` (one `wildcard_replace()`, `08` §5.2); `_probe/` directories → `…/index.html` (ADR-032).
    - **Rate limiting** (`http_ratelimit`): 300 requests / 10 s per client IP → block 10 s. Runs before the managed WAF.
    - **WAF managed rules** (`http_request_firewall_managed`): Cloudflare Free Managed Ruleset.
    - **Cache rule** (`http_request_cache_settings`): everything is cache-eligible; the cache key ignores the query string; TTL follows the object's `Cache-Control`.
@@ -57,7 +57,7 @@ flowchart LR
 | `schema/manifest-v1.json` | JSON Schema (immutable once published) | `application/schema+json` | `public, max-age=31536000, immutable` |
 | `assets/og.png`, `assets/mark.svg` | Social image, brand mark | `image/png`, `image/svg+xml` | `public, max-age=86400` |
 | `.well-known/security.txt` | RFC 9116 | `text/plain; charset=utf-8` | `public, max-age=86400` |
-| `_probe/*` | Exists only while `infra.yml` probe mode runs (M2.4) | — | — |
+| `_probe/*` | Exists only while `infra.yml` probe mode runs (M2.4) | none | none |
 
 Why format pages and per-format indexes live outside `{format}/`: every format prefix carries an indefinite bucket lock, which refuses overwrites, so a page stored there could never change again (ADR-032).
 
