@@ -149,6 +149,14 @@ DOCS = (
         "pages/languages.md",
     ),
     (
+        "docs/mcp",
+        "MCP server",
+        "Connect an agent to loremfile.dev: the npx and uvx configs, and the three read-only "
+        "tools.",
+        "content",
+        "pages/mcp.md",
+    ),
+    (
         "docs/faq",
         "FAQ",
         "Hotlinking, rate limits, why files are not indexed, mirroring and accessibility.",
@@ -876,6 +884,8 @@ def llms(
         f"- Per-format lists: {base}{{format}}/index.json",
         f"- Verify: {base}sha256sums.txt",
         f"- Working examples in five languages: {base}docs/languages",
+        "- MCP server for agents: `npx -y loremfile mcp` or `uvx loremfile mcp`, three read-only "
+        f"tools (list_fixtures, describe_fixture, verify_file): {base}docs/mcp",
         "",
         "## Formats",
     ]

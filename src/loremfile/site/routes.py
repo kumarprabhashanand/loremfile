@@ -72,9 +72,17 @@ API_CATALOG_TYPE: Final = (
     'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"'
 )
 AGENT_SKILLS_INDEX_KEY: Final = ".well-known/agent-skills/index.json"
-#: The only external hosts a page may link to (docs/07 §4).
+#: The only external hosts a page may link to (docs/07 §4). The package registries and the
+#: MCP Registry are where the clients and the server are published (/docs/mcp, the home page).
 ALLOWED_HOSTS: Final = frozenset(
-    {"creativecommons.org", "llmstxt.org", "developers.cloudflare.com"}
+    {
+        "creativecommons.org",
+        "llmstxt.org",
+        "developers.cloudflare.com",
+        "pypi.org",
+        "www.npmjs.com",
+        "registry.modelcontextprotocol.io",
+    }
 )
 
 
