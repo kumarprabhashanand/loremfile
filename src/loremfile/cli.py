@@ -1663,6 +1663,26 @@ def _check_manifest_against_catalog() -> tuple[Manifest, list[str]]:
     return loaded, errors
 
 
+def _contains_text_disagreements(loaded: Manifest, catalog_obj: Catalog) -> list[str]:
+    """Catalog and manifest must agree on `contains_text` (docs/04 §1.3.2).
+
+    The catalog declares the strings and a reader checks them before `manifest update`
+    publishes them, so a catalog edit with no rebuild is the one way the two part.
+    """
+    published = loaded.by_path
+    errors = []
+    for fixture in catalog_obj.fixtures():
+        entry = published.get(fixture.path)
+        if entry is None or entry.get("status", "active") != "active":
+            continue
+        if (entry.get("props") or {}).get("contains_text") != fixture.contains_text:
+            errors.append(
+                f"{fixture.path}: contains_text differs between the catalog and the "
+                "manifest; rebuild it and run `manifest update`"
+            )
+    return errors
+
+
 def _entries_from_build(
     catalog_obj: Catalog, committed: Manifest
 ) -> tuple[list[dict[str, Any]], list[str]]:
@@ -1719,6 +1739,8 @@ def manifest_check(as_json: bool) -> None:
     pair of truncated hashes, so the author can take CI's answer without guessing.
     """
     loaded, errors = _check_manifest_against_catalog()
+    if not errors:
+        errors += _contains_text_disagreements(loaded, Catalog.load())
     items: list[Item] = []
     corrections: list[dict[str, Any]] = []
     regenerated: list[dict[str, Any]] = []

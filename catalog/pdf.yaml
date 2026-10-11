@@ -25,6 +25,11 @@ fixtures:
     tags: [document, text]
     expect: { pages: 1, page_width_pt: 595.28, page_height_pt: 841.89, encrypted: false }
     size_class: free
+    contains_text:
+      - "Rerum repellat quia elit"
+      - "Saepe enim eu placeat"
+      - "Modi debitis necessitatibus qui"
+      - "Omnis quia neque elit"
   - name: a4-3pages.pdf
     phase: 1
     generator: pdf.basic
@@ -33,6 +38,11 @@ fixtures:
     tags: [document, multi-page, text]
     expect: { pages: 3, page_width_pt: 595.28, page_height_pt: 841.89, encrypted: false }
     size_class: free
+    contains_text:
+      - "Lorem sequitur modi debitis"
+      - "Do fugiat anim tempor"
+      - "Adipiscing maiores minim necessitatibus"
+      - "Commodo assumenda voluptas quis"
   - name: a4-10pages.pdf
     phase: 1
     generator: pdf.basic
@@ -41,6 +51,11 @@ fixtures:
     tags: [document, multi-page, text]
     expect: { pages: 10, page_width_pt: 595.28, page_height_pt: 841.89, encrypted: false }
     size_class: free
+    contains_text:
+      - "Quae cillum in fuga"
+      - "Ea deserunt fugiat non"
+      - "Similique ut pariatur ut"
+      - "Modi similique elit esse"
   - name: form-fields-1page.pdf
     phase: 2
     generator: pdf.form
@@ -49,6 +64,11 @@ fixtures:
     tags: [document]
     expect: { pages: 1, encrypted: false, form_fields: 6, filled_fields: 3 }
     size_class: free
+    contains_text:
+      - "loremfile.dev - sample form"
+      - "Full name"
+      - "Send me the newsletter"
+      - "I accept the terms"
   - name: letter-1page.pdf
     phase: 1
     generator: pdf.basic
@@ -57,6 +77,11 @@ fixtures:
     tags: [document, text]
     expect: { pages: 1, page_width_pt: 612.0, page_height_pt: 792.0 }
     size_class: free
+    contains_text:
+      - "Pariatur dolor cillum temporibus"
+      - "Architecto nesciunt maiores earum"
+      - "Mollit earum explicabo delectus"
+      - "Fugiat consectetur debitis sed"
   - name: a4-landscape-1page.pdf
     phase: 1
     generator: pdf.basic
@@ -65,6 +90,11 @@ fixtures:
     tags: [document, text]
     expect: { pages: 1, page_width_pt: 841.89, page_height_pt: 595.28 }
     size_class: free
+    contains_text:
+      - "Assumenda cupidatat tenetur laborum"
+      - "Consectetur consequat excepteur totam"
+      - "Architecto eius doloribus magnam"
+      - "Itaque fuga fugiat nostrud"
   - name: a4-with-images-2pages.pdf
     phase: 1
     generator: pdf.with_images
@@ -82,6 +112,11 @@ fixtures:
     tags: [document, dataset-people]
     expect: { pages: 1, has_images: false }
     size_class: free
+    contains_text:
+      - "first_name"
+      - "Bucharest"
+      - "Gothenburg"
+      - "Montreal"
   - name: a4-encrypted-1page.pdf
     phase: 1
     generator: pdf.encrypted
@@ -90,6 +125,11 @@ fixtures:
     tags: [document, encrypted]
     expect: { pages: 1, encrypted: true }
     size_class: free
+    contains_text:
+      - "Encrypted sample"
+      - "Mollit incidunt quia explicabo"
+      - "Aliquip proident maiores sequi"
+      - "Debitis porro repudiandae esse"
   - name: blank-1page.pdf
     phase: 1
     generator: pdf.blank

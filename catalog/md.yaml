@@ -15,6 +15,11 @@ fixtures:
     tags: [text, document]
     expect: { line_ending: lf }
     size_class: exact
+    contains_text:
+      - "Necessitatibus assumenda non voluptatem"
+      - "Proident reiciendis quae dolor"
+      - "Mollit dolor adipiscing veniam"
+      - "Ex nostrud tenetur exercitation"
     nominal_bytes: 4096
   - name: all-elements.md
     phase: 1
@@ -26,3 +31,8 @@ fixtures:
     tags: [text, document]
     expect: { line_ending: lf }
     size_class: free
+    contains_text:
+      - "Officiis ipsa amet repudiandae"
+      - "hello from a fenced block"
+      - "The footnote body, rendered at the end of the document"
+      - "A raw HTML block, which Markdown passes through untouched"

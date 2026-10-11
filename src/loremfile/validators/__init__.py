@@ -236,6 +236,30 @@ def check_text_hygiene(data: bytes, fixture: Fixture, mime: str) -> list[str]:
     return []
 
 
+def check_contains_text(data: bytes, fixture: Fixture, props: dict[str, Any]) -> list[str]:
+    """Publish the catalog's `contains_text` only once a real reader finds every string.
+
+    The strings come from the generator's input; the reader's text is never published,
+    because readers differ in whitespace and order (docs/04 §1.3.2).
+    """
+    if not fixture.contains_text:
+        return []
+    from loremfile.validators import extract  # noqa: PLC0415 - the readers are heavy to import
+
+    if fixture.format not in extract.READERS:
+        return [f"contains_text needs a text reader, and {fixture.format} has none"]
+    password = fixture.params.get("user_password")
+    try:
+        found = extract.text(fixture.format, data, password=password)
+    except Exception as exc:  # a reader blowing up is a validation failure
+        return [f"contains_text: {type(exc).__name__} while extracting text: {exc}"]
+    missing = [string for string in fixture.contains_text if string not in found]
+    if missing:
+        return [f"contains_text the {fixture.format} reader does not find: {missing}"]
+    props["contains_text"] = list(fixture.contains_text)
+    return []
+
+
 def validate(data: bytes, fixture: Fixture, mime: str) -> Report:
     """Run every check for one fixture and return what was measured."""
     report = Report(path=fixture.path)
@@ -253,6 +277,7 @@ def validate(data: bytes, fixture: Fixture, mime: str) -> Report:
             "every generator family ships with its validator in the same pull request"
         )
 
+    report.failures += check_contains_text(data, fixture, report.props)
     report.failures += check_magic(data, fixture)
     report.failures += check_size(data, fixture)
     report.failures += check_text_hygiene(data, fixture, mime)
