@@ -2,7 +2,7 @@
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
   "catalog_version": "1.7.0",
-  "generated_at": "2026-10-11T11:43:42Z",
+  "generated_at": "2026-10-11T14:46:34Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
@@ -272,6 +272,7 @@
         "height": 480,
         "vcodec": "mpeg4",
         "fps": 30.0,
+        "profile": "Simple Profile",
         "acodec": "mp3",
         "sample_rate": 48000,
         "channels": 1
@@ -3004,6 +3005,8 @@
         "height": 360,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.0",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -3046,6 +3049,8 @@
         "height": 360,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.0",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -3088,6 +3093,8 @@
         "height": 360,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.0",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -3130,6 +3137,8 @@
         "height": 360,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.0",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -3172,6 +3181,8 @@
         "height": 360,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.0",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -3248,6 +3259,8 @@
         "height": 720,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -3290,6 +3303,8 @@
         "height": 720,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -3332,6 +3347,8 @@
         "height": 720,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -3374,6 +3391,8 @@
         "height": 720,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -3416,6 +3435,8 @@
         "height": 720,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -4789,6 +4810,8 @@
         "height": 720,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -4831,6 +4854,8 @@
         "height": 720,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -5111,86 +5136,90 @@
       "supersededBy": null
     },
     {
-      "added_in": "1.2.0",
-      "bytes": 7829049,
-      "deprecated": false,
-      "description": "1920x1080 at 30 fps, ten seconds, H.264 plus AAC.",
-      "edge_case": false,
-      "ext": "mp4",
-      "format": "mp4",
-      "generator": "media_video.mp4",
-      "generator_params": {
-        "duration": 10,
-        "height": 1080,
-        "width": 1920
-      },
-      "mime": "video/mp4",
       "path": "mp4/1080p-10s.mp4",
-      "phase": 1,
-      "props": {
-        "acodec": "aac",
-        "audio_streams": 1,
-        "channels": 1,
-        "duration_ms": 10000,
-        "fps": 30.0,
-        "height": 1080,
-        "sample_rate": 48000,
-        "subtitle_streams": 0,
-        "vcodec": "h264",
-        "video_streams": 1,
-        "width": 1920
-      },
+      "url": "https://loremfile.dev/mp4/1080p-10s.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 7829049,
       "sha256": "d47a9f351638d4b330a08dff4a86e4fad62855492375a7296af857acdc1e12d8",
       "size_class": "free",
-      "status": "active",
-      "supersededBy": null,
+      "phase": 1,
+      "description": "1920x1080 at 30 fps, ten seconds, H.264 plus AAC.",
       "tags": [
         "video",
         "codec-h264",
         "codec-aac"
       ],
-      "url": "https://loremfile.dev/mp4/1080p-10s.mp4"
+      "edge_case": false,
+      "props": {
+        "duration_ms": 10000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1920,
+        "height": 1080,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "profile": "High",
+        "level": "4.0",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 1920,
+        "height": 1080,
+        "duration": 10
+      },
+      "added_in": "1.2.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
     },
     {
-      "added_in": "1.2.0",
-      "bytes": 10062489,
-      "deprecated": false,
-      "description": "About 10MB: 1280x720 at 30 fps for sixty seconds, two-pass at a flat bitrate.",
-      "edge_case": false,
-      "ext": "mp4",
-      "format": "mp4",
-      "generator": "media_video.mp4_sized",
-      "generator_params": {
-        "duration": 60,
-        "size": 10000000
-      },
-      "mime": "video/mp4",
       "path": "mp4/10mb.mp4",
-      "phase": 1,
-      "props": {
-        "acodec": "aac",
-        "audio_streams": 1,
-        "channels": 1,
-        "duration_ms": 60000,
-        "fps": 30.0,
-        "height": 720,
-        "sample_rate": 48000,
-        "subtitle_streams": 0,
-        "vcodec": "h264",
-        "video_streams": 1,
-        "width": 1280
-      },
+      "url": "https://loremfile.dev/mp4/10mb.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 10062489,
       "sha256": "75b9fa17ad73324fcee4cd321da6e157543ed9d4fd22626398dd797bd1e9e343",
       "size_class": "approx",
-      "status": "active",
-      "supersededBy": null,
+      "phase": 1,
+      "description": "About 10MB: 1280x720 at 30 fps for sixty seconds, two-pass at a flat bitrate.",
       "tags": [
         "video",
         "sized",
         "codec-h264",
         "large"
       ],
-      "url": "https://loremfile.dev/mp4/10mb.mp4"
+      "edge_case": false,
+      "props": {
+        "duration_ms": 60000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "media_video.mp4_sized",
+      "generator_params": {
+        "size": 10000000,
+        "duration": 60
+      },
+      "added_in": "1.2.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
     },
     {
       "path": "mp4/1mb.mp4",
@@ -5218,6 +5247,8 @@
         "height": 720,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -5258,6 +5289,8 @@
         "height": 360,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.0",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -5274,45 +5307,47 @@
       "supersededBy": null
     },
     {
-      "added_in": "1.2.0",
-      "bytes": 50081140,
-      "deprecated": false,
-      "description": "About 50MB: 1280x720 at 30 fps for two minutes, two-pass at a flat bitrate. The largest video in the launch set.",
-      "edge_case": false,
-      "ext": "mp4",
-      "format": "mp4",
-      "generator": "media_video.mp4_sized",
-      "generator_params": {
-        "duration": 120,
-        "size": 50000000
-      },
-      "mime": "video/mp4",
       "path": "mp4/50mb.mp4",
-      "phase": 1,
-      "props": {
-        "acodec": "aac",
-        "audio_streams": 1,
-        "channels": 1,
-        "duration_ms": 120000,
-        "fps": 30.0,
-        "height": 720,
-        "sample_rate": 48000,
-        "subtitle_streams": 0,
-        "vcodec": "h264",
-        "video_streams": 1,
-        "width": 1280
-      },
+      "url": "https://loremfile.dev/mp4/50mb.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 50081140,
       "sha256": "509e34f369aa3d8c6f98b02661a5b7dfb757759687928db366418f9adf719ae9",
       "size_class": "approx",
-      "status": "active",
-      "supersededBy": null,
+      "phase": 1,
+      "description": "About 50MB: 1280x720 at 30 fps for two minutes, two-pass at a flat bitrate. The largest video in the launch set.",
       "tags": [
         "video",
         "sized",
         "codec-h264",
         "large"
       ],
-      "url": "https://loremfile.dev/mp4/50mb.mp4"
+      "edge_case": false,
+      "props": {
+        "duration_ms": 120000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1
+      },
+      "generator": "media_video.mp4_sized",
+      "generator_params": {
+        "size": 50000000,
+        "duration": 120
+      },
+      "added_in": "1.2.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
     },
     {
       "path": "mp4/720p-5s.mp4",
@@ -5340,6 +5375,8 @@
         "height": 720,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -5381,6 +5418,8 @@
         "height": 720,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "Constrained Baseline",
+        "level": "3.0",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -5422,7 +5461,9 @@
         "width": 1280,
         "height": 720,
         "vcodec": "h264",
-        "fps": 30.0
+        "fps": 30.0,
+        "profile": "High",
+        "level": "3.1"
       },
       "generator": "media_video.mp4",
       "generator_params": {
@@ -5462,6 +5503,8 @@
         "height": 720,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1,
@@ -5505,6 +5548,8 @@
         "height": 1920,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "4.0",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -5668,42 +5713,42 @@
       "supersededBy": null
     },
     {
-      "path": "opus/cbr-32k-30s.opus",
-      "url": "https://loremfile.dev/opus/cbr-32k-30s.opus",
-      "format": "opus",
-      "ext": "opus",
-      "mime": "audio/opus",
+      "added_in": "1.7.0",
       "bytes": 122539,
-      "sha256": "95663467c679f23b76f9b35c8911b999a2639b4b2394abd0338b9020c901796b",
-      "size_class": "free",
-      "phase": 2,
+      "deprecated": false,
       "description": "Thirty seconds of a sine tone, stereo Opus encoded at a constant 32 kbps, for code that reads, limits or transcodes by bitrate.",
+      "edge_case": false,
+      "ext": "opus",
+      "format": "opus",
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "bitrate": "32k",
+        "codec": "opus",
+        "constant": true,
+        "duration": 30
+      },
+      "mime": "audio/opus",
+      "path": "opus/cbr-32k-30s.opus",
+      "phase": 2,
+      "props": {
+        "acodec": "opus",
+        "audio_streams": 1,
+        "bitrate_kbps": 32.0,
+        "channels": 2,
+        "duration_ms": 30006,
+        "sample_rate": 48000,
+        "subtitle_streams": 0,
+        "video_streams": 0
+      },
+      "sha256": "5e518230b738e74ae305ae81282666d0d89fb585c8a95616148c95b12da508f0",
+      "size_class": "free",
+      "status": "active",
+      "supersededBy": null,
       "tags": [
         "audio",
         "codec-opus"
       ],
-      "edge_case": false,
-      "props": {
-        "duration_ms": 30006,
-        "video_streams": 0,
-        "audio_streams": 1,
-        "subtitle_streams": 0,
-        "acodec": "opus",
-        "sample_rate": 48000,
-        "channels": 2,
-        "bitrate_kbps": 32.0
-      },
-      "generator": "media_audio.encoded",
-      "generator_params": {
-        "codec": "opus",
-        "duration": 30,
-        "bitrate": "32k",
-        "constant": true
-      },
-      "added_in": "1.7.0",
-      "status": "active",
-      "deprecated": false,
-      "supersededBy": null
+      "url": "https://loremfile.dev/opus/cbr-32k-30s.opus"
     },
     {
       "path": "otf/loremfile-sans.otf",
@@ -7268,6 +7313,8 @@
         "height": 720,
         "vcodec": "h264",
         "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1
@@ -8188,6 +8235,7 @@
         "height": 720,
         "vcodec": "vp9",
         "fps": 30.0,
+        "profile": "Profile 0",
         "acodec": "opus",
         "sample_rate": 48000,
         "channels": 1

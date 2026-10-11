@@ -273,7 +273,7 @@ jobs:
       # The carry-forward store. Fixtures marked `expected_drift` do not reproduce
       # byte for byte on different hardware (docs/06 §4), so the bytes the manifest
       # describes cannot be rebuilt on demand — they exist only here until the deploy
-      # publishes them. Five paths, about 69 MB, rather than the whole 500 MB build
+      # publishes them. Six paths, about 69 MB, rather than the whole 500 MB build
       # directory that docs/09 §3.1 originally asked for and M3.1 dropped.
       - name: Collect the fixtures that cannot be rebuilt
         id: drift

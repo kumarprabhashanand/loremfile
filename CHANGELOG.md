@@ -12,9 +12,9 @@
 - `hls/multi-bitrate/master.m3u8`: a master playlist over a new 360p rendition in `hls/360p-10s/`
   and the existing 720p one, its BANDWIDTH, RESOLUTION and CODECS measured from the segments.
 - New measured props, existing bytes unchanged: `bitrate_kbps` from the audio packets and
-  `bit_depth` for PCM on every audio file, the WAV header's format and size, inline and
-  anchored images and alt text on every DOCX, and headings, anchor links and footnotes on
-  Markdown.
+  `bit_depth` for PCM on every audio file, the WAV header's format and size, the video
+  profile and H.264 level, inline and anchored images and alt text on every DOCX, and
+  headings, anchor links and footnotes on Markdown.
 - Four audio descriptions now say what was measured: `opus/30s.opus` averages 114 kbps, not
   the 96 it was encoded for; `aac/adts-30s.aac` is 130.6 kbps with its frame headers;
   `ogg/vorbis-30s.ogg` no longer names an encoder quality; and the 3-second MP3's extra

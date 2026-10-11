@@ -74,6 +74,11 @@ def _common_props(report: dict[str, Any]) -> dict[str, Any]:
         rate = first.get("avg_frame_rate", "0/1")
         numerator, _, denominator = rate.partition("/")
         props["fps"] = round(int(numerator) / int(denominator or 1), 2) if int(numerator) else 0
+        if first.get("profile"):
+            props["profile"] = first["profile"]
+        if first["codec_name"] == "h264" and int(first.get("level", -99)) > 0:
+            # level_idc is ten times the level: 30 is level 3.0, 31 is level 3.1.
+            props["level"] = f"{int(first['level']) / 10:.1f}"
     if audio:
         first = audio[0]
         props["acodec"] = first["codec_name"]

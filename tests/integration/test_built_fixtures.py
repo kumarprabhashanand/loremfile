@@ -182,6 +182,7 @@ def test_nothing_unmarked_is_quietly_exempt(catalog: Catalog) -> None:
         "mp4/10mb.mp4",
         "mp4/50mb.mp4",
         "opus/30s.opus",
+        "opus/cbr-32k-30s.opus",
         "webm/720p-5s-vp9.webm",
     }, f"expected_drift set changed: {sorted(marked)}"
 

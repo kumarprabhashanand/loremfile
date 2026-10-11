@@ -3,9 +3,9 @@ stream, with no MP4 container around the frames: the shape broadcast feeds and H
 arrive in. That makes `aac/adts-30s.aac` a good test of whether a decoder can find frame
 boundaries on its own, or quietly expects the box structure of an M4A file.
 
-The file is a 440 Hz sine wave, thirty seconds long, 48 kHz stereo at 128 kbps. A pure tone
-is easy to check by ear and by spectrum: any pitch shift, dropout or channel problem is
-obvious.
+`aac/adts-30s.aac` is a 440 Hz sine wave, thirty seconds long, 48 kHz stereo, at 130.6 kbps
+counting each frame's ADTS header. A pure tone is easy to check by ear and by spectrum: any
+pitch shift, dropout or channel problem is obvious.
 
 Use it to test upload validation that inspects a file's first bytes, players that must
 stream rather than seek, and transcoders that need to wrap raw AAC in a container. For the
