@@ -28,6 +28,15 @@
   </div>
 </section>
 
+<section aria-labelledby="tasks-heading">
+  <h2 id="tasks-heading">By task</h2>
+  <ul class="index">
+{% for href, heading, text in tasks %}
+    <li><a href="{{ href }}">{{ heading }}</a>: {{ text }}</li>
+{% endfor %}
+  </ul>
+</section>
+
 <section aria-labelledby="popular-heading">
   <h2 id="popular-heading">Popular</h2>
   <ul class="popular">

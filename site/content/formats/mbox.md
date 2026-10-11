@@ -1,6 +1,6 @@
 An mbox holds several messages in one file, each introduced by a `From ` separator line at the
 start of a line. It is the format mail archives and account exports still use, and the one
-where parsers most often go wrong — because a body line that happens to begin with `From `
+where parsers most often go wrong, because a body line that happens to begin with `From `
 looks exactly like a separator unless the reader is careful.
 
 `mbox/3-messages.mbox` contains three plain-text messages separated by `From ` lines, each

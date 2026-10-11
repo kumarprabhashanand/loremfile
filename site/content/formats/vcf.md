@@ -2,7 +2,7 @@ vCards are what address books exchange, and the two versions still in circulatio
 different enough to break code written for only one of them.
 
 `vcf/vcard3-single.vcf` is a version 3.0 contact with a name, organisation, email, telephone,
-URL and note — the shape most exporters still produce. `vcf/vcard4-single.vcf` is the same
+URL and note: the shape most exporters still produce. `vcf/vcard4-single.vcf` is the same
 sort of contact expressed the way RFC 6350 introduced: typed, URI-shaped properties that a
 3.0-only parser will not recognise.
 

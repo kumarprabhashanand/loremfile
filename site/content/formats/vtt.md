@@ -3,7 +3,7 @@ from SubRip in ways that matter to a parser: a `WEBVTT` signature on the first l
 rather than comma-separated milliseconds, and optional blocks that simpler readers have to
 skip rather than choke on.
 
-`vtt/3-cues.vtt` is the signature and three plain cues — what a `track` element needs and
+`vtt/3-cues.vtt` is the signature and three plain cues: what a `track` element needs and
 nothing more. It is small enough to read in full, which makes it a good first case when
 something in a player is not displaying subtitles at all.
 

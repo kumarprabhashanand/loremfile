@@ -69,7 +69,9 @@ LABELS = {
     "txt": "text",
 }
 #: Top-level keys the site owns; a format of the same name would overwrite one.
-RESERVED = frozenset({"formats", "docs", "legal", "changelog", "status", "assets", "schema"})
+RESERVED = frozenset(
+    {"formats", "docs", "legal", "changelog", "status", "assets", "schema", "testing"}
+)
 SECURITY_TXT_DAYS = 365
 #: docs/04 §6, exactly; tests/unit/test_site_build.py compares the two.
 ROBOTS_TXT = """User-agent: *
@@ -178,6 +180,32 @@ LEGAL = (
         "What loremfile.dev processes, who is responsible, and your rights.",
     ),
     ("legal/imprint", "## 3b. Impressum", "Impressum of loremfile.dev (§ 18 Abs. 1 MStV)."),
+)
+
+
+#: (key, title, description, source): pages chosen by the job a file tests, not its format.
+TESTING = (
+    (
+        "testing/uploads",
+        "Sample files for testing file uploads",
+        "Files on the edge of every upload check: exact size limits, mislabelled types, "
+        "rotated and CMYK images, hostile and encrypted archives. Free, CC0, hotlinkable.",
+        "testing/uploads.md",
+    ),
+    (
+        "testing/parsers",
+        "Sample files for testing parsers and error handling",
+        "Files that must load correctly, must fail, may be recovered or split readers, each "
+        "with its known contents or measured outcome. Free, CC0, hotlinkable.",
+        "testing/parsers.md",
+    ),
+    (
+        "testing/media-playback",
+        "Sample files for testing media playback and seeking",
+        "Video and audio that test playback and seeking: where the index sits, range "
+        "requests, codecs, missing tracks and adaptive HLS. Free, CC0, hotlinkable.",
+        "testing/media-playback.md",
+    ),
 )
 
 
@@ -318,12 +346,16 @@ def counted(count: int, noun: str) -> str:
 FACTS: tuple[tuple[str, Callable[[Any], str]], ...] = (
     ("duration_ms", lambda v: f"{v / 1000:g} s"),
     ("vcodec", str),
+    ("profile", str),
+    ("level", lambda v: f"level {v}"),
     ("acodec", str),
     ("sample_rate", lambda v: f"{v / 1000:g} kHz"),
     ("channels", lambda v: counted(v, "channel")),
     ("segments", lambda v: counted(v, "segment")),
     ("target_duration_s", lambda v: f"{v} s target duration"),
     ("playlist_type", str),
+    ("variants", lambda v: counted(v, "rendition")),
+    ("resolutions", " and ".join),
     ("paragraphs", lambda v: counted(v, "paragraph")),
     ("words", lambda v: counted(v, "word")),
     ("rows", lambda v: counted(v, "row")),
@@ -332,6 +364,9 @@ FACTS: tuple[tuple[str, Callable[[Any], str]], ...] = (
     ("encoding", str),
     ("line_ending", lambda v: str(v).upper()),
     ("lines", lambda v: counted(v, "line")),
+    ("entries", lambda v: f"{v:,} {'entry' if v == 1 else 'entries'}"),
+    ("moov_at_end", lambda v: "moov at the end" if v else "moov first"),
+    ("outcome", str),
 )
 
 
@@ -354,13 +389,16 @@ def file_facts(entry: dict[str, Any]) -> str:
     return " · ".join(facts)
 
 
-def lead_files(text: str, fmt: str, active: list[dict[str, Any]]) -> str:
-    """Replace each `<!-- file: PATH -->` line with that fixture's `file_facts`."""
-    entries = {e["path"]: e for e in active}
+def lead_files(text: str, source: str, entries: dict[str, dict[str, Any]]) -> str:
+    """Replace each `<!-- file: PATH -->` line with that fixture's `file_facts`.
+
+    ``entries`` is what ``source`` may name: a format page its own active files, a testing
+    guide every active file. Anything else stops the build, so no page lists a stale file.
+    """
 
     def facts(match: re.Match[str]) -> str:
         if match.group(1) not in entries:
-            raise SiteError(f"formats/{fmt}.md leads with {match.group(1)}, no active {fmt} file")
+            raise SiteError(f"{source} names {match.group(1)}, which it may not list")
         return file_facts(entries[match.group(1)])
 
     return FILE.sub(facts, text)
@@ -474,6 +512,27 @@ def article(page: Page) -> list[dict[str, Any]]:
     ]
 
 
+def dataset(name: str, description: str, url: str, entries: list[dict[str, Any]]) -> dict[str, Any]:
+    """docs/04 §10: a page of files is a Dataset whose distribution is those files."""
+    return {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": name,
+        "description": description,
+        "url": url,
+        "license": config.LICENSE_URL,
+        "isAccessibleForFree": True,
+        "distribution": [
+            {
+                "@type": "DataDownload",
+                "contentUrl": f"{config.BASE_URL}{e['path']}",
+                "encodingFormat": e["mime"],
+            }
+            for e in entries
+        ],
+    }
+
+
 # --- pages ------------------------------------------------------------------------------------
 
 
@@ -518,7 +577,13 @@ def format_pages(root: Path, manifest: Manifest, catalogs: dict[str, FormatCatal
                 "format": fmt,
                 "label": label(fmt),
                 "intro": trusted(
-                    markdown.render(lead_files(content(root, f"formats/{fmt}.md"), fmt, active))
+                    markdown.render(
+                        lead_files(
+                            content(root, f"formats/{fmt}.md"),
+                            f"site/content/formats/{fmt}.md",
+                            {e["path"]: e for e in active},
+                        )
+                    )
                 ),
                 "rows": rows,
                 "removed": [e for e in entries if e.get("status") == "removed"],
@@ -531,19 +596,7 @@ def format_pages(root: Path, manifest: Manifest, catalogs: dict[str, FormatCatal
             },
         )
         page.jsonld = [
-            {
-                "@context": "https://schema.org",
-                "@type": "Dataset",
-                "name": info.seo_title,
-                "description": " ".join(info.description.split()),
-                "url": page.canonical,
-                "license": config.LICENSE_URL,
-                "isAccessibleForFree": True,
-                "distribution": [
-                    {"@type": "DataDownload", "contentUrl": row["url"], "encodingFormat": e["mime"]}
-                    for row, e in zip(rows, active, strict=True)
-                ],
-            },
+            dataset(info.seo_title, " ".join(info.description.split()), page.canonical, active),
             breadcrumbs(page.crumbs, label(fmt), page.canonical),
         ]
         pages.append(page)
@@ -565,7 +618,12 @@ def families(manifest: Manifest, catalogs: dict[str, FormatCatalog]) -> list[dic
     return grouped
 
 
-def home_page(root: Path, manifest: Manifest, catalogs: dict[str, FormatCatalog]) -> Page:
+def home_page(
+    root: Path,
+    manifest: Manifest,
+    catalogs: dict[str, FormatCatalog],
+    tasks: list[tuple[str, str, str]],
+) -> Page:
     by_path = {entry["path"]: entry for entry in manifest.active}
     missing = [path for path in POPULAR if path not in by_path]
     if missing:
@@ -592,6 +650,7 @@ def home_page(root: Path, manifest: Manifest, catalogs: dict[str, FormatCatalog]
                 for path in POPULAR
             ],
             "count": len(manifest.active),
+            "tasks": tasks,
         },
         jsonld=[
             {
@@ -672,6 +731,47 @@ def doc_pages(root: Path) -> list[Page]:
     return [index, *pages]
 
 
+def testing_pages(root: Path, manifest: Manifest) -> list[Page]:
+    """Guides by job: prose that names files and says why, their facts from the manifest."""
+    active = {entry["path"]: entry for entry in manifest.active}
+    crumbs = [("Home", "/"), ("Testing", "/testing")]
+    pages: list[Page] = []
+    for key, title, description, source in TESTING:
+        text = content(root, source)
+        named = list(dict.fromkeys(FILE.findall(text)))
+        body = markdown.render(lead_files(text, f"site/content/{source}", active))
+        page = Page(
+            key,
+            title,
+            description,
+            "doc.html",
+            title=f"{title} · loremfile.dev",
+            crumbs=crumbs,
+            context={"body": trusted(body)},
+        )
+        listed = [active[path] for path in named]
+        page.jsonld = [
+            dataset(title, description, page.canonical, listed),
+            breadcrumbs(crumbs, title, page.canonical),
+        ]
+        pages.append(page)
+    index = Page(
+        "testing",
+        "Testing guides",
+        "Sample files chosen for a job rather than a format: uploads, parsers and error "
+        "handling, media playback and seeking.",
+        "doc.html",
+        crumbs=[("Home", "/")],
+        context={"body": trusted(""), "items": guides(pages)},
+    )
+    index.jsonld = article(index)
+    return [index, *pages]
+
+
+def guides(pages: list[Page]) -> list[tuple[str, str, str]]:
+    return [(f"/{p.key}", p.h1, p.description) for p in pages if p.key.startswith("testing/")]
+
+
 def legal_pages(root: Path) -> list[Page]:
     source = root / "docs" / "13-legal-and-policy.md"
     crumbs = [("Home", "/"), ("Legal", "/legal")]
@@ -748,7 +848,13 @@ def search_index(manifest: Manifest) -> bytes:
     return (json.dumps(rows, ensure_ascii=False, separators=(",", ":")) + "\n").encode()
 
 
-def llms(manifest: Manifest, catalogs: dict[str, FormatCatalog], *, full: bool) -> bytes:
+def llms(
+    manifest: Manifest,
+    catalogs: dict[str, FormatCatalog],
+    tasks: list[tuple[str, str, str]],
+    *,
+    full: bool,
+) -> bytes:
     """docs/04 §5. Lists fixtures and formats only, never a legal page (ADR-028)."""
     base = config.BASE_URL
     lines = [
@@ -759,7 +865,7 @@ def llms(manifest: Manifest, catalogs: dict[str, FormatCatalog], *, full: bool) 
         "no rate-limit keys.",
         "",
         "## How to use",
-        f"- Every fixture: {base}{{format}}/{{name}} — see the manifest for all paths.",
+        f"- Every fixture: {base}{{format}}/{{name}}; see the manifest for all paths.",
         f"- Machine-readable list of everything: {base}manifest.json (JSON, includes sha256, "
         "bytes, mime, measured properties)",
         f"- Per-format lists: {base}{{format}}/index.json",
@@ -774,6 +880,8 @@ def llms(manifest: Manifest, catalogs: dict[str, FormatCatalog], *, full: bool) 
             for item in group["formats"]
         )
         lines.append(f"- {group['label']}: {links}")
+    lines += ["", "## Testing guides"]
+    lines += [f"- [{title}]({base}{href[1:]}): {text}" for href, title, text in tasks]
     lines += [
         "",
         "## Rules",
@@ -921,10 +1029,12 @@ def build(out: Path, *, root: Path, committed: dt.datetime) -> BuildReport:
         "og_image": routes.absolute_url("assets/og.png"),
         "source": config.SOURCE_URL,
     }
+    testing = testing_pages(root, manifest)
     pages = [
-        home_page(root, manifest, catalogs),
+        home_page(root, manifest, catalogs, guides(testing)),
         *format_pages(root, manifest, catalogs),
         formats_page(manifest, catalogs),
+        *testing,
         *doc_pages(root),
         *legal_pages(root),
         changelog_page(root),
@@ -949,8 +1059,8 @@ def build(out: Path, *, root: Path, committed: dt.datetime) -> BuildReport:
                 root / "src/loremfile/schema/manifest-v1.json"
             ).read_bytes(),
             "search-index.json": search_index(manifest),
-            "llms.txt": llms(manifest, catalogs, full=False),
-            "llms-full.txt": llms(manifest, catalogs, full=True),
+            "llms.txt": llms(manifest, catalogs, guides(testing), full=False),
+            "llms-full.txt": llms(manifest, catalogs, guides(testing), full=True),
             "sitemap.xml": sitemap(pages, committed),
             "robots.txt": ROBOTS_TXT.encode(),
             ".well-known/security.txt": security_txt(committed),

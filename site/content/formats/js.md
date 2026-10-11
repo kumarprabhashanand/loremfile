@@ -1,5 +1,5 @@
 One script, and deliberately only one. `js/hello-console.js` defines a function and logs a
-line — that is the entire file, so what it can do is obvious at a glance.
+line; that is the entire file, so what it can do is obvious at a glance.
 
 The restraint is the point. Nothing in this catalog reaches the network, touches the DOM or
 evaluates a string, and a validator checks that on every build: no `eval`, no `Function`

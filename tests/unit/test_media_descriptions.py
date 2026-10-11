@@ -121,32 +121,44 @@ def media_entries() -> list[dict[str, Any]]:
 # --- page prose ---------------------------------------------------------------------------
 
 PAGES = ROOT / "site" / "content" / "formats"
+GUIDES = ROOT / "site" / "content" / "testing"
 ENTRY_PATHS = {e["path"] for e in json.loads((ROOT / "manifest.json").read_text())["fixtures"]}
 FILE_MARKER = re.compile(r"^<!-- file: \S+ -->$", re.MULTILINE)
 CODE_PATH = re.compile(r"`([a-z0-9]+/[a-z0-9._/-]+\.[a-z0-9]+)`")
 SENTENCE_BREAK = re.compile(r"(?<=[.!?])\s+(?=[A-Z`])")
 
 
-def paragraphs(text: str) -> list[list[str]]:
-    """Prose as paragraphs of sentences. The lead line is generated from the manifest, so
-    its marker is not prose and is dropped."""
-    text = FILE_MARKER.sub("", text)
-    return [
-        [s for s in SENTENCE_BREAK.split(" ".join(block.split())) if s]
-        for block in re.split(r"\n\s*\n", text)
-    ]
+def paragraphs(text: str) -> list[tuple[str | None, list[str]]]:
+    """Prose as (marked file, sentences) per paragraph. A `<!-- file: PATH -->` line renders
+    from the manifest, so it is not prose; it marks the paragraph after it as about PATH."""
+    found: list[tuple[str | None, list[str]]] = []
+    marked: str | None = None
+    for block in re.split(r"\n\s*\n", text):
+        if marker := FILE_MARKER.fullmatch(block.strip()):
+            marked = marker.group(0).split()[2]
+            continue
+        sentences = [s for s in SENTENCE_BREAK.split(" ".join(block.split())) if s]
+        if sentences:
+            found.append((marked, sentences))
+        marked = None
+    return found
 
 
-def attribute(sentence: str, paragraph: list[str], own: set[str]) -> str | None:
+def attribute(
+    sentence: str, paragraph: list[str], own: set[str], marked: str | None = None
+) -> str | None:
     """The one fixture a sentence's numbers are about, or None when that is not certain.
 
-    The sentence's own path first; failing that, the one path of this format its paragraph
-    names ("The clip is ..." after naming the clip); failing that, the page's only file.
-    A sentence that names two fixtures is never guessed at.
+    The sentence's own path first; then the file a marker line put just above its
+    paragraph; then the one path of this format its paragraph names ("The clip is ..."
+    after naming the clip); then the page's only file. A sentence that names two fixtures
+    is never guessed at.
     """
     named = set(CODE_PATH.findall(sentence)) & ENTRY_PATHS
     if named:
         return named.pop() if len(named) == 1 else None
+    if marked is not None:
+        return marked
     nearby = {p for s in paragraph for p in CODE_PATH.findall(s)} & own
     if nearby:
         return nearby.pop() if len(nearby) == 1 else None
@@ -165,28 +177,42 @@ def prose_claims(
     entries = {e["path"]: e for e in media_entries()}
     checked: list[tuple[str, str, list[str]]] = []
     unchecked: list[tuple[str, str]] = []
-    for fmt, text in sorted(pages.items()):
-        own = {path for path in entries if path.startswith(f"{fmt}/")}
-        for paragraph in paragraphs(text):
+    everything = {e["path"]: e for e in all_entries()}
+    for name, text in sorted(pages.items()):
+        own = {path for path in entries if path.startswith(f"{name}/")}
+        for marked, paragraph in paragraphs(text):
             for sentence in paragraph:
                 found = claims(sentence)
                 if not found:
                     continue
-                path = attribute(sentence, paragraph, own)
+                path = attribute(sentence, paragraph, own, marked)
                 if path is None:
-                    unchecked += [(fmt, claim) for claim in found]
+                    unchecked += [(name, claim) for claim in found]
                 else:
-                    props = entries[path].get("props") or {}
-                    checked.append((fmt, path, problems(sentence, props)))
+                    props = everything[path].get("props") or {}
+                    checked.append((name, path, problems(sentence, props)))
     return checked, unchecked
 
 
 def media_pages() -> dict[str, str]:
-    return {
+    """Every media format page, and every testing guide, which names files of any format."""
+    found = {
         page.stem: page.read_text(encoding="utf-8")
         for page in sorted(PAGES.glob("*.md"))
         if page.stem in MEDIA
     }
+    found.update(
+        {
+            f"testing/{page.stem}": page.read_text(encoding="utf-8")
+            for page in sorted(GUIDES.glob("*.md"))
+        }
+    )
+    return found
+
+
+def all_entries() -> list[dict[str, Any]]:
+    document = json.loads((ROOT / "manifest.json").read_text())
+    return [e for e in document["fixtures"] if e.get("status", "active") == "active"]
 
 
 @pytest.mark.parametrize("entry", media_entries(), ids=lambda e: e["path"])
@@ -268,6 +294,7 @@ def test_the_prose_check_ties_the_sentences_it_is_meant_to() -> None:
         ("opus", "opus/30s.opus"),
         ("wav", "wav/10mb.wav"),  # named earlier in the paragraph
         ("avi", "avi/640x480-5s.avi"),  # the page's only file
+        ("testing/media-playback", "mp4/50mb.mp4"),  # the marker line above its paragraph
     } <= tied
 
 

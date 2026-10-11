@@ -195,7 +195,7 @@ Follow the llmstxt.org layout (H1 title, blockquote summary, H2 sections with li
 > Free, CC0, hotlink-friendly sample files and test fixtures for every common file type. Stable URLs, open CORS, byte-range support, SHA-256 manifest. No ads, no signup, no rate-limit keys.
 
 ## How to use
-- Every fixture: https://loremfile.dev/{format}/{name} — see the manifest for all paths.
+- Every fixture: https://loremfile.dev/{format}/{name}; see the manifest for all paths.
 - Machine-readable list of everything: https://loremfile.dev/manifest.json (JSON, includes sha256, bytes, mime, measured properties)
 - Per-format lists: https://loremfile.dev/{format}/index.json
 - Verify: https://loremfile.dev/sha256sums.txt
@@ -203,6 +203,10 @@ Follow the llmstxt.org layout (H1 title, blockquote summary, H2 sections with li
 ## Formats
 - [PDF](https://loremfile.dev/pdf): A4/Letter, 1–100 pages, images, tables, links, outline, encrypted, exact-ish sizes 1 MB / 10 MB
 - [Images](https://loremfile.dev/png): png, jpg, gif, webp, avif, svg, bmp, tiff, ico …
+...
+
+## Testing guides
+- [Sample files for testing file uploads](https://loremfile.dev/testing/uploads): one line on what it covers
 ...
 
 ## Rules
@@ -312,7 +316,7 @@ Deployed copy of the JSON Schema (§1.4). `application/schema+json`, immutable c
 
 ## 10. Structured data on pages
 
-JSON-LD per page type (single source of truth; `07` §3 refers here): home → `WebSite` + `SoftwareSourceCode` (pointing at the repository); format page → `Dataset` (`name`, `description`, `license: CC0`, `distribution` with `contentUrl` and `encodingFormat` per active fixture, `isAccessibleForFree: true`) + `BreadcrumbList`; docs and legal pages → `TechArticle` + `BreadcrumbList`, **except `/legal/imprint` and `/legal/privacy`, which carry no JSON-LD at all** (ADR-028). No `Organization` node.
+JSON-LD per page type (single source of truth; `07` §3 refers here): home → `WebSite` + `SoftwareSourceCode` (pointing at the repository); format page → `Dataset` (`name`, `description`, `license: CC0`, `distribution` with `contentUrl` and `encodingFormat` per active fixture, `isAccessibleForFree: true`) + `BreadcrumbList`; testing guide → the same `Dataset`, its `distribution` being exactly the files the guide names, + `BreadcrumbList`; docs, legal and the testing index → `TechArticle` + `BreadcrumbList`, **except `/legal/imprint` and `/legal/privacy`, which carry no JSON-LD at all** (ADR-028). No `Organization` node.
 
 ## 11. Agent discovery
 

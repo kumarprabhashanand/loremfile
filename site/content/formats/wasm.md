@@ -8,7 +8,7 @@ producers section and no debug information, so the file is small, stable, and th
 every build.
 
 It is enough for a host to instantiate the module and call the export, which is the operation
-worth testing — not what a large module does, but whether your loader gets a small one right.
+worth testing: not what a large module does, but whether your loader gets a small one right.
 It is served as `application/wasm`, so it also checks that the content type survives your
 pipeline, which matters because browsers refuse to stream-compile a module served as anything
 else.
