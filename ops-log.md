@@ -39,3 +39,5 @@ disabling scheduled workflows after 60 quiet days.
 | 2026-10-03 | 0 | 1,044 | 51 |  |
 | 2026-10-04 | 0 | 1,176 | 64 |  |
 | 2026-10-05 | 0 | 853 | 22 |  |
+| 2026-10-09 | — | — | — | #66 live 09:29 UTC: the ten ranking format pages (arrow, docx, hls, m4a, md, ogg, opus, rtf, tiff, wav) open with one answering sentence, then their file and measured props |
+| 2026-10-11 | — | — | — | #67 live 10:40 UTC: contains_text in the manifest; #68 live 15:26 UTC: catalog 1.7.0, fixtures for the formats that rank; #69 live 16:16 UTC: /testing guides, em dashes removed from 22 content pages; #70 live 21:08 UTC: catalog 1.8.0, all 79 format titles lose their em dash (the comparison pages ogg, rtf, tiff and arrow included), plus 14 format and 17 fixture descriptions; the 23 Oct Search Console reading is directional, not an experiment: every title changed on this one day |
