@@ -41,6 +41,9 @@ WORD_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 WORD_NAMESPACES = {"w": WORD_NS}
 COMMENT_REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments"
 COMMENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml"
+DRAWING_NAMESPACES = {
+    "wp": "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+}
 
 
 def _word_xml(archive: zipfile.ZipFile, part: str) -> etree._Element:
@@ -146,6 +149,26 @@ def _revision_props(data: bytes) -> dict[str, Any]:
     }
 
 
+def _drawing_props(data: bytes) -> dict[str, Any]:
+    """Inline and anchored drawings, and how many carry alt text, from document.xml.
+
+    An anchored drawing floats with text wrapped around it. Readers that walk inline shapes
+    alone report a document with one as having no picture, so the two are counted apart.
+    """
+    with _archive(data) as archive:
+        body = _word_xml(archive, "word/document.xml")
+    described = [
+        doc_pr
+        for doc_pr in body.iterfind(".//wp:docPr", DRAWING_NAMESPACES)
+        if (doc_pr.get("descr") or "").strip()
+    ]
+    return {
+        "inline_images": len(body.findall(".//wp:inline", DRAWING_NAMESPACES)),
+        "anchored_images": len(body.findall(".//wp:anchor", DRAWING_NAMESPACES)),
+        "images_with_alt_text": len(described),
+    }
+
+
 def _archive(data: bytes) -> zipfile.ZipFile:
     try:
         return zipfile.ZipFile(io.BytesIO(data))
@@ -192,6 +215,7 @@ def validate_docx(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
         "table_rows": table_rows[0] if table_rows else 0,
         "images": len(images),
         "words": sum(len(p.text.split()) for p in paragraphs),
+        **_drawing_props(data),
         **revisions,
     }
 

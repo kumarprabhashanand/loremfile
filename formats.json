@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.6.1",
+  "catalog_version": "1.7.0",
   "formats": [
     {
       "format": "7z",
@@ -107,8 +107,8 @@
     },
     {
       "format": "docx",
-      "count": 6,
-      "total_bytes": 11288823,
+      "count": 7,
+      "total_bytes": 11332023,
       "url": "https://loremfile.dev/docx",
       "index": "https://loremfile.dev/docx/index.json",
       "mime_default": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -195,8 +195,8 @@
     },
     {
       "format": "hls",
-      "count": 6,
-      "total_bytes": 4122346,
+      "count": 13,
+      "total_bytes": 5358948,
       "url": "https://loremfile.dev/hls",
       "index": "https://loremfile.dev/hls/index.json",
       "mime_default": "application/vnd.apple.mpegurl"
@@ -291,8 +291,8 @@
     },
     {
       "format": "m4a",
-      "count": 1,
-      "total_bytes": 486931,
+      "count": 2,
+      "total_bytes": 733991,
       "url": "https://loremfile.dev/m4a",
       "index": "https://loremfile.dev/m4a/index.json",
       "mime_default": "audio/mp4"
@@ -307,8 +307,8 @@
     },
     {
       "format": "md",
-      "count": 2,
-      "total_bytes": 5016,
+      "count": 3,
+      "total_bytes": 29449,
       "url": "https://loremfile.dev/md",
       "index": "https://loremfile.dev/md/index.json",
       "mime_default": "text/markdown"
@@ -371,8 +371,8 @@
     },
     {
       "format": "opus",
-      "count": 1,
-      "total_bytes": 431592,
+      "count": 2,
+      "total_bytes": 554131,
       "url": "https://loremfile.dev/opus",
       "index": "https://loremfile.dev/opus/index.json",
       "mime_default": "audio/opus"
@@ -547,8 +547,8 @@
     },
     {
       "format": "wav",
-      "count": 2,
-      "total_bytes": 10529244,
+      "count": 3,
+      "total_bytes": 11393312,
       "url": "https://loremfile.dev/wav",
       "index": "https://loremfile.dev/wav/index.json",
       "mime_default": "audio/wav"

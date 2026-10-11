@@ -132,6 +132,33 @@ def probe(path: Path, *, timeout: int = 120) -> dict[str, Any]:
     return parsed
 
 
+def packet_bytes(path: Path, stream: str = "a:0", *, timeout: int = 120) -> int:
+    """The summed size of one stream's packets: its payload, without container framing."""
+    command = [
+        tool("ffprobe"),
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-select_streams",
+        stream,
+        "-show_entries",
+        "packet=size",
+        "-of",
+        "json",
+        str(path),
+    ]
+    completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
+        command, capture_output=True, timeout=timeout, check=False
+    )
+    if completed.returncode != 0:
+        tail = completed.stderr.decode("utf-8", "replace").strip()
+        raise FfmpegError(f"ffprobe exited {completed.returncode}: {tail}")
+    packets = json.loads(completed.stdout).get("packets", [])
+    if not packets:
+        raise FfmpegError(f"ffprobe lists no packets for stream {stream}")
+    return sum(int(packet["size"]) for packet in packets)
+
+
 def available_encoders() -> set[str]:
     """Encoder names the installed ffmpeg offers. Used by the toolchain smoke test."""
     completed = subprocess.run(  # noqa: S603 - fixed argv, no shell

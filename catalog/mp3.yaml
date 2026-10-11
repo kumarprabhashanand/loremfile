@@ -13,7 +13,7 @@ fixtures:
     phase: 1
     generator: media_audio.encoded
     params: { codec: mp3, duration: 3, bitrate: 128k }
-    description: "A 440 Hz sine wave, three seconds, 128 kbps stereo. The smallest useful audio sample. Measured duration is 3024 ms: an MP3 frame holds 1152 samples, so the encoder rounds up to a whole frame."
+    description: "A 440 Hz sine wave, three seconds, 128 kbps stereo. The smallest useful audio sample. Measured duration is 3024 ms: 1152 samples past three seconds at 48 kHz, which is exactly one MP3 frame."
     tags: [audio, codec-mp3]
     expect: { duration_ms: 3024, acodec: mp3, channels: 2, audio_streams: 1 }
     size_class: free

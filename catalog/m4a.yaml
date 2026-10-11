@@ -16,3 +16,11 @@ fixtures:
     tags: [audio, codec-aac]
     expect: { acodec: aac, sample_rate: 48000, channels: 2 }
     size_class: free
+  - name: aac-64k-44k-30s.m4a
+    phase: 2
+    generator: media_audio.encoded
+    params: { codec: aac, duration: 30, bitrate: 64k, sample_rate: 44100, container: ipod }
+    description: "Thirty seconds of a sine tone, 44.1 kHz stereo AAC at 64 kbps in an MP4 container: half the bitrate of m4a/aac-30s.m4a, at a different sample rate."
+    tags: [audio, codec-aac]
+    expect: { acodec: aac, sample_rate: 44100, channels: 2 }
+    size_class: free

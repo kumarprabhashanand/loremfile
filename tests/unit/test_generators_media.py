@@ -167,7 +167,8 @@ def test_a_playlist_without_endlist_is_rejected() -> None:
 
 def test_every_hls_segment_is_a_real_transport_stream() -> None:
     segments = [p for p in EVERY_MEDIA_FIXTURE if p.endswith(".ts") and p.startswith("hls/")]
-    assert len(segments) == 5, segments
+    renditions = ("720p-10s", "360p-10s")
+    assert set(segments) == {f"hls/{v}/seg-{i:03d}.ts" for v in renditions for i in range(5)}
     for path in segments:
         props = measure(path, built(path))
         assert props["video_streams"] == 1, path

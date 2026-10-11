@@ -16,7 +16,15 @@ fixtures:
     phase: 1
     generator: media_audio.encoded
     params: { codec: opus, duration: 30, bitrate: 96k }
-    description: "A 440 Hz sine wave, thirty seconds, stereo Opus at 96 kbps."
+    description: "A 440 Hz sine wave, thirty seconds, variable-rate stereo Opus averaging 114 kbps."
     tags: [audio, codec-opus]
     expect: { acodec: opus, channels: 2 }
+    size_class: free
+  - name: cbr-32k-30s.opus
+    phase: 2
+    generator: media_audio.encoded
+    params: { codec: opus, duration: 30, bitrate: 32k, constant: true }
+    description: "Thirty seconds of a sine tone, stereo Opus encoded at a constant 32 kbps, for code that reads, limits or transcodes by bitrate."
+    tags: [audio, codec-opus]
+    expect: { acodec: opus, channels: 2, bitrate_kbps: 32.0 }
     size_class: free

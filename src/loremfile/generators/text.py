@@ -8,6 +8,7 @@ text and still weighs precisely what its name claims (docs/05 §6).
 from __future__ import annotations
 
 import json
+import re
 from datetime import UTC, datetime, timedelta
 
 from loremfile.generators.base import GeneratorContext, generator
@@ -222,6 +223,42 @@ unicode = café-naïve-Ω
 #: Sample text for a Markdown code fence. Named so it reads as the literal it is:
 #: inlined, a linter takes a string starting with SELECT for a constructed query.
 SQL_FENCE_SAMPLE = "SELECT id, name FROM people ORDER BY id;"
+
+
+def _anchor(title: str) -> str:
+    """GitHub's heading anchor: lowercased, punctuation dropped, spaces to hyphens."""
+    return re.sub(r"[^\w\- ]", "", title.lower()).replace(" ", "-")
+
+
+@generator()
+def markdown_long(
+    ctx: GeneratorContext, *, sections: int, paragraphs: int, footnotes: int
+) -> bytes:
+    """A long document: a contents list linking every section, and numbered footnotes.
+
+    Section titles carry their number, so every anchor is unique and a renderer never has
+    to disambiguate a repeated title by suffixing it, which renderers do differently.
+    """
+    rng = ctx.rng
+    titles = [
+        f"{number}. {' '.join(lorem.words(rng, 3)).capitalize()}"
+        for number in range(1, sections + 1)
+    ]
+    noted = {index * sections // footnotes: index + 1 for index in range(footnotes)}
+    blocks = [
+        f"# {' '.join(lorem.words(rng, 4)).capitalize()}",
+        lorem.paragraph(rng),
+        "## Contents",
+    ]
+    blocks.append("\n".join(f"- [{title}](#{_anchor(title)})" for title in titles))
+    for index, title in enumerate(titles):
+        blocks.append(f"## {title}")
+        body = [lorem.paragraph(rng) for _ in range(paragraphs)]
+        if index in noted:
+            body[0] += f"[^{noted[index]}]"
+        blocks += body
+    blocks += [f"[^{number}]: {lorem.sentence(rng)}" for number in range(1, footnotes + 1)]
+    return ("\n\n".join(blocks) + "\n").encode("utf-8")
 
 
 @generator()

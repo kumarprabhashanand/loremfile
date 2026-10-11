@@ -12,7 +12,7 @@ fixtures:
     phase: 1
     generator: media_audio.encoded
     params: { codec: vorbis, duration: 30, quality: "4" }
-    description: "A 440 Hz sine wave, thirty seconds, 48 kHz stereo Vorbis at quality 4."
+    description: "A 440 Hz sine wave, thirty seconds, 48 kHz stereo Vorbis."
     tags: [audio]
     expect: { acodec: vorbis, sample_rate: 48000, channels: 2 }
     size_class: free

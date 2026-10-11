@@ -3,9 +3,10 @@ format: wav
 family: audio
 mime: audio/wav
 description: >-
-  Uncompressed PCM in a canonical 44-byte-header WAV. The sized file is exact to the
-  byte, because uncompressed audio is the one format where a byte count is arithmetic
-  rather than an estimate.
+  Uncompressed PCM in WAV: 16-bit files behind the canonical 44-byte header, and a 24-bit
+  file behind the 68-byte extensible one. The sized file is exact to the byte, because
+  uncompressed audio is the one format where a byte count is arithmetic rather than an
+  estimate.
 seo_title: "Sample WAV audio files for testing — free, CC0, hotlinkable"
 related: [mp3, flac, aiff]
 fixtures:
@@ -26,3 +27,11 @@ fixtures:
     expect: { sample_rate: 44100, channels: 2 }
     size_class: exact
     nominal_bytes: 10000000
+  - name: sine-440hz-3s-48k-24bit-stereo.wav
+    phase: 2
+    generator: media_audio.pcm
+    params: { duration: 3, sample_rate: 48000, bits: 24, channels: 2 }
+    description: "Three seconds of a sine tone as 48 kHz, 24-bit stereo PCM behind a 68-byte extensible header, the layout 24-bit writers produce; a reader that skips 44 bytes plays header as audio."
+    tags: [audio]
+    expect: { acodec: pcm_s24le, sample_rate: 48000, channels: 2, bit_depth: 24, header_format: extensible, header_bytes: 68 }
+    size_class: free

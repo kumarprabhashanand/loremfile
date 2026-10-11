@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from loremfile.catalog import Fixture
-from loremfile.util.ffmpeg import FfmpegError, probe
+from loremfile.util.ffmpeg import FfmpegError, packet_bytes, probe
 from loremfile.validators import ValidationError, register
 
 #: Formats whose props come from ffprobe. HLS playlists are text and handled separately.
@@ -82,6 +82,62 @@ def _common_props(report: dict[str, Any]) -> dict[str, Any]:
     return props
 
 
+def _audio_rates(data: bytes, suffix: str, report: dict[str, Any]) -> dict[str, Any]:
+    """`bitrate_kbps` from the audio packets themselves, and `bit_depth` for PCM.
+
+    The rate is the audio packets' bytes over the stream's duration: what the codec
+    actually spent, without container pages, tags or cover art. Neither ffprobe's stream
+    rate nor an encoder setting will do: for Vorbis the stream rate is the nominal figure
+    the encoder wrote into its header (128 kbps on a file whose packets average 23.6), and
+    asked for 96k, libopus averaged 114.
+    """
+    audio = _streams(report, "audio")[0]
+    seconds = float(audio.get("duration") or report.get("format", {}).get("duration") or 0)
+    if seconds <= 0:
+        raise ValidationError("the audio stream reports no duration to divide by")
+    with tempfile.TemporaryDirectory() as temporary:
+        path = Path(temporary) / f"fixture{suffix}"
+        path.write_bytes(data)
+        try:
+            payload = packet_bytes(path)
+        except FfmpegError as exc:
+            raise ValidationError(f"ffprobe could not list the audio packets: {exc}") from exc
+    props: dict[str, Any] = {"bitrate_kbps": round(payload * 8 / seconds / 1000, 1)}
+    if str(audio.get("codec_name", "")).startswith("pcm_"):
+        props["bit_depth"] = int(audio["bits_per_sample"])
+    return props
+
+
+#: WAVE `fmt ` chunk format tags a fixture may carry.
+WAV_FORMAT_TAGS = {1: "pcm", 3: "float", 0xFFFE: "extensible"}
+RIFF_CHUNK_HEADER_BYTES = 8
+
+
+def _wav_header(data: bytes) -> dict[str, Any]:
+    """The `fmt ` chunk's format tag and where the samples start, read from the chunks.
+
+    A canonical PCM header is 44 bytes; a 24-bit writer uses the extensible tag and 68.
+    Readers that seek to byte 44 instead of walking the chunks read 24 bytes of header
+    as audio, which is why both numbers are measured rather than assumed.
+    """
+    if data[:4] != b"RIFF" or data[8:12] != b"WAVE":
+        raise ValidationError("not a RIFF/WAVE file")
+    offset, tag = 12, None
+    while offset + RIFF_CHUNK_HEADER_BYTES <= len(data):
+        chunk = data[offset : offset + 4]
+        (size,) = struct.unpack("<I", data[offset + 4 : offset + 8])
+        if chunk == b"fmt ":
+            (tag,) = struct.unpack("<H", data[offset + 8 : offset + 10])
+        elif chunk == b"data":
+            if tag is None:
+                raise ValidationError("the data chunk comes before any fmt chunk")
+            if tag not in WAV_FORMAT_TAGS:
+                raise ValidationError(f"unknown WAVE format tag 0x{tag:04x}")
+            return {"header_format": WAV_FORMAT_TAGS[tag], "header_bytes": offset + 8}
+        offset += RIFF_CHUNK_HEADER_BYTES + size + (size & 1)
+    raise ValidationError("no data chunk")
+
+
 def _atoms(data: bytes) -> list[str]:
     """Top-level MP4/MOV atoms in order. Enough to tell where `moov` sits."""
     names: list[str] = []
@@ -103,7 +159,8 @@ def _atoms(data: bytes) -> list[str]:
 def make_media_validator(fmt: str, suffix: str) -> None:
     @register(fmt)
     def _validate(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
-        props = _common_props(_probe(data, suffix))
+        report = _probe(data, suffix)
+        props = _common_props(report)
 
         declared = fixture.params.get("duration")
         if declared is not None:
@@ -118,6 +175,10 @@ def make_media_validator(fmt: str, suffix: str) -> None:
             raise ValidationError("has no video stream")
         if fmt in AUDIO_FORMATS and not props["audio_streams"]:
             raise ValidationError("has no audio stream")
+        if fmt in AUDIO_FORMATS:
+            props.update(_audio_rates(data, suffix, report))
+        if fmt == "wav":
+            props.update(_wav_header(data))
 
         if fmt in {"mp4", "mov"}:
             # +faststart moves `moov` ahead of `mdat`. Without it the file plays fine
@@ -147,6 +208,47 @@ for _format in AUDIO_FORMATS:
 #: An HLS media playlist has to open with this and, being VOD, has to close with ENDLIST.
 PLAYLIST_HEADER = "#EXTM3U"
 SEGMENT_URI_RE = re.compile(r"^seg-\d{3}\.ts$")
+#: A rendition named by a master playlist: a sibling variant directory's media playlist.
+RENDITION_URI_RE = re.compile(r"^\.\./[a-z0-9]+(?:-[a-z0-9]+)*/index\.m3u8$")
+STREAM_INF_ATTRIBUTE = re.compile(r'([A-Z0-9-]+)=("[^"]*"|[^,]*)')
+RESOLUTION_RE = re.compile(r"^[1-9][0-9]*x[1-9][0-9]*$")
+MIN_RENDITIONS = 2
+
+
+def _master_props(lines: list[str]) -> dict[str, Any]:
+    """Every rendition with the three attributes a player chooses by, and a relative URI."""
+    renditions = []
+    for index, line in enumerate(lines):
+        if not line.startswith("#EXT-X-STREAM-INF:"):
+            continue
+        attributes = dict(STREAM_INF_ATTRIBUTE.findall(line.split(":", 1)[1]))
+        missing = [n for n in ("BANDWIDTH", "RESOLUTION", "CODECS") if n not in attributes]
+        if missing:
+            raise ValidationError(f"a rendition without {', '.join(missing)}: {line}")
+        if not attributes["BANDWIDTH"].isdigit():
+            raise ValidationError(f"BANDWIDTH is not a whole number: {line}")
+        if not RESOLUTION_RE.match(attributes["RESOLUTION"]):
+            raise ValidationError(f"RESOLUTION is not WIDTHxHEIGHT: {line}")
+        uri = lines[index + 1] if index + 1 < len(lines) else ""
+        if not RENDITION_URI_RE.match(uri):
+            raise ValidationError(f"a rendition URI must be ../<variant>/index.m3u8; got {uri!r}")
+        renditions.append(
+            (
+                int(attributes["BANDWIDTH"]),
+                attributes["RESOLUTION"],
+                attributes["CODECS"].strip('"'),
+            )
+        )
+    if len(renditions) < MIN_RENDITIONS:
+        raise ValidationError(f"{len(renditions)} rendition(s): a master needs at least two")
+    if "#EXT-X-ENDLIST" in lines:
+        raise ValidationError("a master playlist carries #EXT-X-ENDLIST, a media-playlist tag")
+    return {
+        "variants": len(renditions),
+        "bandwidths": [bandwidth for bandwidth, _, _ in renditions],
+        "resolutions": [resolution for _, resolution, _ in renditions],
+        "codecs": [codecs for _, _, codecs in renditions],
+    }
 
 
 @register("hls")
@@ -165,6 +267,8 @@ def validate_hls(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     if not lines or lines[0] != PLAYLIST_HEADER:
         raise ValidationError(f"does not start with {PLAYLIST_HEADER}")
+    if fixture.path.endswith("/master.m3u8"):
+        return _master_props(lines)
     if "#EXT-X-ENDLIST" not in lines:
         raise ValidationError("no #EXT-X-ENDLIST, so a player treats it as a live stream")
 

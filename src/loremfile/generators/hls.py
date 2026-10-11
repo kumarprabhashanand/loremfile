@@ -14,16 +14,21 @@ point at a build directory would be useless the moment it was published.
 
 from __future__ import annotations
 
+import math
 import re
 from pathlib import Path
 
 from loremfile.generators.base import GeneratorContext, generator
-from loremfile.util.ffmpeg import encoder_for, run
+from loremfile.util.ffmpeg import encoder_for, probe, run
 
 #: Segment file names, matching the catalog: seg-000.ts, seg-001.ts, ...
 SEGMENT_PATTERN = "seg-%03d.ts"
 SEGMENT_RE = re.compile(r"^seg-\d{3}\.ts$")
 PLAYLIST_NAME = "index.m3u8"
+#: H.264 sequence parameter set: a start code, then the NAL header byte for type 7.
+SPS_MARKER = b"\x00\x00\x01\x67"
+#: AAC profile as ffprobe names it → the MPEG-4 audio object type CODECS carries.
+AAC_OBJECT_TYPES = {"LC": 2, "HE-AAC": 5, "HE-AACv2": 29}
 
 #: The x264 settings the rest of M3.6 uses, so an HLS segment and a plain .ts fixture
 #: are encoded the same way.
@@ -140,3 +145,67 @@ def member(
         produced = sorted(p.name for p in workdir.iterdir())
         raise ValueError(f"the segmenter produced no '{member}'; it made {produced}")
     return target.read_bytes()
+
+
+def _avc1(segment: bytes, workdir: Path) -> str:
+    """`avc1.PPCCLL` read from the segment's own sequence parameter set, not assumed."""
+    source, target = workdir / "first.ts", workdir / "first.h264"
+    source.write_bytes(segment)
+    run(
+        [
+            "-i",
+            str(source),
+            "-map",
+            "0:v:0",
+            "-c:v",
+            "copy",
+            "-bsf:v",
+            "h264_mp4toannexb",
+            "-frames:v",
+            "1",
+            "-f",
+            "h264",
+            str(target),
+        ]
+    )
+    stream = target.read_bytes()
+    at = stream.find(SPS_MARKER)
+    if at < 0:
+        raise ValueError("the segment's video has no sequence parameter set")
+    profile, constraints, level = stream[at + 4 : at + 7]
+    return f"avc1.{profile:02x}{constraints:02x}{level:02x}"
+
+
+@generator(parallel_safe=False)
+def master(ctx: GeneratorContext, *, renditions: list[str]) -> bytes:
+    """A master playlist with one EXT-X-STREAM-INF per rendition, every attribute measured.
+
+    BANDWIDTH is the peak over a rendition's segments of bytes x 8 / EXTINF seconds,
+    rounded up, which is how RFC 8216 §4.3.4.2 defines it. RESOLUTION and CODECS come
+    from the first segment. The renditions are published fixtures read through
+    `ctx.dependency`, so the 720p one is the bytes already served, never a rebuild.
+    """
+    workdir = ctx.workdir / ctx.path.replace("/", "_")
+    workdir.mkdir(parents=True, exist_ok=True)
+    lines = ["#EXTM3U", "#EXT-X-VERSION:3"]
+    for playlist_path in renditions:
+        playlist = ctx.dependency(playlist_path).decode("utf-8")
+        directory = playlist_path.rsplit("/", 1)[0]
+        seconds = [float(value) for value in re.findall(r"^#EXTINF:([0-9.]+),", playlist, re.M)]
+        names = [line for line in playlist.splitlines() if line and not line.startswith("#")]
+        segments = [ctx.dependency(f"{directory}/{name}") for name in names]
+        peak = max(
+            math.ceil(len(segment) * 8 / duration)
+            for segment, duration in zip(segments, seconds, strict=True)
+        )
+        (workdir / "probe.ts").write_bytes(segments[0])
+        streams = probe(workdir / "probe.ts")["streams"]
+        video = next(s for s in streams if s["codec_type"] == "video")
+        audio = next(s for s in streams if s["codec_type"] == "audio")
+        codecs = f"{_avc1(segments[0], workdir)},mp4a.40.{AAC_OBJECT_TYPES[audio['profile']]}"
+        lines.append(
+            f"#EXT-X-STREAM-INF:BANDWIDTH={peak},"
+            f'RESOLUTION={video["width"]}x{video["height"]},CODECS="{codecs}"'
+        )
+        lines.append(f"../{directory.split('/', 1)[1]}/{PLAYLIST_NAME}")
+    return ("\n".join(lines) + "\n").encode("utf-8")

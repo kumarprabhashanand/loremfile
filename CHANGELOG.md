@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-10-11
+
+- `m4a/aac-64k-44k-30s.m4a`: AAC at 64 kbps and 44.1 kHz, beside the 128 kbps, 48 kHz file.
+- `opus/cbr-32k-30s.opus`: Opus at a constant 32 kbps.
+- `wav/sine-440hz-3s-48k-24bit-stereo.wav`: 24-bit PCM behind the 68-byte extensible header.
+- `md/long-with-toc-and-footnotes.md`: a long document whose contents links and footnotes all resolve.
+- `docx/anchored-image-with-alt-text.docx`: one JPEG floating in an anchor, with alt text.
+- `hls/multi-bitrate/master.m3u8`: a master playlist over a new 360p rendition in `hls/360p-10s/`
+  and the existing 720p one, its BANDWIDTH, RESOLUTION and CODECS measured from the segments.
+- New measured props, existing bytes unchanged: `bitrate_kbps` from the audio packets and
+  `bit_depth` for PCM on every audio file, the WAV header's format and size, inline and
+  anchored images and alt text on every DOCX, and headings, anchor links and footnotes on
+  Markdown.
+- Four audio descriptions now say what was measured: `opus/30s.opus` averages 114 kbps, not
+  the 96 it was encoded for; `aac/adts-30s.aac` is 130.6 kbps with its frame headers;
+  `ogg/vorbis-30s.ogg` no longer names an encoder quality; and the 3-second MP3's extra
+  24 ms is one 1152-sample frame.
+
 ## [1.6.1] - 2026-10-11
 
 - `contains_text` in the manifest: three to five strings each text-bearing PDF, DOCX, PPTX,

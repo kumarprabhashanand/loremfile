@@ -214,6 +214,18 @@ AFTER_LAUNCH = (
     "pdf/scanned-1page.pdf",
     "docx/with-tracked-changes.docx",
     "txt/utf16be-no-bom.txt",
+    "m4a/aac-64k-44k-30s.m4a",
+    "opus/cbr-32k-30s.opus",
+    "wav/sine-440hz-3s-48k-24bit-stereo.wav",
+    "md/long-with-toc-and-footnotes.md",
+    "docx/anchored-image-with-alt-text.docx",
+    "hls/360p-10s/index.m3u8",
+    "hls/360p-10s/seg-000.ts",
+    "hls/360p-10s/seg-001.ts",
+    "hls/360p-10s/seg-002.ts",
+    "hls/360p-10s/seg-003.ts",
+    "hls/360p-10s/seg-004.ts",
+    "hls/multi-bitrate/master.m3u8",
 )
 
 

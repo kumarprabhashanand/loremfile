@@ -10,6 +10,10 @@ from `hls/720p-10s/seg-000.ts` to `hls/720p-10s/seg-004.ts`, each carrying H.264
 AAC audio in an MPEG-2 transport stream. Because the URIs are relative, the stream works from
 any host that serves the same layout, including a local mirror.
 
+`hls/multi-bitrate/master.m3u8` is a master playlist over two renditions: the 720p stream
+above and a 360p one in `hls/360p-10s/`. Its BANDWIDTH, RESOLUTION and CODECS are read from
+the segments themselves, so a player choosing between renditions chooses on real numbers.
+
 Point a player such as hls.js, Safari or ExoPlayer at the playlist URL to test playback,
 seeking and segment fetching. Every segment is served with open CORS, so a player on another
 origin can load it. Related formats: [TS](/ts) and [MP4](/mp4).
