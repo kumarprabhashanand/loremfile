@@ -46,6 +46,15 @@
 {% endfor %}
 </ul>
 {% endif %}
+{% if superseded %}
+
+<h2 id="superseded">Superseded</h2>
+<ul class="removed">
+{% for entry in superseded %}
+  <li><a href="/{{ entry.path }}"><code>{{ entry.path }}</code></a> is replaced by <a href="/{{ entry.supersededBy }}"><code>{{ entry.supersededBy }}</code></a>. The old URL still serves the same bytes, so nothing that embeds it breaks.</li>
+{% endfor %}
+</ul>
+{% endif %}
 {% if related %}
 
 <h2 id="related">Related formats</h2>

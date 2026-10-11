@@ -7,7 +7,7 @@ description: >-
   common element, inline styles, one inline script that only logs, many scripts in one
   page, a right-to-left document, the table layout mail clients need, and strict XHTML.
   None carries an event handler or a reference to another host.
-seo_title: "Sample HTML files for testing parsers and sanitisers — free, CC0"
+seo_title: "Sample HTML files for testing parsers and sanitisers, free and CC0"
 related: [css, js, txt]
 fixtures:
   - name: basic.html

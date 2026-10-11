@@ -5,7 +5,7 @@ mime: application/pkix-cert
 description: >-
   The same self-signed Ed25519 certificate as the PEM fixture, in binary DER form: the
   encoding a parser meets inside TLS handshakes and keystores, without the base64 wrapper.
-seo_title: "Sample DER certificate for testing parsers — free, CC0"
+seo_title: "Sample DER certificate for testing parsers, free and CC0"
 related: [pem]
 fixtures:
   - name: self-signed-ed25519-cert.der

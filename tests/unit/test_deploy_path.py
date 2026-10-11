@@ -226,6 +226,7 @@ AFTER_LAUNCH = (
     "hls/360p-10s/seg-003.ts",
     "hls/360p-10s/seg-004.ts",
     "hls/multi-bitrate/master.m3u8",
+    "jpg/cmyk-640x640.jpg",
 )
 
 

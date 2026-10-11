@@ -4,7 +4,7 @@ family: images
 mime: image/gif
 description: >-
   A minimal GIF and an animated one.
-seo_title: "Sample GIF images for testing — free, CC0"
+seo_title: "Sample GIF images for testing, free and CC0"
 related: [png, webp]
 fixtures:
   - name: 1x1.gif

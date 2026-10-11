@@ -4,7 +4,7 @@ family: data
 mime: application/vnd.apache.parquet
 description: >-
   The people dataset as Apache Parquet, snappy-compressed, one row group.
-seo_title: "Sample Parquet files for testing data pipelines — free, CC0"
+seo_title: "Sample Parquet files for testing data pipelines, free and CC0"
 related: [arrow, avro, csv, sqlite]
 fixtures:
   - name: people-1000.parquet

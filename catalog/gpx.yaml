@@ -4,7 +4,7 @@ family: data
 mime: application/gpx+xml
 description: >-
   A GPX 1.1 track with timestamps and elevations.
-seo_title: "Sample GPX track file for testing GPS tools — free, CC0"
+seo_title: "Sample GPX track file for testing GPS tools, free and CC0"
 related: [geojson, kml]
 fixtures:
   - name: track-100-points.gpx

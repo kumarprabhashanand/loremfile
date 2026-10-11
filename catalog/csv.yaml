@@ -6,7 +6,7 @@ description: >-
   The people dataset as comma-separated values, plus the variants that break naive
   splitters: a semicolon delimiter, a BOM, a real newline inside a quoted field, and a
   comma inside one.
-seo_title: "Sample CSV files for testing parsers and imports — free, CC0"
+seo_title: "Sample CSV files for testing parsers and imports, free and CC0"
 related: [tsv, json, ndjson, sql]
 fixtures:
   - name: people-10.csv

@@ -5,7 +5,7 @@ mime: application/vnd.sqlite3
 description: >-
   SQLite databases: one flat table of the people dataset, and one with three related
   tables, a foreign key, indexes, a view and a trigger.
-seo_title: "Sample SQLite database files for testing — free, CC0"
+seo_title: "Sample SQLite database files for testing, free and CC0"
 related: [sql, csv, parquet]
 fixtures:
   - name: people-1000.sqlite

@@ -483,3 +483,28 @@ def test_a_guide_that_names_an_unpublished_file_stops_the_build(tmp_path: Path) 
     manifest = build.Manifest.load(ROOT / "manifest.json")
     with pytest.raises(build.SiteError, match=re.escape("bin/never-published.bin")):
         build.testing_pages(tmp_path, manifest)
+
+
+# --- superseded entries ---------------------------------------------------------------
+
+
+def test_a_superseded_file_is_named_but_not_recommended(site: Path) -> None:
+    old, new = "jpg/cmyk-640x480.jpg", "jpg/cmyk-640x640.jpg"
+    page = text(site, "jpg")
+    table, _, after = page.partition('<h2 id="superseded">')
+    assert f'href="/{new}"' in table and f'href="/{old}"' not in table
+    assert f'href="/{old}"' in after and f'href="/{new}"' in after
+    dataset = next(b for b in checks._jsonld(page) if b.get("@type") == "Dataset")
+    urls = {d["contentUrl"] for d in dataset["distribution"]}
+    assert f"https://loremfile.dev/{new}" in urls and f"https://loremfile.dev/{old}" not in urls
+    index = json.loads(text(site, "_formats/jpg.json"))
+    served = {e["path"]: e for e in index["fixtures"]}
+    assert served[old]["supersededBy"] == new and served[old]["deprecated"] is True
+    assert old not in {row["path"] for row in json.loads(text(site, "search-index.json"))}
+    assert f"| {old} |" not in text(site, "llms-full.txt") and f"| {new} |" in text(
+        site, "llms-full.txt"
+    )
+
+
+def test_a_format_without_supersessions_shows_no_section(site: Path) -> None:
+    assert 'id="superseded"' not in text(site, "png")

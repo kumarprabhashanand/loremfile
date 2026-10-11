@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -396,3 +397,60 @@ def test_shipped_tag_vocabulary_loads() -> None:
     assert {"dataset-people", "truncated", "mismatched", "polyglot"} <= set(catalog.tags)
     assert len(catalog.tags) == len(set(catalog.tags)), "no duplicates"
     assert catalog.tags == [tag.lower() for tag in catalog.tags]
+
+
+# --- names that state dimensions, and supersession ------------------------
+
+
+def test_a_name_must_state_the_dimensions_its_params_declare() -> None:
+    """The authoring guard that would have caught jpg/cmyk-640x480.jpg before publication."""
+    wrong = minimal_fixture(name="cmyk-640x480.jpg", params={"width": 640, "height": 640})
+    with pytest.raises(ValidationError, match="says 640x480; params declare 640x640"):
+        Fixture(**wrong, format="jpg")
+    right = minimal_fixture(name="cmyk-640x640.jpg", params={"width": 640, "height": 640})
+    assert Fixture(**right, format="jpg").name == "cmyk-640x640.jpg"
+
+
+def test_a_named_video_height_must_match_its_params() -> None:
+    wrong = minimal_fixture(name="720p-5s.mp4", params={"width": 640, "height": 360})
+    with pytest.raises(ValidationError, match="says 720p; params declare height 360"):
+        Fixture(**wrong, format="mp4")
+
+
+def test_a_superseded_name_is_frozen_and_exempt() -> None:
+    old = minimal_fixture(
+        name="cmyk-640x480.jpg",
+        params={"width": 640, "height": 640},
+        superseded_by="jpg/cmyk-640x640.jpg",
+    )
+    assert Fixture(**old, format="jpg").superseded_by == "jpg/cmyk-640x640.jpg"
+
+
+def test_the_real_catalog_names_are_checked() -> None:
+    """Empty-set control: the guard reads the names it should."""
+    named = {f.path for f in Catalog.load().fixtures() if re.search(r"\d+x\d+|\d+p\b", f.name)}
+    assert {"png/640x480.png", "mp4/720p-5s.mp4", "jpg/cmyk-640x640.jpg"} <= named
+
+
+@pytest.mark.parametrize(
+    ("target", "message"),
+    [("pdf/nope.pdf", "is not another path"), ("pdf/a4-3pages.pdf", "is not another path")],
+    ids=["unknown", "itself"],
+)
+def test_superseded_by_must_name_another_catalogued_path(
+    catalog_dir: Path, target: str, message: str
+) -> None:
+    write_format(catalog_dir, minimal_format(fixtures=[minimal_fixture(superseded_by=target)]))
+    with pytest.raises(CatalogError, match=message):
+        load(catalog_dir)
+
+
+def test_a_replacement_cannot_itself_be_superseded(catalog_dir: Path) -> None:
+    rows = [
+        minimal_fixture(name="one.pdf", superseded_by="pdf/two.pdf"),
+        minimal_fixture(name="two.pdf", superseded_by="pdf/three.pdf"),
+        minimal_fixture(name="three.pdf"),
+    ]
+    write_format(catalog_dir, minimal_format(fixtures=rows))
+    with pytest.raises(CatalogError, match="itself superseded"):
+        load(catalog_dir)

@@ -4,7 +4,7 @@ family: images
 mime: image/x-icon
 description: >-
   A multi-resolution favicon.
-seo_title: "Sample ICO favicon for testing — free, CC0"
+seo_title: "Sample ICO favicon for testing, free and CC0"
 related: [png]
 fixtures:
   - name: favicon-16-32-48.ico

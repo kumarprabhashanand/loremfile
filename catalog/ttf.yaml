@@ -6,7 +6,7 @@ description: >-
   "Loremfile Sans" as TrueType. Every glyph is a rectangle computed from its codepoint, so
   the family is generated rather than derived from any typeface, and text set in it
   renders as visible blocks.
-seo_title: "Sample TTF font for testing renderers and loaders — free, CC0"
+seo_title: "Sample TTF font for testing renderers and loaders, free and CC0"
 related: [otf, woff, woff2]
 fixtures:
   - name: loremfile-sans.ttf

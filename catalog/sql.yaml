@@ -5,7 +5,7 @@ mime: application/sql
 description: >-
   Portable CREATE TABLE and INSERT statements for the shared people dataset,
   with no vendor-specific syntax.
-seo_title: "Sample SQL dump for testing importers — free, CC0"
+seo_title: "Sample SQL dump for testing importers, free and CC0"
 related: [csv, json]
 fixtures:
   - name: people-1000-inserts-portable.sql

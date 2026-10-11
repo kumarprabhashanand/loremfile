@@ -5,7 +5,7 @@ mime: application/xml
 description: >-
   XML with the features that actually differ between parsers: namespaces with and
   without prefixes, and a real RSS 2.0 feed.
-seo_title: "Sample XML files for testing parsers and feeds — free, CC0"
+seo_title: "Sample XML files for testing parsers and feeds, free and CC0"
 related: [json, yaml]
 fixtures:
   - name: people-10.xml

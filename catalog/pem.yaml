@@ -7,7 +7,7 @@ description: >-
   The key is derived from a published seed, so anyone can rebuild it and check the
   signature, and the private key itself is never written to a fixture. The subject is
   fixture.example, a name reserved for documentation.
-seo_title: "Sample PEM certificate and CSR for testing — free, CC0"
+seo_title: "Sample PEM certificate and CSR for testing, free and CC0"
 related: [der]
 fixtures:
   - name: self-signed-ed25519-cert.pem

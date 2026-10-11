@@ -7,7 +7,7 @@ description: >-
   stored and deflated entries, non-ASCII names, empty directories, an archive comment,
   an AES-encrypted archive whose password is published, and one large enough to need
   ZIP64.
-seo_title: "Sample ZIP files for testing extractors and uploads — free, CC0"
+seo_title: "Sample ZIP files for testing extractors and uploads, free and CC0"
 related: [tar, gz, 7z]
 fixtures:
   - name: zip64-70000-empty-files.zip

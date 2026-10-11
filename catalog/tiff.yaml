@@ -4,7 +4,7 @@ family: images
 mime: image/tiff
 description: >-
   An uncompressed RGB TIFF.
-seo_title: "Sample TIFF image for testing — free, CC0"
+seo_title: "Sample TIFF image for testing, free and CC0"
 related: [png, bmp, jpg]
 fixtures:
   - name: rgb-640x480.tiff

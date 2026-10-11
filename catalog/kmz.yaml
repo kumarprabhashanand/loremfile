@@ -4,7 +4,7 @@ family: data
 mime: application/vnd.google-earth.kmz
 description: >-
   The same KML placemarks, zipped as KMZ with doc.kml first.
-seo_title: "Sample KMZ file for testing mapping tools — free, CC0"
+seo_title: "Sample KMZ file for testing mapping tools, free and CC0"
 related: [kml, geojson]
 fixtures:
   - name: placemarks-10.kmz

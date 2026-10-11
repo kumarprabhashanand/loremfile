@@ -5,7 +5,7 @@ mime: image/svg+xml
 description: >-
   Hand-written SVG with no script, no event handlers and no external references.
   Served with a sandbox CSP so it renders its own shapes but can execute nothing.
-seo_title: "Sample SVG images for testing renderers — free, CC0"
+seo_title: "Sample SVG images for testing renderers, free and CC0"
 related: [png, webp]
 fixtures:
   - name: simple-shapes.svg

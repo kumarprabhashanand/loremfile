@@ -554,7 +554,11 @@ def format_pages(root: Path, manifest: Manifest, catalogs: dict[str, FormatCatal
         entries = sorted(
             (e for e in manifest.entries if e["format"] == fmt), key=lambda e: e["path"]
         )
-        active = [e for e in entries if e.get("status", "active") == "active"]
+        served = [e for e in entries if e.get("status", "active") == "active"]
+        # A superseded path is still served, but the page recommends its replacement and
+        # names the old path below the table, so an embedded URL is never left unexplained.
+        active = [e for e in served if not e.get("supersededBy")]
+        superseded = [e for e in served if e.get("supersededBy")]
         rows = [
             {
                 "path": e["path"],
@@ -595,6 +599,7 @@ def format_pages(root: Path, manifest: Manifest, catalogs: dict[str, FormatCatal
                 ),
                 "rows": rows,
                 "removed": [e for e in entries if e.get("status") == "removed"],
+                "superseded": superseded,
                 "related": [
                     {"format": other, "label": label(other)}
                     for other in info.related
@@ -612,7 +617,7 @@ def format_pages(root: Path, manifest: Manifest, catalogs: dict[str, FormatCatal
 
 
 def families(manifest: Manifest, catalogs: dict[str, FormatCatalog]) -> list[dict[str, Any]]:
-    counts = Counter(entry["format"] for entry in manifest.active)
+    counts = Counter(entry["format"] for entry in manifest.current)
     formats = sorted({entry["format"] for entry in manifest.entries})
     grouped = []
     for family, name in FAMILIES:
@@ -632,7 +637,7 @@ def home_page(
     catalogs: dict[str, FormatCatalog],
     tasks: list[tuple[str, str, str]],
 ) -> Page:
-    by_path = {entry["path"]: entry for entry in manifest.active}
+    by_path = {entry["path"]: entry for entry in manifest.current}
     missing = [path for path in POPULAR if path not in by_path]
     if missing:
         raise SiteError(f"popular paths not in the manifest: {', '.join(missing)} (docs/05 §8)")
@@ -657,7 +662,7 @@ def home_page(
                 }
                 for path in POPULAR
             ],
-            "count": len(manifest.active),
+            "count": len(manifest.current),
             "tasks": tasks,
         },
         jsonld=[
@@ -682,7 +687,7 @@ def home_page(
 
 
 def formats_page(manifest: Manifest, catalogs: dict[str, FormatCatalog]) -> Page:
-    active = manifest.active
+    active = manifest.current
     rows = []
     for fmt in sorted({entry["format"] for entry in manifest.entries}):
         mine = [e for e in active if e["format"] == fmt]
@@ -741,7 +746,7 @@ def doc_pages(root: Path) -> list[Page]:
 
 def testing_pages(root: Path, manifest: Manifest) -> list[Page]:
     """Guides by job: prose that names files and says why, their facts from the manifest."""
-    active = {entry["path"]: entry for entry in manifest.active}
+    active = {entry["path"]: entry for entry in manifest.current}
     crumbs = [("Home", "/"), ("Testing", "/testing")]
     pages: list[Page] = []
     for key, title, description, source in TESTING:
@@ -851,7 +856,7 @@ def format_index(manifest: Manifest, fmt: str) -> bytes:
 def search_index(manifest: Manifest) -> bytes:
     rows = [
         {"path": e["path"], "bytes": e["bytes"], "description": e["description"]}
-        for e in sorted(manifest.active, key=lambda e: e["path"])
+        for e in sorted(manifest.current, key=lambda e: e["path"])
     ]
     return (json.dumps(rows, ensure_ascii=False, separators=(",", ":")) + "\n").encode()
 
@@ -900,7 +905,7 @@ def llms(
     ]
     if full:
         lines += ["", "## Fixtures"]
-        active = sorted(manifest.active, key=lambda e: e["path"])
+        active = sorted(manifest.current, key=lambda e: e["path"])
         for fmt in sorted({e["format"] for e in active}):
             lines += ["", f"### {fmt}", "", "| Path | Bytes | Description | Properties |"]
             lines.append("|---|---|---|---|")

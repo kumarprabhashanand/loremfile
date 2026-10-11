@@ -3,9 +3,9 @@ format: opus
 family: audio
 mime: audio/opus
 description: >-
-  Opus in an Ogg container — the codec browsers and real-time systems standardised on.
+  Opus in an Ogg container: the codec browsers and real-time systems standardised on.
   Note that Opus always reports 48 kHz, whatever it was fed.
-seo_title: "Sample Opus audio files for testing — free, CC0, hotlinkable"
+seo_title: "Sample Opus audio files for testing, free, CC0 and hotlinkable"
 related: [ogg, mp3, m4a]
 fixtures:
   - name: 30s.opus

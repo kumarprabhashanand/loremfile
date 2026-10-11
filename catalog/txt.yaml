@@ -6,7 +6,7 @@ description: >-
   Plain text at exact sizes, every common line ending, and every charset a parser
   is likely to meet: UTF-8/16 with and without BOM, Latin-1, Windows-1252,
   Shift-JIS, plus a multilingual torture file and an emoji-only file.
-seo_title: "Sample text files for testing encodings and line endings — free, CC0"
+seo_title: "Sample text files for testing encodings and line endings, free and CC0"
 related: [md, log, ini, bin]
 fixtures:
   - name: utf16be-no-bom.txt
@@ -136,7 +136,7 @@ fixtures:
     phase: 1
     generator: text.multilingual
     params: {}
-    description: "One line per script — Latin, Greek, Cyrillic, Arabic, Hebrew, Devanagari, Thai, CJK, Hangul — plus emoji, combining marks, bidi controls and unusual space characters."
+    description: "One line per script (Latin, Greek, Cyrillic, Arabic, Hebrew, Devanagari, Thai, CJK, Hangul), plus emoji, combining marks, bidi controls and unusual space characters."
     tags: [text, unicode, encoding]
     expect: { encoding: utf-8, bom: false }
     size_class: free

@@ -3,9 +3,9 @@ format: ogv
 family: video
 mime: video/ogg
 description: >-
-  Theora video with Vorbis audio in Ogg — the older royalty-free stack, still what some
+  Theora video with Vorbis audio in Ogg: the older royalty-free stack, still what some
   toolchains emit and a useful negative control against VP9.
-seo_title: "Sample OGV video files for testing — free, CC0, hotlinkable"
+seo_title: "Sample OGV video files for testing, free, CC0 and hotlinkable"
 related: [webm, mp4, ogg]
 fixtures:
   - name: 720p-5s.ogv

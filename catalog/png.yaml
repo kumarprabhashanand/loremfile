@@ -5,7 +5,7 @@ mime: image/png
 description: >-
   PNG test cards at the sizes people actually need, plus transparency, greyscale
   and an animated APNG.
-seo_title: "Sample PNG images for testing uploads and viewers — free, CC0"
+seo_title: "Sample PNG images for testing uploads and viewers, free and CC0"
 related: [jpg, webp, avif, gif, svg]
 fixtures:
   - name: 1x1.png

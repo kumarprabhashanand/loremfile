@@ -5,7 +5,7 @@ mime: text/plain
 description: >-
   A configuration file covering sections, both comment styles, quoted values,
   empty values, lists and non-ASCII.
-seo_title: "Sample INI config file for testing parsers — free, CC0"
+seo_title: "Sample INI config file for testing parsers, free and CC0"
 related: [txt]
 fixtures:
   - name: config.ini

@@ -5,7 +5,7 @@ mime: application/json
 description: >-
   JSON arrays of the shared people dataset, a file exercising every scalar shape a
   parser must get right, and a 100-level nesting case for recursion limits.
-seo_title: "Sample JSON files for testing parsers and APIs — free, CC0"
+seo_title: "Sample JSON files for testing parsers and APIs, free and CC0"
 related: [ndjson, yaml, toml, xml]
 fixtures:
   - name: people-10.json

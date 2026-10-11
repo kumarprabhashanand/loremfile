@@ -6,7 +6,7 @@ description: >-
   A hand-assembled WebAssembly module exporting one function, `add(i32, i32) -> i32`. It
   is written byte by byte rather than compiled, so it carries no toolchain version or
   build path and stays small enough to read in a hex dump.
-seo_title: "Sample WebAssembly file for testing loaders — free, CC0"
+seo_title: "Sample WebAssembly file for testing loaders, free and CC0"
 related: [bin]
 fixtures:
   - name: minimal-add.wasm

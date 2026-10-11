@@ -4,9 +4,9 @@ family: documents
 mime: application/epub+zip
 description: >-
   EPUB 3 e-books for readers, converters and validators. A real package document, a real
-  navigation document and XHTML chapters — not a renamed zip. The `mimetype` entry is
+  navigation document and XHTML chapters, not a renamed zip. The `mimetype` entry is
   first and stored uncompressed, as the container format requires.
-seo_title: "Sample EPUB files for testing — free, CC0, hotlinkable"
+seo_title: "Sample EPUB files for testing, free, CC0 and hotlinkable"
 related: [pdf, docx, txt]  # zip joins in M3.7
 fixtures:
   - name: epub3-3chapters.epub
