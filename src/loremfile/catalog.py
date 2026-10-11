@@ -17,6 +17,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from loremfile import config
+from loremfile.site import routes
 
 # --- grammars (docs/03 §1) -------------------------------------------------
 
@@ -284,6 +285,13 @@ class Fixture(BaseModel):
                 else "lowercase kebab-case followed by one or more extensions"
             )
             raise ValueError(f"name '{self.name}' does not match the grammar: {hint}")
+        # The edge answers some URLs from the site's own files (docs/08 §5.2): a fixture at
+        # one of them would never be served, and a published name cannot change later.
+        served = routes.key_for(f"/{self.path}")
+        if served != self.path:
+            raise ValueError(
+                f"name '{self.name}' is reserved: the edge serves /{self.path} from {served}"
+            )
 
     @property
     def path(self) -> str:

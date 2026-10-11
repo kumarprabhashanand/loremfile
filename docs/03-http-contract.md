@@ -11,6 +11,7 @@ https://loremfile.dev/{format}/{name}
 - `format`: `^[a-z0-9]+$`, one of the formats in `05-fixture-catalog.md` (e.g. `pdf`, `mp4`, `bin`, `edge`, `hls`).
 - `name`: `^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+)+$`, a lowercase kebab-case descriptor followed by one or more extensions. Examples: `a4-3pages.pdf`, `3-text-files.tar.gz`, `people-1000.parquet`.
 - HLS is the one nested case and has its own grammar: `hls/{variant}/(index|master)\.m3u8` and `hls/{variant}/seg-[0-9]{3}\.ts` where `variant` matches the descriptor grammar (`720p-10s`, `multi-bitrate`). The catalog validator applies this exception; `filename` in `Content-Disposition` and `ext` in the manifest are derived from the last path segment.
+- `index.json` and `index.md` are reserved in every format directory. The edge serves `/{x}/index.json` and `/{x}/index.md` from the site's own files (`08` §5.2), so a fixture with either name could never be downloaded at its URL. The catalog validator refuses any name the edge would route to a different key, at authoring time, while the name can still change.
 - No uppercase, no spaces, no underscores, no query parameters needed. Query strings are ignored by the origin and excluded from the edge cache key, so `?v=1` is harmless (ADR-013).
 - Names stay put. A fixture is not renamed, and is removed only for a legal takedown (`13-legal-and-policy.md` §7); the manifest then keeps a tombstone.
 
