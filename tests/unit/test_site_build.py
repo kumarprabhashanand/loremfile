@@ -369,6 +369,49 @@ def test_the_icons_have_the_documented_sizes(site: Path) -> None:
     assert struct.unpack("<HHH", (site / "favicon.ico").read_bytes()[:6]) == (0, 1, 3)
 
 
+def light_tokens() -> dict[str, str]:
+    css = (ROOT / "site" / "static" / "site.css").read_text(encoding="utf-8")
+    light = css.split("@media (prefers-color-scheme: dark)", 1)[0]
+    found = re.findall(r"--([\w-]+):\s*(#[0-9a-fA-F]{6})", light)
+    return {name: value.lower() for name, value in found}
+
+
+def brand_drift(svg: str, drawn: dict[str, icons.Color], tokens: dict[str, str]) -> list[str]:
+    """Where the mark, or the icons and social card drawn from it, leave the site palette."""
+    expected = [tokens["accent"], "#fff", tokens["fg"], tokens["fg"], tokens["fg"]]
+    fills = [fill.lower() for fill in re.findall(r'fill="(#[0-9a-fA-F]+)"', svg)]
+    problems = [] if fills == expected else [f"mark.svg fills {fills}, expected {expected}"]
+    for name, token in (("ACCENT", "accent"), ("INK", "fg"), ("BACKDROP", "code-bg")):
+        drawn_hex = "#{:02x}{:02x}{:02x}".format(*drawn[name])
+        if drawn_hex != tokens[token]:
+            problems.append(f"icons.{name} is {drawn_hex}, --{token} is {tokens[token]}")
+    return problems
+
+
+MARK = ROOT / "site" / "static" / "mark.svg"
+DRAWN = ("ACCENT", "INK", "BACKDROP")
+
+
+def test_the_mark_and_the_drawn_icons_use_the_site_palette() -> None:
+    tokens = light_tokens()
+    assert {"accent", "fg", "code-bg"} <= set(tokens), "the token search found the palette"
+    drawn = {name: getattr(icons, name) for name in DRAWN}
+    assert brand_drift(MARK.read_text(encoding="utf-8"), drawn, tokens) == []
+    assert icons.PAPER == (255, 255, 255)
+
+
+def test_the_brand_check_names_the_old_blue() -> None:
+    tokens = light_tokens()
+    accent, fg = tokens["accent"], tokens["fg"]
+    svg = MARK.read_text(encoding="utf-8").replace(accent, "#2563eb")
+    drawn = {name: getattr(icons, name) for name in DRAWN} | {"ACCENT": (37, 99, 235)}
+    old, new = ["#2563eb", "#fff", fg, fg, fg], [accent, "#fff", fg, fg, fg]
+    assert brand_drift(svg, drawn, tokens) == [
+        f"mark.svg fills {old}, expected {new}",
+        f"icons.ACCENT is #2563eb, --accent is {accent}",
+    ]
+
+
 def test_a_png_decodes_to_the_pixels_drawn() -> None:
     canvas = icons.Canvas(3, 2, (1, 2, 3))
     canvas.fill(1, 0, 1, 1, (9, 9, 9))

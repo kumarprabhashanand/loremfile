@@ -11,10 +11,12 @@ import zlib
 
 Color = tuple[int, int, int]
 
-INK: Color = (15, 23, 42)
+#: The light theme's --fg, --accent and --code-bg in site/static/site.css, and a white page;
+#: mark.svg draws with the same colours, and a test keeps all three files in step.
+INK: Color = (28, 26, 23)
 PAPER: Color = (255, 255, 255)
-ACCENT: Color = (37, 99, 235)
-BACKDROP: Color = (241, 245, 249)
+ACCENT: Color = (15, 94, 89)
+BACKDROP: Color = (240, 236, 228)
 
 #: 5x7 glyphs for the wordmark, top row first.
 GLYPHS: dict[str, tuple[str, ...]] = {
