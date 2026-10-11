@@ -11,6 +11,7 @@ from catalog_helpers import minimal_edge, minimal_fixture, minimal_format, write
 from pydantic import ValidationError
 
 from loremfile.catalog import Catalog, CatalogError, Fixture, FormatCatalog
+from loremfile.site import routes
 
 
 def load(directory: Path) -> Catalog:
@@ -93,6 +94,25 @@ def test_hls_nesting_is_allowed(name: str) -> None:
 def test_invalid_hls_names_are_rejected(name: str) -> None:
     with pytest.raises(ValidationError, match="does not match the grammar"):
         Fixture.model_validate(minimal_fixture(name=name, format="hls"))
+
+
+@pytest.mark.parametrize(("fmt", "name"), [("json", "index.json"), ("md", "index.md")])
+def test_a_name_the_index_rewrite_claims_is_reserved(fmt: str, name: str) -> None:
+    """`/{x}/index.json` and `/{x}/index.md` are rewritten to the site's own files (docs/08
+    §5.2), so a fixture with either name would be unreachable at its own URL."""
+    with pytest.raises(ValidationError, match=f"name '{name}' is reserved: the edge serves"):
+        Fixture.model_validate(minimal_fixture(name=name, format=fmt))
+
+
+@pytest.mark.parametrize(("fmt", "name"), [("json", "index-1.json"), ("md", "indexes.md")])
+def test_names_beside_the_reserved_ones_are_allowed(fmt: str, name: str) -> None:
+    assert Fixture.model_validate(minimal_fixture(name=name, format=fmt)).name == name
+
+
+def test_no_catalogued_path_is_one_the_edge_routes_elsewhere() -> None:
+    paths = {fixture.path for fixture in Catalog.load().fixtures()}
+    assert {"json/people-10.json", "md/readme-style.md", "hls/720p-10s/index.m3u8"} <= paths
+    assert sorted(p for p in paths if routes.key_for(f"/{p}") != p) == []
 
 
 def test_hls_exception_does_not_leak_to_other_formats() -> None:
