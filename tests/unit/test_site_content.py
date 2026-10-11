@@ -100,7 +100,7 @@ def test_the_ranking_pages_open_with_one_sentence_and_then_their_file() -> None:
         assert len(re.findall(r"[.!?](?:\s|$)", opening)) == 1, f"{name}.md: one opening sentence"
 
 
-@pytest.mark.parametrize("name", ["getting-started", "naming", "faq", "languages"])
+@pytest.mark.parametrize("name", ["getting-started", "naming", "faq", "languages", "mcp"])
 def test_a_documentation_page_is_at_least_120_words(name: str) -> None:
     assert words((CONTENT / "pages" / f"{name}.md").read_text(encoding="utf-8")) >= 120
 

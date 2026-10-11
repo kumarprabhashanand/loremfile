@@ -199,6 +199,7 @@ Follow the llmstxt.org layout (H1 title, blockquote summary, H2 sections with li
 - Machine-readable list of everything: https://loremfile.dev/manifest.json (JSON, includes sha256, bytes, mime, measured properties)
 - Per-format lists: https://loremfile.dev/{format}/index.json
 - Verify: https://loremfile.dev/sha256sums.txt
+- MCP server for agents: `npx -y loremfile mcp` or `uvx loremfile mcp`, three read-only tools (list_fixtures, describe_fixture, verify_file): https://loremfile.dev/docs/mcp
 
 ## Formats
 - [PDF](https://loremfile.dev/pdf): A4/Letter, 1–100 pages, images, tables, links, outline, encrypted, exact-ish sizes 1 MB / 10 MB

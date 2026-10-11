@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import html
 import json
 import re
 import shutil
@@ -141,7 +142,7 @@ def _contrast(fg: str, bg: str) -> float:
 def test_the_footer_link_keeps_the_size_and_contrast_the_law_depends_on() -> None:
     """The case-law risk (OLG Frankfurt) is a link in very small or pale type, not its
     position — so a restyle that shrinks or fades the footer link must fail CI here, not
-    pass silently. Values measured on production 2026-09-21 (docs/07 §2)."""
+    pass silently. Values computed from the 2026-10 palette tokens (docs/07 §2)."""
     css = (ROOT / "site" / "static" / "site.css").read_text(encoding="utf-8")
     light = css.split("@media (prefers-color-scheme: dark)", 1)[0]
     dark = css.split("@media (prefers-color-scheme: dark)", 1)[1].split("}\n}", 1)[0]
@@ -151,10 +152,10 @@ def test_the_footer_link_keeps_the_size_and_contrast_the_law_depends_on() -> Non
         assert match, f"--{name} not found"
         return match.group(1).lower()
 
-    assert token(light, "accent") == "#1d4ed8" and token(light, "bg") == "#ffffff"
-    assert token(dark, "accent") == "#93c5fd" and token(dark, "bg") == "#0b1120"
-    assert round(_contrast(token(light, "accent"), token(light, "bg")), 1) == 6.7
-    assert round(_contrast(token(dark, "accent"), token(dark, "bg")), 1) == 10.4
+    assert token(light, "accent") == "#0f5e59" and token(light, "bg") == "#fbfaf7"
+    assert token(dark, "accent") == "#6fc4bb" and token(dark, "bg") == "#16140f"
+    assert round(_contrast(token(light, "accent"), token(light, "bg")), 1) == 7.3
+    assert round(_contrast(token(dark, "accent"), token(dark, "bg")), 1) == 9.0
 
     # Anchored to a line start: `.site-header, main, .site-footer { … }` is a shared layout
     # rule that comes first and carries no font-size, so an unanchored match reads it.
@@ -163,6 +164,41 @@ def test_the_footer_link_keeps_the_size_and_contrast_the_law_depends_on() -> Non
     assert re.search(r"(?m)^a\s*\{[^}]*color:\s*var\(--accent\)", css), "links lost --accent"
     # Nothing may restyle the footer's links more specifically than the rules above.
     assert not re.search(r"\.site-footer[^{]*\ba\b[^{]*\{", css), "a footer-link override"
+
+
+#: Selectors for the controls a person operates: their borders are UI, held to 3:1.
+CONTROL = re.compile(r"\b(input|button|select|textarea)\b")
+
+
+def border_misuse(css: str) -> list[str]:
+    """Controls bordered with anything but --muted, and --line used anywhere but a border."""
+    problems: list[str] = []
+    for raw, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+        selector = " ".join(raw.split())
+        control = bool(CONTROL.search(selector))
+        for prop, value in re.findall(r"([\w-]+)\s*:\s*([^;]+)", body):
+            border = prop.startswith("border")
+            if "var(--line)" in value and (not border or control):
+                problems.append(f"{selector}: {prop} uses --line")
+            if control and border and "var(" in value and "var(--muted)" not in value:
+                problems.append(f"{selector}: {prop} is not --muted")
+    return problems
+
+
+def test_controls_are_bordered_with_muted_and_line_is_decoration_only() -> None:
+    css = (ROOT / "site" / "static" / "site.css").read_text(encoding="utf-8")
+    assert {".search-box input", "button.copy"} <= {
+        " ".join(s.split()) for s in re.findall(r"([^{}]+)\{", css)
+    }, "empty-set control: the controls are in the stylesheet"
+    assert border_misuse(css) == []
+
+
+def test_the_border_check_fires() -> None:
+    assert border_misuse("button.copy { border: 1px solid var(--line); }") == [
+        "button.copy: border uses --line",
+        "button.copy: border is not --muted",
+    ]
+    assert border_misuse(".family { color: var(--line); }") == [".family: color uses --line"]
 
 
 def test_robots_txt_is_the_one_docs_04_specifies(site: Path) -> None:
@@ -228,6 +264,43 @@ def test_the_home_page_names_hotlinking_before_downloading(site: Path) -> None:
         assert "hotlink" in words and "download" in words, (where, words)
         assert words.index("hotlink") < words.index("download"), (where, words)
     assert len(places["description"].group(1)) < 160  # type: ignore[union-attr]
+
+
+def test_the_home_page_names_four_routes_and_links_status(site: Path) -> None:
+    home = text(site, "index.html")
+    routes_ = {
+        "Action": "https://github.com/kumarprabhashanand/loremfile/tree/main/action",
+        "pip": "https://pypi.org/project/loremfile/",
+        "npm": "https://www.npmjs.com/package/loremfile",
+        "MCP": "/docs/mcp",
+    }
+    for name, href in routes_.items():
+        assert f'<strong><a href="{href}">{name}</a></strong>' in home, name
+    assert 'href="/status"' in home
+
+
+def test_the_mcp_page_has_both_configs_the_tools_and_the_registry(site: Path) -> None:
+    page = text(site, "docs/mcp")
+    plain = html.unescape(page)
+    assert '"command": "npx", "args": ["-y", "loremfile", "mcp"]' in plain
+    assert '"command": "uvx", "args": ["loremfile", "mcp"]' in plain
+    shipped = json.loads((ROOT / "client" / "src" / "loremfile_client" / "tools.json").read_text())
+    assert [tool["name"] for tool in shipped] == [
+        "list_fixtures",
+        "describe_fixture",
+        "verify_file",
+    ]
+    assert all(f"<code>{tool['name']}</code>" in page for tool in shipped)
+    assert (
+        'href="https://registry.modelcontextprotocol.io/v0/servers?search=io.github.kumarprabhashanand/loremfile"'
+        in page
+    )
+
+
+def test_both_llms_files_point_agents_at_the_mcp_server(site: Path) -> None:
+    for key in ("llms.txt", "llms-full.txt"):
+        body = text(site, key)
+        assert "uvx loremfile mcp" in body and "https://loremfile.dev/docs/mcp" in body, key
 
 
 def test_every_format_page_names_the_command_for_its_whole_format(site: Path) -> None:

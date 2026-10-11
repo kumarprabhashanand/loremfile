@@ -30,19 +30,19 @@ current canonical host is stated here first. Do not rely on any other mirror.
 - **The bytes at a published path do not change.** Hash, byte count and MIME type stay as
   they are; a fix is a new path, and the old entry records `supersededBy`. A file may be
   withdrawn for legal reasons, and the manifest then keeps a tombstone for it. There is no
-  promise of availability — see [the terms](https://loremfile.dev/legal/terms).
+  promise of availability; see [the terms](https://loremfile.dev/legal/terms).
 - **Hotlinking is welcome.** That is what this is for. Please keep automated traffic under
   30 requests per second per client (the edge rate-limits at 300 requests / 10 s per IP).
 - **No tracking cookies, no analytics scripts, no accounts.**
 
 ## For agents and CI
 
-- [`/llms.txt`](https://loremfile.dev/llms.txt) — what this service is, in one file.
-- [`/manifest.json`](https://loremfile.dev/manifest.json) — every fixture with path, bytes,
+- [`/llms.txt`](https://loremfile.dev/llms.txt): what this service is, in one file.
+- [`/manifest.json`](https://loremfile.dev/manifest.json): every fixture with path, bytes,
   `sha256`, MIME type, tags and format-specific properties.
-- [`/sha256sums.txt`](https://loremfile.dev/sha256sums.txt) — verify downloads with
+- [`/sha256sums.txt`](https://loremfile.dev/sha256sums.txt): verify downloads with
   `sha256sum -c`.
-- `/{format}/index.json` — one format at a time.
+- `/{format}/index.json`: one format at a time.
 
 ### GitHub Action
 
@@ -61,23 +61,54 @@ run if loremfile.dev has moved on.
 
 The action is shell only and talks to nothing but loremfile.dev. It downloads one file at a
 time with a pause between them and backs off on a 429, because the published rate limit
-applies to it like any other client. **Linux and macOS runners only** — it needs `sha256sum`
+applies to it like any other client. **Linux and macOS runners only**: it needs `sha256sum`
 or `shasum`, and Windows is not supported rather than half-supported.
 
 `action-v1` is a major tag that moves as the action changes; it is deliberately not a `v*`
 release tag, because those name a catalog version and are frozen once pushed. Pinning a
 commit SHA works too and is the strictest option.
 
+### Command-line clients
+
+[`loremfile` on PyPI](https://pypi.org/project/loremfile/) (Python 3.11 or newer) and
+[`loremfile` on npm](https://www.npmjs.com/package/loremfile) take named files or a whole
+format, and write a file only after checking it against its `sha256`:
+
+```sh
+npx loremfile get --format pdf
+loremfile get pdf/minimal.pdf mp4/720p-5s.mp4    # after pip install loremfile
+```
+
+### MCP server
+
+Both packages also run a Model Context Protocol server over stdio, with three read-only
+tools: `list_fixtures`, `describe_fixture` and `verify_file`. With Node:
+
+```json
+{ "mcpServers": { "loremfile": { "command": "npx", "args": ["-y", "loremfile", "mcp"] } } }
+```
+
+With Python, without an install:
+
+```json
+{ "mcpServers": { "loremfile": { "command": "uvx", "args": ["loremfile", "mcp"] } } }
+```
+
+It is listed in the
+[MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.kumarprabhashanand/loremfile)
+as `io.github.kumarprabhashanand/loremfile`, and [loremfile.dev/docs/mcp](https://loremfile.dev/docs/mcp)
+describes the tools.
+
 ## Licences
 
 | What | Licence |
 |---|---|
-| Every file served under a format path (`/pdf/…`, `/bin/…`, `/edge/…`) | [CC0 1.0 Universal](LICENSES/CC0-1.0.txt) — public domain, no attribution needed |
+| Every file served under a format path (`/pdf/…`, `/bin/…`, `/edge/…`) | [CC0 1.0 Universal](LICENSES/CC0-1.0.txt): public domain, no attribution needed |
 | Generators, site and tooling in this repository | [MIT](LICENSE) |
 | Website text and graphics | CC BY 4.0, attribute "loremfile.dev" |
 
 Third-party tools used to generate the files are listed in [`THIRD_PARTY.md`](THIRD_PARTY.md).
-No third-party media is redistributed — everything is generated.
+No third-party media is redistributed: everything is generated.
 
 ## Repository
 
@@ -87,7 +118,7 @@ No third-party media is redistributed — everything is generated.
 | `catalog/` | Declarative fixture definitions, one YAML per format. |
 | `src/loremfile/` | Generators, validators, site builder, uploader, infrastructure code. |
 | `infra/` | Cloudflare desired state, applied by workflow. |
-| `manifest.json` | Generated lock file — never hand-edited. |
+| `manifest.json` | Generated lock file, never hand-edited. |
 
 ## Contributing
 
