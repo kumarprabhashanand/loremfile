@@ -6,7 +6,7 @@ description: >-
   A Unix mbox: several messages in one file, each introduced by a `From ` separator
   line. The format mail archives and exports still use, and the one where splitting on
   the wrong line loses a message.
-seo_title: "Sample mbox file for testing mail importers — free, CC0"
+seo_title: "Sample mbox file for testing mail importers, free and CC0"
 related: [eml]
 fixtures:
   - name: 3-messages.mbox

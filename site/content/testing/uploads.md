@@ -55,10 +55,10 @@ to convert it or show a placeholder, because not every browser displays HEIC.
 The pixels are stored rotated, with an EXIF tag that says how to turn them upright. A
 thumbnailer that strips metadata without applying the tag publishes the card sideways.
 
-<!-- file: jpg/cmyk-640x480.jpg -->
+<!-- file: jpg/cmyk-640x640.jpg -->
 
 CMYK rather than RGB. Image code that assumes three channels either rejects it or produces
-the wrong colours. Despite its name it measures 640x640, as the line above shows.
+the wrong colours.
 
 <!-- file: jpg/4000x3000.jpg -->
 

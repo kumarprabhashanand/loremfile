@@ -6,7 +6,7 @@ break naive decoders.
 baseline JPEGs at quality 85 with 4:2:0 chroma subsampling. `jpg/progressive-1920x1080.jpg`
 is the same card saved as a progressive scan, which renders coarse to fine.
 
-Two files target specific bugs. `jpg/cmyk-640x480.jpg` uses the CMYK colour space, which
+Two files target specific bugs. `jpg/cmyk-640x640.jpg` uses the CMYK colour space, which
 pipelines expecting RGB mishandle. `jpg/exif-orientation-6-640x480.jpg` carries orientation
 6, but its stored rotation makes the label upside down when the tag is applied. Use the
 orientation-8 fixture for a tag that restores upright pixels.

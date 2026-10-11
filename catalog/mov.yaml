@@ -5,7 +5,7 @@ mime: video/quicktime
 description: >-
   QuickTime, MP4's older sibling and what Apple devices produce. H.264 plus AAC,
   faststart, so the moov atom is ahead of the media.
-seo_title: "Sample MOV video files for testing — free, CC0, hotlinkable"
+seo_title: "Sample MOV video files for testing, free, CC0 and hotlinkable"
 related: [mp4, mkv]
 fixtures:
   - name: 720p-5s.mov

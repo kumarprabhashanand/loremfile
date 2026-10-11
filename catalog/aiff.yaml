@@ -3,9 +3,9 @@ format: aiff
 family: audio
 mime: audio/aiff
 description: >-
-  Uncompressed big-endian PCM in Apple's AIFF container — the byte-order counterpart to
+  Uncompressed big-endian PCM in Apple's AIFF container: the byte-order counterpart to
   WAV, and a useful check that a reader is not assuming little-endian.
-seo_title: "Sample AIFF audio files for testing — free, CC0, hotlinkable"
+seo_title: "Sample AIFF audio files for testing, free, CC0 and hotlinkable"
 related: [wav, flac]
 fixtures:
   - name: 3s.aiff

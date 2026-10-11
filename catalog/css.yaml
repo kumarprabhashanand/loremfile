@@ -5,7 +5,7 @@ mime: text/css
 description: >-
   Stylesheets for parsers and build tools: a small one using custom properties, media
   queries and feature queries, and a large one for measuring. Neither imports anything.
-seo_title: "Sample CSS files for testing parsers and build tools — free, CC0"
+seo_title: "Sample CSS files for testing parsers and build tools, free and CC0"
 related: [html, js]
 fixtures:
   - name: basic.css

@@ -5,7 +5,7 @@ mime: text/markdown
 description: >-
   Markdown documents: a README-shaped file, one exercising every common element, and a
   long one whose contents links and footnotes all resolve.
-seo_title: "Sample Markdown files for testing parsers — free, CC0"
+seo_title: "Sample Markdown files for testing parsers, free and CC0"
 related: [txt]
 fixtures:
   - name: readme-style.md

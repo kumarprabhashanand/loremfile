@@ -5,7 +5,7 @@ mime: image/avif
 description: >-
   An AVIF encoded by avifenc from the PNG test card, single-threaded so the output
   reproduces byte for byte.
-seo_title: "Sample AVIF image for testing modern decoders — free, CC0"
+seo_title: "Sample AVIF image for testing modern decoders, free and CC0"
 related: [webp, png, jpg]
 fixtures:
   - name: 640x480.avif

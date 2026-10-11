@@ -1,15 +1,15 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.7.0",
-  "generated_at": "2026-10-11T14:46:34Z",
+  "catalog_version": "1.8.0",
+  "generated_at": "2026-10-11T16:22:51Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:e334c50e6e3a68c6a7c2c4d9b824856299f8deeb3782fc104fd888b80e0c736c",
-  "count": 253,
-  "total_bytes": 607285323,
+  "count": 254,
+  "total_bytes": 607310590,
   "formats": [
     "7z",
     "aac",
@@ -1875,7 +1875,7 @@
       "sha256": "9b282e8b0b248bcc4bfbd2e9cc45013c5e13f7e9b0bd9f281719ca244d3ee897",
       "size_class": "free",
       "phase": 1,
-      "description": "One file that is a valid GIF image and a valid zip archive at once: the archive is everything after the GIF trailer. Scanners and proxies sometimes refuse polyglots outright — see the notes on the page.",
+      "description": "One file that is a valid GIF image and a valid zip archive at once: the archive is everything after the GIF trailer. Scanners and proxies sometimes refuse polyglots outright; see the notes on the page.",
       "tags": [
         "image",
         "archive",
@@ -2112,7 +2112,7 @@
       "sha256": "759337b3a30d123993fb473cb06ed5ced212cb0dbec147eb9b4d812d779e177a",
       "size_class": "free",
       "phase": 1,
-      "description": "One file that is a valid PDF and a valid zip archive at once: a PDF reader shows a page, a zip reader extracts readme.txt. Scanners and proxies sometimes refuse polyglots outright — see the notes on the page.",
+      "description": "One file that is a valid PDF and a valid zip archive at once: a PDF reader shows a page, a zip reader extracts readme.txt. Scanners and proxies sometimes refuse polyglots outright; see the notes on the page.",
       "tags": [
         "document",
         "archive",
@@ -2891,7 +2891,7 @@
       "sha256": "7cc7125995effea6924dc1002299b710e8b1b0b09ac93619ecdc6cbb6bb7da38",
       "size_class": "free",
       "phase": 1,
-      "description": "One page and three requests — a document, a stylesheet and an image — with fixed start times and timings.",
+      "description": "One page and three requests (a document, a stylesheet and an image) with fixed start times and timings.",
       "tags": [
         "web",
         "data"
@@ -3793,7 +3793,7 @@
       "sha256": "2233f68dec9e15f341bb94aede12648220f599641702e8bcf18206382d69aa58",
       "size_class": "free",
       "phase": 1,
-      "description": "Three cells — one Markdown, two code — with an execution result and a stdout stream already stored in the file.",
+      "description": "Three cells (one Markdown, two code) with an execution result and a stdout stream already stored in the file.",
       "tags": [
         "web",
         "data",
@@ -3858,7 +3858,7 @@
       "sha256": "9c0aafe20bc223c40b33dde4c15581994be7ac49b0285cf88693a81de6585bbe",
       "size_class": "approx",
       "phase": 1,
-      "description": "About 10MB of seeded noise at quality 95, 4:4:4 — noise does not compress, so the size is honest.",
+      "description": "About 10MB of seeded noise at quality 95, 4:4:4. Noise does not compress, so the size is honest.",
       "tags": [
         "image",
         "sized"
@@ -3930,7 +3930,7 @@
       "sha256": "63382ed1cbb89249822074bf9675d58829e444934f32a3acd7ee2facbd7f27e2",
       "size_class": "approx",
       "phase": 1,
-      "description": "About 1MB of seeded noise at quality 95, 4:4:4 — noise does not compress, so the size is honest.",
+      "description": "About 1MB of seeded noise at quality 95, 4:4:4. Noise does not compress, so the size is honest.",
       "tags": [
         "image",
         "sized"
@@ -4038,7 +4038,7 @@
       "sha256": "492ccd56ac18fee7453597967e56b517f03c75f837efa9201f0b6b2b593a1d58",
       "size_class": "free",
       "phase": 1,
-      "description": "A CMYK JPEG, the colour space that trips pipelines expecting RGB.",
+      "description": "A CMYK JPEG, the colour space that trips pipelines expecting RGB. Its name says 640x480, but it measures 640x640; jpg/cmyk-640x640.jpg replaces it, and this URL keeps serving the same bytes.",
       "tags": [
         "image"
       ],
@@ -4060,6 +4060,42 @@
         "mode": "CMYK"
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": true,
+      "supersededBy": "jpg/cmyk-640x640.jpg"
+    },
+    {
+      "path": "jpg/cmyk-640x640.jpg",
+      "url": "https://loremfile.dev/jpg/cmyk-640x640.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 25267,
+      "sha256": "492ccd56ac18fee7453597967e56b517f03c75f837efa9201f0b6b2b593a1d58",
+      "size_class": "free",
+      "phase": 2,
+      "description": "A CMYK JPEG, the colour space that trips pipelines expecting RGB. Replaces jpg/cmyk-640x480.jpg, whose name misstated its size.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 640,
+        "mode": "CMYK",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 640,
+        "height": 640,
+        "fmt": "JPEG",
+        "mode": "CMYK"
+      },
+      "added_in": "1.8.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -4882,7 +4918,7 @@
       "sha256": "c9efb7476277383553596af6167a763eebe266f04ab67d7ec42a608df3f02bb2",
       "size_class": "approx",
       "phase": 1,
-      "description": "About 10MB of 440 Hz sine at a constant 128 kbps — roughly ten minutes of audio.",
+      "description": "About 10MB of 440 Hz sine at a constant 128 kbps, roughly ten minutes of audio.",
       "tags": [
         "audio",
         "sized",
@@ -4955,7 +4991,7 @@
       "sha256": "e347b8227f47b104b400ec74568a50f567604ce81312351f62478a97b863a254",
       "size_class": "free",
       "phase": 1,
-      "description": "Five seconds of digital silence — a valid MP3 with nothing in it, for code that treats silence as failure.",
+      "description": "Five seconds of digital silence: a valid MP3 with nothing in it, for code that treats silence as failure.",
       "tags": [
         "audio",
         "codec-mp3"
@@ -4993,7 +5029,7 @@
       "sha256": "3820efa1481d02e6db8bfd1782ddee1a2d1c27cfab1d470ff0757b2f93770c1e",
       "size_class": "free",
       "phase": 1,
-      "description": "A 440 Hz sine wave, thirty seconds, 128 kbps stereo — long enough to test seeking and scrubbing.",
+      "description": "A 440 Hz sine wave, thirty seconds, 128 kbps stereo, long enough to test seeking and scrubbing.",
       "tags": [
         "audio",
         "codec-mp3"
@@ -5105,7 +5141,7 @@
       "sha256": "a71e94a5ca504c24604fb692102ec88317a7bd380b3a3a6eab1aafc6ae9e6154",
       "size_class": "free",
       "phase": 1,
-      "description": "Three seconds of 440 Hz carrying ID3v2.3 tags — title, artist, album, year and a PNG cover image taken from the published 100x100 fixture.",
+      "description": "Three seconds of 440 Hz carrying ID3v2.3 tags: title, artist, album, year and a PNG cover image taken from the published 100x100 fixture.",
       "tags": [
         "audio",
         "codec-mp3"
@@ -5402,7 +5438,7 @@
       "sha256": "701b1a23e75387af7adf3dc10880732f1d1d9caea7377f5bf6f89cd02ecd642c",
       "size_class": "free",
       "phase": 1,
-      "description": "H.264 Baseline profile at level 3.0 — the constrained profile old devices and some hardware decoders need.",
+      "description": "H.264 Baseline profile at level 3.0: the constrained profile old devices and some hardware decoders need.",
       "tags": [
         "video",
         "codec-h264",
@@ -5447,7 +5483,7 @@
       "sha256": "941f98f457cb89272b7d99e60ce801ce3a68b47a86711effe00bb98c5d591691",
       "size_class": "free",
       "phase": 1,
-      "description": "1280x720 with no audio track at all — for code paths that assume every video has one.",
+      "description": "1280x720 with no audio track at all, for code paths that assume every video has one.",
       "tags": [
         "video",
         "codec-h264"
@@ -6123,7 +6159,7 @@
       "sha256": "6ed3118f1cdfc2468a55eb680217469a5e881a2a22d46c89301757153665e205",
       "size_class": "free",
       "phase": 1,
-      "description": "A4 landscape, one page — the page box is wider than it is tall.",
+      "description": "A4 landscape, one page: the page box is wider than it is tall.",
       "tags": [
         "document",
         "text"
@@ -7871,7 +7907,7 @@
       "sha256": "ec651bc33c7e034df11b7c37ef8b67bbf771fac912011499b6824d52f3704fd7",
       "size_class": "free",
       "phase": 1,
-      "description": "One line per script — Latin, Greek, Cyrillic, Arabic, Hebrew, Devanagari, Thai, CJK, Hangul — plus emoji, combining marks, bidi controls and unusual space characters.",
+      "description": "One line per script (Latin, Greek, Cyrillic, Arabic, Hebrew, Devanagari, Thai, CJK, Hangul), plus emoji, combining marks, bidi controls and unusual space characters.",
       "tags": [
         "text",
         "unicode",
@@ -8097,7 +8133,7 @@
       "sha256": "d92572b5e46746358943922a462cf33f8a001cb488173a35b5ec8c3057eab4a2",
       "size_class": "exact",
       "phase": 1,
-      "description": "Exactly 10,000,000 bytes: a 44-byte header plus 2,499,989 frames of 44.1 kHz 16-bit stereo sine. Not approximately — exactly.",
+      "description": "Exactly 10,000,000 bytes: a 44-byte header plus 2,499,989 frames of 44.1 kHz 16-bit stereo sine. Not approximately: exactly.",
       "tags": [
         "audio",
         "sized",
@@ -8139,7 +8175,7 @@
       "sha256": "4e9e029040d3cf648ec3878c847189bf48a4dde12c8305f7aa37657f8fb14c64",
       "size_class": "free",
       "phase": 1,
-      "description": "A 440 Hz sine wave: three seconds of 44.1 kHz, 16-bit, stereo PCM — CD format, and what most software assumes a WAV is.",
+      "description": "A 440 Hz sine wave: three seconds of 44.1 kHz, 16-bit, stereo PCM: CD format, and what most software assumes a WAV is.",
       "tags": [
         "audio"
       ],
@@ -8625,7 +8661,7 @@
       "sha256": "f9c1b3642a8fef407a0b967599d4602a9a989677453ca41b4d9fb8f13a7e1c08",
       "size_class": "free",
       "phase": 1,
-      "description": "SUM, AVERAGE, IF and VLOOKUP over a ten-line order table, each with its result cached in the file. Readers that do not calculate — pandas, openpyxl's data_only mode — still see the values.",
+      "description": "SUM, AVERAGE, IF and VLOOKUP over a ten-line order table, each with its result cached in the file. Readers that do not calculate (pandas, openpyxl's data_only mode) still see the values.",
       "tags": [
         "document",
         "data"

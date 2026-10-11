@@ -8,9 +8,9 @@ mime: application/octet-stream
 description: >-
   Files that are wrong on purpose, or ambiguous on purpose: empty, truncated, mislabelled,
   malformed, or valid as two formats at once. Each is served as the type its extension
-  claims, so you can test what your code does with input it should refuse — and with input
+  claims, so you can test what your code does with input it should refuse, and with input
   nothing in the bytes can classify.
-seo_title: "Corrupt and malformed test files for error handling — free, CC0"
+seo_title: "Corrupt and malformed test files for error handling, free and CC0"
 related: [pdf, png, jpg, mp4, zip, json, csv, xml, txt]
 fixtures:
   - name: zero-byte.pdf
@@ -293,7 +293,7 @@ fixtures:
     description: >-
       One file that is a valid PDF and a valid zip archive at once: a PDF reader shows a
       page, a zip reader extracts readme.txt. Scanners and proxies sometimes refuse
-      polyglots outright — see the notes on the page.
+      polyglots outright; see the notes on the page.
     tags: [document, archive, polyglot]
     size_class: free
     mime: application/pdf
@@ -311,7 +311,7 @@ fixtures:
     description: >-
       One file that is a valid GIF image and a valid zip archive at once: the archive is
       everything after the GIF trailer. Scanners and proxies sometimes refuse polyglots
-      outright — see the notes on the page.
+      outright; see the notes on the page.
     tags: [image, archive, polyglot]
     size_class: free
     mime: image/gif

@@ -7,7 +7,7 @@ description: >-
   attachments, an inline image referenced by Content-ID, and non-ASCII in the headers.
   The date, Message-ID and MIME boundaries are fixed, and every address is at the
   reserved example.com domain.
-seo_title: "Sample EML email files for testing parsers and clients — free, CC0"
+seo_title: "Sample EML email files for testing parsers and clients, free and CC0"
 related: [mbox, txt]
 fixtures:
   - name: plain-text.eml

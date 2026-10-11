@@ -5,7 +5,7 @@ mime: application/x-tar
 description: >-
   Tar archives with fixed timestamps, ownership and permissions: plain, compressed four
   ways, nested, with relative symlinks, and with names too long for the ustar header.
-seo_title: "Sample TAR archives for testing — free, CC0, hotlinkable"
+seo_title: "Sample TAR archives for testing, free, CC0 and hotlinkable"
 related: [zip, gz, 7z]
 fixtures:
   - name: 3-text-files.tar

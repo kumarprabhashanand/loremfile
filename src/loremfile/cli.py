@@ -1663,11 +1663,11 @@ def _check_manifest_against_catalog() -> tuple[Manifest, list[str]]:
     return loaded, errors
 
 
-def _contains_text_disagreements(loaded: Manifest, catalog_obj: Catalog) -> list[str]:
-    """Catalog and manifest must agree on `contains_text` (docs/04 §1.3.2).
+def _catalog_disagreements(loaded: Manifest, catalog_obj: Catalog) -> list[str]:
+    """Catalog and manifest must agree on `contains_text` (docs/04 §1.3.2) and supersession.
 
-    The catalog declares the strings and a reader checks them before `manifest update`
-    publishes them, so a catalog edit with no rebuild is the one way the two part.
+    The catalog declares both and `manifest update` publishes them from a rebuild, so a
+    catalog edit with no rebuild is the one way the two part.
     """
     published = loaded.by_path
     errors = []
@@ -1678,6 +1678,12 @@ def _contains_text_disagreements(loaded: Manifest, catalog_obj: Catalog) -> list
         if (entry.get("props") or {}).get("contains_text") != fixture.contains_text:
             errors.append(
                 f"{fixture.path}: contains_text differs between the catalog and the "
+                "manifest; rebuild it and run `manifest update`"
+            )
+        superseded = (entry.get("supersededBy"), bool(entry.get("deprecated")))
+        if superseded != (fixture.superseded_by, fixture.superseded_by is not None):
+            errors.append(
+                f"{fixture.path}: supersededBy differs between the catalog and the "
                 "manifest; rebuild it and run `manifest update`"
             )
     return errors
@@ -1740,7 +1746,7 @@ def manifest_check(as_json: bool) -> None:
     """
     loaded, errors = _check_manifest_against_catalog()
     if not errors:
-        errors += _contains_text_disagreements(loaded, Catalog.load())
+        errors += _catalog_disagreements(loaded, Catalog.load())
     items: list[Item] = []
     corrections: list[dict[str, Any]] = []
     regenerated: list[dict[str, Any]] = []

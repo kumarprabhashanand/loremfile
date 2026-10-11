@@ -67,11 +67,11 @@ Field rules:
 | `description` | string | One or two sentences a human or agent can use to decide fit. ≤ 300 chars. |
 | `tags` | string[] | Lowercase; controlled vocabulary in `catalog/_tags.yaml`. |
 | `edge_case` | boolean | `true` for anything under `edge/` and for format-dir fixtures flagged as unusual (e.g. `txt/control-characters.txt`). |
-| `props` | object | Measured by validators, format-specific (see §1.3). The measured *values* cannot change, because the bytes they were measured on cannot: `sha256` is frozen, so `pages` or `rows` is settled for good. What a prop is called, and the wording of one that is a sentence, may be corrected — a correction is a changelog entry and a new catalog version, never a silent rewrite. |
+| `props` | object | Measured by validators, format-specific (see §1.3). The measured *values* cannot change, because the bytes they were measured on cannot: `sha256` is frozen, so `pages` or `rows` is settled for good. What a prop is called, and the wording of one that is a sentence, may be corrected: a correction is a changelog entry and a new catalog version, never a silent rewrite. |
 | `generator`, `generator_params` | string, object | Enough to regenerate. Informational; may change if a generator is refactored (bytes must not). |
 | `added_in` | semver | Catalog version that introduced it. |
 | `status` | enum | `active`, `removed` (legal takedown tombstone, see §1.5). |
-| `deprecated`, `supersededBy` | boolean, string/null | See immutability policy. |
+| `deprecated`, `supersededBy` | boolean, string/null | Set together from the catalog's `superseded_by` (`03` §7.3): `supersededBy` is the replacing path. A superseded entry stays active and served, and stays in `manifest.json`, `sha256sums.txt` and `{format}/index.json`; format pages, the search index and `llms-full.txt` list its replacement instead. |
 
 ### 1.3 `props` by format (what validators measure)
 
@@ -105,18 +105,18 @@ Field rules:
 | pdf, docx, pptx, xlsx, epub, html, md | `contains_text` on the fixtures §1.3.2 names: three to five strings a correct reader finds in the file |
 | pem, der | `kind` (`certificate`/`csr`), `algorithm`, `not_before`, `not_after` |
 | wasm | `sections`, `exports` |
-| edge/* | `defect`, `intended_format`, `bytes`, `damage`, `outcome`, `compare_with`, and `derived_from` for the six that were cut or copied from a published fixture; plus `fraction` (truncated) and `hostile_entries` (hostile-name). §1.3.1 describes the four that are about the breakage. `defect` is a closed enum, and it tells the validator what to assert: `zero-byte` (bytes == 0), `truncated` (bytes == floor(`fraction` × source bytes) with `fraction` from the catalog's `edge` block, default 0.5 — `pdf-truncated-60pct.pdf` uses 0.6 — and prefix-equal to the source), `mismatched-extension` (bytes equal the source fixture; magic bytes match the *source* format, not the extension), `magic-prefix` (bytes == the `magic` value from the `edge` block followed by the source fixture's bytes), `invalid-syntax` (the format's parser raises), `invalid-encoding` (strict decode with the declared charset raises), `nonstandard` (strict parser raises, lenient parser succeeds), `bom` (decodes after stripping the BOM; parser succeeds on the stripped text), `stress` (parses; the recorded `props` document the depth/size), `hostile-name` (parses; at least one entry name contains `../`), `polyglot` (**both** the announced format's reader and the one named by `edge.also_valid_as` accept the bytes; the prop `also_valid_as` records the second format). Only fixtures under `edge/` carry these; unusual-but-valid fixtures elsewhere (`txt/control-characters.txt`, `txt/nul-bytes.txt`) have `edge_case: true` and ordinary props |
+| edge/* | `defect`, `intended_format`, `bytes`, `damage`, `outcome`, `compare_with`, and `derived_from` for the six that were cut or copied from a published fixture; plus `fraction` (truncated) and `hostile_entries` (hostile-name). §1.3.1 describes the four that are about the breakage. `defect` is a closed enum, and it tells the validator what to assert: `zero-byte` (bytes == 0), `truncated` (bytes == floor(`fraction` × source bytes) with `fraction` from the catalog's `edge` block, default 0.5 (`pdf-truncated-60pct.pdf` uses 0.6), and prefix-equal to the source), `mismatched-extension` (bytes equal the source fixture; magic bytes match the *source* format, not the extension), `magic-prefix` (bytes == the `magic` value from the `edge` block followed by the source fixture's bytes), `invalid-syntax` (the format's parser raises), `invalid-encoding` (strict decode with the declared charset raises), `nonstandard` (strict parser raises, lenient parser succeeds), `bom` (decodes after stripping the BOM; parser succeeds on the stripped text), `stress` (parses; the recorded `props` document the depth/size), `hostile-name` (parses; at least one entry name contains `../`), `polyglot` (**both** the announced format's reader and the one named by `edge.also_valid_as` accept the bytes; the prop `also_valid_as` records the second format). Only fixtures under `edge/` carry these; unusual-but-valid fixtures elsewhere (`txt/control-characters.txt`, `txt/nul-bytes.txt`) have `edge_case: true` and ordinary props |
 
 #### 1.3.1 The four edge props (what is wrong, and what to expect)
 
 A broken file is only useful if you know how it is broken. Four props say so, and none of
-them is written by hand — `loremfile validate` measures or derives each one from the bytes
+them is written by hand: `loremfile validate` measures or derives each one from the bytes
 and refuses the fixture when the answer disagrees with the catalog.
 
 | Prop | What it is |
 |---|---|
 | `damage` | One sentence about the bytes: where the file stops, which structure is missing, where a parser gives up. Composed from what the validator measured, so every number in it was counted on the file it describes. |
-| `outcome` | `must-fail`, `may-recover` or `varies` — see below. |
+| `outcome` | `must-fail`, `may-recover` or `varies`; see below. |
 | `compare_with` | The valid fixture of the same announced type. Feed your reader both: a reader that refuses everything is not the same as one that refuses this. |
 | `derived_from` | The published fixture this one was cut or copied from, present on the six that have one and absent on the other thirteen. The validator reads that file and checks the relationship: a truncation's length must equal the recorded fraction of it and be a prefix of it, and a mislabelled file must equal it byte for byte. |
 
@@ -124,21 +124,21 @@ and refuses the fixture when the answer disagrees with the catalog.
 reader for the type the file announces and, when that refuses them, to a tolerant reading
 the format itself permits:
 
-- **`must-fail`** — nothing conforming gets anything out of it. An empty JSON file has no
+- **`must-fail`**: nothing conforming gets anything out of it. An empty JSON file has no
   value to return, and a trailing comma has no reading RFC 8259 allows. A parser that
   succeeds here is wrong.
-- **`may-recover`** — part of the content survives and a conforming reader may return it: a
+- **`may-recover`**: part of the content survives and a conforming reader may return it: a
   PDF reader rebuilding a lost cross-reference table, a JPEG decoder painting the scan lines
   that arrived, U+FFFD substitution for ill-formed UTF-8.
-- **`varies`** — readers legitimately disagree. Either one takes the file whole while
+- **`varies`**: readers legitimately disagree. Either one takes the file whole while
   another refuses it (a mislabelled file read by content rather than by name, a BOM that
-  RFC 8259 lets a parser ignore), or two take it whole and disagree about what it *is* —
+  RFC 8259 lets a parser ignore), or two take it whole and disagree about what it *is*:
   a polyglot, where nothing in the bytes decides the type.
 
 **`may-recover` and `varies` mean a parser that recovers is not wrong.** Only `must-fail`
 says failure is the required behaviour, so only `must-fail` belongs in a test that asserts
 your code refuses the file. For the other two, assert that your code does not crash, lose
-data silently or hang — not that it fails.
+data silently or hang, not that it fails.
 
 #### 1.3.2 `contains_text` (what a correct reader must find)
 
@@ -258,15 +258,15 @@ Disallow: /legal/privacy
 Sitemap: https://loremfile.dev/sitemap.xml
 ```
 
-AI crawlers are deliberately allowed (the audience includes agents). Raw fixtures carry `X-Robots-Tag: noindex`; pages are indexable — **except the two legal pages that name the operator** (ADR-016 amendment, ADR-028).
+AI crawlers are deliberately allowed (the audience includes agents). Raw fixtures carry `X-Robots-Tag: noindex`; pages are indexable, **except the two legal pages that name the operator** (ADR-016 amendment, ADR-028).
 
 - **`User-agent: *` keeps `Allow: /`.** Google honours `noindex` only on a page it is "not … blocked by a robots.txt file"; disallowing the legal pages for everyone would stop search engines from ever seeing the `noindex` that keeps them out.
-- **The named group replaces the `*` group for those crawlers, and disallows only the two paths** — everything else stays allowed for them. Each token is checked against its vendor's own documentation, and **no token is added without that check**: OpenAI documents `GPTBot`, `OAI-SearchBot`, `ChatGPT-User` and `OAI-AdsBot` ("OAI-AdsBot only visits pages submitted as ads, and the data collected by OAI-AdsBot is not used to train generative AI foundation models"), and says of `ChatGPT-User` that "robots.txt rules may not apply" to user-initiated actions; Anthropic documents `ClaudeBot`, `Claude-User` and `Claude-SearchBot` as robots.txt user agents; Google documents `Google-Extended` as a robots.txt token that "does not impact a site's inclusion in Google Search".
+- **The named group replaces the `*` group for those crawlers, and disallows only the two paths**; everything else stays allowed for them. Each token is checked against its vendor's own documentation, and **no token is added without that check**: OpenAI documents `GPTBot`, `OAI-SearchBot`, `ChatGPT-User` and `OAI-AdsBot` ("OAI-AdsBot only visits pages submitted as ads, and the data collected by OAI-AdsBot is not used to train generative AI foundation models"), and says of `ChatGPT-User` that "robots.txt rules may not apply" to user-initiated actions; Anthropic documents `ClaudeBot`, `Claude-User` and `Claude-SearchBot` as robots.txt user agents; Google documents `Google-Extended` as a robots.txt token that "does not impact a site's inclusion in Google Search".
 - **`Google-Extended` and `Applebot-Extended` send no requests of their own.** Google says `Google-Extended` "doesn't have a separate HTTP request user agent string"; Apple says `Applebot-Extended` "does not crawl webpages" and only controls how Applebot's data is used. Both belong here and **never** in a user-agent-matching rule, where they could not fire.
 - **Checked against each operator's own documentation (2026-09-22), with the token in the casing that operator publishes**: `CCBot` (Common Crawl, `CCBot/2.0`), `PerplexityBot` and `Perplexity-User` (Perplexity; the second "generally ignores robots.txt", which is why the WAF rule matters), `meta-externalagent` and `meta-externalfetcher` (Meta publishes them lower-case in the user agent), `Amazonbot` (`compatible; Amazonbot/0.1`), `Diffbot`, `MistralAI-User` (Mistral also runs `MistralAI-Index` and `MistralAI-Training`), `DuckAssistBot` (`DuckAssistBot/1.2`) and `Applebot-Extended`. **`Bytespider` is the one token vouched for by someone other than its operator**: ByteDance publishes no crawler documentation, and Cloudflare's AI Crawl Control bot reference lists it as `Bytespider | ByteDance | AI Crawler` (read 2026-09-22).
 - **Four proposed tokens are deliberately absent, because nobody documents them.** `anthropic-ai` and `claude-web`: Anthropic's crawler page names only `ClaudeBot`, `Claude-User` and `Claude-SearchBot`. `cohere-ai`: Cohere's own page says it runs no crawling bots "at this time" and names none. `archive.org_bot`: the Internet Archive's help pages do not name it, though a *verified* archiver is refused by category at the edge (`08` §5.7). `ia_archiver`: that token belongs to Alexa Internet, retired in 2022, so a clause for it could not fire. Adding any of them is a decision to drop this section's rule, not a detail.
-- **Five more, weighed 2026-09-28 (`crawler-watch`, old issue #27), all five refused.** The evidence is not equal across them and the record says so. `CloudflareBrowserRenderingCrawler` is the only one its operator documents: Cloudflare publishes the user agent as `CloudflareBrowserRenderingCrawler/1.0`, "not customizable", for Browser Rendering's `/crawl` endpoint, and calls it a verified bot that honours robots.txt (read 2026-09-28). It is verified under *intermediary agent*, which is **not** one of the four categories this rule matches, so the token clause is what refuses it. `qodercli` is Qoder's terminal coding agent; their documentation names the command but publishes no user agent, so the bare token is what the rule matches. `Kimi-Agent` is Moonshot AI's browsing agent and has no crawler page at all. `AgentDataBot` and `BixelBot` are listed with the operator "unclear at this time", so there is no operator to check them against — the list is the only source, as it is for `Bytespider`.
-- **`qodercli` and `Kimi-Agent` are refused as user-directed agents, not as crawlers.** Both fetch because a person asked them to, which is the same category as `ChatGPT-User`, `Claude-User` and `Perplexity-User` — already refused here since 2026-09-22. The two pages name the operator; the rule is about who ends up holding that name, not about why they came. Being user-directed is a reason robots.txt may not be obeyed, which is exactly why the WAF rule exists.
+- **Five more, weighed 2026-09-28 (`crawler-watch`, old issue #27), all five refused.** The evidence is not equal across them and the record says so. `CloudflareBrowserRenderingCrawler` is the only one its operator documents: Cloudflare publishes the user agent as `CloudflareBrowserRenderingCrawler/1.0`, "not customizable", for Browser Rendering's `/crawl` endpoint, and calls it a verified bot that honours robots.txt (read 2026-09-28). It is verified under *intermediary agent*, which is **not** one of the four categories this rule matches, so the token clause is what refuses it. `qodercli` is Qoder's terminal coding agent; their documentation names the command but publishes no user agent, so the bare token is what the rule matches. `Kimi-Agent` is Moonshot AI's browsing agent and has no crawler page at all. `AgentDataBot` and `BixelBot` are listed with the operator "unclear at this time", so there is no operator to check them against: the list is the only source, as it is for `Bytespider`.
+- **`qodercli` and `Kimi-Agent` are refused as user-directed agents, not as crawlers.** Both fetch because a person asked them to, which is the same category as `ChatGPT-User`, `Claude-User` and `Perplexity-User`, already refused here since 2026-09-22. The two pages name the operator; the rule is about who ends up holding that name, not about why they came. Being user-directed is a reason robots.txt may not be obeyed, which is exactly why the WAF rule exists.
 - **Two more, weighed 2026-10-07 (#51), both refused, both documented by their operator.** Keenable publishes its agents on its own crawler page, with full user-agent strings: `KeenableBot` (`Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; KeenableBot/1.0; +https://keenable.ai/bot)`) "collects publicly available pages to build and maintain the Keenable search index", which answers queries from AI agents and applications; and `Keenable-User` (the same string with `Keenable-User/1.0`) "identifies requests we make on behalf of a person, or an agent acting for one … It does not crawl the web automatically." `KeenableBot` came from `crawler-watch`. **`Keenable-User` is refused under the rule above for user-directed agents** (`qodercli`, `Kimi-Agent`), and it is **not on the crawler list** the watch reads, so the weekly watch would never have raised it.
 - **What the watch covers, and what it cannot.** `crawler-watch` reads a list of crawlers. User-directed agents are mostly not on it, so they have to be found in the operator's own documentation, as `Keenable-User` was, next to the crawler that brought the operator to our attention. When a new operator is weighed, read its crawler page for every token it publishes, not only the one the watch named.
 - **robots.txt asks; a WAF custom rule refuses.** Every token in this group except `Google-Extended` is also matched by the custom rule `loremfile_legal_pages_ai_agents` (`08` §5.7, ADR-030), which answers `403` on the two paths. `tests/unit/test_legal_pages.py` keeps the two lists equal.
@@ -281,18 +281,18 @@ The `files_headers` rule matches any path containing a dot, so `sitemap.xml`,
 `formats.json` and `security.txt` all receive it alongside the fixtures. It looks alarming
 next to a Search Console error and it is the wrong suspect: Google's own sitemap
 troubleshooting lists robots.txt blocking, manual actions, 404s, server errors and low
-crawl demand as the causes of "Couldn't fetch" — `noindex` is not among them, and a
+crawl demand as the causes of "Couldn't fetch": `noindex` is not among them, and a
 `noindex` sitemap is still fetched and read.
 
 **The observation that prompted this (2026-09-17).** A Search Console submission reported
 "Couldn't fetch" on a property verified minutes earlier, while the file served 200 to
 Googlebot with 92 URLs. **Decision: no header change**; re-check after a few days, because
 a just-verified property commonly reports that and resolves itself. This is written down
-so the rule is not "fixed" later on a theory the documentation does not support — changing
+so the rule is not "fixed" later on a theory the documentation does not support: changing
 `files_headers` to carve out the discovery files would alter the headers on every fixture
 path, which is a real risk taken against an imagined cause.
 
-**The decision stands after 2026-09-21.** Four display assets — `favicon.ico`, `apple-touch-icon.png`, `/assets/og.png`, `/assets/mark.svg` — were taken out of the noindex rule that day (`08` §5.3), because they exist to be *shown* by search engines and social platforms. That is not precedent for the discovery files: a sitemap does not need to be indexable to be fetched, and nothing in Google's documentation says otherwise.
+**The decision stands after 2026-09-21.** Four display assets (`favicon.ico`, `apple-touch-icon.png`, `/assets/og.png`, `/assets/mark.svg`) were taken out of the noindex rule that day (`08` §5.3), because they exist to be *shown* by search engines and social platforms. That is not precedent for the discovery files: a sitemap does not need to be indexable to be fetched, and nothing in Google's documentation says otherwise.
 
 
 Lists the home page, every format page, docs pages, legal pages **except `/legal/imprint` and `/legal/privacy`**, and the changelog. Does not list raw fixtures. `lastmod` = the committer date of the built commit (`07` §4), never the clock. Under 50 MB / 50,000 URLs, so a single file suffices.
@@ -323,8 +323,8 @@ JSON-LD per page type (single source of truth; `07` §3 refers here): home → `
 Four static standards, checked by Cloudflare's agent-readiness scanner. None of them lists or links either legal page, and `site build` refuses one that does (`site/checks.py`).
 
 - **`Content-Signal`** in robots.txt (§6).
-- **`Link` on every page** (RFC 8288), set by the `site_pages_headers` rule: `</llms.txt>; rel="describedby", </.well-known/api-catalog>; rel="api-catalog"`. Registered relation types only — `sitemap` is not in the IANA registry, RFC 8288 requires an unregistered type to be a URI, and robots.txt already names the sitemap. The same rule matches `/.well-known/api-catalog`, because RFC 9727 §2 requires its `HEAD` to carry the relation.
-- **`/.well-known/api-catalog`** (RFC 9727), served as `application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"` — the key has no extension, so `routes.content_type` names it rather than defaulting to HTML. One linkset entry per data file an agent can use: `manifest.json` with its schema as `service-desc`, `sha256sums.txt`, and every `{format}/index.json`, each with `llms.txt` as `service-doc`. A per-format index has no `service-desc`: it lacks the manifest's `formats` array, so the manifest schema does not describe it.
+- **`Link` on every page** (RFC 8288), set by the `site_pages_headers` rule: `</llms.txt>; rel="describedby", </.well-known/api-catalog>; rel="api-catalog"`. Registered relation types only: `sitemap` is not in the IANA registry, RFC 8288 requires an unregistered type to be a URI, and robots.txt already names the sitemap. The same rule matches `/.well-known/api-catalog`, because RFC 9727 §2 requires its `HEAD` to carry the relation.
+- **`/.well-known/api-catalog`** (RFC 9727), served as `application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"`; the key has no extension, so `routes.content_type` names it rather than defaulting to HTML. One linkset entry per data file an agent can use: `manifest.json` with its schema as `service-desc`, `sha256sums.txt`, and every `{format}/index.json`, each with `llms.txt` as `service-doc`. A per-format index has no `service-desc`: it lacks the manifest's `formats` array, so the manifest schema does not describe it.
 - **`/.well-known/agent-skills/index.json`** (Agent Skills Discovery v0.2.0) listing one skill, `find-and-verify-fixtures` (`site/agent-skills/`): find a fixture by format, fetch it, verify it against the manifest hash. The index carries `$schema`, and the skill entry's `digest` is the SHA-256 of the `SKILL.md` bytes, computed at build.
 
 ## 12. IndexNow

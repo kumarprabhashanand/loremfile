@@ -6,7 +6,7 @@ description: >-
   PDFs for viewers, parsers and upload forms: A4 and Letter, portrait and landscape,
   with images, with a table, encrypted, blank, and a hand-written minimal file.
   No embedded fonts and no scripts.
-seo_title: "Sample PDF files for testing — free, CC0, hotlinkable"
+seo_title: "Sample PDF files for testing, free, CC0 and hotlinkable"
 related: [png, jpg, docx, epub, edge]
 fixtures:
   - name: scanned-1page.pdf
@@ -86,7 +86,7 @@ fixtures:
     phase: 1
     generator: pdf.basic
     params: { pages: 1, orientation: landscape }
-    description: "A4 landscape, one page — the page box is wider than it is tall."
+    description: "A4 landscape, one page: the page box is wider than it is tall."
     tags: [document, text]
     expect: { pages: 1, page_width_pt: 841.89, page_height_pt: 595.28 }
     size_class: free

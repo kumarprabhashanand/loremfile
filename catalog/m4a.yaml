@@ -3,9 +3,9 @@ format: m4a
 family: audio
 mime: audio/mp4
 description: >-
-  AAC in an MP4 container — what Apple devices produce and what most streaming
+  AAC in an MP4 container: what Apple devices produce and what most streaming
   services deliver.
-seo_title: "Sample M4A audio files for testing — free, CC0, hotlinkable"
+seo_title: "Sample M4A audio files for testing, free, CC0 and hotlinkable"
 related: [aac, mp3, opus]
 fixtures:
   - name: aac-30s.m4a

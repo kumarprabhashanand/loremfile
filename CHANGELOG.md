@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-10-11
+
+- `jpg/cmyk-640x640.jpg` replaces `jpg/cmyk-640x480.jpg`, which has measured 640x640 since it
+  was published under a 640x480 name. The old URL keeps serving the same bytes, and its entry
+  now carries `supersededBy` and `deprecated`.
+- Catalog text without em dashes: 75 format titles first, then 13 format descriptions and 17
+  fixture descriptions, reworded with the same meaning. The files are unchanged.
+
 ## [1.7.0] - 2026-10-11
 
 - `m4a/aac-64k-44k-30s.m4a`: AAC at 64 kbps and 44.1 kHz, beside the 128 kbps, 48 kHz file.

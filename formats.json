@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.7.0",
+  "catalog_version": "1.8.0",
   "formats": [
     {
       "format": "7z",
@@ -243,8 +243,8 @@
     },
     {
       "format": "jpg",
-      "count": 10,
-      "total_bytes": 11441424,
+      "count": 11,
+      "total_bytes": 11466691,
       "url": "https://loremfile.dev/jpg",
       "index": "https://loremfile.dev/jpg/index.json",
       "mime_default": "image/jpeg"
