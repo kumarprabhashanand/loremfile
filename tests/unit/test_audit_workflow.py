@@ -138,3 +138,51 @@ def test_an_infra_report_without_items_fails_the_step(tmp_path: Path) -> None:
     done = run("infra", INFRA, {"ok": True}, tmp_path, "audit.json")
     assert done.returncode != 0
     assert "items" in done.stderr
+
+
+# --- a dispatch from a branch (2026-10-12) -------------------------------------------------
+
+SKIP_NOTICE = "Say why the zone audit is skipped on this branch"
+MAIN_ONLY = "github.ref == 'refs/heads/main'"
+
+
+def unguarded(workflow: dict[str, Any]) -> list[str]:
+    """Jobs gated by the production environment that a branch dispatch would still start.
+
+    GitHub rejects such a job at the environment gate before its first step, so it fails
+    with no log at all, which is how three branch dispatches failed without a trace.
+    """
+    return [
+        name
+        for name, job in workflow["jobs"].items()
+        if job.get("environment") == "production" and job.get("if") != MAIN_ONLY
+    ]
+
+
+def test_the_production_job_runs_on_main_only() -> None:
+    workflow = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
+    assert workflow["jobs"]["infra"]["environment"] == "production", "the job this is about"
+    assert unguarded(workflow) == []
+
+
+def test_the_guard_check_names_an_unguarded_production_job() -> None:
+    workflow = {"jobs": {"infra": {"environment": "production"}, "crawlers": {}}}
+    assert unguarded(workflow) == ["infra"]
+
+
+def test_a_branch_run_says_why_the_zone_audit_was_skipped(tmp_path: Path) -> None:
+    step = next(s for s in steps("setup") if s.get("name") == SKIP_NOTICE)
+    assert step["if"] == "github.ref != 'refs/heads/main'"
+    summary = tmp_path / "summary.md"
+    done = subprocess.run(  # noqa: S603 - this repository's own step, as `run` above
+        ["bash", "-c", script("setup", SKIP_NOTICE)],  # noqa: S607
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+        env={"GITHUB_REF_NAME": "chore/toolchain", "GITHUB_STEP_SUMMARY": str(summary)},
+    )
+    assert done.returncode == 0, done.stderr
+    assert done.stdout.startswith("::notice title=Zone audit skipped::")
+    assert "skipped on chore/toolchain" in done.stdout and "Dispatch from main" in done.stdout
+    assert "admits main only" in summary.read_text(encoding="utf-8")

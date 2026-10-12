@@ -37,9 +37,21 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: read
         run: echo "digest=$(cat tools/TOOLCHAIN_DIGEST)" >> "$GITHUB_OUTPUT"
+      # A dispatch from a branch is how a toolchain change gets its determinism audit before it
+      # merges, so the run must not go red for the zone audit it was never asked to make.
+      - name: Say why the zone audit is skipped on this branch
+        if: github.ref != 'refs/heads/main'
+        run: |
+          msg="The infra job audits the zone through the production environment, which admits main only, so it is skipped on ${GITHUB_REF_NAME}. Dispatch from main to audit the zone; the determinism and crawlers jobs ran on this branch."
+          echo "::notice title=Zone audit skipped::${msg}"
+          echo "${msg}" >> "$GITHUB_STEP_SUMMARY"
 
   infra:
     needs: setup
+    # Main only. On any other ref GitHub rejects this job at the environment gate before its
+    # first step, so it fails with no log: every branch dispatch from 2026-09-28 to 10-07 did,
+    # and the cause survived only as the job's annotation (docs/09 §3.4).
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     environment: production
     container:
