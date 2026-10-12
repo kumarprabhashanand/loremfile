@@ -13,7 +13,7 @@ disabling scheduled workflows after 60 quiet days.
 |---|---|---|---|---|
 | 2026-09-08 | 0 | 405 | 382 |  |
 | 2026-09-09 | 129 | 1,525 | 1,385 |  |
-| 2026-09-10 | 155 | 1,975 | 1,505 |  |
+| 2026-09-10 | 155 | 561 | 104 |  |
 | 2026-09-11 | 0 | 471 | 252 |  |
 | 2026-09-12 | 0 | 311 | 243 |  |
 | 2026-09-13 | 0 | 452 | 291 |  |
@@ -38,6 +38,11 @@ disabling scheduled workflows after 60 quiet days.
 | 2026-10-02 | 3 | 3,676 | 58 |  |
 | 2026-10-03 | 0 | 1,044 | 51 |  |
 | 2026-10-04 | 0 | 1,176 | 64 |  |
-| 2026-10-05 | 0 | 853 | 22 |  |
-| 2026-10-09 | — | — | — | #66 live 09:29 UTC: the ten ranking format pages (arrow, docx, hls, m4a, md, ogg, opus, rtf, tiff, wav) open with one answering sentence, then their file and measured props |
-| 2026-10-11 | — | — | — | #67 live 10:40 UTC: contains_text in the manifest; #68 live 15:26 UTC: catalog 1.7.0, fixtures for the formats that rank; #69 live 16:16 UTC: /testing guides, em dashes removed from 22 content pages; #70 live 21:08 UTC: catalog 1.8.0, all 79 format titles lose their em dash (the comparison pages ogg, rtf, tiff and arrow included), plus 14 format and 17 fixture descriptions; the 23 Oct Search Console reading is directional, not an experiment: every title changed on this one day |
+| 2026-10-05 | 0 | 1,414 | 27 |  |
+| 2026-10-06 | 0 | 1,104 | 43 |  |
+| 2026-10-07 | 197 | 7,770 | 206 |  |
+| 2026-10-08 | 114 | 2,754 | 745 |  |
+| 2026-10-09 | 12 | 2,149 | 34 | #66 live 09:29 UTC: the ten ranking format pages (arrow, docx, hls, m4a, md, ogg, opus, rtf, tiff, wav) open with one answering sentence, then their file and measured props |
+| 2026-10-10 | 0 | 1,040 | 42 |  |
+| 2026-10-11 | 513 | 7,134 | 167 | #67 live 10:40 UTC: contains_text in the manifest; #68 live 15:26 UTC: catalog 1.7.0, fixtures for the formats that rank; #69 live 16:16 UTC: /testing guides, em dashes removed from 22 content pages; #70 live 21:08 UTC: catalog 1.8.0, all 79 format titles lose their em dash (the comparison pages ogg, rtf, tiff and arrow included), plus 14 format and 17 fixture descriptions; the 23 Oct Search Console reading is directional, not an experiment: every title changed on this one day |
+| 2026-10-12 | 411 | 6,704 | 2 |  |
