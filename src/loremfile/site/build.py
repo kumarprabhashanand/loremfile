@@ -702,7 +702,10 @@ def format_pages(
             breadcrumbs(page.crumbs, label(fmt), page.canonical),
         ]
         index_url = routes.absolute_url(routes.format_index_key(fmt))
-        page.alternates = [("application/json", index_url)]
+        page.alternates = [
+            ("application/json", index_url),
+            ("text/markdown", routes.absolute_url(routes.twin_key(fmt))),
+        ]
         page.twin = twin(
             page,
             content(root, f"formats/{fmt}.md"),
@@ -892,6 +895,7 @@ def testing_pages(root: Path, manifest: Manifest, *, modified: dt.date) -> list[
             breadcrumbs(crumbs, title, page.canonical),
         ]
         page.twin = twin(page, text, f"site/content/{source}", active)
+        page.alternates = [("text/markdown", routes.absolute_url(routes.twin_key(key)))]
         pages.append(page)
     index = Page(
         "testing",
@@ -1009,7 +1013,11 @@ def llms(
         f"- Machine-readable list of everything: {base}manifest.json (JSON, includes sha256, "
         "bytes, mime, measured properties)",
         f"- Per-format lists: {base}{{format}}/index.json",
+        "- Any format or guide page as Markdown: append /index.md to its URL, for example "
+        f"{base}pdf/index.md or {base}testing/uploads/index.md",
         f"- Verify: {base}sha256sums.txt",
+        "- Verify from a page alone: the JSON-LD Dataset on every format and guide page gives "
+        "each file's contentSize and sha256, so a download can be checked without the manifest",
         f"- Working examples in five languages: {base}docs/languages",
         "- MCP server for agents: `npx -y loremfile mcp` or `uvx loremfile mcp`, three read-only "
         f"tools (list_fixtures, describe_fixture, verify_file): {base}docs/mcp",

@@ -198,7 +198,9 @@ Follow the llmstxt.org layout (H1 title, blockquote summary, H2 sections with li
 - Every fixture: https://loremfile.dev/{format}/{name}; see the manifest for all paths.
 - Machine-readable list of everything: https://loremfile.dev/manifest.json (JSON, includes sha256, bytes, mime, measured properties)
 - Per-format lists: https://loremfile.dev/{format}/index.json
+- Any format or guide page as Markdown: append /index.md to its URL, for example https://loremfile.dev/pdf/index.md or https://loremfile.dev/testing/uploads/index.md
 - Verify: https://loremfile.dev/sha256sums.txt
+- Verify from a page alone: the JSON-LD Dataset on every format and guide page gives each file's contentSize and sha256, so a download can be checked without the manifest
 - MCP server for agents: `npx -y loremfile mcp` or `uvx loremfile mcp`, three read-only tools (list_fixtures, describe_fixture, verify_file): https://loremfile.dev/docs/mcp
 
 ## Formats
@@ -226,7 +228,7 @@ Each format page and each of the three testing guides has a Markdown twin at its
 - **Stored under `_formats/`** (`_formats/pdf.md`, `_formats/testing/uploads.md`) and served by the same rewrite as `index.json` (`08` §5.2). An object under a locked format prefix can never change again, and a twin has to change whenever its page's copy does.
 - Served as `text/markdown; charset=utf-8`, cached like the pages, with the headers every dotted path carries, `X-Robots-Tag: noindex` included. There is no `Link: rel="canonical"` header: noindex already keeps a twin out of search, and the two would contradict each other (owner, 2026-10-11).
 - Not in `sitemap.xml`, `search-index.json` or `llms.txt`, and no `Accept` negotiation: `/pdf` always answers HTML.
-- **Not advertised yet.** `<link rel="alternate" type="text/markdown">` on the pages and a line in `llms.txt` come in a later change, once the twin URLs answer in production; a test fails if either appears before then.
+- **Advertised since 2026-10-12**, after the twins answered in production: every format page and guide carries `<link rel="alternate" type="text/markdown">` to its twin, and `llms.txt` states the `/index.md` pattern under How to use, the only two ways an agent learns a twin exists, since nothing looks for `.md` by convention. A test requires every advertised twin to exist in the build, for every page a later change adds as well.
 - The catalog refuses the fixture names `index.json` and `index.md` (`03` §1), so no fixture can sit at a twin's URL.
 
 ## 6. `robots.txt`
@@ -327,7 +329,7 @@ Deployed copy of the JSON Schema (§1.4). `application/schema+json`, immutable c
 
 ## 10. Structured data on pages
 
-JSON-LD per page type (single source of truth; `07` §3 refers here): home → `WebSite` + `SoftwareSourceCode` (pointing at the repository); format page → `Dataset` (`name`, `description`, `license: CC0`, `isAccessibleForFree: true`, `dateModified` (the commit date the sitemap gives as `lastmod`), and `distribution` with `contentUrl`, `encodingFormat`, `contentSize` (the manifest's byte count) and `sha256` per active fixture) + `BreadcrumbList`, and a `<link rel="alternate" type="application/json">` to its `index.json`; testing guide → the same `Dataset`, its `distribution` being exactly the files the guide names, + `BreadcrumbList`; `/formats` → `CollectionPage` whose `mainEntity` is an `ItemList` of every format page, in the table's order, + `BreadcrumbList`; docs, legal, the testing index and `/changelog` → `TechArticle` + `BreadcrumbList`, **except `/legal/imprint` and `/legal/privacy`, which carry no JSON-LD at all** (ADR-028). No `Organization`, `creator`, `publisher` or `author` node anywhere, and a test fails on one.
+JSON-LD per page type (single source of truth; `07` §3 refers here): home → `WebSite` + `SoftwareSourceCode` (pointing at the repository); format page → `Dataset` (`name`, `description`, `license: CC0`, `isAccessibleForFree: true`, `dateModified` (the commit date the sitemap gives as `lastmod`), and `distribution` with `contentUrl`, `encodingFormat`, `contentSize` (the manifest's byte count) and `sha256` per active fixture) + `BreadcrumbList`, and `<link rel="alternate">` to its `index.json` (`application/json`) and its Markdown twin (`text/markdown`, §5b); a testing guide carries the Markdown one; testing guide → the same `Dataset`, its `distribution` being exactly the files the guide names, + `BreadcrumbList`; `/formats` → `CollectionPage` whose `mainEntity` is an `ItemList` of every format page, in the table's order, + `BreadcrumbList`; docs, legal, the testing index and `/changelog` → `TechArticle` + `BreadcrumbList`, **except `/legal/imprint` and `/legal/privacy`, which carry no JSON-LD at all** (ADR-028). No `Organization`, `creator`, `publisher` or `author` node anywhere, and a test fails on one.
 
 ## 11. Agent discovery
 

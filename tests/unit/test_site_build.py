@@ -694,37 +694,60 @@ def test_a_twin_names_a_superseded_file_and_its_replacement(site: Path) -> None:
     assert "jpg/cmyk-640x480.jpg" not in body.split("\n## Files\n", 1)[1].split("\n## ", 1)[0]
 
 
-def test_twins_are_markdown_and_stay_out_of_every_index(site: Path, keys: dict[str, Path]) -> None:
+def test_twins_are_markdown_and_listed_nowhere_but_one_llms_line(
+    site: Path, keys: dict[str, Path]
+) -> None:
     twins = [key for key in keys if key.startswith("_formats/") and key.endswith(".md")]
     assert {"_formats/jpg.md", "_formats/testing/uploads.md"} <= set(twins)
     assert len(twins) == len({p.split("/", 1)[0] for p in fixtures()}) + 3
     for key in twins:
         assert routes.content_type(key) == "text/markdown; charset=utf-8"
-    for index in ("sitemap.xml", "search-index.json", "llms.txt", "llms-full.txt"):
+    for index in ("sitemap.xml", "search-index.json"):
         assert "index.md" not in text(site, index), index
+    for llms in ("llms.txt", "llms-full.txt"):
+        lines = [line for line in text(site, llms).splitlines() if "index.md" in line]
+        assert len(lines) == 1 and "append /index.md to its URL" in lines[0], llms
 
 
-def advertises_twin(html_text: str) -> bool:
-    return bool(re.search(r'<link rel="alternate" type="text/markdown"', html_text))
+def test_llms_states_the_twin_pattern_and_the_hashes_under_how_to_use(site: Path) -> None:
+    for llms in ("llms.txt", "llms-full.txt"):
+        how = text(site, llms).split("## How to use\n", 1)[1].split("\n## ", 1)[0].splitlines()
+        lists = next(i for i, line in enumerate(how) if line.startswith("- Per-format lists:"))
+        assert how[lists + 1].startswith("- Any format or guide page as Markdown: append /index.md")
+        assert any("contentSize and sha256" in line for line in how), llms
 
 
-def test_the_advertising_check_finds_a_markdown_alternate() -> None:
-    link = '<link rel="alternate" type="text/markdown" href="https://loremfile.dev/pdf/index.md">'
-    assert advertises_twin(f"<head>{link}</head>")
-    assert not advertises_twin('<link rel="alternate" type="application/json" href="x">')
+#: A `<link rel="alternate" type="text/markdown">` and the URL it advertises.
+MARKDOWN_ALTERNATE = re.compile(r'<link rel="alternate" type="text/markdown" href="([^"]+)">')
 
 
-def test_no_page_advertises_a_twin_before_production_serves_it(
-    site: Path, keys: dict[str, Path]
-) -> None:
-    """Owner, 2026-10-11: no `rel="alternate" type="text/markdown"` and no llms.txt line until
-    the twin URLs resolve in production. The PR that adds them removes this test."""
-    pages = [key for key in keys if routes.is_page(key)]
-    assert {"jpg", "testing/uploads"} <= set(pages)
-    assert [key for key in pages if advertises_twin(text(site, key))] == []
-    link = re.compile(r'<link rel="alternate" type="([^"]+)" href="([^"]+)">')
-    alternate = link.findall(text(site, "jpg"))
-    assert alternate == [("application/json", "https://loremfile.dev/jpg/index.json")]
+def missing_twins(pages: dict[str, str], keys: set[str]) -> list[tuple[str, str]]:
+    """(page, href) for every advertised Markdown twin whose key the build did not write."""
+    return [
+        (page, href)
+        for page, html_text in sorted(pages.items())
+        for href in MARKDOWN_ALTERNATE.findall(html_text)
+        if routes.key_for(href.removeprefix("https://loremfile.dev")) not in keys
+    ]
+
+
+def test_every_advertised_twin_exists_in_the_build(site: Path, keys: dict[str, Path]) -> None:
+    """Advertising a twin that is not there is the mistake to prevent, for every twin a later
+    page adds as much as for today's 83 (owner, 2026-10-12)."""
+    pages = {key: text(site, key) for key in keys if routes.is_page(key)}
+    advertising = {key for key, html_text in pages.items() if MARKDOWN_ALTERNATE.search(html_text)}
+    formats = {p.split("/", 1)[0] for p in fixtures()}
+    assert formats | {"testing/uploads", "testing/parsers", "testing/media-playback"} == advertising
+    assert missing_twins(pages, set(keys)) == []
+
+
+def test_the_twin_check_finds_an_advertised_twin_that_is_missing() -> None:
+    link = '<link rel="alternate" type="text/markdown" href="https://loremfile.dev/{}/index.md">'
+    pages = {"pdf": link.format("pdf"), "nope": link.format("nope")}
+    assert MARKDOWN_ALTERNATE.findall(pages["pdf"]) == ["https://loremfile.dev/pdf/index.md"]
+    assert missing_twins(pages, {"_formats/pdf.md"}) == [
+        ("nope", "https://loremfile.dev/nope/index.md")
+    ]
 
 
 def test_a_twin_marker_the_page_may_not_list_stops_the_build() -> None:
