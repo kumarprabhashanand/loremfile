@@ -672,7 +672,11 @@ def header_branch_findings(hashes: dict[str, str], responses: dict[str, Response
     """The header rules' branches on real pages: `/`, a format page with and without its
     slash, the legal pages, and a per-format index (docs/09 §3.2, ADR-032)."""
     prefix = f"{routes.FORMAT_INDEX_DIR}/"
-    formats = sorted(key[len(prefix) : -len(".json")] for key in hashes if key.startswith(prefix))
+    formats = sorted(
+        key[len(prefix) : -len(".json")]
+        for key in hashes
+        if key.startswith(prefix) and key.endswith(".json")  # not the .md twins beside them
+    )
     findings: list[Finding] = []
     for key in ("index.html", *formats[:1], *routes.LEGAL_KEYS):
         if key in responses:

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from loremfile.infra import locks
+from loremfile.infra import locks, purge
 from loremfile.site import build, checks, icons, legal, routes
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -544,7 +544,7 @@ def test_a_guide_that_names_an_unpublished_file_stops_the_build(tmp_path: Path) 
     guide.write_text(guide.read_text() + "\n<!-- file: bin/never-published.bin -->\n")
     manifest = build.Manifest.load(ROOT / "manifest.json")
     with pytest.raises(build.SiteError, match=re.escape("bin/never-published.bin")):
-        build.testing_pages(tmp_path, manifest)
+        build.testing_pages(tmp_path, manifest, modified=WHEN.date())
 
 
 # --- superseded entries ---------------------------------------------------------------
@@ -570,3 +570,198 @@ def test_a_superseded_file_is_named_but_not_recommended(site: Path) -> None:
 
 def test_a_format_without_supersessions_shows_no_section(site: Path) -> None:
     assert 'id="superseded"' not in text(site, "png")
+
+
+# --- structured data: sizes, hashes, dates and the formats collection --------------------
+
+
+def manifest_entries() -> dict[str, dict]:
+    return {e["path"]: e for e in json.loads((ROOT / "manifest.json").read_text())["fixtures"]}
+
+
+def datasets(site: Path, keys: dict[str, Path]) -> dict[str, dict]:
+    found = {}
+    for key in keys:
+        if routes.is_page(key) and key not in routes.LEGAL_KEYS:
+            for block in checks._jsonld(text(site, key)):
+                if block.get("@type") == "Dataset":
+                    found[key] = block
+    return found
+
+
+def test_every_data_download_carries_the_manifest_size_and_hash(
+    site: Path, keys: dict[str, Path]
+) -> None:
+    found = datasets(site, keys)
+    assert {"jpg", "wav", "hls", "testing/uploads", "testing/parsers"} <= set(found)
+    entries = manifest_entries()
+    for key, block in found.items():
+        for download in block["distribution"]:
+            entry = entries[download["contentUrl"].removeprefix("https://loremfile.dev/")]
+            assert download["contentSize"] == f"{entry['bytes']} bytes", (key, entry["path"])
+            assert download["sha256"] == entry["sha256"], (key, entry["path"])
+
+
+def test_every_dataset_is_dated_like_its_sitemap_entry(site: Path, keys: dict[str, Path]) -> None:
+    lastmods = set(re.findall(r"<lastmod>([^<]+)</lastmod>", text(site, "sitemap.xml")))
+    assert lastmods == {WHEN.date().isoformat()}
+    found = datasets(site, keys)
+    assert len(found) > 80 and "pdf" in found
+    assert {block["dateModified"] for block in found.values()} == lastmods
+
+
+def test_the_formats_page_is_a_collection_of_every_format_page(site: Path) -> None:
+    blocks = checks._jsonld(text(site, "formats"))
+    collection = next(b for b in blocks if b.get("@type") == "CollectionPage")
+    items = collection["mainEntity"]["itemListElement"]
+    formats = sorted({path.split("/", 1)[0] for path in fixtures()})
+    assert {"jpg", "wav", "7z"} <= set(formats)
+    assert [item["url"] for item in items] == [f"https://loremfile.dev/{f}" for f in formats]
+    assert [item["position"] for item in items] == list(range(1, len(formats) + 1))
+    assert collection["mainEntity"]["numberOfItems"] == len(formats)
+
+
+def test_the_changelog_is_a_tech_article(site: Path) -> None:
+    types = [b["@type"] for b in checks._jsonld(text(site, "changelog"))]
+    assert types == ["TechArticle", "BreadcrumbList"]
+
+
+#: ADR-028: no person or organization in public markup.
+PARTY = re.compile(r'"(creator|publisher|author)"|"Organization"')
+
+
+def parties(html_text: str) -> list[str]:
+    return [m.group(0) for b in checks._jsonld(html_text) for m in PARTY.finditer(json.dumps(b))]
+
+
+def test_no_structured_data_names_a_creator_or_publisher(site: Path, keys: dict[str, Path]) -> None:
+    pages = [key for key in keys if routes.is_page(key)]
+    assert {"jpg", "formats", "changelog"} <= set(pages)
+    assert {key: parties(text(site, key)) for key in pages if parties(text(site, key))} == {}
+
+
+def test_the_party_check_finds_a_publisher() -> None:
+    block = {"@type": "Dataset", "publisher": {"@type": "Organization", "name": "x"}}
+    page = f'<script type="application/ld+json">{json.dumps(block)}</script>'
+    assert parties(page) == ['"publisher"', '"Organization"']
+
+
+# --- Markdown twins (docs/04 §5b) ----------------------------------------------------------
+
+
+TWIN_ROW = re.compile(r"^\| \[`([^`]+)`\]\(https://loremfile\.dev/\1\) \|", re.M)
+
+
+def test_every_format_page_has_a_twin_listing_exactly_its_files(site: Path) -> None:
+    current = {
+        e["path"]
+        for e in json.loads((ROOT / "manifest.json").read_text())["fixtures"]
+        if e.get("status", "active") == "active" and not e.get("supersededBy")
+    }
+    formats = sorted({path.split("/", 1)[0] for path in fixtures()})
+    assert {"jpg", "wav", "7z"} <= set(formats)
+    for fmt in formats:
+        body = text(site, routes.twin_key(fmt))
+        table = body.split("\n## Files\n", 1)[1].split("\n## ", 1)[0]
+        listed = set(TWIN_ROW.findall(table))
+        assert listed == {p for p in current if p.startswith(f"{fmt}/")}, fmt
+        assert f"The page: <https://loremfile.dev/{fmt}>." in body
+        assert f"<https://loremfile.dev/{fmt}/index.json>" in body
+        assert "<!-- file:" not in body
+
+
+def test_a_guide_twin_lists_the_files_its_prose_names_in_order(site: Path) -> None:
+    for slug in ("uploads", "parsers", "media-playback"):
+        source = (ROOT / "site" / "content" / "testing" / f"{slug}.md").read_text()
+        named = re.findall(r"^<!-- file: (\S+) -->$", source, re.M)
+        assert len(named) > 5, slug
+        body = text(site, routes.twin_key(f"testing/{slug}"))
+        assert TWIN_ROW.findall(body) == named, slug
+
+
+def test_a_twin_row_states_the_manifest_measurements(site: Path) -> None:
+    entry = manifest_entries()["jpg/cmyk-640x640.jpg"]
+    row = build.twin_row(entry)
+    assert row in text(site, routes.twin_key("jpg"))
+    assert f"{entry['bytes']:,} bytes" in row and entry["mime"] in row
+    props = entry["props"]
+    assert f"{props['width']}x{props['height']}, {props['mode']}" in row
+
+
+def test_a_twin_names_a_superseded_file_and_its_replacement(site: Path) -> None:
+    body = text(site, routes.twin_key("jpg"))
+    assert "- `jpg/cmyk-640x480.jpg` is replaced by `jpg/cmyk-640x640.jpg`." in body
+    assert "jpg/cmyk-640x480.jpg" not in body.split("\n## Files\n", 1)[1].split("\n## ", 1)[0]
+
+
+def test_twins_are_markdown_and_stay_out_of_every_index(site: Path, keys: dict[str, Path]) -> None:
+    twins = [key for key in keys if key.startswith("_formats/") and key.endswith(".md")]
+    assert {"_formats/jpg.md", "_formats/testing/uploads.md"} <= set(twins)
+    assert len(twins) == len({p.split("/", 1)[0] for p in fixtures()}) + 3
+    for key in twins:
+        assert routes.content_type(key) == "text/markdown; charset=utf-8"
+    for index in ("sitemap.xml", "search-index.json", "llms.txt", "llms-full.txt"):
+        assert "index.md" not in text(site, index), index
+
+
+def advertises_twin(html_text: str) -> bool:
+    return bool(re.search(r'<link rel="alternate" type="text/markdown"', html_text))
+
+
+def test_the_advertising_check_finds_a_markdown_alternate() -> None:
+    link = '<link rel="alternate" type="text/markdown" href="https://loremfile.dev/pdf/index.md">'
+    assert advertises_twin(f"<head>{link}</head>")
+    assert not advertises_twin('<link rel="alternate" type="application/json" href="x">')
+
+
+def test_no_page_advertises_a_twin_before_production_serves_it(
+    site: Path, keys: dict[str, Path]
+) -> None:
+    """Owner, 2026-10-11: no `rel="alternate" type="text/markdown"` and no llms.txt line until
+    the twin URLs resolve in production. The PR that adds them removes this test."""
+    pages = [key for key in keys if routes.is_page(key)]
+    assert {"jpg", "testing/uploads"} <= set(pages)
+    assert [key for key in pages if advertises_twin(text(site, key))] == []
+    link = re.compile(r'<link rel="alternate" type="([^"]+)" href="([^"]+)">')
+    alternate = link.findall(text(site, "jpg"))
+    assert alternate == [("application/json", "https://loremfile.dev/jpg/index.json")]
+
+
+def test_a_twin_marker_the_page_may_not_list_stops_the_build() -> None:
+    page = build.Page("x", "X", "A page.", "doc.html")
+    with pytest.raises(build.SiteError, match=re.escape("bin/never-published.bin")):
+        build.twin(page, "<!-- file: bin/never-published.bin -->\n", "x.md", {})
+
+
+def test_consecutive_markers_share_one_table() -> None:
+    entries = manifest_entries()
+    page = build.Page("x", "X", "A page.", "doc.html")
+    text_ = "<!-- file: bin/10mb.bin -->\n\n<!-- file: bin/10mb-plus-1.bin -->\n\nProse.\n"
+    body = build.twin(page, text_, "x.md", entries)
+    assert body.count("| Path | Size | MIME | Properties |") == 1
+    assert TWIN_ROW.findall(body) == ["bin/10mb.bin", "bin/10mb-plus-1.bin"]
+
+
+#: Built keys a deploy deliberately does not purge, because their bytes never change: the
+#: IndexNow key file is a constant, and a schema version is published once (docs/04 §2).
+NEVER_PURGED = {routes.INDEXNOW_KEY_FILE, "schema/manifest-v1.json"}
+
+
+def unpurged(keys: dict[str, Path]) -> list[str]:
+    """Built keys whose public URL no purge target reaches, by URL or by prefix."""
+    prefixes, files = purge.site_targets(sorted({p.split("/", 1)[0] for p in fixtures()}))
+    reached = set(files)
+    return sorted(
+        key
+        for key in keys
+        if f"https://loremfile.dev{routes.public_path(key)}" not in reached
+        and not any(f"loremfile.dev{routes.public_path(key)}".startswith(p) for p in prefixes)
+    )
+
+
+def test_every_built_key_that_can_change_is_purged_on_deploy(keys: dict[str, Path]) -> None:
+    """A page the purge misses is served stale for up to five minutes after a deploy, and
+    the deploy's own verify-live then reads it as a hash mismatch. `/testing` was missed
+    from 2026-10-11 (#69) until this check existed."""
+    assert {"testing/uploads", "_formats/jpg.md", "jpg", "llms.txt"} <= set(keys)
+    assert set(unpurged(keys)) == NEVER_PURGED

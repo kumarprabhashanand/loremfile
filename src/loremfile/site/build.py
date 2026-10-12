@@ -232,6 +232,10 @@ class Page:
     context: dict[str, Any] = field(default_factory=dict)
     jsonld: list[dict[str, Any]] = field(default_factory=list)
     robots: str | None = None
+    #: (media type, absolute URL) pairs for `<link rel="alternate">` in the head.
+    alternates: list[tuple[str, str]] = field(default_factory=list)
+    #: The page as Markdown, published at `/{key}/index.md` (docs/04 §5b), or None.
+    twin: str | None = None
 
     @property
     def canonical(self) -> str:
@@ -384,17 +388,25 @@ def file_facts(entry: dict[str, Any]) -> str:
     Read from the manifest, so the numbers a page leads with are the measured ones: a size
     or duration typed into prose is a second copy that nobody re-measures.
     """
-    props = entry.get("props") or {}
-    human, exact = human_bytes(entry["bytes"]), f"{entry['bytes']:,} bytes"
     facts = [
         f"[`{config.BASE_URL}{entry['path']}`](/{entry['path']})",
-        exact if human == f"{entry['bytes']} B" else f"{human} ({exact})",
+        sized(entry["bytes"]),
         f"`{entry['mime']}`",
     ]
-    if "width" in props and "height" in props:
-        facts.append(f"{props['width']}x{props['height']}")
-    facts += [show(props[name]) for name, show in FACTS if props.get(name) is not None]
-    return " · ".join(facts)
+    return " · ".join(facts + measured(entry))
+
+
+def sized(count: int) -> str:
+    """A byte count as a page shows it: human-readable, with the exact count beside it."""
+    human, exact = human_bytes(count), f"{count:,} bytes"
+    return exact if human == f"{count} B" else f"{human} ({exact})"
+
+
+def measured(entry: dict[str, Any]) -> list[str]:
+    """A fixture's measured properties as short facts, in the order the pages show them."""
+    props = entry.get("props") or {}
+    size = [f"{props['width']}x{props['height']}"] if "width" in props and "height" in props else []
+    return size + [show(props[name]) for name, show in FACTS if props.get(name) is not None]
 
 
 def lead_files(text: str, source: str, entries: dict[str, dict[str, Any]]) -> str:
@@ -410,6 +422,66 @@ def lead_files(text: str, source: str, entries: dict[str, dict[str, Any]]) -> st
         return file_facts(entries[match.group(1)])
 
     return FILE.sub(facts, text)
+
+
+TWIN_TABLE = "| Path | Size | MIME | Properties |\n|---|---|---|---|\n"
+#: File markers one after another, blank lines between: one table in a twin, not several.
+MARKER_RUN = re.compile(r"^<!-- file: \S+ -->(?:\n\n?<!-- file: \S+ -->)*$", re.M)
+#: A Markdown link to a site path, made absolute in a twin, which agents read without a base.
+SITE_LINK = re.compile(r"\]\(/(?!/)")
+
+
+def twin_row(entry: dict[str, Any]) -> str:
+    cells = [
+        f"[`{entry['path']}`]({config.BASE_URL}{entry['path']})",
+        sized(entry["bytes"]),
+        f"`{entry['mime']}`",
+        ", ".join(measured(entry)),
+    ]
+    return "| " + " | ".join(cell.replace("|", "\\|") for cell in cells) + " |\n"
+
+
+def twin(
+    page: Page,
+    text: str,
+    source: str,
+    entries: dict[str, dict[str, Any]],
+    *,
+    table: list[dict[str, Any]] | None = None,
+    superseded: list[dict[str, Any]] | None = None,
+    index_url: str | None = None,
+) -> str:
+    """The page as Markdown (docs/04 §5b): its prose with each file marker expanded into a
+    row of path, size, media type and measured props, then its file table if it has one.
+
+    Every number comes from the manifest, as on the HTML page; a marker the page may not
+    list stops the build here too.
+    """
+
+    def expand(match: re.Match[str]) -> str:
+        paths = FILE.findall(match.group(0))
+        for path in paths:
+            if path not in entries:
+                raise SiteError(f"{source} names {path}, which it may not list")
+        return (TWIN_TABLE + "".join(twin_row(entries[path]) for path in paths)).rstrip("\n")
+
+    prose = SITE_LINK.sub(f"]({config.BASE_URL}", MARKER_RUN.sub(expand, text)).strip()
+    parts = [f"# {page.h1}", page.description, f"The page: <{page.canonical}>.", prose]
+    if table:
+        rows = "".join(twin_row(entry) for entry in table)
+        parts.append(f"## Files\n\n{TWIN_TABLE}{rows}".rstrip("\n"))
+    if superseded:
+        parts.append(
+            "## Superseded\n\n"
+            + "\n".join(
+                f"- `{e['path']}` is replaced by `{e['supersededBy']}`. The old URL still "
+                "serves the same bytes."
+                for e in superseded
+            )
+        )
+    if index_url:
+        parts.append(f"The same list as JSON: <{index_url}>.")
+    return "\n\n".join(parts) + "\n"
 
 
 def embed_snippet(family: str, url: str) -> str:
@@ -520,8 +592,14 @@ def article(page: Page) -> list[dict[str, Any]]:
     ]
 
 
-def dataset(name: str, description: str, url: str, entries: list[dict[str, Any]]) -> dict[str, Any]:
-    """docs/04 §10: a page of files is a Dataset whose distribution is those files."""
+def dataset(
+    name: str, description: str, url: str, entries: list[dict[str, Any]], *, modified: dt.date
+) -> dict[str, Any]:
+    """docs/04 §10: a page of files is a Dataset whose distribution is those files.
+
+    `dateModified` is the commit date the sitemap gives as `lastmod`; `contentSize` and
+    `sha256` are the manifest's, so a crawler can tell the file it fetched is the one listed.
+    """
     return {
         "@context": "https://schema.org",
         "@type": "Dataset",
@@ -530,11 +608,14 @@ def dataset(name: str, description: str, url: str, entries: list[dict[str, Any]]
         "url": url,
         "license": config.LICENSE_URL,
         "isAccessibleForFree": True,
+        "dateModified": modified.isoformat(),
         "distribution": [
             {
                 "@type": "DataDownload",
                 "contentUrl": f"{config.BASE_URL}{e['path']}",
                 "encodingFormat": e["mime"],
+                "contentSize": f"{e['bytes']} bytes",
+                "sha256": e["sha256"],
             }
             for e in entries
         ],
@@ -544,7 +625,9 @@ def dataset(name: str, description: str, url: str, entries: list[dict[str, Any]]
 # --- pages ------------------------------------------------------------------------------------
 
 
-def format_pages(root: Path, manifest: Manifest, catalogs: dict[str, FormatCatalog]) -> list[Page]:
+def format_pages(
+    root: Path, manifest: Manifest, catalogs: dict[str, FormatCatalog], *, modified: dt.date
+) -> list[Page]:
     formats = sorted({entry["format"] for entry in manifest.entries})
     pages: list[Page] = []
     for fmt in formats:
@@ -609,9 +692,26 @@ def format_pages(root: Path, manifest: Manifest, catalogs: dict[str, FormatCatal
             },
         )
         page.jsonld = [
-            dataset(info.seo_title, " ".join(info.description.split()), page.canonical, active),
+            dataset(
+                info.seo_title,
+                " ".join(info.description.split()),
+                page.canonical,
+                active,
+                modified=modified,
+            ),
             breadcrumbs(page.crumbs, label(fmt), page.canonical),
         ]
+        index_url = routes.absolute_url(routes.format_index_key(fmt))
+        page.alternates = [("application/json", index_url)]
+        page.twin = twin(
+            page,
+            content(root, f"formats/{fmt}.md"),
+            f"site/content/formats/{fmt}.md",
+            {e["path"]: e for e in active},
+            table=active,
+            superseded=superseded,
+            index_url=index_url,
+        )
         pages.append(page)
     return pages
 
@@ -701,7 +801,7 @@ def formats_page(manifest: Manifest, catalogs: dict[str, FormatCatalog]) -> Page
                 "mime": catalogs[fmt].mime,
             }
         )
-    return Page(
+    page = Page(
         key="formats",
         h1="All formats",
         description=f"Every format on loremfile.dev: {len(rows)} formats, {len(active)} files.",
@@ -709,6 +809,30 @@ def formats_page(manifest: Manifest, catalogs: dict[str, FormatCatalog]) -> Page
         crumbs=[("Home", "/")],
         context={"rows": rows},
     )
+    page.jsonld = [
+        {
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": page.h1,
+            "description": page.description,
+            "url": page.canonical,
+            "mainEntity": {
+                "@type": "ItemList",
+                "numberOfItems": len(rows),
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": position,
+                        "name": row["label"],
+                        "url": routes.absolute_url(row["format"]),
+                    }
+                    for position, row in enumerate(rows, start=1)
+                ],
+            },
+        },
+        breadcrumbs(page.crumbs, page.h1, page.canonical),
+    ]
+    return page
 
 
 def doc_pages(root: Path) -> list[Page]:
@@ -744,7 +868,7 @@ def doc_pages(root: Path) -> list[Page]:
     return [index, *pages]
 
 
-def testing_pages(root: Path, manifest: Manifest) -> list[Page]:
+def testing_pages(root: Path, manifest: Manifest, *, modified: dt.date) -> list[Page]:
     """Guides by job: prose that names files and says why, their facts from the manifest."""
     active = {entry["path"]: entry for entry in manifest.current}
     crumbs = [("Home", "/"), ("Testing", "/testing")]
@@ -764,9 +888,10 @@ def testing_pages(root: Path, manifest: Manifest) -> list[Page]:
         )
         listed = [active[path] for path in named]
         page.jsonld = [
-            dataset(title, description, page.canonical, listed),
+            dataset(title, description, page.canonical, listed, modified=modified),
             breadcrumbs(crumbs, title, page.canonical),
         ]
+        page.twin = twin(page, text, f"site/content/{source}", active)
         pages.append(page)
     index = Page(
         "testing",
@@ -816,7 +941,7 @@ def legal_pages(root: Path) -> list[Page]:
 
 def changelog_page(root: Path) -> Page:
     text = markdown.strip_title((root / "CHANGELOG.md").read_text(encoding="utf-8"))[1]
-    return Page(
+    page = Page(
         "changelog",
         "Changelog",
         "Every catalog version of loremfile.dev and what it added.",
@@ -824,6 +949,8 @@ def changelog_page(root: Path) -> Page:
         crumbs=[("Home", "/")],
         context={"body": trusted(markdown.render(text, source="CHANGELOG.md"))},
     )
+    page.jsonld = article(page)
+    return page
 
 
 def status_page() -> Page:
@@ -1044,10 +1171,11 @@ def build(out: Path, *, root: Path, committed: dt.datetime) -> BuildReport:
         "og_image": routes.absolute_url("assets/og.png"),
         "source": config.SOURCE_URL,
     }
-    testing = testing_pages(root, manifest)
+    modified = committed.date()
+    testing = testing_pages(root, manifest, modified=modified)
     pages = [
         home_page(root, manifest, catalogs, guides(testing)),
-        *format_pages(root, manifest, catalogs),
+        *format_pages(root, manifest, catalogs, modified=modified),
         formats_page(manifest, catalogs),
         *testing,
         *doc_pages(root),
@@ -1063,6 +1191,8 @@ def build(out: Path, *, root: Path, committed: dt.datetime) -> BuildReport:
         if page.key in files:
             raise SiteError(f"two outputs claim the key {page.key!r}")
         files[page.key] = render_page(env, page, site)
+        if page.twin is not None:
+            files[routes.twin_key(page.key)] = page.twin.encode("utf-8")
     formats = sorted({entry["format"] for entry in manifest.entries})
     files.update({routes.format_index_key(fmt): format_index(manifest, fmt) for fmt in formats})
     files.update(
