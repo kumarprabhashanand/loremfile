@@ -176,3 +176,94 @@ def test_the_new_files_are_purged_on_deploy() -> None:
     prefixes, files = purge.site_targets([])
     assert "loremfile.dev/.well-known/agent-skills/" in prefixes
     assert "https://loremfile.dev/.well-known/api-catalog" in files
+
+
+# --- every agent-facing surface is in the skill, or left out on purpose (2026-10-12) ------
+#
+# The third time a surface reached agents without reaching the one document written for
+# them: the MCP server, then the Markdown twins and the JSON-LD hashes, all missing from
+# SKILL.md. Surfaces are discovered from the build, not listed here from memory, so a new one
+# fails until someone decides whether agents should be told about it.
+
+#: Surface -> the text that shows SKILL.md tells agents about it.
+IN_THE_SKILL = {
+    "manifest.json": "https://loremfile.dev/manifest.json",
+    "{format}/index.json": "https://loremfile.dev/{format}/index.json",
+    "sha256sums.txt": "https://loremfile.dev/sha256sums.txt",
+    "llms.txt": "https://loremfile.dev/llms.txt",
+    "llms-full.txt": "https://loremfile.dev/llms-full.txt",
+    "Markdown twins": "append `/index.md`",
+    "MCP server": "uvx loremfile mcp",
+    ".well-known/api-catalog": "https://loremfile.dev/.well-known/api-catalog",
+    "JSON-LD hashes": "`contentSize` and `sha256`",
+}
+#: Surface -> why the skill does not mention it.
+LEFT_OUT = {
+    "formats.json": "manifest.json's `formats` names the same formats; one entry point is enough",
+    "search-index.json": "the home page's search box reads it; its shape is not a contract",
+    "sitemap.xml": "lists pages for crawlers, not files",
+    "robots.txt": "crawler policy, not a way to find or verify a file",
+    ".well-known/security.txt": "for reporting a vulnerability, not for using the files",
+    ".well-known/agent-skills/index.json": "the index that lists this skill",
+    ".well-known/agent-skills/find-and-verify-fixtures/SKILL.md": "the skill itself",
+    "schema/manifest-v1.json": "the manifest's schema, linked from the api-catalog the skill names",
+    routes.INDEXNOW_KEY_FILE: "proves ownership of the site to IndexNow; nothing to use",
+}
+
+
+def surfaces(keys: set[str], llms_text: str) -> set[str]:
+    """Agent-facing surfaces: built files that are neither pages nor display assets, the
+    per-format lists and twins as one surface each, and the two that are not files at all,
+    found by what llms.txt's How to use says about them."""
+    found: set[str] = set()
+    for key in keys:
+        if routes.is_page(key) or key in routes.DISPLAY_ASSETS or key.startswith("assets/"):
+            continue
+        if key.startswith(f"{routes.FORMAT_INDEX_DIR}/"):
+            found.add("Markdown twins" if key.endswith(".md") else "{format}/index.json")
+        else:
+            found.add(key)
+    how_to_use = llms_text.split("## How to use\n", 1)[1].split("\n## ", 1)[0]
+    if "loremfile mcp" in how_to_use:
+        found.add("MCP server")
+    if "contentSize and sha256" in how_to_use:
+        found.add("JSON-LD hashes")
+    return found
+
+
+def unaccounted(found: set[str], skill: str) -> list[str]:
+    """Surfaces neither in the skill nor left out on purpose, and listed ones that are gone
+    or that the skill no longer mentions."""
+    problems = [
+        f"{s}: neither in SKILL.md nor in LEFT_OUT"
+        for s in sorted(found)
+        if s not in IN_THE_SKILL and s not in LEFT_OUT
+    ]
+    problems += [
+        f"{s}: listed, but no longer published" for s in sorted({*IN_THE_SKILL, *LEFT_OUT} - found)
+    ]
+    problems += [
+        f"{s}: SKILL.md does not say {t!r}"
+        for s, t in sorted(IN_THE_SKILL.items())
+        if t not in skill
+    ]
+    return problems
+
+
+def test_every_agent_facing_surface_is_in_the_skill_or_left_out_with_a_reason(site: Path) -> None:
+    keys = set(routes.site_files(site))
+    found = surfaces(keys, read(site, "llms.txt"))
+    assert {"manifest.json", "Markdown twins", "MCP server", "JSON-LD hashes"} <= found
+    skill = read(site, ".well-known/agent-skills/find-and-verify-fixtures/SKILL.md")
+    assert unaccounted(found, skill) == []
+    assert all(reason.strip() for reason in LEFT_OUT.values())
+
+
+def test_a_new_surface_or_a_forgotten_one_is_named() -> None:
+    llms_text = "## How to use\n- MCP server: `uvx loremfile mcp`\n\n## Formats\n"
+    found = surfaces({"manifest.json", "pdf", "assets/x.css", "feeds/new.json"}, llms_text)
+    assert found == {"manifest.json", "feeds/new.json", "MCP server"}
+    problems = unaccounted(found, "Only https://loremfile.dev/manifest.json here.")
+    assert "feeds/new.json: neither in SKILL.md nor in LEFT_OUT" in problems
+    assert "MCP server: SKILL.md does not say 'uvx loremfile mcp'" in problems
+    assert "llms.txt: listed, but no longer published" in problems
