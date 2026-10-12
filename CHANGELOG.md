@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Every format page and testing guide has a Markdown copy at its URL plus `/index.md`, for
+  example `/pdf/index.md`, linked from the page and described in `llms.txt`. The pages'
+  structured data now gives each file's size and SHA-256.
+
 ## [1.8.0] - 2026-10-11
 
 - Format titles without em dashes: all 79 that carried one, each of which reaches its page's
