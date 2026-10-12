@@ -219,6 +219,16 @@ Follow the llmstxt.org layout (H1 title, blockquote summary, H2 sections with li
 
 **Neither file ever lists `/legal/imprint` or `/legal/privacy`** (ADR-016 amendment, ADR-028). Neither lists legal pages today; this is a rule the builder must keep, not a removal.
 
+## 5b. Markdown twins (`/{x}/index.md`)
+
+Each format page and each of the three testing guides has a Markdown twin at its URL plus `/index.md`: `/pdf/index.md`, `/testing/uploads/index.md`. A twin is the page for a reader that wants text rather than HTML: the H1, the description, a line linking the page, then the page's prose with each `<!-- file: PATH -->` marker expanded into a table of path, size, media type and measured props (consecutive markers share one table). A format page's twin adds the full file table, any superseded paths with their replacements, and the URL of the same list as JSON. Every number is the manifest's, as on the HTML page, and a marker the page may not list stops the build.
+
+- **Stored under `_formats/`** (`_formats/pdf.md`, `_formats/testing/uploads.md`) and served by the same rewrite as `index.json` (`08` §5.2). An object under a locked format prefix can never change again, and a twin has to change whenever its page's copy does.
+- Served as `text/markdown; charset=utf-8`, cached like the pages, with the headers every dotted path carries, `X-Robots-Tag: noindex` included. There is no `Link: rel="canonical"` header: noindex already keeps a twin out of search, and the two would contradict each other (owner, 2026-10-11).
+- Not in `sitemap.xml`, `search-index.json` or `llms.txt`, and no `Accept` negotiation: `/pdf` always answers HTML.
+- **Not advertised yet.** `<link rel="alternate" type="text/markdown">` on the pages and a line in `llms.txt` come in a later change, once the twin URLs answer in production; a test fails if either appears before then.
+- The catalog refuses the fixture names `index.json` and `index.md` (`03` §1), so no fixture can sit at a twin's URL.
+
 ## 6. `robots.txt`
 
 ```
@@ -317,7 +327,7 @@ Deployed copy of the JSON Schema (§1.4). `application/schema+json`, immutable c
 
 ## 10. Structured data on pages
 
-JSON-LD per page type (single source of truth; `07` §3 refers here): home → `WebSite` + `SoftwareSourceCode` (pointing at the repository); format page → `Dataset` (`name`, `description`, `license: CC0`, `distribution` with `contentUrl` and `encodingFormat` per active fixture, `isAccessibleForFree: true`) + `BreadcrumbList`; testing guide → the same `Dataset`, its `distribution` being exactly the files the guide names, + `BreadcrumbList`; docs, legal and the testing index → `TechArticle` + `BreadcrumbList`, **except `/legal/imprint` and `/legal/privacy`, which carry no JSON-LD at all** (ADR-028). No `Organization` node.
+JSON-LD per page type (single source of truth; `07` §3 refers here): home → `WebSite` + `SoftwareSourceCode` (pointing at the repository); format page → `Dataset` (`name`, `description`, `license: CC0`, `isAccessibleForFree: true`, `dateModified` (the commit date the sitemap gives as `lastmod`), and `distribution` with `contentUrl`, `encodingFormat`, `contentSize` (the manifest's byte count) and `sha256` per active fixture) + `BreadcrumbList`, and a `<link rel="alternate" type="application/json">` to its `index.json`; testing guide → the same `Dataset`, its `distribution` being exactly the files the guide names, + `BreadcrumbList`; `/formats` → `CollectionPage` whose `mainEntity` is an `ItemList` of every format page, in the table's order, + `BreadcrumbList`; docs, legal, the testing index and `/changelog` → `TechArticle` + `BreadcrumbList`, **except `/legal/imprint` and `/legal/privacy`, which carry no JSON-LD at all** (ADR-028). No `Organization`, `creator`, `publisher` or `author` node anywhere, and a test fails on one.
 
 ## 11. Agent discovery
 

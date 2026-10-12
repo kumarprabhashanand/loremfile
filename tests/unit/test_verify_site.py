@@ -20,6 +20,10 @@ FILES = {
     "legal/imprint": META + b"<p>imprint</p>",
     "legal/privacy": META + b"<p>privacy</p>",
     "_formats/pdf.json": b"{}",
+    # A Markdown twin that sorts before the per-format index: the header-branch check must
+    # still find `pdf` among the `_formats/` keys, not a name sliced out of a `.md` key.
+    "_formats/7z.md": b"# 7z\n",
+    "_formats/pdf.md": b"# pdf\n",
     "llms.txt": b"# loremfile.dev\n",
 }
 
@@ -181,6 +185,15 @@ def test_a_broken_index_rewrite_fails_the_site_check(site: Path, edge: Edge) -> 
     found = failures(verify_live.site_findings(site))
     assert ("/pdf/index.json", Status.MISSING_OBJECT, "404") in found
     assert not any(path.startswith("/_formats/") for path in edge.calls)
+
+
+def test_a_twin_is_fetched_at_its_index_md_url_and_compared(site: Path, edge: Edge) -> None:
+    """Twins are verified like every other key, through the rewrite (docs/08 §5.2)."""
+    edge.bodies["/pdf/index.md"] = b"# defaced\n"
+    found = failures(verify_live.site_findings(site))
+    mismatched = [path for path, status, _ in found if status is Status.HASH_MISMATCH]
+    assert "/pdf/index.md" in mismatched
+    assert "/7z/index.md" in edge.calls
 
 
 def test_a_format_index_must_carry_the_file_headers(site: Path, edge: Edge) -> None:

@@ -100,6 +100,15 @@ def format_index_key(fmt: str) -> str:
     return f"{FORMAT_INDEX_DIR}/{fmt}.json"
 
 
+def twin_key(page_key: str) -> str:
+    """A page's Markdown twin, served at `/{page}/index.md` (docs/04 §5b).
+
+    Under `_formats/` rather than beside the page: a key under a format's locked prefix could
+    never change again, and a twin changes whenever its page's copy does.
+    """
+    return f"{FORMAT_INDEX_DIR}/{page_key}.md"
+
+
 def is_page(key: str) -> bool:
     if key == API_CATALOG_KEY:
         return False

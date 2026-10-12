@@ -9,6 +9,9 @@
 <meta name="robots" content="{{ page.robots }}">
 {% endif %}
 <link rel="canonical" href="{{ page.canonical }}">
+{% for type, href in page.alternates %}
+<link rel="alternate" type="{{ type }}" href="{{ href }}">
+{% endfor %}
 <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="{{ site.css }}">

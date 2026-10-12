@@ -48,6 +48,7 @@ flowchart LR
 |---|---|---|---|
 | `{format}/{name}` | Fixture bytes (each `{format}/` prefix is covered by an indefinite R2 bucket-lock rule, so the storage layer refuses overwrites and deletes) | from catalog | `public, max-age=31536000, immutable, no-transform` |
 | `_formats/{format}.json` (served at `/{format}/index.json`) | Per-format manifest subset | `application/json` | `public, max-age=300, must-revalidate` |
+| `_formats/{x}.md` (served at `/{x}/index.md`) | Markdown twin of a format page or testing guide (`04` §5b) | `text/markdown; charset=utf-8` | `public, max-age=300, must-revalidate` |
 | `{format}` (no slash, no extension; `/{format}/` is rewritten to it) | Format landing page | `text/html; charset=utf-8` | `public, max-age=300, must-revalidate` |
 | `index.html`, `docs/…`, `legal/…`, `changelog` | Site pages (extensionless keys) | `text/html; charset=utf-8` | `public, max-age=300, must-revalidate` |
 | `assets/site.css`, `assets/site.js`, `assets/*.svg` | Site assets (content-hashed names) | per type | `public, max-age=31536000, immutable` |

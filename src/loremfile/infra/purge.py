@@ -25,6 +25,11 @@ SITE_PREFIXES = (
     f"{SITE_HOST}/legal/",
     f"{SITE_HOST}/assets/",
     f"{SITE_HOST}/.well-known/agent-skills/",
+    # Every per-format index and Markdown twin. Cloudflare files a rewritten request under
+    # its post-transform URL for a prefix purge, so this is the one prefix that reaches them.
+    f"{SITE_HOST}/_formats/",
+    # The testing guides, their index, and the guides' twins' public URLs.
+    f"{SITE_HOST}/testing",
 )
 
 #: Discovery files and the root, purged by exact URL.
@@ -89,6 +94,7 @@ def site_targets(formats: list[str]) -> tuple[list[str], list[str]]:
         files.append(f"https://{SITE_HOST}/{fmt}")
         files.append(f"https://{SITE_HOST}/{fmt}/")
         files.append(f"https://{SITE_HOST}/{fmt}/index.json")
+        files.append(f"https://{SITE_HOST}/{fmt}/index.md")
         files.append(f"https://{SITE_HOST}/_formats/{fmt}.json")
     return list(SITE_PREFIXES), files
 
