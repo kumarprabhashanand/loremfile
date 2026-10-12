@@ -397,9 +397,15 @@ def file_facts(entry: dict[str, Any]) -> str:
 
 
 def sized(count: int) -> str:
-    """A byte count as a page shows it: human-readable, with the exact count beside it."""
-    human, exact = human_bytes(count), f"{count:,} bytes"
-    return exact if human == f"{count} B" else f"{human} ({exact})"
+    """A fixture's size wherever a page or twin shows one: rounded, with the exact count.
+
+    The rounding alone gives `bin/10mb-minus-1.bin`, `10mb.bin` and `10mb-plus-1.bin` one
+    label, and those files exist for the one byte between them. The search box prints this
+    string from `search-index.json` rather than formatting sizes a second way.
+    """
+    human = human_bytes(count)
+    # Under a kilobyte the rounded figure is already the exact one: "586 B", not "586 bytes".
+    return human if human == f"{count} B" else f"{human} ({count:,} bytes)"
 
 
 def measured(entry: dict[str, Any]) -> list[str]:
@@ -647,8 +653,7 @@ def format_pages(
                 "path": e["path"],
                 "name": e["path"].split("/", 1)[1],
                 "url": f"{config.BASE_URL}{e['path']}",
-                "size": human_bytes(e["bytes"]),
-                "exact": f"{e['bytes']:,} bytes",
+                "size": sized(e["bytes"]),
                 "props": key_props(e.get("props") or {}),
                 "edge": edge_facts(e.get("props") or {}),
                 "description": e["description"],
@@ -760,7 +765,7 @@ def home_page(
                 {
                     "path": path,
                     "url": f"{config.BASE_URL}{path}",
-                    "size": human_bytes(by_path[path]["bytes"]),
+                    "size": sized(by_path[path]["bytes"]),
                     "description": by_path[path]["description"],
                 }
                 for path in POPULAR
@@ -986,7 +991,12 @@ def format_index(manifest: Manifest, fmt: str) -> bytes:
 
 def search_index(manifest: Manifest) -> bytes:
     rows = [
-        {"path": e["path"], "bytes": e["bytes"], "description": e["description"]}
+        {
+            "path": e["path"],
+            "bytes": e["bytes"],
+            "size": sized(e["bytes"]),
+            "description": e["description"],
+        }
         for e in sorted(manifest.current, key=lambda e: e["path"])
     ]
     return (json.dumps(rows, ensure_ascii=False, separators=(",", ":")) + "\n").encode()

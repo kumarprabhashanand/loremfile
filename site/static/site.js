@@ -32,14 +32,6 @@
     return loading;
   }
 
-  function human(bytes) {
-    var units = [["GB", 1e9], ["MB", 1e6], ["KB", 1e3]];
-    for (var i = 0; i < units.length; i++) {
-      if (bytes >= units[i][1]) { return (bytes / units[i][1]).toFixed(1).replace(/\.0$/, "") + " " + units[i][0]; }
-    }
-    return bytes + " B";
-  }
-
   function show(query) {
     results.textContent = "";
     if (!query || !index) { return; }
@@ -56,7 +48,8 @@
         code.textContent = row.path;
         link.appendChild(code);
         item.appendChild(link);
-        item.appendChild(document.createTextNode(" " + human(row.bytes)));
+        // The page's own size string, from search-index.json: one formatter, not two.
+        item.appendChild(document.createTextNode(" " + row.size));
         results.appendChild(item);
         shown++;
       }

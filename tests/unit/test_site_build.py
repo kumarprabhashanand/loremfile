@@ -328,7 +328,7 @@ def test_a_lead_line_shows_only_what_the_manifest_measured() -> None:
         "props": {"width": 4, "height": 2},
     }
     assert build.file_facts(small) == (
-        "[`https://loremfile.dev/png/b.png`](/png/b.png) · 920 bytes · `image/png` · 4x2"
+        "[`https://loremfile.dev/png/b.png`](/png/b.png) · 920 B · `image/png` · 4x2"
     )
 
 
@@ -353,7 +353,8 @@ def test_a_page_with_a_lead_shows_its_file_right_after_its_opening_sentence(site
         second = re.findall(r"<p>(.*?)</p>", intro.group(1), re.S)[1]
         entry = entries[found.group(1)]
         assert f'href="/{entry["path"]}"' in second, page.stem
-        assert f"{entry['bytes']:,} bytes" in second, page.stem
+        # The manifest's count in the one form every page and twin uses (`build.sized`).
+        assert build.sized(entry["bytes"]) in second, page.stem
         checked.add(page.stem)
     assert {"m4a", "md", "wav"} <= checked, "empty-set control"
 
@@ -788,3 +789,88 @@ def test_every_built_key_that_can_change_is_purged_on_deploy(keys: dict[str, Pat
     from 2026-10-11 (#69) until this check existed."""
     assert {"testing/uploads", "_formats/jpg.md", "jpg", "llms.txt"} <= set(keys)
     assert set(unpurged(keys)) == NEVER_PURGED
+
+
+# --- sizes: rounded, with the exact count, the same on every surface ------------------------
+
+#: A format page's table row: the file's path, then its size cell.
+SIZE_CELL = re.compile(
+    r'<th scope="row"><a href="/([^"]+)"><code>[^<]*</code></a>.*?</th>\s*<td>([^<]*)</td>', re.S
+)
+#: A twin's table row: path, then size.
+TWIN_SIZE = re.compile(r"^\| \[`([^`]+)`\]\([^)]*\) \| ([^|]+) \|", re.M)
+
+
+def page_sizes(html_text: str) -> dict[str, str]:
+    return {path: html.unescape(size).strip() for path, size in SIZE_CELL.findall(html_text)}
+
+
+def twin_sizes(markdown_text: str) -> dict[str, str]:
+    table = markdown_text.split("\n## Files\n", 1)[1].split("\n## ", 1)[0]
+    return {path: size.strip() for path, size in TWIN_SIZE.findall(table)}
+
+
+def test_every_format_page_shows_the_size_its_twin_shows(site: Path) -> None:
+    """A page and its twin disagreeing is what let rounded-only sizes sit unnoticed."""
+    formats = sorted({path.split("/", 1)[0] for path in fixtures()})
+    assert {"bin", "txt", "jpg"} <= set(formats)
+    for fmt in formats:
+        shown = page_sizes(text(site, fmt))
+        assert shown, fmt
+        assert shown == twin_sizes(text(site, routes.twin_key(fmt))), fmt
+
+
+def test_the_page_and_twin_check_finds_a_disagreement() -> None:
+    page = '<th scope="row"><a href="/bin/10mb.bin"><code>10mb.bin</code></a></th>\n<td>10 MB</td>'
+    twin = "\n## Files\n\n| [`bin/10mb.bin`](u) | 10 MB (10,000,000 bytes) | x | |\n"
+    assert page_sizes(page) != twin_sizes(twin)
+
+
+def test_a_boundary_file_shows_its_exact_byte_count(site: Path) -> None:
+    shown = page_sizes(text(site, "bin"))
+    assert shown["bin/10mb-minus-1.bin"] == "10 MB (9,999,999 bytes)"
+    assert shown["bin/10mb-plus-1.bin"] == "10 MB (10,000,001 bytes)"
+    assert shown["bin/10mib-plus-1.bin"] == "10.5 MB (10,485,761 bytes)"
+    assert shown["bin/1-byte.bin"] == "1 B"
+
+
+def labels_shared_by_different_sizes(sizes: dict[str, str], counts: dict[str, int]) -> list[str]:
+    """Labels one page gives to files of different byte counts."""
+    by_label: dict[str, set[int]] = {}
+    for path, label in sizes.items():
+        by_label.setdefault(label, set()).add(counts[path])
+    return sorted(label for label, seen in by_label.items() if len(seen) > 1)
+
+
+def test_no_page_gives_two_different_sizes_one_label(site: Path) -> None:
+    counts = {path: entry["bytes"] for path, entry in manifest_entries().items()}
+    formats = sorted({path.split("/", 1)[0] for path in fixtures()})
+    assert {"bin/10mb-minus-1.bin", "bin/10mb.bin", "bin/10mb-plus-1.bin"} <= set(
+        page_sizes(text(site, "bin"))
+    ), "the rows these labels come from must be found, or every page passes empty"
+    for fmt in formats:
+        shown = page_sizes(text(site, fmt))
+        assert shown, fmt
+        assert labels_shared_by_different_sizes(shown, counts) == [], fmt
+
+
+def test_rounding_alone_would_give_the_boundary_files_one_label() -> None:
+    counts = {"a": 9_999_999, "b": 10_000_000, "c": 10_000_001}
+    rounded = {path: build.human_bytes(count) for path, count in counts.items()}
+    assert labels_shared_by_different_sizes(rounded, counts) == ["10 MB"]
+    exact = {path: build.sized(count) for path, count in counts.items()}
+    assert labels_shared_by_different_sizes(exact, counts) == []
+
+
+def test_the_popular_list_and_search_use_the_same_size_string(site: Path) -> None:
+    entries = manifest_entries()
+    home = text(site, "index.html")
+    popular = re.findall(r'<code>([^<]+)</code></a> <span class="size">([^<]+)</span>', home)
+    assert len(popular) >= 5
+    for path, size in popular:
+        assert html.unescape(size) == build.sized(entries[path]["bytes"]), path
+    rows = json.loads(text(site, "search-index.json"))
+    assert len(rows) > 200
+    assert all(row["size"] == build.sized(row["bytes"]) for row in rows)
+    script = (ROOT / "site" / "static" / "site.js").read_text(encoding="utf-8")
+    assert "row.size" in script and '"MB"' not in script, "search formats sizes its own way"
