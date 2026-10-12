@@ -14,6 +14,8 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
+from array import array
 from pathlib import Path
 from typing import Any
 
@@ -180,3 +182,45 @@ def available_encoders() -> set[str]:
         ):
             names.add(parts[1])
     return names
+
+
+def decode_pcm(
+    path: Path, *, channels: int, start: float, seconds: float, rate: int, timeout: int = 120
+) -> list[array[int]]:
+    """The first audio stream as signed 16-bit samples, one array per channel.
+
+    Decoded by ffmpeg from ``start`` for ``seconds`` and resampled to ``rate``, keeping the
+    stream's own channel layout so each channel can be measured on its own.
+    """
+    command = [
+        tool("ffmpeg"),
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-nostdin",
+        "-ss",
+        f"{start}",
+        "-t",
+        f"{seconds}",
+        "-i",
+        str(path),
+        "-map",
+        "0:a:0",
+        "-ar",
+        str(rate),
+        "-acodec",
+        "pcm_s16le",
+        "-f",
+        "s16le",
+        "-",
+    ]
+    completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
+        command, capture_output=True, timeout=timeout, check=False
+    )
+    if completed.returncode != 0:
+        tail = completed.stderr.decode("utf-8", "replace").strip()
+        raise FfmpegError(f"ffmpeg could not decode the audio: {tail}")
+    samples = array("h", completed.stdout[: len(completed.stdout) // 2 * 2])
+    if sys.byteorder == "big":
+        samples.byteswap()
+    return [samples[channel::channels] for channel in range(channels)]
