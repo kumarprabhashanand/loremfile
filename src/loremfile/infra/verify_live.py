@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
+import html
 import json
 import re
 import socket
@@ -50,6 +51,10 @@ class Status(StrEnum):
     TLS_EXPIRY = "tls_expiry"
     SECURITY_TXT_EXPIRY = "security_txt_expiry"
     COUNT_MISMATCH = "count_mismatch"
+    #: A legal page carries a value where it must not, or lacks the one it must carry.
+    LEGAL_VALUE = "legal_value"
+    #: The check could not look, so it learned nothing; never `ok` (as `audit` reports it).
+    UNREADABLE = "unreadable"
 
 
 #: Our own rate limit answering. Retried, unlike in the probe (see the module docstring).
@@ -502,6 +507,140 @@ def contract_findings(entries: list[dict[str, Any]]) -> list[Finding]:
                 check_agent_refused(agent, legal, fetch(legal, extra_headers={"User-Agent": agent}))
             )
     return findings
+
+
+# --- the legal pages' values (ADR-028, docs/13 §3b) --------------------------------------
+#
+# Every name and detail below is a fixed label, a path or a status code. Findings reach the
+# public run log and the health issue; the values never may, so no message is built from one.
+
+HTTP_NOT_FOUND = 404
+PLACEHOLDER = "%%IMPRINT_"
+#: The Impressum's three value lines as the build renders them (docs/13 §3b).
+IMPRINT_LINES = re.compile(
+    r"<p>Angaben gemäß § 18 Abs\. 1 MStV</p>\n<p>([^<\n]+)<br />\n([^<\n]+)<br />\n([^<\n]+)</p>"
+)
+#: The privacy notice's controller paragraph (docs/13 §3): the name, the contact, the pointer.
+PRIVACY_CONTROLLER = re.compile(
+    r"<p><strong>Who is responsible\.</strong> ([^<\n]+) is the controller for the personal "
+    r"data\ndescribed here\. Contact: hello@loremfile\.dev\. The postal address is in the\n"
+    r'<a href="/legal/imprint">Impressum</a>\.</p>'
+)
+#: The legal pages that name nobody.
+LEGAL_NEIGHBOURS = ("/legal/terms", "/legal/license", "/legal")
+#: Every other path that could serve a legal page's text: the build guard's twins
+#: (`routes.LEGAL_TWINS`), the Markdown twin's own key path, and what a hand upload could add.
+LEGAL_TWIN_PATHS = tuple(
+    f"/{key}{suffix}"
+    for key in routes.LEGAL_KEYS
+    for suffix in ("/index", ".html", "/index.html", ".md", "/index.md")
+) + tuple(f"/{routes.FORMAT_INDEX_DIR}/{key}.md" for key in routes.LEGAL_KEYS)
+
+
+def _imprint_values(response: Response) -> tuple[list[str] | None, str]:
+    """The three lines, or None and why they could not be read (a status, never a value)."""
+    if response.status != HTTP_OK:
+        return None, f"/legal/imprint answered {response.status}"
+    lines = IMPRINT_LINES.search(response.body.decode("utf-8", "replace"))
+    if lines is None or not all(line.strip() for line in lines.groups()):
+        return None, "name, street and postal city not found as three lines"
+    if any(PLACEHOLDER in line for line in lines.groups()):
+        return None, "the lines are unfilled placeholders"
+    return list(lines.groups()), ""
+
+
+def _filled(path: str, response: Response) -> Finding:
+    """A placeholder served is a blank Impressum, which § 18 MStV forbids (docs/13 §3b)."""
+    name = f"legal:filled {path}"
+    if response.status != HTTP_OK:
+        return Finding(name, Status.STATUS, str(response.status))
+    if PLACEHOLDER.encode() in response.body:
+        return Finding(name, Status.LEGAL_VALUE, f"serves an unfilled {PLACEHOLDER} placeholder")
+    return Finding(name, Status.OK)
+
+
+def _carries(text: str, value: str) -> bool:
+    return any(form in text for form in {value, html.unescape(value)})
+
+
+def _privacy_findings(values: list[str] | None, not_compared: str) -> list[Finding]:
+    """The controller paragraph, its name against the Impressum's, and no address."""
+    privacy = fetch("/legal/privacy", method="GET")
+    text = privacy.body.decode("utf-8", "replace") if privacy.status == HTTP_OK else ""
+    paragraph = PRIVACY_CONTROLLER.search(text)
+    findings = [_filled("/legal/privacy", privacy)]
+    label = "legal:controller-paragraph /legal/privacy"
+    if privacy.status != HTTP_OK:
+        findings.append(Finding(label, Status.STATUS, str(privacy.status)))
+    elif paragraph is None:
+        findings.append(Finding(label, Status.LEGAL_VALUE, "not in its published form"))
+    else:
+        findings.append(Finding(label, Status.OK))
+    label = "legal:same-controller /legal/privacy"
+    if values is None:
+        findings.append(Finding(label, Status.UNREADABLE, not_compared))
+    elif paragraph is None:
+        findings.append(Finding(label, Status.UNREADABLE, "not compared: no controller paragraph"))
+    elif paragraph.group(1) != values[0]:
+        findings.append(Finding(label, Status.LEGAL_VALUE, "not the Impressum's name"))
+    else:
+        findings.append(Finding(label, Status.OK))
+    for label, line, index in (("no-street", "street", 1), ("no-postal-city", "postal city", 2)):
+        name = f"legal:{label} /legal/privacy"
+        if values is None:
+            findings.append(Finding(name, Status.UNREADABLE, not_compared))
+        elif privacy.status != HTTP_OK:
+            findings.append(Finding(name, Status.UNREADABLE, f"privacy answered {privacy.status}"))
+        elif _carries(text, values[index]):
+            findings.append(Finding(name, Status.LEGAL_VALUE, f"carries the Impressum's {line}"))
+        else:
+            findings.append(Finding(name, Status.OK))
+    return findings
+
+
+def _neighbour_finding(path: str, values: list[str] | None, not_compared: str) -> Finding:
+    name = f"legal:no-value {path}"
+    response = fetch(path, method="GET")
+    if response.status != HTTP_OK:
+        return Finding(name, Status.STATUS, str(response.status))
+    if values is None:
+        return Finding(name, Status.UNREADABLE, not_compared)
+    text = response.body.decode("utf-8", "replace")
+    if any(_carries(text, value) for value in values):
+        return Finding(name, Status.LEGAL_VALUE, "carries an Impressum value")
+    return Finding(name, Status.OK)
+
+
+def _twin_finding(path: str) -> Finding:
+    status, name = fetch(path).status, f"legal:no-twin {path}"
+    if status == HTTP_NOT_FOUND:
+        return Finding(name, Status.OK, str(status))
+    if status == 0:
+        return Finding(name, Status.TIMEOUT, "no response")
+    return Finding(name, Status.STATUS, f"{status}, expected {HTTP_NOT_FOUND}")
+
+
+def legal_findings() -> list[Finding]:
+    """The legal pages on production, compared against the live Impressum (ADR-028).
+
+    The values exist only in production, so the one source to compare against is the
+    Impressum itself. When it cannot be read, every comparison reports `unreadable`: a check
+    that could not look has learned nothing, and must not pass. Robots header and meta tag
+    on both URL forms are `check_page_headers`'s, which every `--site-dir` run applies.
+    """
+    imprint = fetch("/legal/imprint", method="GET")
+    values, why = _imprint_values(imprint)
+    label = "legal:imprint-lines /legal/imprint"
+    findings = [
+        _filled("/legal/imprint", imprint),
+        Finding(label, Status.OK, "3 lines")
+        if values is not None
+        else Finding(label, Status.UNREADABLE, why),
+    ]
+    not_compared = f"not compared: {why}"
+    findings += _privacy_findings(values, not_compared)
+    findings += [_neighbour_finding(path, values, not_compared) for path in LEGAL_NEIGHBOURS]
+    return findings + [_twin_finding(path) for path in LEGAL_TWIN_PATHS]
 
 
 # --- expiry (daily and full) ----------------------------------------------------------
