@@ -30,11 +30,13 @@ LEGAL_ROBOTS: Final = "noindex, nofollow, nosnippet"
 #: Both edge rules match these exact paths, so the values may live nowhere else (docs/15 M4.1).
 LEGAL_KEYS: Final = ("legal/imprint", "legal/privacy")
 FORMAT_INDEX_DIR: Final = "_formats"
-#: Every other key that would serve a legal page's text, the Markdown twin (`twin_key`)
-#: included: neither edge rule matches `/legal/privacy/index.md` (docs/13 §3b).
+#: Every other key a build could write a legal page's text to, as `site_files` returns it: a
+#: `legal/privacy/index.html` file becomes `legal/privacy/index`, and the Markdown twin is
+#: `twin_key`. Neither edge rule matches their paths (docs/13 §3b). `legal/privacy.html` is
+#: absent because on disk it is the page itself, never a second key.
 LEGAL_TWINS: Final = tuple(
-    f"{key}{suffix}" for key in LEGAL_KEYS for suffix in (".html", "/index.html")
-) + tuple(f"{FORMAT_INDEX_DIR}/{key}.md" for key in LEGAL_KEYS)
+    twin for key in LEGAL_KEYS for twin in (f"{key}/index", f"{FORMAT_INDEX_DIR}/{key}.md")
+)
 #: IndexNow's key file (docs/04 §12): at the root, holding the key and nothing else. A site
 #: key like any other, so the upload publishes it and nothing ever deletes it.
 INDEXNOW_KEY_FILE: Final = f"{INDEXNOW_KEY}.txt"

@@ -88,15 +88,29 @@ def test_a_page_without_a_value_it_must_carry_is_counted(site: Path, key: str, n
     assert all(value not in shown(report) for value in VALUES.values())
 
 
-@pytest.mark.parametrize("key", routes.LEGAL_KEYS)
-def test_a_markdown_twin_of_either_legal_page_fails_every_guard(site: Path, key: str) -> None:
-    """Served at /legal/…/index.md, which neither edge rule matches (docs/13 §3b). It holds
-    no value and no placeholder, so only the twin guard itself can fail it."""
+def test_every_twin_the_guard_names_is_a_key_a_built_site_can_hold() -> None:
+    """Four of six entries once could never appear, and the list looked like theatre."""
+    assert set(routes.LEGAL_TWINS) == {
+        "legal/imprint/index",
+        "legal/privacy/index",
+        routes.twin_key("legal/imprint"),
+        routes.twin_key("legal/privacy"),
+    }
+    for twin in routes.LEGAL_TWINS:
+        assert routes.key_of(routes.disk_path(twin)) == twin, twin
+    # Control: the retired entries do not survive the round trip, which is why they went.
+    for retired in ("legal/privacy.html", "legal/privacy/index.html"):
+        assert routes.key_of(routes.disk_path(retired)) != retired
+
+
+@pytest.mark.parametrize("twin", routes.LEGAL_TWINS)
+def test_a_twin_of_either_legal_page_fails_every_guard(site: Path, twin: str) -> None:
+    """Served at a path neither edge rule matches (docs/13 §3b). It holds no value and no
+    placeholder, so only the twin guard itself can fail it."""
     legal.fill(site, VALUES)
-    twin = routes.twin_key(key)
-    assert twin in routes.LEGAL_TWINS
-    (site / twin).parent.mkdir(parents=True, exist_ok=True)
-    (site / twin).write_text("# Privacy\n\nWho is responsible.\n")
+    path = site / routes.disk_path(twin)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("# Privacy\n\nWho is responsible.\n")
     assert legal.twins(site) == [twin]
     assert legal.audit(site, VALUES, in_git=never).problems == [
         "1 twin key(s) of the legal pages exist; the edge rules match exact paths"

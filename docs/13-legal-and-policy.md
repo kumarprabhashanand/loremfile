@@ -155,10 +155,12 @@ ADR-016 amendment).
 served to the public can be read by anyone who requests it, and RFC 9309 says of robots.txt that
 it is "not a form of access authorization".
 
-**No twin of either page.** `routes.LEGAL_TWINS` lists every other key that would serve a legal
-page's text, the Markdown twins `_formats/legal/imprint.md` and `_formats/legal/privacy.md`
-included: the edge would serve one at `/legal/privacy/index.md` with `noindex` only, outside
-both exact-path rules. The site checks, the legal audit and the upload gate each fail on one.
+**No twin of either page.** `routes.LEGAL_TWINS` lists every other key a build could write a
+legal page's text to: `legal/privacy/index`, which a `legal/privacy/index.html` file becomes,
+and the Markdown twin `_formats/legal/privacy.md`, served at `/legal/privacy/index.md` with
+`noindex` only; the same for the Impressum. Both lie outside the exact-path rules. The site
+checks, the legal audit and the upload gate each fail on one, and every entry is a key a built
+site can hold. `legal/privacy.html` is not listed: on disk it is the page itself.
 
 ## 3a. Compliance posture
 
