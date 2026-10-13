@@ -1,6 +1,6 @@
 """The two legal pages that name the operator: out of search, AI crawlers and every index.
 
-`/legal/imprint` and `/legal/privacy` carry the operator's name and address (ADR-028). The
+`/legal/imprint` carries the operator's name and address, `/legal/privacy` the name (ADR-028). The
 values never enter the repository, so nothing here can test them; these tests guard the
 parts that do live here — the edge header rule, the robots.txt specification, and the
 placeholder hygiene of the templates.
@@ -12,6 +12,8 @@ import json
 import re
 from pathlib import Path
 from typing import Any
+
+from loremfile.site import build, legal, routes
 
 ROOT = Path(__file__).resolve().parents[2]
 LEGAL_PAGES = {"/legal/imprint", "/legal/privacy"}
@@ -195,10 +197,23 @@ def test_the_rule_also_refuses_cloudflares_verified_ai_bot_categories() -> None:
 # --- placeholders -----------------------------------------------------------------
 
 
-def test_the_templates_carry_the_imprint_placeholders() -> None:
-    text = (ROOT / "docs" / "13-legal-and-policy.md").read_text(encoding="utf-8")
-    found = set(PLACEHOLDER.findall(text))
-    assert {"%%IMPRINT_NAME%%", "%%IMPRINT_STREET%%", "%%IMPRINT_POSTAL_CITY%%"} <= found
+def test_each_published_template_carries_exactly_its_placeholders() -> None:
+    """Per page, from the quoted text the build publishes: the Impressum all three, the
+    privacy notice the name, pointing to the Impressum for the address (docs/13 §3)."""
+    source = ROOT / "docs" / "13-legal-and-policy.md"
+    headings = {key: heading for key, heading, _ in build.LEGAL}
+    texts = {
+        key: build.quoted(build.section(source, headings[key]))[1] for key in routes.LEGAL_KEYS
+    }
+    found = {key: set(PLACEHOLDER.findall(text)) for key, text in texts.items()}
+    assert found == {
+        "legal/imprint": {"%%IMPRINT_NAME%%", "%%IMPRINT_STREET%%", "%%IMPRINT_POSTAL_CITY%%"},
+        "legal/privacy": {"%%IMPRINT_NAME%%"},
+    }
+    assert found == {
+        key: {legal.PLACEHOLDERS[name] for name in names} for key, names in legal.REQUIRED.items()
+    }
+    assert "[Impressum](/legal/imprint)" in texts["legal/privacy"]
 
 
 def test_the_retired_placeholders_are_gone_from_the_living_documents() -> None:

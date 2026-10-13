@@ -6,13 +6,15 @@ error ever contains a value, whatever goes wrong.
 
 from __future__ import annotations
 
+import html
 import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
 
-from loremfile.site import legal, routes
+from loremfile.infra import upload
+from loremfile.site import checks, legal, routes
 
 VALUES = {
     "IMPRINT_NAME": "Test Operator & Co",
@@ -20,6 +22,8 @@ VALUES = {
     "IMPRINT_POSTAL_CITY": "00000 Example City",
 }
 PLACEHOLDERS = "%%IMPRINT_NAME%%<br>%%IMPRINT_STREET%%<br>%%IMPRINT_POSTAL_CITY%%"
+#: The shape docs/13 §3 publishes: the name, and a pointer to the Impressum for the address.
+PRIVACY = '<p>%%IMPRINT_NAME%% is the controller. <a href="/legal/imprint">Impressum</a></p>'
 
 
 @pytest.fixture
@@ -27,7 +31,7 @@ def site(tmp_path: Path) -> Path:
     root = tmp_path / "site"
     pages = {
         "legal/imprint": f"<p>{PLACEHOLDERS}</p>",
-        "legal/privacy": f"<p>Controller: {PLACEHOLDERS}</p>",
+        "legal/privacy": PRIVACY,
         "index.html": "<p>home</p>",
         "formats": "<p>formats</p>",
         "llms.txt": "# loremfile.dev\n",
@@ -48,13 +52,60 @@ def shown(report: legal.LegalReport) -> str:
 
 
 def test_the_values_fill_exactly_the_two_pages_escaped(site: Path) -> None:
-    assert legal.fill(site, VALUES) == 6
+    assert legal.fill(site, VALUES) == 4
     imprint = (site / "legal" / "imprint.html").read_text()
     assert "Test Operator &amp; Co" in imprint
     assert "%%IMPRINT_" not in imprint
     report = legal.audit(site, VALUES, in_git=never)
     assert report.problems == []
     assert (site / "formats.html").read_text() == "<p>formats</p>"
+
+
+def test_each_page_must_carry_its_own_values_and_the_impressum_all_three() -> None:
+    assert set(legal.REQUIRED) == set(routes.LEGAL_KEYS)
+    assert legal.REQUIRED["legal/imprint"] == legal.SECRETS
+    assert legal.REQUIRED["legal/privacy"] == ("IMPRINT_NAME",)
+
+
+@pytest.mark.parametrize(
+    ("key", "name"),
+    [
+        ("legal/imprint", "IMPRINT_NAME"),
+        ("legal/imprint", "IMPRINT_STREET"),
+        ("legal/imprint", "IMPRINT_POSTAL_CITY"),
+        ("legal/privacy", "IMPRINT_NAME"),
+    ],
+)
+def test_a_page_without_a_value_it_must_carry_is_counted(site: Path, key: str, name: str) -> None:
+    """Control: privacy carrying the name alone passes, so watch the check still fire."""
+    legal.fill(site, VALUES)
+    page = site / routes.disk_path(key)
+    before = page.read_text()
+    page.write_text(before.replace(html.escape(VALUES[name], quote=True), ""))
+    assert page.read_text() != before
+    report = legal.audit(site, VALUES, in_git=never)
+    assert report.pages_missing_a_value == 1
+    assert all(value not in shown(report) for value in VALUES.values())
+
+
+@pytest.mark.parametrize("key", routes.LEGAL_KEYS)
+def test_a_markdown_twin_of_either_legal_page_fails_every_guard(site: Path, key: str) -> None:
+    """Served at /legal/…/index.md, which neither edge rule matches (docs/13 §3b). It holds
+    no value and no placeholder, so only the twin guard itself can fail it."""
+    legal.fill(site, VALUES)
+    twin = routes.twin_key(key)
+    assert twin in routes.LEGAL_TWINS
+    (site / twin).parent.mkdir(parents=True, exist_ok=True)
+    (site / twin).write_text("# Privacy\n\nWho is responsible.\n")
+    assert legal.twins(site) == [twin]
+    assert legal.audit(site, VALUES, in_git=never).problems == [
+        "1 twin key(s) of the legal pages exist; the edge rules match exact paths"
+    ]
+    assert f"{twin}: twin of a legal page" in checks.discovery_problems(
+        site, set(routes.site_files(site))
+    )
+    (blocker,) = upload.site_gates(site, upload.site_files(site), lock_rules=[])
+    assert twin in blocker
 
 
 def test_a_missing_or_empty_secret_is_named_and_no_value_is_shown() -> None:
