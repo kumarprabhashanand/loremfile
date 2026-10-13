@@ -162,6 +162,14 @@ and the Markdown twin `_formats/legal/privacy.md`, served at `/legal/privacy/ind
 checks, the legal audit and the upload gate each fail on one, and every entry is a key a built
 site can hold. `legal/privacy.html` is not listed: on disk it is the page itself.
 
+**Checked on production after every deploy and every day (`verify-live`).** Both pages carry
+the robots header and meta tag on both URL forms and serve no placeholder; the Impressum shows
+three value lines; the privacy notice keeps its controller paragraph, names the Impressum's
+controller and carries neither the street nor the postal city; terms, licence and the legal
+index carry no value; and twelve twin paths answer 404. The values are read from the live
+Impressum and never printed: every finding is a label, a path or a status code. If the
+Impressum cannot be read, every comparison reports `unreadable` instead of passing.
+
 ## 3a. Compliance posture
 
 **Processor agreement.** Cloudflare Customer Data Processing Addendum, **version 6.4,
