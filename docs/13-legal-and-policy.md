@@ -198,7 +198,7 @@ nothing else.
 | Data | Held by | Retention |
 |---|---|---|
 | IP address and request metadata | Cloudflare (processor) | Cloudflare's own retention policy; the operator neither receives nor stores raw logs |
-| Aggregated analytics (counts, bandwidth, hit ratio, countries, referrers, top paths) | Cloudflare dashboard; totals copied into `ops-log.md` | Aggregated, not personal data; the ops-log line is kept indefinitely |
+| Aggregated analytics (counts, bandwidth, hit ratio, countries, referrers, top paths) | Cloudflare dashboard, read by the operator; the repository records only R2 operation counts (Class A, Class B, missing-key GETs) | Aggregated, not personal data; the ops-log line is kept indefinitely |
 | Email correspondence | The owner's mailbox, via Cloudflare Email Routing | Deleted no later than 24 months after the last message in the thread |
 | Legal notices, takedown and law-enforcement requests | Private GitHub security advisory draft plus the mailbox | 6 years after the request is resolved |
 | GitHub issues and pull requests | GitHub, public | Public and permanent by design; created voluntarily by the person |
