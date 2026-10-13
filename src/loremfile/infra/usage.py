@@ -442,17 +442,24 @@ def scanner_summary(found: list[ScannerDay]) -> dict[str, Any]:
     }
 
 
-def render_scanners(summary: dict[str, Any], *, detail: bool = True) -> str:
+def render_scanners(summary: dict[str, Any], *, counts: bool = False) -> str:
+    """The scanner paths' share of the zone's requests, and nothing absolute by default.
+
+    Scheduled runs print to a public log, and the zone's request count is audience data that
+    never goes in a public place (docs/11 §2 step 3). A share beside either count gives the
+    other away (an invented 10 at 0.5% is 2,000), so the line carries the share at one
+    decimal, the day count and the sampling state. `counts` adds the counts, locally.
+    """
     share = summary["share"]
     sampling = {True: "unsampled", False: "SAMPLED, so estimated", None: "sampling unknown"}
     lines = [
         f"  scanner paths, {summary['from']} to {summary['to']} "
-        f"({len(summary['days'])} complete UTC days): {summary['scanner_requests']:,} of "
-        f"{summary['requests']:,} requests"
-        + (f" ({share:.3%})" if share is not None else "")
+        f"({len(summary['days'])} complete UTC days): "
+        + (f"{share:.1%} of requests" if share is not None else "share unavailable")
         + f", {sampling[summary['unsampled']]}"
     ]
-    if detail:
+    if counts:
+        lines.append(f"    {summary['scanner_requests']:,} of {summary['requests']:,} requests")
         lines += [
             f"    {day['date']}  {day['scanner_requests']:>6,} of {day['requests']:>8,}"
             for day in summary["days"]
@@ -472,7 +479,7 @@ def render_detail(document: dict[str, Any]) -> str:
     lines += [f"    {item['path']:<25} {int(item.get('detail') or 0):>10,}" for item in rows]
     scanners = document.get("scanner_paths") or {}
     if "days" in scanners:
-        lines.append(render_scanners(scanners, detail=True))
+        lines.append(render_scanners(scanners))  # the share only: this prints in public
     elif scanners:
         lines.append(f"  scanner paths: unavailable: {scanners.get('error')}")
     lines += [f"  error: {error}" for error in document.get("errors") or []]
