@@ -39,8 +39,9 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 
 > **Privacy**
 >
-> **Who is responsible.** `%%IMPRINT_NAME%%`, `%%IMPRINT_STREET%%`, `%%IMPRINT_POSTAL_CITY%%`
-> is the controller for the personal data described here. Contact: hello@loremfile.dev.
+> **Who is responsible.** `%%IMPRINT_NAME%%` is the controller for the personal data
+> described here. Contact: hello@loremfile.dev. The postal address is in the
+> [Impressum](/legal/imprint).
 >
 > **What is processed, and by whom.** loremfile.dev has no server, no accounts, no logins,
 > no cookies and no analytics scripts. The one exception: if Cloudflare has to show a
@@ -101,11 +102,15 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 > the changelog.
 
 **Placeholders (resolved 2026-09-15, ADR-028).** The contact address is
-**hello@loremfile.dev** (Q-07). The controller is named, with a serviceable address (Q-21):
-the notice keeps the `%%IMPRINT_*%%` placeholders in the repository, and the values are filled
-in at deploy from production secrets exactly as for the Impressum (§3b). Art. 13 GDPR asks
-for the controller's identity and contact details; the requirement for a **serviceable postal
-address** comes from **§ 18 Abs. 1 MStV** for the Impressum, not from Art. 13.
+**hello@loremfile.dev** (Q-07). The controller is named (Q-21): the notice keeps the
+`%%IMPRINT_NAME%%` placeholder in the repository, and the value is filled in at deploy from
+production secrets exactly as for the Impressum (§3b). Art. 13 GDPR asks for the controller's
+identity and contact details; the requirement for a **serviceable postal address** comes from
+**§ 18 Abs. 1 MStV** for the Impressum, not from Art. 13. **On the owner's instruction
+(2026-10-13) the notice no longer repeats the address.** It names the controller, because for a
+natural person the name is that identity, gives hello@loremfile.dev, and points to
+`/legal/imprint`, which carries the street and postal city in full. `legal.REQUIRED` holds what
+each page must carry once filled.
 
 ## 3b. Impressum (`/legal/imprint`) — template, and how its values are handled
 
@@ -149,6 +154,11 @@ ADR-016 amendment).
 **The limit, stated plainly: these measures reduce reading; they cannot prevent it.** A page
 served to the public can be read by anyone who requests it, and RFC 9309 says of robots.txt that
 it is "not a form of access authorization".
+
+**No twin of either page.** `routes.LEGAL_TWINS` lists every other key that would serve a legal
+page's text, the Markdown twins `_formats/legal/imprint.md` and `_formats/legal/privacy.md`
+included: the edge would serve one at `/legal/privacy/index.md` with `noindex` only, outside
+both exact-path rules. The site checks, the legal audit and the upload gate each fail on one.
 
 ## 3a. Compliance posture
 

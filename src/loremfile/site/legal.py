@@ -17,6 +17,12 @@ from loremfile.site import routes
 
 SECRETS = ("IMPRINT_NAME", "IMPRINT_STREET", "IMPRINT_POSTAL_CITY")
 PLACEHOLDERS = {name: f"%%{name}%%" for name in SECRETS}
+#: What each page must carry once filled: the Impressum all three (§ 18 Abs. 1 MStV), the
+#: privacy notice the controller's name (Art. 13 GDPR), pointing to the Impressum (docs/13 §3).
+REQUIRED: dict[str, tuple[str, ...]] = {
+    "legal/imprint": SECRETS,
+    "legal/privacy": ("IMPRINT_NAME",),
+}
 
 
 class LegalError(RuntimeError):
@@ -127,12 +133,12 @@ def audit(
     """The count-only checks of docs/15 M4.1, run after `fill`."""
     report = LegalReport()
     files = routes.site_files(site_dir)
-    escaped = [html.escape(value, quote=True).encode() for value in values.values()]
-    forms = {form for value in values.values() for form in (value.encode(), *escaped)}
+    escaped = {name: html.escape(value, quote=True).encode() for name, value in values.items()}
+    forms = {form for name, value in values.items() for form in (value.encode(), escaped[name])}
     for key, path in files.items():
         body = path.read_bytes()
         if key in routes.LEGAL_KEYS:
-            report.pages_missing_a_value += not all(value in body for value in escaped)
+            report.pages_missing_a_value += not all(escaped[name] in body for name in REQUIRED[key])
         elif any(form in body for form in forms):
             report.other_keys_with_a_value += 1
     report.pages_missing_a_value += sum(key not in files for key in routes.LEGAL_KEYS)

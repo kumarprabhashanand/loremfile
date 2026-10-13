@@ -29,10 +29,12 @@ LINK_HEADER: Final = '</llms.txt>; rel="describedby", </.well-known/api-catalog>
 LEGAL_ROBOTS: Final = "noindex, nofollow, nosnippet"
 #: Both edge rules match these exact paths, so the values may live nowhere else (docs/15 M4.1).
 LEGAL_KEYS: Final = ("legal/imprint", "legal/privacy")
+FORMAT_INDEX_DIR: Final = "_formats"
+#: Every other key that would serve a legal page's text, the Markdown twin (`twin_key`)
+#: included: neither edge rule matches `/legal/privacy/index.md` (docs/13 §3b).
 LEGAL_TWINS: Final = tuple(
     f"{key}{suffix}" for key in LEGAL_KEYS for suffix in (".html", "/index.html")
-)
-FORMAT_INDEX_DIR: Final = "_formats"
+) + tuple(f"{FORMAT_INDEX_DIR}/{key}.md" for key in LEGAL_KEYS)
 #: IndexNow's key file (docs/04 §12): at the root, holding the key and nothing else. A site
 #: key like any other, so the upload publishes it and nothing ever deletes it.
 INDEXNOW_KEY_FILE: Final = f"{INDEXNOW_KEY}.txt"

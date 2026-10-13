@@ -39,6 +39,13 @@ def test_a_production_build_fills_the_pages_and_prints_no_value(tmp_path: Path) 
     assert all(value not in result.output for value in VALUES.values())
     imprint = (out / "legal" / "imprint.html").read_text()
     assert all(value in imprint for value in VALUES.values())
+    # The privacy notice names the controller and leaves the address to the Impressum.
+    privacy = (out / "legal" / "privacy.html").read_text()
+    prose = privacy.split('<div class="prose">', 1)[1].split("</div>", 1)[0]
+    assert VALUES["IMPRINT_NAME"] in prose
+    assert VALUES["IMPRINT_STREET"] not in privacy
+    assert VALUES["IMPRINT_POSTAL_CITY"] not in privacy
+    assert '<a href="/legal/imprint">Impressum</a>.' in prose
 
 
 def test_a_production_build_without_the_values_fails_and_names_them(tmp_path: Path) -> None:
