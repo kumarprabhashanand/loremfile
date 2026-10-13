@@ -1116,8 +1116,15 @@ def tokens_due_command(as_json: bool) -> None:
     default=usage_module.MAX_WINDOW_DAYS,
     help="Days of per-day history to include; 0 omits the series.",
 )
+@click.option(
+    "--counts",
+    "show_counts",
+    is_flag=True,
+    help="Also print the scanner paths' request counts. A local run only: scheduled workflows "
+    "print to a public log, where the zone's traffic never goes (docs/11 §2 step 3).",
+)
 @click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
-def usage_command(days: int, daily_days: int, as_json: bool) -> None:
+def usage_command(days: int, daily_days: int, show_counts: bool, as_json: bool) -> None:
     """R2 operations from the Analytics API (docs/19 §3). Read-only, T4."""
     errors: list[str] = []
     summary: dict[str, Any] = {}
@@ -1174,7 +1181,7 @@ def usage_command(days: int, daily_days: int, as_json: bool) -> None:
     if "error" in scanners:
         click.echo(f"  scanner paths: unavailable: {scanners['error']}", err=True)
     else:
-        click.echo(usage_module.render_scanners(scanners, detail=detail), err=True)
+        click.echo(usage_module.render_scanners(scanners, counts=show_counts), err=True)
     sys.exit(
         _emit(
             "usage",

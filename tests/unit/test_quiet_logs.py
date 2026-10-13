@@ -169,7 +169,9 @@ SCANNERS = {
 }
 
 
-def run_usage(monkeypatch: pytest.MonkeyPatch, *, series_fails: bool) -> Any:
+def run_usage(
+    monkeypatch: pytest.MonkeyPatch, *, series_fails: bool, extra: tuple[str, ...] = ()
+) -> Any:
     monkeypatch.setattr(usage_module, "month_to_date", operations)
     monkeypatch.setattr(usage_module, "scanner_days", lambda: [])
     monkeypatch.setattr(usage_module, "scanner_summary", lambda _found: SCANNERS)
@@ -180,24 +182,30 @@ def run_usage(monkeypatch: pytest.MonkeyPatch, *, series_fails: bool) -> Any:
         return []
 
     monkeypatch.setattr(usage_module, "recent_days", recent_days)
-    return CliRunner().invoke(cli.main, ["usage", "--json", "--daily-days", "2"])
+    return CliRunner().invoke(cli.main, ["usage", "--json", "--daily-days", "2", *extra])
 
 
 def test_a_clean_usage_read_prints_counts_only(monkeypatch: pytest.MonkeyPatch) -> None:
     stderr = run_usage(monkeypatch, series_fails=False).stderr
     assert len(stderr.strip().splitlines()) == 2, stderr
     assert "R2 operations:" in stderr
-    assert "scanner paths, 2026-10-01 to 2026-10-06" in stderr
+    assert (
+        "scanner paths, 2026-10-01 to 2026-10-06 (2 complete UTC days): 0.4% of requests, "
+        "SAMPLED, so estimated"
+    ) in stderr
     assert "HeadObject" not in stderr
-    assert "2026-10-02 " not in stderr
+    assert absolute_counts(SCANNERS, stderr) == []
 
 
-def test_a_failed_usage_read_prints_every_row(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The control: a read that failed keeps the whole breakdown in the log."""
+def test_a_failed_usage_read_prints_every_r2_row_and_still_no_traffic(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A read that failed keeps the whole R2 breakdown, which is cost data, in the log; the
+    zone's request counts stay out of it all the same (docs/11 §2 step 3)."""
     stderr = run_usage(monkeypatch, series_fails=True).stderr
     assert "HeadObject" in stderr
     assert "GetObject" in stderr
-    assert "2026-10-02 " in stderr
+    assert absolute_counts(SCANNERS, stderr) == []
 
 
 def test_over_the_threshold_the_workflow_prints_every_row(tmp_path: Path) -> None:
@@ -216,10 +224,69 @@ def test_over_the_threshold_the_workflow_prints_every_row(tmp_path: Path) -> Non
     text = usage_module.render_detail(document)
     for needle in ("r2_class_b_mtd: 6000000", "GetObject/success", "HeadObject/success"):
         assert needle in text
-    assert "2026-10-01 " in text and "2026-10-02 " in text
+    assert "0.4% of requests" in text
+    assert absolute_counts(SCANNERS, text) == []
     report = tmp_path / "usage.json"
     report.write_text(json.dumps(document))
     assert usage_detail.main([str(report)]) == 0
+
+
+# --- the zone's traffic never reaches a public log (2026-10-13) -----------------------------
+
+
+def absolute_counts(summary: dict[str, Any], text: str) -> list[str]:
+    """Every request count of a scanner summary that a piece of text prints, as printed."""
+    numbers = {summary["requests"], summary["scanner_requests"]}
+    numbers |= {day[key] for day in summary["days"] for key in ("requests", "scanner_requests")}
+    found = []
+    for number in sorted(numbers):
+        for shown in dict.fromkeys((f"{number:,}", str(number))):
+            if re.search(rf"(?<![\d.,]){re.escape(shown)}(?![\d.,]*\d)", text):
+                found.append(shown)
+    return found
+
+
+def test_the_scanner_line_carries_no_count_only_the_share() -> None:
+    line = usage_module.render_scanners(SCANNERS)
+    assert "0.4% of requests" in line and "2 complete UTC days" in line
+    assert absolute_counts(SCANNERS, line) == []
+
+
+def test_the_count_check_finds_the_line_this_replaced() -> None:
+    """The format every scheduled run printed until 2026-10-13: the total in plain sight."""
+    old = "  scanner paths, 2026-10-01 to 2026-10-06: 16 of 4,100 requests (0.390%), SAMPLED"
+    assert absolute_counts(SCANNERS, old) == ["16", "4,100"]
+
+
+def test_the_counts_print_only_when_a_local_run_asks(monkeypatch: pytest.MonkeyPatch) -> None:
+    stderr = run_usage(monkeypatch, series_fails=False, extra=("--counts",)).stderr
+    assert "16 of 4,100 requests" in stderr and "2026-10-02 " in stderr
+
+
+WORKFLOWS = Path(__file__).resolve().parents[2] / ".github" / "workflows"
+
+
+def usage_calls_asking_for_counts(texts: dict[str, str]) -> list[str]:
+    """Workflow lines that run `loremfile usage` with `--counts`, and so would publish them."""
+    return [
+        f"{name}: {line.strip()}"
+        for name, text in sorted(texts.items())
+        for line in text.splitlines()
+        if "loremfile usage" in line and "--counts" in line
+    ]
+
+
+def test_no_workflow_asks_usage_for_counts() -> None:
+    texts = {path.name: path.read_text(encoding="utf-8") for path in WORKFLOWS.glob("*.yml")}
+    assert any("loremfile usage" in line for line in texts["health.yml"].splitlines())
+    assert usage_calls_asking_for_counts(texts) == []
+
+
+def test_the_workflow_check_finds_a_call_with_counts() -> None:
+    texts = {"health.yml": "        run: loremfile usage --json --counts > usage.json\n"}
+    assert usage_calls_asking_for_counts(texts) == [
+        "health.yml: run: loremfile usage --json --counts > usage.json"
+    ]
 
 
 def expiry(name: str, days_left: int) -> tokens_module.Expiry:
