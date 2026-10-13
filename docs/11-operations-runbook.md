@@ -20,10 +20,12 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 
 1. **Triage issues** labelled `health`, `infra-drift`, `determinism`, `security`, `fixture-request`. For each: read the latest comment; follow the matching procedure in §7.
 2. **Merge Dependabot PRs** that are green. For Python or Docker updates the PR must include the regenerated lock and new digest (CI enforces). If determinism tests fail on a toolchain bump, open a `determinism` issue and do not merge.
-3. **Look at usage** (2 minutes, A): read the latest line of `ops-log.md` on the `ops-log` branch (`https://github.com/kumarprabhashanand/loremfile/blob/ops-log/ops-log.md`), written automatically every Monday by `health.yml` (requests/day, bandwidth, cache hit ratio, R2 Class B month-to-date, top paths). Target hit ratio ≥ 95 % zone-wide; R2 Class B < 5 M/month. If the line is missing, `health.yml` is not running — check Actions.
+3. **Look at cost** (2 minutes, A): read the latest rows of `ops-log.md` on the `ops-log` branch (`https://github.com/kumarprabhashanand/loremfile/blob/ops-log/ops-log.md`), committed every Monday by `health.yml` through `ops_log.py`: one row per UTC day with R2 Class A operations, R2 Class B operations and missing-key GETs, then a notes column. That is the whole line, and it is complete as it is. R2 Class B stays under 5 M a month, the threshold the health check's `cost` step fails on (the free tier is 10 M, §7.4). If no row is newer than a week, `health.yml` is not running; check Actions.
+
+   **Audience numbers never go in a public place.** Visitor counts, unique addresses, page views, search impressions, clicks, positions and package download counts are never written into the repository, its issues, its pull requests or the `ops-log` branch, and neither are the requests per day, bandwidth, top paths or referrer hosts this step once listed. Read them where they live (Cloudflare analytics, Search Console, the PyPI and npm statistics) and keep anything taken from them outside the repository. The ops log is a cost record: R2 operations, missing-key reads, and dated notes on what shipped and when it went live. A design that seems to be missing its traffic columns is finished on purpose; do not complete it.
 4. **Check spend** (O, monthly is enough): Billing → current usage should be USD 0.00 apart from the domain. The agent cannot see billing; the `cost` issue from `health.yml` is the automated proxy.
 5. **Fixture requests**: label, reply with the naming grammar, or implement if small.
-6. **Close the session** by noting anything unusual in the `notes` column of the latest `ops-log.md` line (push to the `ops-log` branch).
+6. **Close the session** by noting anything unusual in the `notes` column of the latest `ops-log.md` line (push to the `ops-log` branch): what changed and when, never an audience number (step 3).
 
 ## 3. Monthly (first weekly session of the month, +30 minutes)
 
@@ -31,7 +33,6 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 - (O, 10 minutes; the agent cannot see account settings or billing) Run the hardening checklist from `10-security.md` §5 (read-only spot check: 2FA on, tokens as inventoried, Registrar lock, auto-renew; the readable "must be off" settings via `infra audit`, the manual ones listed in `08` §8 and the dashboard-only ones in `08` §8b by eye).
 - (O) Check the card on file is not expiring within 60 days.
 - (A) Verify the latest GitHub Release archive is downloadable and `sha256sum -c` (macOS: `shasum -a 256 -c`) passes for 3 random entries.
-- (A) Add the monthly success-metric line (`00-overview.md` §6: GitHub code-search count, referrer hosts) under the automated weekly lines in `ops-log.md` on the `ops-log` branch (a direct push; the branch is unprotected by design).
 
 ## 4. Quarterly (+60 minutes)
 
@@ -121,7 +122,7 @@ before treating it as a fault.
 
 ### 7.4 Cost spike or abuse
 
-1. Read the `cost` issue (it lists Class B reads per day and the top paths and status codes from zone analytics). Cloudflare Analytics → Traffic and Security → Analytics show the ASNs, countries and whether requests hit existing objects or 404s.
+1. Read the `cost` issue: it holds the `usage` report's summary (R2 Class A and Class B operations month to date, and missing-key reads) and any errors, and nothing from zone analytics; the run log of that `health.yml` run breaks the operations down by action and status. Cloudflare Analytics → Traffic and Security → Analytics show the paths, ASNs, countries and whether requests hit existing objects or 404s; read them there, and keep what you read out of the issue (§2 step 3).
 2. If the pattern is unique non-existent paths: Security → WAF → Custom rules (5 free) → block requests whose path does not start with a known prefix, e.g. `not (starts_with(http.request.uri.path, "/pdf/") or starts_with(http.request.uri.path, "/png/") or … or http.request.uri.path eq "/" or starts_with(http.request.uri.path, "/docs/") …)` — `loremfile infra allowlist-rule` prints the full expression from the catalog. Port it into `infra/` via PR if it stays.
 3. If a single ASN/IP range: custom rule blocking `ip.src.asnum` or `ip.src in {…}`. **Custom rules added in the dashboard are never touched by `apply`** (ADR-030):
    - `infra apply` leaves them in place and reports each as a `warning`;
