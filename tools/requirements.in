@@ -10,7 +10,7 @@
 
 # --- documents -------------------------------------------------------------
 fpdf2>=2.8.9
-pypdf>=6.19               # reads every PDF; writes only pdf/form-fields-1page.pdf's form
+pypdf>=6.20.0               # reads every PDF; writes only pdf/form-fields-1page.pdf's form
 python-docx>=1.2          # comments API
 openpyxl
 python-pptx
@@ -19,7 +19,7 @@ python-pptx
 Pillow>=12.3              # AVIF support in the published wheels starts at 11.3.0
 
 # --- data ------------------------------------------------------------------
-pyarrow>=25.0.1
+pyarrow>=26.0.0
 fastavro
 ijson
 lxml
@@ -45,7 +45,7 @@ vobject
 cryptography
 
 # --- framework -------------------------------------------------------------
-pydantic>=2.13.5
+pydantic>=2.14.0
 click
 Jinja2
 boto3
