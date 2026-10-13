@@ -88,6 +88,7 @@ Format: context → decision → consequences. Status is *Accepted* unless noted
 ## ADR-017 No analytics script; usage from Cloudflare zone analytics
 - **Context**: privacy, CSP strictness, no cookie banner.
 - **Decision**: no JS analytics; weekly numbers copied into `ops-log.md`.
+- **Amended 2026-10-13: the ops log holds cost, not usage.** Its weekly commit writes R2 operations and missing-key reads (`11` §8). Audience numbers (visitor counts, unique addresses, page views, search impressions, clicks, positions, package download counts, requests per day, referrer hosts) are read in the Cloudflare dashboard, Search Console and the package registries, and are never copied into the repository, its issues, its pull requests or the `ops-log` branch (`11` §2 step 3).
 - **Consequences**: no consent banner is needed because nothing is stored on the visitor's device and no tracking happens, not because no personal data is processed. Cloudflare processes IP addresses and request metadata as our processor, so the controller obligations in `13` §3/§3a still apply.
 
 ## ADR-018 Loremfile Sans is a generated font, not a third-party font

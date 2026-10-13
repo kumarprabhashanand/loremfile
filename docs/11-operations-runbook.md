@@ -20,10 +20,12 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 
 1. **Triage issues** labelled `health`, `infra-drift`, `determinism`, `security`, `fixture-request`. For each: read the latest comment; follow the matching procedure in §7.
 2. **Merge Dependabot PRs** that are green. For Python or Docker updates the PR must include the regenerated lock and new digest (CI enforces). If determinism tests fail on a toolchain bump, open a `determinism` issue and do not merge.
-3. **Look at usage** (2 minutes, A): read the latest line of `ops-log.md` on the `ops-log` branch (`https://github.com/kumarprabhashanand/loremfile/blob/ops-log/ops-log.md`), written automatically every Monday by `health.yml` (requests/day, bandwidth, cache hit ratio, R2 Class B month-to-date, top paths). Target hit ratio ≥ 95 % zone-wide; R2 Class B < 5 M/month. If the line is missing, `health.yml` is not running — check Actions.
+3. **Look at cost** (2 minutes, A): read the latest rows of `ops-log.md` on the `ops-log` branch (`https://github.com/kumarprabhashanand/loremfile/blob/ops-log/ops-log.md`), committed every Monday by `health.yml` through `ops_log.py`: one row per UTC day with R2 Class A operations, R2 Class B operations and missing-key GETs, then a notes column. That is the whole line, and it is complete as it is. R2 Class B stays under 5 M a month, the threshold the health check's `cost` step fails on (the free tier is 10 M, §7.4). If no row is newer than a week, `health.yml` is not running; check Actions.
+
+   **Audience numbers never go in a public place.** Visitor counts, unique addresses, page views, search impressions, clicks, positions and package download counts are never written into the repository, its issues, its pull requests or the `ops-log` branch, and neither are the requests per day, bandwidth, top paths or referrer hosts this step once listed. Read them where they live (Cloudflare analytics, Search Console, the PyPI and npm statistics) and keep anything taken from them outside the repository. The ops log is a cost record: R2 operations, missing-key reads, and dated notes on what shipped and when it went live. A design that seems to be missing its traffic columns is finished on purpose; do not complete it.
 4. **Check spend** (O, monthly is enough): Billing → current usage should be USD 0.00 apart from the domain. The agent cannot see billing; the `cost` issue from `health.yml` is the automated proxy.
 5. **Fixture requests**: label, reply with the naming grammar, or implement if small.
-6. **Close the session** by noting anything unusual in the `notes` column of the latest `ops-log.md` line (push to the `ops-log` branch).
+6. **Close the session** by noting anything unusual in the `notes` column of the latest `ops-log.md` line (push to the `ops-log` branch): what changed and when, never an audience number (step 3).
 
 ## 3. Monthly (first weekly session of the month, +30 minutes)
 
@@ -31,7 +33,6 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 - (O, 10 minutes; the agent cannot see account settings or billing) Run the hardening checklist from `10-security.md` §5 (read-only spot check: 2FA on, tokens as inventoried, Registrar lock, auto-renew; the readable "must be off" settings via `infra audit`, the manual ones listed in `08` §8 and the dashboard-only ones in `08` §8b by eye).
 - (O) Check the card on file is not expiring within 60 days.
 - (A) Verify the latest GitHub Release archive is downloadable and `sha256sum -c` (macOS: `shasum -a 256 -c`) passes for 3 random entries.
-- (A) Add the monthly success-metric line (`00-overview.md` §6: GitHub code-search count, referrer hosts) under the automated weekly lines in `ops-log.md` on the `ops-log` branch (a direct push; the branch is unprotected by design).
 
 ## 4. Quarterly (+60 minutes)
 
@@ -69,30 +70,30 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 
 1. Open the issue; read the JSON report attached in the latest comment: which checks failed (`missing_object`, `content_length_mismatch`, `hash_mismatch`, `header_missing`, `status`, `rdap_expiry`, `tls_expiry`, `security_txt_expiry`, `timeout`).
 2. `timeout`/`status 5xx` for many paths → check https://www.cloudflarestatus.com. If Cloudflare has an incident, wait; the check auto-closes when green.
-3. `missing_object` → the key is absent in R2. Run `deploy.yml` manually (`workflow_dispatch`); `build --missing-in-bucket` regenerates and uploads the missing fixtures (never overwrites). If `manifest check` fails there with a hash diff, the toolchain has drifted for that fixture: run `infra.yml` in `restore` mode with the latest release archive instead. If objects keep disappearing, rotate T2 and read the R2 audit log — with bucket locks in place this should be impossible.
-4. `hash_mismatch` or `content_length_mismatch` on a fixture → treat as an incident (`10` §6): run `infra.yml` in `audit` mode plus `verify-live --mode full` to list **all** affected paths — any machine, no credentials needed, and `health.yml` takes `mode: full` on `workflow_dispatch` if you would rather run it there than locally. The scheduled health check only hashes a rotating tenth on six days in seven (`12` §4), so the paths it named are not the whole list;  restore them by running `infra.yml` in `restore` mode with the latest release archive URL and the affected paths (`upload --restore` writes only where the live hash differs from the manifest); rotate T2.
+3. `missing_object` → the key is absent in R2. Run `deploy.yml` manually (`workflow_dispatch`); `build --missing-in-bucket` regenerates and uploads the missing fixtures (never overwrites). If `manifest check` fails there with a hash diff, the toolchain has drifted for that fixture: run `infra.yml` in `restore` mode with the latest release archive instead. If objects keep disappearing, rotate T2 and read the R2 audit log; with bucket locks in place this should be impossible.
+4. `hash_mismatch` or `content_length_mismatch` on a fixture → treat as an incident (`10` §6): run `infra.yml` in `audit` mode plus `verify-live --mode full` to list **all** affected paths: any machine, no credentials needed, and `health.yml` takes `mode: full` on `workflow_dispatch` if you would rather run it there than locally. The scheduled health check only hashes a rotating tenth on six days in seven (`12` §4), so the paths it named are not the whole list;  restore them by running `infra.yml` in `restore` mode with the latest release archive URL and the affected paths (`upload --restore` writes only where the live hash differs from the manifest); rotate T2.
 5. `header_missing` → run `infra.yml` in `audit` mode; if drift, run it in `apply` mode.
 6. `rdap_expiry` < 45 days → Domain Registration → check auto-renew and card; renew manually if needed. `tls_expiry` < 14 days → SSL/TLS → Edge Certificates: the certificate should have renewed; open a Cloudflare support ticket if it has not.
 7. `security_txt_expiry` → trigger a deploy.
 8. Comment on the issue with what you did; the next green run closes it.
 
-### 7.2 Infra drift — and the other issue with the same label
+### 7.2 Infra drift, and the other issue with the same label
 
 `audit.yml` opens **two** distinct issues under the `infra-drift` label, because they have different remedies and must open and close independently. `gh_issue` de-duplicates on label **plus** title, so they do.
 
-**"Infra drift detected"** (`infra audit` exit 1). The output lists each differing resource with both values. If the change was intentional — made in the dashboard during an incident — port it into `infra/` via a pull request, so the desired state is what is actually wanted. Otherwise run `infra.yml` in `apply` mode and investigate who changed it (Cloudflare → Manage Account → Audit Log).
+**"Infra drift detected"** (`infra audit` exit 1). The output lists each differing resource with both values. If the change was intentional (made in the dashboard during an incident), port it into `infra/` via a pull request, so the desired state is what is actually wanted. Otherwise run `infra.yml` in `apply` mode and investigate who changed it (Cloudflare → Manage Account → Audit Log).
 
-**"Infra audit could not run"** (exit 2). Nothing is known about drift; the audit did not complete. This is **not** a Cloudflare problem by default — read the error in the issue body first:
+**"Infra audit could not run"** (exit 2). Nothing is known about drift; the audit did not complete. This is **not** a Cloudflare problem by default; read the error in the issue body first:
 
-1. **`ZONE SCOPE REFUSED`** — the zone id does not resolve to `loremfile.dev`. Do not "fix" it by changing the secret until you know why: this guard exists because the account holds unrelated production zones. Check `CLOUDFLARE_ZONE_ID` against the dashboard and treat a mismatch as an incident, not a typo.
-2. **missing or rejected credentials** — T1 expired or was rotated without updating the `production` environment. `infra.yml` → `verify-tokens` says which; `11` §7.3 rotates it.
-3. **API errors or timeouts** — re-run `audit.yml` by dispatch. If it passes, the issue closes itself on that run.
+1. **`ZONE SCOPE REFUSED`**: the zone id does not resolve to `loremfile.dev`. Do not "fix" it by changing the secret until you know why: this guard exists because the account holds unrelated production zones. Check `CLOUDFLARE_ZONE_ID` against the dashboard and treat a mismatch as an incident, not a typo.
+2. **missing or rejected credentials**: T1 expired or was rotated without updating the `production` environment. `infra.yml` → `verify-tokens` says which; `11` §7.3 rotates it.
+3. **API errors or timeouts**: re-run `audit.yml` by dispatch. If it passes, the issue closes itself on that run.
 
 **A run that could not complete never touches the drift issue.** An audit that failed on a bad token has learned nothing about drift, so reporting `ok` for it would close a genuine drift issue on the strength of a run that never looked. Expect to see the two issues in different states, and that is correct rather than confusing.
 
-**A scheduled audit can be cancelled before it starts (ADR-029).** `deploy.yml`, `infra.yml` and the audit's `infra` job share the `loremfile-zone` concurrency group, so they never overlap — but GitHub keeps only **one run pending** per group, and a third arrival cancels the pending one. **A cancelled audit opens no issue.** After a busy Monday — merges or `infra.yml` dispatches around the audit's 05:43 UTC schedule, which GitHub often runs hours late — check that the week's `audit` run **completed**; if it shows *cancelled*, dispatch `audit.yml`. This instruction goes away when `queue: max` can be used: GitHub documents it, but actionlint 1.7.12 rejects it.
+**A scheduled audit can be cancelled before it starts (ADR-029).** `deploy.yml`, `infra.yml` and the audit's `infra` job share the `loremfile-zone` concurrency group, so they never overlap, but GitHub keeps only **one run pending** per group, and a third arrival cancels the pending one. **A cancelled audit opens no issue.** After a busy Monday (merges or `infra.yml` dispatches around the audit's 05:43 UTC schedule, which GitHub often runs hours late), check that the week's `audit` run **completed**; if it shows *cancelled*, dispatch `audit.yml`. This instruction goes away when `queue: max` can be used: GitHub documents it, but actionlint 1.7.12 rejects it.
 
-**Drift that appears right after a deploy may be a race, not drift** — old issue #58 was exactly that, before the group existed. Re-run `audit.yml` and let `gh_issue` close the issue; never close an `infra-drift` issue by hand.
+**Drift that appears right after a deploy may be a race, not drift**: old issue #58 was exactly that, before the group existed. Re-run `audit.yml` and let `gh_issue` close the issue; never close an `infra-drift` issue by hand.
 
 ### 7.2b Applying infrastructure, then probing it
 
@@ -106,7 +107,7 @@ The order is: **apply → wait → probe.** The probe now settles for up to
 `SETTLE_DEADLINE_SECONDS` (180 s) per check, so a short gap is absorbed; a longer outage
 still fails, because an unbounded wait would be the vacuous pass the probe exists to
 catch. A settle that expires says **"never appeared within 180 s"**, which is a different
-finding from an assertion that fails — propagation versus misconfiguration, and they need
+finding from an assertion that fails: propagation versus misconfiguration, and they need
 different responses.
 
 If a check reports "never appeared" immediately after an apply, wait and re-run once
@@ -121,39 +122,39 @@ before treating it as a fault.
 
 ### 7.4 Cost spike or abuse
 
-1. Read the `cost` issue (it lists Class B reads per day and the top paths and status codes from zone analytics). Cloudflare Analytics → Traffic and Security → Analytics show the ASNs, countries and whether requests hit existing objects or 404s.
-2. If the pattern is unique non-existent paths: Security → WAF → Custom rules (5 free) → block requests whose path does not start with a known prefix, e.g. `not (starts_with(http.request.uri.path, "/pdf/") or starts_with(http.request.uri.path, "/png/") or … or http.request.uri.path eq "/" or starts_with(http.request.uri.path, "/docs/") …)` — `loremfile infra allowlist-rule` prints the full expression from the catalog. Port it into `infra/` via PR if it stays.
+1. Read the `cost` issue: it holds the `usage` report's summary (R2 Class A and Class B operations month to date, and missing-key reads) and any errors, and nothing from zone analytics; the run log of that `health.yml` run breaks the operations down by action and status. Cloudflare Analytics → Traffic and Security → Analytics show the paths, ASNs, countries and whether requests hit existing objects or 404s; read them there, and keep what you read out of the issue (§2 step 3).
+2. If the pattern is unique non-existent paths: Security → WAF → Custom rules (5 free) → block requests whose path does not start with a known prefix, e.g. `not (starts_with(http.request.uri.path, "/pdf/") or starts_with(http.request.uri.path, "/png/") or … or http.request.uri.path eq "/" or starts_with(http.request.uri.path, "/docs/") …)`; `loremfile infra allowlist-rule` prints the full expression from the catalog. Port it into `infra/` via PR if it stays.
 3. If a single ASN/IP range: custom rule blocking `ip.src.asnum` or `ip.src in {…}`. **Custom rules added in the dashboard are never touched by `apply`** (ADR-030):
    - `infra apply` leaves them in place and reports each as a `warning`;
    - `infra audit` warns about them, and opens no drift issue.
 
    Free has 5 custom rules and `infra/` uses 1, so 4 are available. If a rule should stay, port it into `infra/rulesets/http_request_firewall_custom.json` with a `ref` starting `loremfile_`, then delete the dashboard copy once the apply has added it.
-4. If volumetric: Security → Settings → Under Attack Mode for a few hours (this challenges all clients, including agents — use only as a last resort). **While it is on, do not merge a change to `infra/`, tick `apply_infra` on a `deploy.yml` dispatch, or dispatch `infra.yml` in `apply` mode.** Under Attack Mode is `security_level = "under_attack"`, and `infra/zone-settings.json` commits `"essentially_off"`: any infra apply resets it and switches Under Attack Mode off mid-incident (ADR-029). A merge applies `infra/` only when it changed since the last *successful* push deploy — so also check that the latest `deploy` run on `main` succeeded; if one after an `infra/` merge failed or was cancelled, the next merge of anything applies. While it is on, `audit.yml` reports `setting:security_level` as drift and opens "Infra drift detected". **Do not close that issue by hand**: turn Under Attack Mode off when the incident is over, dispatch `audit.yml`, and `gh_issue` closes it on the clean run.
-5. R2: the free tier is 10 M reads/month; overage is USD 0.36 per million — a spike of 100 M reads costs USD 32 (90 M billable). If spend is escalating and the above doesn't stop it, temporarily disable the custom domain (R2 → bucket → Settings → Custom Domains → Disable). This is the "big red button": the site goes dark with TLS/connection errors (no maintenance page is possible with HSTS-preloaded `.dev`), new R2 reads stop, and already-cached objects keep serving until they expire.
+4. If volumetric: Security → Settings → Under Attack Mode for a few hours (this challenges all clients, including agents; use only as a last resort). **While it is on, do not merge a change to `infra/`, tick `apply_infra` on a `deploy.yml` dispatch, or dispatch `infra.yml` in `apply` mode.** Under Attack Mode is `security_level = "under_attack"`, and `infra/zone-settings.json` commits `"essentially_off"`: any infra apply resets it and switches Under Attack Mode off mid-incident (ADR-029). A merge applies `infra/` only when it changed since the last *successful* push deploy, so also check that the latest `deploy` run on `main` succeeded; if one after an `infra/` merge failed or was cancelled, the next merge of anything applies. While it is on, `audit.yml` reports `setting:security_level` as drift and opens "Infra drift detected". **Do not close that issue by hand**: turn Under Attack Mode off when the incident is over, dispatch `audit.yml`, and `gh_issue` closes it on the clean run.
+5. R2: the free tier is 10 M reads/month; overage is USD 0.36 per million: a spike of 100 M reads costs USD 32 (90 M billable). If spend is escalating and the above doesn't stop it, temporarily disable the custom domain (R2 → bucket → Settings → Custom Domains → Disable). This is the "big red button": the site goes dark with TLS/connection errors (no maintenance page is possible with HSTS-preloaded `.dev`), new R2 reads stop, and already-cached objects keep serving until they expire.
 6. Post-mortem: open an issue with timeline, cost, and whether the default rate limit should change.
 
 ### 7.5 Determinism drift
 
 The monthly audit found that regenerating fixture X with the current toolchain yields different bytes. Published bytes are canonical and unaffected.
 
-**First, read which section of the report it is in.** `build --audit` splits *expected* drift from real drift (`06` §8): a fixture whose catalog entry sets `expected_drift` is known not to reproduce off the CI reference fleet, because its encoder dispatches on CPU features (`06` §4, RISK-21). Expected drift needs no action at all — it is reported so that the absence of an entry means something.
+**First, read which section of the report it is in.** `build --audit` splits *expected* drift from real drift (`06` §8): a fixture whose catalog entry sets `expected_drift` is known not to reproduce off the CI reference fleet, because its encoder dispatches on CPU features (`06` §4, RISK-21). Expected drift needs no action at all: it is reported so that the absence of an entry means something.
 
 For real drift: (a) read the diff summary; (b) if caused by a dependency update, note it in the fixture's `notes` field in the catalog (informational) and keep going; (c) if caused by a generator bug, fix the generator only if it does not change any *new* fixture's expected output; never regenerate published fixtures. Close the issue with the explanation.
 
-**If a fixture drifts on the reference fleet for the first time and nothing in the repository changed**, that is RISK-21 arriving: the runner fleet's CPU features moved. Do not regenerate and overwrite — the published bytes stay as they are. Add `expected_drift` to that path and, if it must be corrected, supersede it at a **new** path.
+**If a fixture drifts on the reference fleet for the first time and nothing in the repository changed**, that is RISK-21 arriving: the runner fleet's CPU features moved. Do not regenerate and overwrite: the published bytes stay as they are. Add `expected_drift` to that path and, if it must be corrected, supersede it at a **new** path.
 
 ### 7.6 Restore drill / disaster recovery
 
 Honest recovery targets: **content and a mirror hostname within one working day**; **`loremfile.dev` itself only as fast as Cloudflare support restores the account**, because the domain is registered there (ADR-020, RISK-19; Q-06 would change this). The repository README is the out-of-band channel: it always states the current canonical host, and the site's Rules page says so.
 
 1. From GitHub Releases download the latest snapshot, the delta of every release after it, and the newest release's `sha256sums.txt`. As of `v1.4.0` that is the `v1.1.0` snapshot plus one delta each from `v1.2.0`, `v1.3.0` and `v1.4.0`; the next snapshot is due at `v1.10.0` (`09` §3.5), and a release that added no fixtures attaches no part. If a fixture was redacted, its tombstone is in `sha256sums.txt`.
-2. Extract into one directory; run `sha256sum -c sha256sums.txt --ignore-missing` (all OK) — on macOS, `shasum -a 256 -c sha256sums.txt --ignore-missing`.
+2. Extract into one directory; run `sha256sum -c sha256sums.txt --ignore-missing` (all OK); on macOS, `shasum -a 256 -c sha256sums.txt --ignore-missing`.
 3. Missing fixtures (if any archive was lost) can be regenerated with `loremfile build --all --only <paths>` in the toolchain image of the release (`toolchain_image` in that manifest); verify hashes.
-4. New Cloudflare account (or the recovered one), in this order: (a) `08` §2 setup except the lock rules (domain if recoverable, otherwise a fallback hostname; bucket; custom domain; CORS; tokens); (b) `infra.yml` `apply` — it writes no R2 objects and no lock rules; (c) `infra.yml` `restore-dry-run` with the archive part URL(s), and read the plan; (d) `restore`, which verifies the paths it wrote; (e) the site upload; (f) the lock rules; (g) `verify-live --mode full`. If GitHub is also gone, (c)–(d) are `loremfile upload --from-dir <dir> --dry-run` and then without `--dry-run`, from a machine holding temporary tokens. Record the durations; a rehearsal on a throwaway zone is optional (≈ USD 10 for a domain).
+4. New Cloudflare account (or the recovered one), in this order: (a) `08` §2 setup except the lock rules (domain if recoverable, otherwise a fallback hostname; bucket; custom domain; CORS; tokens); (b) `infra.yml` `apply`: it writes no R2 objects and no lock rules; (c) `infra.yml` `restore-dry-run` with the archive part URL(s), and read the plan; (d) `restore`, which verifies the paths it wrote; (e) the site upload; (f) the lock rules; (g) `verify-live --mode full`. If GitHub is also gone, (c)–(d) are `loremfile upload --from-dir <dir> --dry-run` and then without `--dry-run`, from a machine holding temporary tokens. Record the durations; a rehearsal on a throwaway zone is optional (≈ USD 10 for a domain).
 5. If the domain is lost for good, publish the new host in the README and on the mirror's home page; nothing else can be done at this budget.
 Practise steps 1–3 before launch (M5.5) and record the time taken. At M5.5 also run `infra.yml` `restore-dry-run` against the `v1.1.0` archive part: expect `skip=223, upload=0, replace=0`.
 
-**Measured recovery, 2026-09-21** (off-CI, steps 1–3 on the published v1.1.0 release): download **49 s** (526,315,520 bytes), extract **3 s**, verify **4 s** — **56 s in total**, 223/223 OK, 0 failed, about 1.0 GB peak disk. With CI's `restore-dry-run` (run `35274346796`, `skip=223`) this is M5.5's recovery figure: the content half of the one-working-day target above takes about a minute. Steps 4–5 — a new account, apply, restore, the lock rules — have not been timed, and the domain half of the target still depends on Cloudflare support.
+**Measured recovery, 2026-09-21** (off-CI, steps 1–3 on the published v1.1.0 release): download **49 s** (526,315,520 bytes), extract **3 s**, verify **4 s**: **56 s in total**, 223/223 OK, 0 failed, about 1.0 GB peak disk. With CI's `restore-dry-run` (run `35274346796`, `skip=223`) this is M5.5's recovery figure: the content half of the one-working-day target above takes about a minute. Steps 4–5 (a new account, apply, restore, the lock rules) have not been timed, and the domain half of the target still depends on Cloudflare support.
 
 ### 7.7 Deploy failed
 
@@ -164,7 +165,7 @@ Read the failing step. `manifest check` hash diff → a generator drifted for a 
 ### 7.8 Takedown (legal request or policy violation)
 
 1. Verify the request is legitimate (see `13` §7). Record it in a private issue (security advisory draft) with the request text.
-2. Owner (T3 admin token or dashboard): remove the bucket-lock rule for the affected format prefix — `npx wrangler r2 bucket lock remove loremfile-public --id lock-<format>`. Without this step the delete in step 4 is refused by the storage layer.
+2. Owner (T3 admin token or dashboard): remove the bucket-lock rule for the affected format prefix: `npx wrangler r2 bucket lock remove loremfile-public --id lock-<format>`. Without this step the delete in step 4 is refused by the storage layer.
 3. Open a PR that sets `status: removed` with `removed: {reason, removed_at}` on the catalog entry, deletes its `generator_params` (and the generator branch if the code itself embodies the problem), runs `loremfile manifest update` (the entry becomes a tombstone, `04` §1.5), and adds a CHANGELOG line.
 4. Merge: `deploy.yml` runs `upload --apply-removals`, which deletes the object and purges its URL; the site shows the tombstone.
 5. Owner re-adds the lock rule (`npx wrangler r2 bucket lock set loremfile-public --file infra/r2-locks.json` restores the full set).
@@ -174,8 +175,8 @@ Read the failing step. `manifest check` hash diff → a generator drifted for a 
 ### 7.9 Add a fixture (normal change)
 
 1. Add the entry to `catalog/{format}.yaml` and to `docs/05-fixture-catalog.md`.
-2. **Inside the pinned toolchain image** (a host ffmpeg or Pillow will produce different bytes for media and images): `loremfile build --only <path> && loremfile validate --only <path> && loremfile manifest update` → commit `manifest.json` and `sha256sums.txt` changes (only additions). CI regenerates the fixture from the catalog and checks your committed entry against it; if it differs, the CI summary prints the exact entries to commit. **For media, the image alone is not enough**: the encoders dispatch on CPU features, so your machine and CI can legitimately disagree (`06` §4). CI is the authority — save the printed entries to a file and run `loremfile manifest adopt --from <file>`, which refuses anything already published on the base branch. **Expect two round trips for a media fixture** (push, read CI's entries, adopt, push); `06` §11 has the exact loop. This is normal, not a broken checkout.
-2b. A **new format** also needs a bucket-lock rule: `loremfile infra locks --write` updates `infra/r2-locks.json`, and the owner applies it once with `wrangler r2 bucket lock set` (T3) before the deploy — add the owner step to the PR description.
+2. **Inside the pinned toolchain image** (a host ffmpeg or Pillow will produce different bytes for media and images): `loremfile build --only <path> && loremfile validate --only <path> && loremfile manifest update` → commit `manifest.json` and `sha256sums.txt` changes (only additions). CI regenerates the fixture from the catalog and checks your committed entry against it; if it differs, the CI summary prints the exact entries to commit. **For media, the image alone is not enough**: the encoders dispatch on CPU features, so your machine and CI can legitimately disagree (`06` §4). CI is the authority: save the printed entries to a file and run `loremfile manifest adopt --from <file>`, which refuses anything already published on the base branch. **Expect two round trips for a media fixture** (push, read CI's entries, adopt, push); `06` §11 has the exact loop. This is normal, not a broken checkout.
+2b. A **new format** also needs a bucket-lock rule: `loremfile infra locks --write` updates `infra/r2-locks.json`, and the owner applies it once with `wrangler r2 bucket lock set` (T3) before the deploy; add the owner step to the PR description.
 3. Update `CHANGELOG.md`. Open a PR; CI must be green; merge; deploy runs; tag a release when convenient.
 
 ### 7.9b Publish a fixture that cannot be rebuilt (`expected_drift`)
@@ -186,16 +187,16 @@ A fixture marked `expected_drift` does not reproduce byte for byte across the ru
 
 1. On a branch, clear `awaiting_publication` from the catalog rows, run `loremfile manifest update` in the image, and open the pull request as a **draft**.
 2. CI fails on the rows whose bytes differ from your machine's and prints its own entries. Save them and `loremfile manifest adopt --from <file>` in the image; push. Note the CPU model that run logged (`Record the CPU this runner has`).
-3. CI on the adopt commit passes only if it reproduces those bytes — in practice, if it lands on the same CPU model. If it fails, re-run that CI run (`gh run rerun <id> --failed`) rather than adopting again; adopting again only moves the target.
+3. CI on the adopt commit passes only if it reproduces those bytes: in practice, if it lands on the same CPU model. If it fails, re-run that CI run (`gh run rerun <id> --failed`) rather than adopting again; adopting again only moves the target.
 4. When the head commit's CI run is green, its artifact holds exactly the manifest's bytes. Mark the pull request ready; the owner merges; the push deploy publishes from that artifact. Read the run: `upload` must report the paths written and `verify-live` `failing=0`.
 
 A later push to the pull request replaces the head commit and starts over at step 3. If the artifact expires before the merge (90 days, `expires_at` on the artifact), re-run CI on the head commit until it reproduces the bytes again.
 
 ### 7.10 Data-subject request (access, erasure, objection, or the same right under another law)
 
-1. **We hold nothing but the email thread the requester started** — no accounts, no cookies, no analytics identifiers and no server logs (`13` §3a). Search the mailbox for their address and check the retention schedule in `13` §3a; that is the whole search.
+1. **We hold nothing but the email thread the requester started**: no accounts, no cookies, no analytics identifiers and no server logs (`13` §3a). Search the mailbox for their address and check the retention schedule in `13` §3a; that is the whole search.
 2. **Cloudflare holds the edge request logs** as our processor and we cannot query them. If the request concerns those, ask the requester for the approximate time and the URL, forward the request to Cloudflare, and tell the requester you have done so and when.
-3. **Reply within one month** using the template below, then record the request, what was held and the reply date in a private GitHub security advisory draft (never in a public issue — the request itself is personal data). If the requester asks for erasure of the thread, delete it and say so.
+3. **Reply within one month** using the template below, then record the request, what was held and the reply date in a private GitHub security advisory draft (never in a public issue: the request itself is personal data). If the requester asks for erasure of the thread, delete it and say so.
 
 Response template:
 
@@ -203,17 +204,17 @@ Response template:
 >
 > loremfile.dev has no accounts, runs no analytics and keeps no server logs, and sets no
 > cookie of its own (only the strictly necessary one Cloudflare sets if it has to show you a
-> security check), so the only personal data we hold about you is this email thread — your address and what you wrote — which we delete no later than 24 months after the last message, or sooner if you ask.
+> security check), so the only personal data we hold about you is this email thread (your address and what you wrote), which we delete no later than 24 months after the last message, or sooner if you ask.
 >
 > Requests to the site are delivered by Cloudflare, Inc., which processes IP addresses and request metadata as our processor; we have no access to those raw logs. {If applicable: we forwarded your request to Cloudflare on {date}.}
 >
-> Our privacy notice is at https://loremfile.dev/legal/privacy. You may complain to your supervisory authority — in the EU the one where you live or work, in the UK the Information Commissioner's Office.
+> Our privacy notice is at https://loremfile.dev/legal/privacy. You may complain to your supervisory authority: in the EU the one where you live or work, in the UK the Information Commissioner's Office.
 
 ### 7.11 Alerting control drill
 
 **A control that has never been exercised is a hypothesis.** REQ-27's `inject_failure` existed from M4.3 and was never dispatched; the ops-log keep-alive shipped unable to run; and four scheduled health runs failed with no issue opened (`09` §3.3). The drill proves the alerting path end to end, against production, with the real `gh`.
 
-**When to run it:** after **any** change to `.github/workflows/health.yml`, `.github/workflows/audit.yml` or `src/loremfile/gh_issue.py` — in the same session as the merge — and otherwise once a quarter.
+**When to run it:** after **any** change to `.github/workflows/health.yml`, `.github/workflows/audit.yml` or `src/loremfile/gh_issue.py` (in the same session as the merge) and otherwise once a quarter.
 
 **Procedure** (Actions → `health` → Run workflow; three dispatches, in order, reading each before the next):
 
@@ -225,15 +226,15 @@ Response template:
 
 If any row does not show what it must, the alerting path is broken: fix it before anything else, because until then a real failure is silent.
 
-**Wait for each run to finish before dispatching the next.** `health.yml` is deliberately outside the zone concurrency group (ADR-029) — a cancelled pending health run would silence alerting — so nothing stops two drill dispatches overlapping. The second drill's runs did; only the order of the issue events made it readable.
+**Wait for each run to finish before dispatching the next.** `health.yml` is deliberately outside the zone concurrency group (ADR-029), because a cancelled pending health run would silence alerting, so nothing stops two drill dispatches overlapping. The second drill's runs did; only the order of the issue events made it readable.
 
 **Drill record**
 
 | Date | Runs | Result |
 |---|---|---|
-| 2026-09-14 | `34894269022` (inject), `34896362833` (clean), `34896553339` (`force_ops_log`) | **Passed, with one defect found.** old issue #53 opened at 20:41 on the injected `pdf/minimal.pdf` and closed at 21:02 on the clean run; cost and rotation ran in all three; the `ops-log` branch was created (`6f2bf9b`, rows 2026-09-08 → 2026-09-14). **Defect:** run 1 ended **green** — a check that found a problem did not fail the run. Fixed by the final verdict step (`09` §3.3); the drill is re-run after that fix, when row 1's "the run ends red" is checked for the first time |
-| 2026-09-14 (after old PR #54) | `34904105748` (inject), `34904276619` (clean) | **Passed; no re-drill.** Run 1 ended **red** and opened old issue #57 at 22:29:39; run 2 closed old issue #57 at 22:30:45. **The runs overlapped**: run 2 started at 22:28:25, before run 1 ended at 22:29:48. The issue events are in the right order, so the open-then-close lifecycle is still shown, but the overlap is recorded rather than smoothed — hence the wait rule above. `force_ops_log` was not re-run; the first drill proved the keep-alive |
-| 2026-09-17 | `35267683488` (inject), `35268148973` (clean) | **Passed, and the runs did not overlap.** Run 1 failed 19:54:56–19:58:05 on the injected `pdf/a4-3pages.pdf` and opened old issue #74 at 19:57:58; run 2 started at 19:59:48 — after run 1 had ended — and closed old issue #74 at 20:05:17. The first drill to satisfy the wait rule above rather than record a breach of it, so the open-then-close lifecycle is shown by sequence and not inferred from event order. Full mode including the site half took **5m37s**, comfortably inside the 20-minute timeout |
+| 2026-09-14 | `34894269022` (inject), `34896362833` (clean), `34896553339` (`force_ops_log`) | **Passed, with one defect found.** old issue #53 opened at 20:41 on the injected `pdf/minimal.pdf` and closed at 21:02 on the clean run; cost and rotation ran in all three; the `ops-log` branch was created (`6f2bf9b`, rows 2026-09-08 → 2026-09-14). **Defect:** run 1 ended **green**: a check that found a problem did not fail the run. Fixed by the final verdict step (`09` §3.3); the drill is re-run after that fix, when row 1's "the run ends red" is checked for the first time |
+| 2026-09-14 (after old PR #54) | `34904105748` (inject), `34904276619` (clean) | **Passed; no re-drill.** Run 1 ended **red** and opened old issue #57 at 22:29:39; run 2 closed old issue #57 at 22:30:45. **The runs overlapped**: run 2 started at 22:28:25, before run 1 ended at 22:29:48. The issue events are in the right order, so the open-then-close lifecycle is still shown, but the overlap is recorded rather than smoothed, hence the wait rule above. `force_ops_log` was not re-run; the first drill proved the keep-alive |
+| 2026-09-17 | `35267683488` (inject), `35268148973` (clean) | **Passed, and the runs did not overlap.** Run 1 failed 19:54:56–19:58:05 on the injected `pdf/a4-3pages.pdf` and opened old issue #74 at 19:57:58; run 2 started at 19:59:48 (after run 1 had ended) and closed old issue #74 at 20:05:17. The first drill to satisfy the wait rule above rather than record a breach of it, so the open-then-close lifecycle is shown by sequence and not inferred from event order. Full mode including the site half took **5m37s**, comfortably inside the 20-minute timeout |
 
 ### 7.12b Move the action's major tag
 
@@ -249,7 +250,7 @@ The ruleset targets `refs/tags/v*` only, and `release.yml` triggers on `v*`, so 
 
 The weekly watch (`09` §3.4) found agents on the public list that this repository has never decided about. Nothing was blocked and nothing was changed; the issue lists each name with its operator and stated purpose.
 
-1. For each name, decide: block it, or record it as weighed. There is no third option — leaving it open means the same names return every week and the label stops meaning anything.
+1. For each name, decide: block it, or record it as weighed. There is no third option: leaving it open means the same names return every week and the label stops meaning anything.
 2. **To block:** add the token to the WAF rule and the robots.txt group, in the casing its operator publishes, with the documentation check `04` §6 requires. `loremfile crawler-watch` fails the audit if the expression passes 4,096 characters; splitting the rule then needs a decision, because the Free plan allows five custom rules in the phase.
 3. **To record as weighed:** add the name to `infra/crawlers-seen.json`.
 4. Either way the next run reports nothing and the issue closes itself.
@@ -288,7 +289,7 @@ approval is the only gate between a pushed tag and a live release.
 
 ## 8. `ops-log.md` format (on the `ops-log` branch)
 
-**One row per day, backfilled weekly.** The Monday `health.yml` run (or a dispatch with `force_ops_log`) writes a row for every day in its usage report — the last 32 days — and **replaces** a date already present rather than adding a second row, so overlapping windows converge (`09` §3.3, `19` §3.2).
+**One row per day, backfilled weekly.** The Monday `health.yml` run (or a dispatch with `force_ops_log`) writes a row for every day in its usage report (the last 32 days) and **replaces** a date already present rather than adding a second row, so overlapping windows converge (`09` §3.3, `19` §3.2).
 
 ```
 | date | R2 class A | R2 class B | missing-key GETs | notes |
@@ -296,5 +297,5 @@ approval is the only gate between a pushed tag and a live release.
 
 - Counts are **per day**, not month-to-date: a cumulative counter cannot express a rate.
 - An absent reading renders `—`, never `0`, so a day with no numbers does not look like a quiet day. A failed usage read writes one `—` row for that date, noted `check failed`.
-- The descriptive header is **regenerated on every write**, so a stale description of the format cannot outlive the next commit — the first file on the branch described itself as "One line a week" directly above "One row per day".
+- The descriptive header is **regenerated on every write**, so a stale description of the format cannot outlive the next commit: the first file on the branch described itself as "One line a week" directly above "One row per day".
 - First written 2026-09-14 by the control drill (`7.11`), commit `6f2bf9b`, rows 2026-09-08 → 2026-09-14.
