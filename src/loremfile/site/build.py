@@ -501,7 +501,11 @@ def embed_snippet(family: str, url: str) -> str:
 
 
 def section(path: Path, heading: str) -> str:
-    lines = path.read_text(encoding="utf-8").splitlines()
+    return section_text(path.read_text(encoding="utf-8"), heading, path.name)
+
+
+def section_text(text: str, heading: str, name: str) -> str:
+    lines = text.splitlines()
     for index, line in enumerate(lines):
         if line.startswith(heading):
             body: list[str] = []
@@ -510,7 +514,7 @@ def section(path: Path, heading: str) -> str:
                     break
                 body.append(following)
             return "\n".join(body).strip("\n") + "\n"
-    raise SiteError(f"{path.name} has no section starting {heading!r}")
+    raise SiteError(f"{name} has no section starting {heading!r}")
 
 
 def quoted(text: str) -> tuple[str, str]:
@@ -585,17 +589,17 @@ def breadcrumbs(crumbs: list[tuple[str, str]], name: str, url: str) -> dict[str,
     }
 
 
-def article(page: Page) -> list[dict[str, Any]]:
-    return [
-        {
-            "@context": "https://schema.org",
-            "@type": "TechArticle",
-            "headline": page.h1,
-            "description": page.description,
-            "url": page.canonical,
-        },
-        breadcrumbs(page.crumbs, page.h1, page.canonical),
-    ]
+def article(page: Page, *, modified: dt.date | None = None) -> list[dict[str, Any]]:
+    node: dict[str, Any] = {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": page.h1,
+        "description": page.description,
+        "url": page.canonical,
+    }
+    if modified is not None:
+        node["dateModified"] = modified.isoformat()
+    return [node, breadcrumbs(page.crumbs, page.h1, page.canonical)]
 
 
 def dataset(
@@ -919,22 +923,98 @@ def guides(pages: list[Page]) -> list[tuple[str, str, str]]:
     return [(f"/{p.key}", p.h1, p.description) for p in pages if p.key.startswith("testing/")]
 
 
-def legal_pages(root: Path) -> list[Page]:
-    source = root / "docs" / "13-legal-and-policy.md"
+#: The source of every legal page (docs/13), relative to the repository root.
+LEGAL_SOURCE = "docs/13-legal-and-policy.md"
+#: The legal pages that show when their text last changed; the Impressum is four fixed lines.
+DATED_LEGAL = ("legal/license", "legal/terms", "legal/privacy")
+#: Spelled out rather than `%B`, which follows the locale and would change the bytes.
+MONTHS = (
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+)
+
+
+def _git(root: Path, *args: str) -> str:
+    executable = shutil.which("git")
+    if executable is None:
+        raise SiteError("git is not on PATH")
+    done = subprocess.run(  # noqa: S603 - fixed argv, no shell
+        [executable, *args], cwd=root, capture_output=True, text=True, check=False
+    )
+    if done.returncode != 0:
+        raise SiteError(f"git {args[0]} failed: {done.stderr.strip()}")
+    return done.stdout
+
+
+def legal_dates(root: Path, committed: dt.datetime) -> dict[str, dt.date]:
+    """Each dated legal page's last change: the commit that introduced its published text.
+
+    Walks back through the commits that touched docs/13 while the page's quoted text stays
+    what the working tree holds; the oldest of that run introduced it. Text that differs from
+    HEAD is dated at the build's clock. A shallow clone would end the walk at its boundary
+    and date every page wrongly, so it is refused: every job that builds the site fetches
+    full history.
+    """
+    if _git(root, "rev-parse", "--is-shallow-repository").strip() == "true":
+        raise SiteError("a shallow clone cannot date the legal pages; fetch full history")
+    headings = {key: heading for key, heading, _ in LEGAL}
+    source = (root / LEGAL_SOURCE).read_text(encoding="utf-8")
+    history = [
+        line.split(" ", 1)
+        for line in _git(root, "log", "--format=%H %cI", "--", LEGAL_SOURCE).splitlines()
+    ]
+    versions: dict[str, str] = {}
+    dates: dict[str, dt.date] = {}
+    for key in DATED_LEGAL:
+        current = quoted(section_text(source, headings[key], LEGAL_SOURCE))
+        dates[key] = committed.astimezone(dt.UTC).date()
+        for sha, when in history:
+            if sha not in versions:
+                versions[sha] = _git(root, "show", f"{sha}:{LEGAL_SOURCE}")
+            try:
+                then = quoted(section_text(versions[sha], headings[key], LEGAL_SOURCE))
+            except SiteError:
+                break
+            if then != current:
+                break
+            dates[key] = dt.datetime.fromisoformat(when).astimezone(dt.UTC).date()
+    return dates
+
+
+def updated_line(day: dt.date) -> str:
+    shown = f"{day.day} {MONTHS[day.month - 1]} {day.year}"
+    return f'<p>Last updated <time datetime="{day.isoformat()}">{shown}</time></p>\n'
+
+
+def legal_pages(root: Path, committed: dt.datetime) -> list[Page]:
+    source = root / LEGAL_SOURCE
     crumbs = [("Home", "/"), ("Legal", "/legal")]
+    dates = legal_dates(root, committed)
     pages: list[Page] = []
     for key, heading, description in LEGAL:
         title, text = quoted(section(source, heading))
+        body = markdown.render(text, breaks=key == "legal/imprint")
+        day = dates.get(key)
         page = Page(
             key,
             title,
             description,
             "legal.html",
             crumbs=crumbs,
-            context={"body": trusted(markdown.render(text, breaks=key == "legal/imprint"))},
+            context={"body": trusted(body if day is None else updated_line(day) + body)},
             robots=routes.LEGAL_ROBOTS if key in routes.LEGAL_KEYS else None,
         )
-        page.jsonld = article(page) if page.listed else []
+        page.jsonld = article(page, modified=day) if page.listed else []
         pages.append(page)
     index = Page(
         "legal",
@@ -1197,7 +1277,7 @@ def build(out: Path, *, root: Path, committed: dt.datetime) -> BuildReport:
         formats_page(manifest, catalogs),
         *testing,
         *doc_pages(root),
-        *legal_pages(root),
+        *legal_pages(root, committed),
         changelog_page(root),
         status_page(),
     ]

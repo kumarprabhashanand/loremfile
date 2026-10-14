@@ -68,7 +68,11 @@ jobs:
       CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
       GH_TOKEN: ${{ github.token }}
     steps:
+      # Full history: the legal pages carry the date of the commit that last changed their
+      # text, and the rebuild must date them as the deploy did (`build.legal_dates`).
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Install the package
         run: pip install -e . --no-deps

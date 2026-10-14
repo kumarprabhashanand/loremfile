@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import re
 from pathlib import Path
 
 import pytest
+
+from loremfile.site import build
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTENT = ROOT / "site" / "content"
@@ -208,3 +211,19 @@ def test_the_em_dash_check_finds_one(tmp_path: Path) -> None:
     clean.write_text("A colon: here.\n", encoding="utf-8")
     marked.write_text(f"A dash {EM_DASH} here.\n", encoding="utf-8")
     assert dashed([clean, marked]) == ["marked.md"]
+
+
+def test_the_legal_pages_have_no_em_dash() -> None:
+    """They render from docs/13's quoted templates, outside `SITE_COPY`: the last exception."""
+    when = dt.datetime(2026, 10, 14, tzinfo=dt.UTC)
+    bodies = {page.key: str(page.context["body"]) for page in build.legal_pages(ROOT, when)}
+    assert {"legal/imprint", "legal/privacy", "legal/terms", "legal/license"} <= set(bodies)
+    assert dashed_bodies(bodies) == []
+
+
+def dashed_bodies(bodies: dict[str, str]) -> list[str]:
+    return sorted(key for key, text in bodies.items() if EM_DASH in text)
+
+
+def test_the_legal_dash_check_finds_one() -> None:
+    assert dashed_bodies({"legal/a": "fine", "legal/b": f"a {EM_DASH} b"}) == ["legal/b"]

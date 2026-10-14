@@ -105,6 +105,11 @@ def test_production_s_shape_passes_every_check(
         "legal:no-twin /legal/privacy/index.md",
         "legal:no-twin /legal/imprint/index",
         "legal:no-twin /_formats/legal/privacy.md",
+        *(
+            f"legal:{check} {path}"
+            for check in ("sections", "no-em-dash", "dated")
+            for path in ("/legal/license", "/legal/terms", "/legal/privacy")
+        ),
     }
     assert named <= set(found), "empty-set control: the checks the rest of this file needs"
     assert [f for f in found.values() if f.status is not Status.OK] == []
@@ -146,7 +151,7 @@ def test_privacy_carrying_the_address_fails(
 def test_privacy_naming_another_controller_fails(
     monkeypatch: pytest.MonkeyPatch, pages: dict[str, bytes]
 ) -> None:
-    edit = replace(f"</strong> {ESCAPED_NAME} is", "</strong> Someone Else is")
+    edit = replace(f"<p>{ESCAPED_NAME} is", "<p>Someone Else is")
     found = by_name(findings(monkeypatch, serve(pages, **{"/legal/privacy": edit})))
     assert found["legal:same-controller /legal/privacy"].status is Status.LEGAL_VALUE
     assert found["legal:controller-paragraph /legal/privacy"].status is Status.OK
@@ -229,6 +234,63 @@ def test_an_imprint_line_left_blank_is_unreadable_too(
     found = by_name(findings(monkeypatch, serve(pages, **{"/legal/imprint": edit})))
     assert found["legal:imprint-lines /legal/imprint"].status is Status.UNREADABLE
     assert found["legal:no-street /legal/privacy"].status is Status.UNREADABLE
+
+
+def last_h2_demoted(body: bytes) -> bytes:
+    """The last one: the first on privacy is the controller section, checked on its own."""
+    head, found, tail = body.rpartition(b"<h2 ")
+    assert found
+    return head + b"<h3 " + tail
+
+
+def with_dash(body: bytes) -> bytes:
+    return body.replace(b"</main>", "<p>a \u2014 b</p></main>".encode(), 1)
+
+
+@pytest.mark.parametrize("path", sorted(verify_live.LEGAL_SECTIONS))
+@pytest.mark.parametrize(
+    ("edit", "check"),
+    [(last_h2_demoted, "sections"), (with_dash, "no-em-dash")],
+    ids=["a-section-short", "an-em-dash"],
+)
+def test_a_dated_page_missing_a_section_or_carrying_a_dash_fails(
+    monkeypatch: pytest.MonkeyPatch,
+    pages: dict[str, bytes],
+    path: str,
+    edit: Callable[[bytes], bytes],
+    check: str,
+) -> None:
+    found = by_name(findings(monkeypatch, serve(pages, **{path: edit})))
+    assert found[f"legal:{check} {path}"].status is Status.LEGAL_VALUE
+    assert sum(f.status is not Status.OK for f in found.values()) == 1
+
+
+@pytest.mark.parametrize(
+    "date",
+    [None, "2026-13-40", "2999-01-01"],
+    ids=["missing", "unparseable", "future"],
+)
+def test_a_missing_unparseable_or_future_date_fails(
+    monkeypatch: pytest.MonkeyPatch, pages: dict[str, bytes], date: str | None
+) -> None:
+    def edit(body: bytes) -> bytes:
+        text = body.decode()
+        current = verify_live.LEGAL_UPDATED.search(text)
+        assert current is not None
+        if date is None:
+            return text.replace("Last updated", "Updated", 1).encode()
+        return (text[: current.start(1)] + date + text[current.end(1) :]).encode()
+
+    found = by_name(findings(monkeypatch, serve(pages, **{"/legal/terms": edit})))
+    assert found["legal:dated /legal/terms"].status is Status.LEGAL_VALUE
+
+
+def test_an_unreachable_dated_page_fails_all_three_shape_checks(
+    monkeypatch: pytest.MonkeyPatch, pages: dict[str, bytes]
+) -> None:
+    found = by_name(findings(monkeypatch, serve(pages, **{"/legal/license": Response(503, {})})))
+    for check in ("sections", "no-em-dash", "dated"):
+        assert found[f"legal:{check} /legal/license"].status is Status.STATUS
 
 
 def test_an_unreachable_privacy_page_is_not_a_pass(
