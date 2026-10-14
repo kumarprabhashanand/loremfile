@@ -532,7 +532,7 @@ PRIVACY_CONTROLLER = re.compile(
 LEGAL_NEIGHBOURS = ("/legal/terms", "/legal/license", "/legal")
 #: Each dated legal page and its number of h2 sections, as the build writes them; a unit test
 #: holds these to the build, so a text change updates both or fails CI (docs/13 §2).
-LEGAL_SECTIONS = {"/legal/license": 4, "/legal/terms": 10, "/legal/privacy": 9}
+LEGAL_SECTIONS = {"/legal/license": 4, "/legal/terms": 9, "/legal/privacy": 9}
 LEGAL_UPDATED = re.compile(r'<p>Last updated <time datetime="(\d{4}-\d{2}-\d{2})">')
 EM_DASH = "\u2014"
 #: Every other path that could serve a legal page's text: the build guard's twins

@@ -242,7 +242,6 @@ OUTLINES = {
     "legal/license": ["Files", "Code", "Website", "Trademarks and third parties"],
     "legal/terms": [
         "Licence",
-        "Stable URLs",
         "Warranty",
         "What the files are",
         "Liability",
