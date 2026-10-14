@@ -154,11 +154,11 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 > ## International transfers
 >
 > Cloudflare is a US company and serves requests from data
-> centres worldwide, so this data leaves your country. Cloudflare certifies under the
-> EU-U.S. Data Privacy Framework, its UK extension and the Swiss-U.S. Data Privacy Framework.
-> Where the Framework does not cover a transfer, the Cloudflare Customer DPA incorporates the
-> EU Standard Contractual Clauses (Module Two, controller to processor), amended by the UK
-> Addendum and the Swiss modifications. Details in §3a.
+> centres worldwide, so this data leaves your country. The transfers rest on the EU Standard
+> Contractual Clauses (Module Two, controller to processor), amended by the UK Addendum and the
+> Swiss modifications, which the Cloudflare Customer DPA incorporates. Where Cloudflare's
+> certification under the EU-U.S. Data Privacy Framework, its UK extension or the Swiss-U.S.
+> Data Privacy Framework applies, it covers the transfer as well. Details in §3a.
 >
 > ## Your rights
 >
@@ -284,7 +284,7 @@ nothing else.
 | 5 | Categories of data subject | Visitors and automated clients of loremfile.dev; people who email us or open a GitHub issue |
 | 6 | Categories of personal data | IP address; request metadata (timestamp, URL, method, status, bytes, user agent, referrer, TLS/protocol, derived country); email address and message content. No special categories (Art. 9), no criminal-offence data (Art. 10), no data about children sought or knowingly processed |
 | 7 | Categories of recipient | Cloudflare, Inc. — processor (CDN, R2 storage, DNS, WAF, Email Routing) and its sub-processors per its published list; GitHub, Inc. — issues and pull requests the person chooses to open, public by design |
-| 8 | Third-country transfers | United States and Cloudflare's global network. Safeguards: EU-U.S. DPF, UK extension and Swiss-U.S. DPF; EU SCCs Module Two with the UK Addendum and Swiss modifications where the DPF does not apply (Cloudflare Customer DPA §6) |
+| 8 | Third-country transfers | United States and Cloudflare's global network. Safeguard: EU SCCs Module Two with the UK Addendum and Swiss modifications (Cloudflare Customer DPA §6); the EU-U.S. DPF, its UK extension and the Swiss-U.S. DPF apply additionally where Cloudflare's certification covers a transfer |
 | 9 | Erasure time limits | Operator: **no server logs are kept at all**. Email: 24 months after the last message. Legal-notice records: 6 years after resolution. Cloudflare-side edge logs: Cloudflare's own retention policy — the operator has no access to raw logs and stores none |
 | 10 | Security measures (Art. 32) | No origin server and no public write path; TLS-only with HSTS; R2 bucket locks make published objects undeletable and unoverwritable; credentials exist only in the GitHub `production` environment and never on a personal machine (`10` §2); hardware-key 2FA on the Cloudflare and GitHub accounts; least-privilege scoped API tokens with expiry dates and quarterly rotation (`11` §7.3); daily automated integrity and health checks; the published files themselves contain no personal data (§5) |
 
@@ -299,9 +299,9 @@ nothing else.
 | GitHub issues and pull requests | GitHub, public | Public and permanent by design; created voluntarily by the person |
 | Published fixtures | R2 bucket | Permanent by design; synthetic, and §5 forbids content identifying a real person |
 
-**Transfer mechanism, in one line.** DPF first; EU SCCs Module Two (with the UK Addendum and
-the Swiss modifications) as the fallback — both supplied by the Cloudflare Customer DPA, no
-separate paperwork on our side.
+**Transfer mechanism, in one line.** EU SCCs Module Two (with the UK Addendum and the Swiss
+modifications), supplied by the Cloudflare Customer DPA, with no separate paperwork on our side;
+the DPF applies additionally where Cloudflare's certification covers a transfer.
 
 **Handling a request.** Runbook `11` §7.10.
 
@@ -342,6 +342,8 @@ The service is content-neutral, hosts synthetic files, and uses no cryptographic
 export-controlled software beyond standard TLS. If a jurisdiction blocks Cloudflare or
 `.dev`, nothing can be done at this budget.
 
+**Why most regimes do not reach this service.** loremfile.dev is non-commercial, takes no accounts, accepts no uploads, serves only self-generated CC0 content, retains no logs and runs no tracking. Those facts place it outside nearly every regime that turns on commercial activity, data volume or intermediary status. A regime reaches it only through the operator's establishment in Germany or through pure targeting, and the service targets no country.
+
 The project's own assessment of the regimes that could reach a free, non-commercial,
 globally reachable file service — not legal advice, reviewed annually and whenever the
 service changes character (for example if it ever charges money or adds accounts):
@@ -349,11 +351,13 @@ service changes character (for example if it ever charges money or adds accounts
 | Regime | In scope? | Posture |
 |---|---|---|
 | **EU GDPR / UK GDPR** | Yes, in principle — visitors in the EU/UK and their IP addresses | Notice in §3, Art. 30 record and DPA in §3a, legal basis Art. 6(1)(f), rights procedure in `11` §7.10. No establishment in the EU or UK. **Art. 27 representative not appointed**: no special-category data, no behavioural monitoring for profiling, no server logs retained, and the only processing is delivery metadata handled by the processor. Revisit if the service becomes commercial or adds any tracking |
+| **Switzerland, revised FADP** (in force 1 September 2023) | Possibly, extraterritorially (Art. 3) | Same posture as the GDPR row. No Art. 14 representative: its conditions are cumulative, and the processing is not high-risk ([FADP](https://www.fedlex.admin.ch/eli/cc/2022/491/en)). Revisit if the service becomes commercial or adds any tracking |
 | **CCPA / CPRA (California)** | No | The operator is not a "business" under Cal. Civ. Code §1798.140(d): it is not operated for profit and is below all three thresholds — annual gross revenue over USD 25 M (as adjusted for inflation); buying, selling or sharing the personal information of 100,000+ consumers or households; or 50 % or more of revenue from selling or sharing personal information. Nothing is sold or shared, so no "Do Not Sell or Share" link is required |
 | **India DPDP Act 2023** | Possibly, extraterritorially (processing connected with offering services to data principals in India) | Only delivery metadata, handled by the processor; no server logs retained; no advertising, no profiling. Data-principal requests are handled by the same procedure as GDPR requests (`11` §7.10). Reassess as the DPDP Rules' obligations come fully into force |
 | **Brazil LGPD** | Possibly, extraterritorially | Same posture as GDPR: legitimate-interests basis (Art. 7 IX), no logs retained, same rights procedure and the same contact address |
 | **Canada PIPEDA** | No | PIPEDA governs personal information collected in the course of **commercial activity**; this service is free, sells nothing and carries no advertising |
 | **China PIPL** | Possibly, extraterritorially | The service is not targeted at, marketed in, or localised for China, does no profiling, and no local representative is filed. Revisit only if that changes |
+| **EU Digital Services Act** (Regulation (EU) 2022/2065) | No | The DSA applies to intermediary services (Art. 2(1)), each defined by information provided by a recipient of the service (Art. 3(g)); hosting is the storage of information provided by, and at the request of, a recipient (Art. 3(g)(iii)). The service accepts no uploads and serves only its own files, so it is no intermediary service, online platform or search engine ([DSA](https://eur-lex.europa.eu/eli/reg/2022/2065/oj)). Revisit if it ever accepts uploads or other recipient-provided content |
 | **European Accessibility Act** (Directive (EU) 2019/882, applicable since 28 June 2025) | Not as a covered service | The site is not e-commerce, banking, transport, telecoms, e-books or any other Annex I service, and is in any case provided by a micro-enterprise (fewer than 10 people, turnover ≤ EUR 2 M), which Art. 4(5) exempts from the service obligations. WCAG 2.1 AA remains the target regardless (§9) |
 
 ## 9. Accessibility statement (`/docs/faq#accessibility`)
