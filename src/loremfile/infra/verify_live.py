@@ -51,7 +51,8 @@ class Status(StrEnum):
     TLS_EXPIRY = "tls_expiry"
     SECURITY_TXT_EXPIRY = "security_txt_expiry"
     COUNT_MISMATCH = "count_mismatch"
-    #: A legal page carries a value where it must not, or lacks the one it must carry.
+    #: A legal page breaks its contract: a value where none may be, or a value, section or
+    #: date it must carry is missing.
     LEGAL_VALUE = "legal_value"
     #: The check could not look, so it learned nothing; never `ok` (as `audit` reports it).
     UNREADABLE = "unreadable"
@@ -520,14 +521,20 @@ PLACEHOLDER = "%%IMPRINT_"
 IMPRINT_LINES = re.compile(
     r"<p>Angaben gemäß § 18 Abs\. 1 MStV</p>\n<p>([^<\n]+)<br />\n([^<\n]+)<br />\n([^<\n]+)</p>"
 )
-#: The privacy notice's controller paragraph (docs/13 §3): the name, the contact, the pointer.
+#: The privacy notice's controller section (docs/13 §3): the name, the contact, the pointer.
 PRIVACY_CONTROLLER = re.compile(
-    r"<p><strong>Who is responsible\.</strong> ([^<\n]+) is the controller for the personal "
+    r'<h2 id="who-is-responsible">Who is responsible</h2>\n'
+    r"<p>([^<\n]+) is the controller for the personal "
     r"data\ndescribed here\. Contact: hello@loremfile\.dev\. The postal address is in the\n"
     r'<a href="/legal/imprint">Impressum</a>\.</p>'
 )
 #: The legal pages that name nobody.
 LEGAL_NEIGHBOURS = ("/legal/terms", "/legal/license", "/legal")
+#: Each dated legal page and its number of h2 sections, as the build writes them; a unit test
+#: holds these to the build, so a text change updates both or fails CI (docs/13 §2).
+LEGAL_SECTIONS = {"/legal/license": 4, "/legal/terms": 9, "/legal/privacy": 9}
+LEGAL_UPDATED = re.compile(r'<p>Last updated <time datetime="(\d{4}-\d{2}-\d{2})">')
+EM_DASH = "\u2014"
 #: Every other path that could serve a legal page's text: the build guard's twins
 #: (`routes.LEGAL_TWINS`), the Markdown twin's own key path, and what a hand upload could add.
 LEGAL_TWIN_PATHS = tuple(
@@ -563,9 +570,10 @@ def _carries(text: str, value: str) -> bool:
     return any(form in text for form in {value, html.unescape(value)})
 
 
-def _privacy_findings(values: list[str] | None, not_compared: str) -> list[Finding]:
+def _privacy_findings(
+    privacy: Response, values: list[str] | None, not_compared: str
+) -> list[Finding]:
     """The controller paragraph, its name against the Impressum's, and no address."""
-    privacy = fetch("/legal/privacy", method="GET")
     text = privacy.body.decode("utf-8", "replace") if privacy.status == HTTP_OK else ""
     paragraph = PRIVACY_CONTROLLER.search(text)
     findings = [_filled("/legal/privacy", privacy)]
@@ -598,9 +606,10 @@ def _privacy_findings(values: list[str] | None, not_compared: str) -> list[Findi
     return findings
 
 
-def _neighbour_finding(path: str, values: list[str] | None, not_compared: str) -> Finding:
+def _neighbour_finding(
+    path: str, response: Response, values: list[str] | None, not_compared: str
+) -> Finding:
     name = f"legal:no-value {path}"
-    response = fetch(path, method="GET")
     if response.status != HTTP_OK:
         return Finding(name, Status.STATUS, str(response.status))
     if values is None:
@@ -609,6 +618,37 @@ def _neighbour_finding(path: str, values: list[str] | None, not_compared: str) -
     if any(_carries(text, value) for value in values):
         return Finding(name, Status.LEGAL_VALUE, "carries an Impressum value")
     return Finding(name, Status.OK)
+
+
+def _shape_findings(path: str, response: Response) -> list[Finding]:
+    """Real sections, no em dash, and a parseable date that is not in the future."""
+    names = [f"legal:{check} {path}" for check in ("sections", "no-em-dash", "dated")]
+    if response.status != HTTP_OK:
+        return [Finding(name, Status.STATUS, str(response.status)) for name in names]
+    text = response.body.decode("utf-8", "replace")
+    main = text.split("<main", 1)[-1].split("</main>", 1)[0]
+    found, wanted = main.count("<h2 "), LEGAL_SECTIONS[path]
+    dashes = text.count(EM_DASH)
+    findings = [
+        Finding(names[0], Status.OK, f"{found} h2")
+        if found == wanted
+        else Finding(names[0], Status.LEGAL_VALUE, f"{found} h2, expected {wanted}"),
+        Finding(names[1], Status.OK)
+        if not dashes
+        else Finding(names[1], Status.LEGAL_VALUE, f"{dashes} em dash(es)"),
+    ]
+    match = LEGAL_UPDATED.search(main)
+    try:
+        day = dt.date.fromisoformat(match.group(1)) if match else None
+    except ValueError:
+        day = None
+    if day is None:
+        findings.append(Finding(names[2], Status.LEGAL_VALUE, "no parseable last-updated date"))
+    elif day > dt.datetime.now(dt.UTC).date():
+        findings.append(Finding(names[2], Status.LEGAL_VALUE, f"{day} is in the future"))
+    else:
+        findings.append(Finding(names[2], Status.OK, day.isoformat()))
+    return findings
 
 
 def _twin_finding(path: str) -> Finding:
@@ -628,7 +668,11 @@ def legal_findings() -> list[Finding]:
     that could not look has learned nothing, and must not pass. Robots header and meta tag
     on both URL forms are `check_page_headers`'s, which every `--site-dir` run applies.
     """
-    imprint = fetch("/legal/imprint", method="GET")
+    pages = {
+        path: fetch(path, method="GET")
+        for path in ("/legal/imprint", "/legal/privacy", *LEGAL_NEIGHBOURS)
+    }
+    imprint = pages["/legal/imprint"]
     values, why = _imprint_values(imprint)
     label = "legal:imprint-lines /legal/imprint"
     findings = [
@@ -638,8 +682,12 @@ def legal_findings() -> list[Finding]:
         else Finding(label, Status.UNREADABLE, why),
     ]
     not_compared = f"not compared: {why}"
-    findings += _privacy_findings(values, not_compared)
-    findings += [_neighbour_finding(path, values, not_compared) for path in LEGAL_NEIGHBOURS]
+    findings += _privacy_findings(pages["/legal/privacy"], values, not_compared)
+    findings += [
+        _neighbour_finding(path, pages[path], values, not_compared) for path in LEGAL_NEIGHBOURS
+    ]
+    for path in LEGAL_SECTIONS:
+        findings += _shape_findings(path, pages[path])
     return findings + [_twin_finding(path) for path in LEGAL_TWIN_PATHS]
 
 

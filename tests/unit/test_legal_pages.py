@@ -8,11 +8,13 @@ placeholder hygiene of the templates.
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import re
 from pathlib import Path
 from typing import Any
 
+from loremfile.infra import verify_live
 from loremfile.site import build, legal, routes
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -229,3 +231,83 @@ def test_the_retired_placeholders_are_gone_from_the_living_documents() -> None:
         text = (ROOT / relative).read_text(encoding="utf-8")
         for token in retired:
             assert token not in text, f"{relative} still has {token}"
+
+
+# --- outline, dates and punctuation -------------------------------------------------------
+
+WHEN = dt.datetime(2026, 10, 14, 12, 0, tzinfo=dt.UTC)
+#: Each dated legal page's sections, in order: real h2 elements a screen reader can move
+#: between (docs/13 §9 states WCAG 2.1 AA), labels without trailing stops (docs/13 §2).
+OUTLINES = {
+    "legal/license": ["Files", "Code", "Website", "Trademarks and third parties"],
+    "legal/terms": [
+        "Licence",
+        "Warranty",
+        "What the files are",
+        "Liability",
+        "Acceptable use",
+        "Discontinuation",
+        "Changes",
+        "Who provides this service",
+        "Contact",
+    ],
+    "legal/privacy": [
+        "Who is responsible",
+        "What is processed, and by whom",
+        "Legal basis",
+        "What the operator sees",
+        "Email",
+        "Sharing",
+        "International transfers",
+        "Your rights",
+        "Changes",
+    ],
+}
+
+
+def published() -> dict[str, build.Page]:
+    """Each legal page as the build renders it."""
+    return {page.key: page for page in build.legal_pages(ROOT, WHEN)}
+
+
+def body(page: build.Page) -> str:
+    return str(page.context["body"])
+
+
+def outline(text: str) -> list[str]:
+    return re.findall(r'<h2 id="[^"]+">([^<]+)</h2>', text)
+
+
+def test_each_legal_page_has_its_sections_as_headings() -> None:
+    pages = published()
+    assert set(OUTLINES) == set(build.DATED_LEGAL)
+    for key, sections in OUTLINES.items():
+        assert outline(body(pages[key])) == sections, key
+        assert "<strong>" not in body(pages[key]).split("<h2", 1)[0], key
+
+
+def test_the_outline_check_finds_run_in_labels() -> None:
+    flat = "<p><strong>Who is responsible.</strong> A name.</p>"
+    assert outline(flat) == []
+
+
+def test_the_live_check_expects_the_section_counts_the_build_writes() -> None:
+    assert {
+        routes.public_path(key): len(sections) for key, sections in OUTLINES.items()
+    } == verify_live.LEGAL_SECTIONS
+
+
+def test_each_dated_page_opens_with_its_date_in_prose_and_markup() -> None:
+    pages, dates = published(), build.legal_dates(ROOT, WHEN)
+    for key in build.DATED_LEGAL:
+        day = dates[key]
+        shown = f"{day.day} {build.MONTHS[day.month - 1]} {day.year}"
+        assert body(pages[key]).startswith(
+            f'<p>Last updated <time datetime="{day.isoformat()}">{shown}</time></p>'
+        ), key
+        if pages[key].listed:
+            (node, crumbs) = pages[key].jsonld
+            assert node["@type"] == "TechArticle" and node["dateModified"] == day.isoformat()
+            assert crumbs["@type"] == "BreadcrumbList"
+    assert "Last updated" not in body(pages["legal/imprint"])
+    assert not pages["legal/privacy"].jsonld, "privacy carries no JSON-LD (ADR-028)"

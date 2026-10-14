@@ -16,34 +16,95 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 ### 1.1 Licence page (`/legal/license`) — full text
 
 > **Licences**
-> **Files.** Every file served under a format path (for example `/pdf/…`, `/bin/…`, `/edge/…`) is dedicated to the public domain under the [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) deed. You may copy, modify, distribute and use them for any purpose, commercially or not, without asking permission or giving credit.
-> **Code.** The generators, site and tooling are open source under the MIT licence at https://github.com/kumarprabhashanand/loremfile.
-> **This website's text and graphics** are licensed CC BY 4.0; attribute "loremfile.dev".
-> **Trademarks and third parties.** Format names (PDF, MP4, …) belong to their owners and are used descriptively. No third-party media is redistributed; see THIRD_PARTY.md in the repository for the tools used to generate files.
+>
+> ## Files
+>
+> Every file served under a format path (for example `/pdf/…`, `/bin/…`, `/edge/…`) is dedicated to the public domain under the [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) deed. You may copy, modify, distribute and use them for any purpose, commercially or not, without asking permission or giving credit.
+>
+> ## Code
+>
+> The generators, site and tooling are open source under the MIT licence at https://github.com/kumarprabhashanand/loremfile.
+>
+> ## Website
+>
+> This website's text and graphics are licensed CC BY 4.0; attribute "loremfile.dev".
+>
+> ## Trademarks and third parties
+>
+> Format names (PDF, MP4, …) belong to their owners and are used descriptively. No third-party media is redistributed; see THIRD_PARTY.md in the repository for the tools used to generate files.
 
 ## 2. Terms of use (`/legal/terms`) — full text
 
 > **loremfile.dev terms of use**
-> 1. **Who provides this service.** loremfile.dev is operated by a private individual and provided free of charge and non-commercially. The operator is named in the Impressum.
-> 2. **Licence.** Every file is released under CC0 1.0. You may use the files for any purpose, without attribution.
-> 3. **No warranty.** The service is provided "as is", without warranty of any kind and without any promise of availability. The bytes at a published path do not change; in rare cases a file may be withdrawn, and the manifest then records the removal.
-> 4. **Liability.** We are liable without limitation for intent and gross negligence, and under mandatory statutory liability, including for injury to life, body or health and under the Produkthaftungsgesetz. For slight negligence we are liable only for the breach of an essential contractual obligation — an obligation whose fulfilment makes the proper performance of this service possible in the first place and on whose observance you may regularly rely — and then only for the foreseeable damage typical of this kind of service. We are not liable for loss of data, for lost profits, or for damage arising from the use of the files in production systems.
-> 5. **What the files are.** The files are synthetic test data. Some are deliberately malformed and may crash or hang software that reads them. Use them only against systems you are authorised to test.
-> 6. **Acceptable use.** Please keep automated traffic below 30 requests per second per client. We may rate-limit, block or otherwise restrict clients that degrade the service for others. Do not use this service to distribute content you do not own, to test attacks against third parties, or in any way that violates the law. The service hosts no user content and offers no upload.
-> 7. **Discontinuation.** We may discontinue the service at any time; where reasonably possible we announce it in advance on the site and in the repository. Every file is CC0, and the release archives and `manifest.json` let anyone mirror the collection.
-> 8. **Contact.** hello@loremfile.dev · https://github.com/kumarprabhashanand/loremfile
+>
+> ## Licence
+>
+> Every file is released under CC0 1.0. You may use the files for any purpose, without attribution.
+>
+> ## Warranty
+>
+> The service is provided "as is", without warranty of any kind and without any promise of availability.
+>
+> The bytes at a published path do not change; in rare cases a file may be withdrawn, and the manifest then records the removal. This describes how the service is operated; it is not a warranty and creates no entitlement.
+>
+> ## What the files are
+>
+> The files are synthetic test data. Some are deliberately malformed and may crash or hang software that reads them. Use them only against systems you are authorised to test.
+>
+> ## Liability
+>
+> In short: our liability is unlimited where the law requires it and limited for slight negligence.
+>
+> We are liable without limitation for intent and gross negligence, and under mandatory statutory liability, including for injury to life, body or health and under the Produkthaftungsgesetz. For slight negligence we are liable only for the breach of an essential contractual obligation, an obligation whose fulfilment makes the proper performance of this service possible in the first place and on whose observance you may regularly rely, and then only for the foreseeable damage typical of this kind of service. We are not liable for loss of data, for lost profits, or for damage arising from the use of the files in production systems.
+>
+> ## Acceptable use
+>
+> Once an IP address reaches 300 requests within 10 seconds at one Cloudflare data centre, its further requests there are blocked for 10 seconds. We may rate-limit, block or otherwise restrict clients that degrade the service for others. Do not use this service to distribute content you do not own, to test attacks against third parties, or in any way that violates the law. The service hosts no user content and offers no upload.
+>
+> ## Discontinuation
+>
+> The service may be discontinued at any time, with or without notice. Every file is CC0, and the release archives and `manifest.json` let anyone mirror the collection.
+>
+> ## Changes
+>
+> These terms may change. The version in force is the one published here, with the date shown. Every file is CC0 and the release archives can be mirrored, so you keep what you already hold.
+>
+> ## Who provides this service
+>
+> loremfile.dev is operated by a private individual and provided free of charge and non-commercially. The operator is named in the Impressum.
+>
+> ## Contact
+>
+> hello@loremfile.dev · https://github.com/kumarprabhashanand/loremfile
 
 **What changed, and why (2026-09-16).** The earlier text promised to keep every URL working "indefinitely" and carried no liability clause. A free, non-commercial service run by a private individual should promise what it can keep: the bytes at a published path do not change, a file may be withdrawn in rare cases, and the service may be discontinued with notice where that is possible. The liability clause is the standard German split — unlimited for intent, gross negligence and mandatory statutory liability; for slight negligence only essential contractual obligations, capped at the foreseeable typical damage. No jurisdiction or choice-of-law clause is claimed.
+
+**What changed, and why (2026-10-14).** The clauses are h2 sections in the order a reader asks: the licence first, the administrative facts last, and the labels without trailing stops ("No warranty" became "Warranty"). **No liability and no guarantee, as far as the law allows (owner, standing instruction, 2026-10-14).** The project may close if adoption stays flat, so the terms promise no continuity. The stability sentence therefore sits inside Warranty, after the disclaimer, and disclaims itself: it describes how the service is operated, consistent with the format pages, ADR-005, the agent skill and `llms.txt`, and creates no entitlement. Do not give it its own clause or heading: a separate undertaking next to a general disclaimer is an ambiguity § 305c Abs. 2 BGB resolves against the user of the terms (a "Stable URLs" clause was tried and reversed the same day). Discontinuation promises no notice: "with or without notice" replaced "where reasonably possible we announce it in advance", a conditional promise; the CC0 and mirror sentence follows as the factual mitigation. For the same reason the Changes clause promises no announcement: "The version in force is the one published here, with the date shown" replaced "Material changes are announced on the site and in the repository"; the page's date does the work. The licence page and the privacy notice got the same headings. One plain sentence now precedes the liability clause, whose operative wording is unchanged apart from two em dashes turned into commas. The rate sentence states the rule in `infra/rulesets/http_ratelimit.json` (300 requests within 10 seconds per IP address and Cloudflare data centre, then 10 seconds blocked) instead of approximating it as 30 per second. Each of the three pages shows the date of the last commit that changed its published text (`build.legal_dates`). For a page unchanged since the repository was recreated on 2026-09-21, that is the earliest date the history can show, not when the text was written, and it is no claim about authorship. **The modification clause has no consent fiction, deliberately.** A sentence deeming continued use to be acceptance of changed terms was considered and rejected: the BGH (27 April 2021, XI ZR 26/20) holds standard-terms clauses that deem a consumer's consent to changes invalid under § 307 BGB, and the Kammergericht (27 March 2024, 26 MK 1/21) holds that continued use is not implied consent. An invalid clause is worse than none, since § 306 BGB substitutes statutory law. **The terms only disclaim.** Operational practice, such as how often hashes are checked against production, is described on `/status` and in the FAQ, which bind nothing; written into the terms it would become a contractual promise.
+
+**Research note, unresolved: § 521 BGB as the footing (2026-10-14). For a lawyer; nothing here is legal advice.** The question was whether the service's gratuitous nature is a better footing than the liability clause's essential-obligation structure, which concedes liability for slight negligence. No earlier note in `13`, `16` or `18` considered § 521 or gift law; the 2026-09-16 note only calls the clause the standard German split.
+
+- [§ 521 BGB](https://lexetius.com/BGB/521,2): a donor is liable only for intent and gross negligence.
+- BGH, 20 November 1984, IVa ZR 104/83, BGHZ 93, 23 ([full text](https://servat.unibe.ch/dfr/bz093023.html)): the privilege extends to concurrent tort claims where the duty concerns the subject of the gift, not to unrelated protective duties.
+- Free open source software is treated as a gift under §§ 516 ff., so § 521 applies, in the prevailing literature view, not settled by the BGH ([Uni Bremen lecture](https://oncourse.uni-bremen.de/pluginfile.php/4642/mod_label/intro/k07_e02.pdf), [Prototype Fund guide](https://kb.prototypefund.de/books/rechtliche-grundlagen/page/verantwortung-fur-software-und-inhalte/export/pdf), [ferner-alsdorf](https://www.ferner-alsdorf.de/softwarerecht-zur-haftung-bei-open-source-software/)).
+- [§ 516a BGB](https://www.gesetze-im-internet.de/bgb/__516a.html), in force since 2022, governs a business's gift of digital products against personal data; it does not apply here, but it shows the statute knows gifts of digital products.
+- Unresolved: whether free downloads are a gift contract at all, or a favour without a contract, where only tort applies. No decision was found.
+- [§ 309 Nr. 7 BGB](https://www.gesetze-im-internet.de/bgb/__309.html) voids standard-terms limits on liability for negligent injury to life, body or health, and for gross negligence.
+
+**Conclusion: the present clause stands, because it holds under either characterisation.** A statutory privilege applies by operation of law if the characterisation holds, so invoking § 521 in the terms gains nothing; relying on it loses the fallback, because a clause cut to intent and gross negligence would breach § 309 Nr. 7 a if a court found no gift, and fall away entirely under § 306. The predicate is preserved without invoking it: the terms state that the service is free of charge and non-commercial.
 
 ## 3. Privacy notice (`/legal/privacy`) — full text
 
 > **Privacy**
 >
-> **Who is responsible.** `%%IMPRINT_NAME%%` is the controller for the personal data
+> ## Who is responsible
+>
+> `%%IMPRINT_NAME%%` is the controller for the personal data
 > described here. Contact: hello@loremfile.dev. The postal address is in the
 > [Impressum](/legal/imprint).
 >
-> **What is processed, and by whom.** loremfile.dev has no server, no accounts, no logins,
+> ## What is processed, and by whom
+>
+> loremfile.dev has no server, no accounts, no logins,
 > no cookies and no analytics scripts. The one exception: if Cloudflare has to show a
 > security check during an attack, it sets one strictly necessary cookie (cf_clearance)
 > recording that the check was passed. Every request is answered by Cloudflare's network in
@@ -59,17 +120,23 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 > privacy policy describes what it does with that data as a controller for its own security
 > purposes.
 >
-> **Legal basis.** Article 6(1)(f) GDPR — our legitimate interests in delivering the file you
+> ## Legal basis
+>
+> Article 6(1)(f) GDPR: our legitimate interests in delivering the file you
 > asked for, keeping the service available, and protecting it from abuse (rate limiting,
 > blocking attack traffic). There is no profiling, no advertising, no automated
 > decision-making and no tracking across sites. You may object; see **Your rights**.
 >
-> **What the operator sees.** **We retain no server logs — there is no server.** We read only
+> ## What the operator sees
+>
+> **We retain no server logs: there is no server.** We read only
 > aggregated statistics that Cloudflare produces: request counts, bandwidth, cache hit ratio,
 > countries, referrer hosts, top paths and status codes. Those aggregates identify nobody and
 > we do not try to re-identify anyone from them.
 >
-> **Email.** If you write to us we process your address and whatever you put in the message,
+> ## Email
+>
+> If you write to us we process your address and whatever you put in the message,
 > in order to answer you (Art. 6(1)(f); Art. 6(1)(c) where a legal notice obliges us to act).
 > We delete ordinary correspondence **no later than 24 months** after the last message in the
 > thread. Records of legal notices, takedown requests and law-enforcement requests are kept
@@ -77,28 +144,36 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 > Mail to loremfile.dev addresses is forwarded by Cloudflare Email Routing to the operator's
 > mailbox at an email provider.
 >
-> **Sharing.** Nothing is sold, rented, or shared for advertising — ever. The only recipient
+> ## Sharing
+>
+> Nothing is sold, rented, or shared for advertising, ever. The only recipient
 > of request data is Cloudflare, Inc. as our processor. If you choose to open an issue or a
 > pull request, GitHub, Inc. processes what you write there under its own terms and it is
 > public.
 >
-> **International transfers.** Cloudflare is a US company and serves requests from data
+> ## International transfers
+>
+> Cloudflare is a US company and serves requests from data
 > centres worldwide, so this data leaves your country. Cloudflare certifies under the
 > EU-U.S. Data Privacy Framework, its UK extension and the Swiss-U.S. Data Privacy Framework.
 > Where the Framework does not cover a transfer, the Cloudflare Customer DPA incorporates the
 > EU Standard Contractual Clauses (Module Two, controller to processor), amended by the UK
 > Addendum and the Swiss modifications. Details in §3a.
 >
-> **Your rights.** Under the GDPR and the UK GDPR you have the right of access,
+> ## Your rights
+>
+> Under the GDPR and the UK GDPR you have the right of access,
 > rectification, erasure, restriction and portability, and the right to object to processing
 > based on legitimate interests. Write to hello@loremfile.dev; we answer within one month.
 > In practice we hold nothing that identifies you except an email thread you started, so an
 > access or erasure request is normally answered with exactly that. For the data Cloudflare
 > processes on our behalf, send us the approximate time and the URL and we will pass the
-> request to Cloudflare. You may also complain to your supervisory authority — in the EU the
+> request to Cloudflare. You may also complain to your supervisory authority: in the EU the
 > one where you live or work, in the UK the Information Commissioner's Office (ico.org.uk).
 >
-> **Changes.** This notice lives in the project's public repository; its version history is
+> ## Changes
+>
+> This notice lives in the project's public repository; its version history is
 > the changelog.
 
 **Placeholders (resolved 2026-09-15, ADR-028).** The contact address is
