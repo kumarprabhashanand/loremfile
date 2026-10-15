@@ -46,6 +46,13 @@ def test_the_console_script_is_the_client_entry_point() -> None:
     assert "loremfile = loremfile_client.cli:main" in text
 
 
+def test_the_wheel_registers_the_pytest_plugin() -> None:
+    with zipfile.ZipFile(wheel()) as archive:
+        entry_points = next(n for n in archive.namelist() if n.endswith("entry_points.txt"))
+        text = archive.read(entry_points).decode()
+    assert "[pytest11]\nloremfile = loremfile_client.pytest_plugin" in text
+
+
 def test_the_wheel_carries_the_mcp_tool_surface() -> None:
     """mcp.py reads tools.json at import; a wheel without it is a server that cannot start."""
     source = CLIENT / "src" / "loremfile_client" / "tools.json"

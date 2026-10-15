@@ -1,8 +1,12 @@
 # Changelog
 
 All notable changes to the `loremfile` client. The files it downloads have their own
-versions, published at <https://loremfile.dev/changelog> — a catalog version says what is
+versions, published at <https://loremfile.dev/changelog>: a catalog version says what is
 on the service, this one says what the client does.
+
+## [0.3.0] - 2026-10-15
+
+- A `loremfile` pytest fixture for files too big to commit: `loremfile("mp4/10mb.mp4")` returns the file as a verified local path. It is cached in `.pytest_cache`, so each file is downloaded once and a filled cache needs no network. pytest loads it wherever the client is installed, and it does nothing until a test asks for it. Still no dependencies.
 
 ## [0.2.0] - 2026-10-07
 

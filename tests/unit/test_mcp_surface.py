@@ -54,15 +54,22 @@ def test_the_registry_name_is_the_one_both_packages_claim() -> None:
     assert f"mcp-name: {name} " in (ROOT / "client" / "README.md").read_text()
 
 
-def test_every_package_is_the_version_its_tree_will_publish() -> None:
+def release(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in version.split("."))
+
+
+def test_the_entry_names_one_version_no_tree_is_short_of() -> None:
+    """A client release that leaves the MCP server alone leaves the entry alone (docs/09
+    §3.9): Python 0.3.0 added the pytest fixture and the entry still names 0.2.0. What must
+    hold is that the entry is one version, and that both trees have reached it."""
     entry = server_json()
     npm = json.loads((ROOT / "client-js" / "package.json").read_text())["version"]
-    pyproject = tomllib.loads((ROOT / "client" / "pyproject.toml").read_text())
+    pypi = tomllib.loads((ROOT / "client" / "pyproject.toml").read_text())["project"]["version"]
     by_registry = {p["registryType"]: p for p in entry["packages"]}
     assert set(by_registry) == {"npm", "pypi"}, "control: both packages are listed"
-    assert by_registry["npm"]["version"] == npm
-    assert by_registry["pypi"]["version"] == pyproject["project"]["version"]
-    assert entry["version"] == npm == pyproject["project"]["version"]
+    assert by_registry["npm"]["version"] == by_registry["pypi"]["version"] == entry["version"]
+    assert release(entry["version"]) <= release(npm), f"npm is at {npm}"
+    assert release(entry["version"]) <= release(pypi), f"PyPI is at {pypi}"
 
 
 def test_both_packages_run_the_mcp_command_on_stdio_and_nothing_is_hosted() -> None:

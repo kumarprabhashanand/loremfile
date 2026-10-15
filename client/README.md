@@ -31,6 +31,28 @@ refuse to run if loremfile.dev has moved on. `get` also takes `--force` (overwri
 Exit codes: `0` fine, `1` a file failed verification or is missing, `2` the request was
 wrong, `3` loremfile.dev could not be read.
 
+## In a pytest suite
+
+For files too big to commit: multi-megabyte video, audio and archives that would otherwise
+bloat a repository. Installing the client gives pytest a `loremfile` fixture:
+
+```python
+def test_reads_a_real_mp4(loremfile):
+    video = loremfile("mp4/10mb.mp4")  # a pathlib.Path
+    ...
+```
+
+The first call downloads the file into `.pytest_cache` and checks its SHA-256 against the
+manifest; a file that does not match is never returned. Published files never change at
+their path, so after that the file and its manifest entry are reused and the suite needs no
+network for them. In CI, cache `.pytest_cache/d/loremfile` between runs to keep it that way;
+`pytest --cache-clear` starts over.
+
+It is not for every suite. If your tests may not touch the network, or the file you need is
+a 4 KB PDF, commit the file: that is simpler and needs nothing from us. The fixture takes a
+path only (`loremfile list` finds one), needs pytest 8.0 or newer, and does nothing until a
+test asks for it.
+
 ## MCP server
 
 <!-- mcp-name: io.github.kumarprabhashanand/loremfile -->
@@ -75,7 +97,7 @@ oldest CPython still receiving security fixes when a release is cut; a new one i
 supported within six weeks of its release, and an end-of-life one is dropped in the next
 minor release.
 
-Zero dependencies — standard library only.
+Zero dependencies: standard library only.
 
 ## In GitHub Actions, prefer the action
 
@@ -86,15 +108,15 @@ Zero dependencies — standard library only.
 ```
 
 It is shell only and needs no install step. This client is for everywhere else: a laptop,
-a Makefile, a CI system that is not Actions, or Windows — which the action does not
+a Makefile, a CI system that is not Actions, or Windows, which the action does not
 support because it needs `sha256sum`.
 
 ## One name, two tools
 
 The console script installed here is `loremfile`, which is also the name of the
 repository's own development CLI (the one that generates and publishes the fixtures).
-They are never installed together — that tool lives only inside the project's toolchain
-image — but a contributor who installs both into one environment gets whichever was
+They are never installed together (that tool lives only inside the project's toolchain
+image), but a contributor who installs both into one environment gets whichever was
 installed last. The published package contains the client only: no generators, no
 validators, no uploader, no infrastructure code.
 
