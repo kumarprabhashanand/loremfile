@@ -47,6 +47,27 @@ def test_the_seen_file_records_the_agents_already_weighed() -> None:
     assert "gptbot" in seen
 
 
+def test_a_deferred_name_is_weighed_and_carries_its_reasons() -> None:
+    """nbot (#96): deferred, not blocked. The record says why and what would reopen it."""
+    deferred = json.loads((ROOT / crawlers.SEEN_FILE).read_text(encoding="utf-8"))["deferred"]
+    entry = deferred["nbot"]
+    assert len(entry["reasons"]) == 2
+    assert "Amazonbot" in entry["reasons"][0]
+    assert "msnbot" in entry["reasons"][0]
+    assert "publishes none" in entry["reasons"][1]
+    assert "exact match" in entry["reopen"]
+    assert (
+        crawlers.unreviewed(known("nbot"), crawlers.blocked_tokens(ROOT), crawlers.seen_names(ROOT))
+        == []
+    )
+
+
+def test_control_without_the_deferral_nbot_would_be_reported() -> None:
+    """It is weighed, not blocked: drop the seen names and the watch raises it again."""
+    [agent] = crawlers.unreviewed(known("nbot"), crawlers.blocked_tokens(ROOT), set())
+    assert agent.name == "nbot"
+
+
 @pytest.mark.parametrize("decided", ["Amazonbot", "amazonbot", "AMAZONBOT"])
 def test_an_agent_already_blocked_is_not_reported_whatever_its_casing(decided: str) -> None:
     found = crawlers.unreviewed(known(decided), {"amazonbot"}, set())

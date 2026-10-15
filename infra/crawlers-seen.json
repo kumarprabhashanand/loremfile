@@ -1,7 +1,7 @@
 {
   "source": "https://raw.githubusercontent.com/ai-robots-txt/ai.robots.txt/main/robots.json",
   "read": "2026-09-22",
-  "note": "Agents that were already on the list when the watch was written. They are not news: the block list is a decision already taken (docs/04 section 6). `loremfile crawler-watch` reports names that are neither here nor blocked; docs/04 section 6 says which are blocked without asking and which go to the reviewer.",
+  "note": "Agents that were already on the list when the watch was written. They are not news: the block list is a decision already taken (docs/04 section 6). `loremfile crawler-watch` reports names that are neither here nor blocked; docs/04 section 6 says which are blocked without asking and which go to the reviewer. `deferred` holds names weighed and deliberately not blocked yet, each with its reasons and what would reopen it; the watch treats them as weighed.",
   "agents": [
     "AddSearchBot",
     "AgentTimes",
@@ -178,5 +178,16 @@
     "YiyanBot",
     "YouBot",
     "ZanistaBot"
-  ]
+  ],
+  "deferred": {
+    "nbot": {
+      "weighed": "2026-10-15",
+      "issue": "#96",
+      "reasons": [
+        "Substring: a case-sensitive contains \"nbot\" also matches Amazonbot and msnbot, so the clause would reach a search engine's crawler (docs/04 section 6, first guard).",
+        "No published user agent: NBot (nbot.ai) publishes none, so neither the exact string nor its casing is known, and a clause in the list's lower case might never fire."
+      ],
+      "reopen": "When NBot publishes an exact user-agent string: block it with an exact match on that string rather than contains (ADR-033)."
+    }
+  }
 }

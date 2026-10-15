@@ -76,8 +76,10 @@ def blocked_tokens(root: Path) -> set[str]:
 
 
 def seen_names(root: Path) -> set[str]:
+    """Names already weighed: the seeded list, and those deferred with their reasons."""
     document = json.loads((root / SEEN_FILE).read_text(encoding="utf-8"))
-    return {str(name).lower() for name in document["agents"]}
+    names = [*document["agents"], *document.get("deferred", {})]
+    return {str(name).lower() for name in names}
 
 
 def fetch_known(url: str = KNOWN_AGENTS_URL, *, timeout: int = 30) -> dict[str, Any]:

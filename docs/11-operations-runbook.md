@@ -252,7 +252,7 @@ The weekly watch (`09` §3.4) found agents on the public list that this reposito
 
 1. **An AI crawler, AI assistant or AI search crawler is added without asking** (`04` §6, ADR-033): add the token to the WAF rule and the robots.txt group, in the casing its operator publishes or the list's spelling when it publishes none, record the evidence and the new length in `04` §6, and update `AI_TOKENS` in `tests/unit/test_legal_pages.py`.
 2. **Two cases go to the reviewer instead:** a token that belongs to, or is contained in, a general web search engine's user agent; and a rule past the 3,072-character budget line, which `crawler-watch` reports in the same advisory. Past 4,096 characters it fails the audit outright, and splitting the rule needs a decision because the Free plan allows five custom rules in the phase.
-3. **To record a name as weighed and not blocked** (the reviewer's call): add it to `infra/crawlers-seen.json`. Leaving a name open is not an option: the same names return every week and the label stops meaning anything.
+3. **To record a name as weighed and not blocked** (the reviewer's call): add it to `infra/crawlers-seen.json`, under `deferred` with its reasons and what would reopen it when the decision is only for now (`nbot`, #96). Leaving a name open is not an option: the same names return every week and the label stops meaning anything.
 4. Either way the next run reports nothing and the issue closes itself.
 
 ### 7.13 Release the npm client
