@@ -19,7 +19,11 @@ python-pptx
 Pillow>=12.3              # AVIF support in the published wheels starts at 11.3.0
 
 # --- data ------------------------------------------------------------------
-pyarrow>=26.0.0
+# Exact, not a floor: every Parquet file's footer records the writer's version
+# (created_by), so any other pyarrow release changes published parquet/ bytes.
+# It can move once new paths replace parquet/people-1000.parquet and
+# parquet/people-100k.parquet, or once pyarrow makes created_by configurable.
+pyarrow==25.0.1
 fastavro
 ijson
 lxml

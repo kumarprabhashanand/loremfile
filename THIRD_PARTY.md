@@ -31,7 +31,7 @@ hashes; regenerate the table with `tools/licences.py` after any dependency chang
 | Library | Version | Licence | Used for |
 |---|---|---|---|
 | `fpdf2` | 2.8.9 | LGPL-3.0-only | PDF generation |
-| `pypdf` | 6.19.0 | BSD-3-Clause | PDF validation, and adding the form to `pdf/form-fields-1page.pdf` |
+| `pypdf` | 6.20.1 | BSD-3-Clause | PDF validation, and adding the form to `pdf/form-fields-1page.pdf` |
 | `python-docx` | 1.2.0 | MIT | DOCX |
 | `openpyxl` | 3.1.5 | MIT | XLSX |
 | `python-pptx` | 1.0.2 | MIT | PPTX |
@@ -54,7 +54,7 @@ hashes; regenerate the table with `tools/licences.py` after any dependency chang
 | `icalendar` | 7.3.0 | BSD-2-Clause | ICS |
 | `vobject` | 0.9.9 | Apache-2.0 | VCF |
 | `cryptography` | 50.0.1 | Apache-2.0 OR BSD-3-Clause | The Ed25519 test certificate |
-| `pydantic` | 2.13.5 | MIT | Catalog and manifest models |
+| `pydantic` | 2.14.1 | MIT | Catalog and manifest models |
 | `click` | 8.5.0 | BSD-3-Clause | The CLI |
 | `Jinja2` | 3.1.6 | BSD-3-Clause | Site templates |
 | `boto3` | 1.43.89 | Apache-2.0 | R2 uploads over the S3 API |
