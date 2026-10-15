@@ -110,10 +110,16 @@ def test_the_client_imports_nothing_but_the_standard_library() -> None:
     }
     imported: set[str] = set()
     for source in PACKAGE.glob("*.py"):
+        found: set[str] = set()
         for node in ast.walk(ast.parse(source.read_text(encoding="utf-8"))):
             if isinstance(node, ast.Import):
-                imported |= {alias.name.split(".")[0] for alias in node.names}
+                found |= {alias.name.split(".")[0] for alias in node.names}
             elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
-                imported.add(node.module.split(".")[0])
+                found.add(node.module.split(".")[0])
+        # The one exemption, by name: only pytest imports the plugin, so pytest is present.
+        if source.name == "pytest_plugin.py":
+            assert "pytest" in found, "the exemption names a module that no longer needs it"
+            found.discard("pytest")
+        imported |= found
     assert imported, "empty-set control: the scan found the imports"
     assert imported <= allowed, imported - allowed
