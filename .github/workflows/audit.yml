@@ -225,8 +225,8 @@ jobs:
   # New AI agents to weigh (docs/09 §3.4). No zone credentials and nothing remote but a
   # public list, so it stays outside the `loremfile-zone` group.
   #
-  # IT NEVER EDITS A RULE. Blocking an agent is a decision about the two pages that name
-  # the operator (ADR-028, ADR-030); this reports what is new and the owner decides.
+  # IT NEVER EDITS A RULE. Blocking an agent changes the two pages that name
+  # the operator (ADR-028, ADR-030); this reports what is new, and docs/04 §6 says who acts.
   crawlers:
     needs: setup
     runs-on: ubuntu-24.04

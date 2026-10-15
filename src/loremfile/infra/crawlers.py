@@ -1,8 +1,10 @@
 """A weekly look at the AI crawlers nobody here has decided about yet (docs/09 §3.4).
 
 This **never** edits a rule. It reads a public list of AI agents, subtracts the tokens the
-edge and robots.txt already name and the ones already considered, and reports what is left
-so the owner can decide. Blocking is a decision, and a decision is not a job for a cron.
+edge and robots.txt already name and the ones already considered, and reports what is left.
+docs/04 §6 says who acts on the report: an AI-category token is added by whoever works the
+issue, and only a search-engine token or a budget warning goes to the reviewer. A cron
+reports; a person writes the rule.
 
 Two failure modes are handled deliberately:
 
@@ -13,6 +15,9 @@ Two failure modes are handled deliberately:
   4,096 characters (Cloudflare's rules documentation), and every token added here lengthens
   one. Past the limit the rule cannot be created or updated at all, so the guard fails the
   run rather than letting the next `infra apply` discover it against the live zone.
+
+Before that limit there is a budget line at 75% of it (docs/04 §6): past it the report says
+so, because the next tokens are a decision about splitting the rule, not a routine addition.
 """
 
 from __future__ import annotations
@@ -31,6 +36,8 @@ KNOWN_AGENTS_URL = "https://raw.githubusercontent.com/ai-robots-txt/ai.robots.tx
 #: Cloudflare: "The maximum length of a rule expression is 4,096 characters." A rule over
 #: the limit "cannot be created or updated".
 MAX_EXPRESSION_CHARACTERS = 4096
+#: docs/04 §6: past three quarters of the limit, adding tokens stops being routine.
+BUDGET_CHARACTERS = MAX_EXPRESSION_CHARACTERS * 3 // 4
 #: Names already weighed and not blocked. New entries in the list upstream are what the
 #: watch is for; the ones that were there when it was written are not news.
 SEEN_FILE = Path("infra") / "crawlers-seen.json"
@@ -111,5 +118,21 @@ def over_long_expressions(root: Path) -> list[str]:
                 problems.append(
                     f"{path.stem}:{rule.get('ref')}: {length:,} characters, over "
                     f"{MAX_EXPRESSION_CHARACTERS:,} — Cloudflare refuses to create or update it"
+                )
+    return problems
+
+
+def over_budget_expressions(root: Path) -> list[str]:
+    """Committed rules past the budget line but still under the limit: escalate, not add."""
+    problems: list[str] = []
+    for path in sorted((root / "infra" / "rulesets").glob("*.json")):
+        document = json.loads(path.read_text(encoding="utf-8"))
+        for rule in document.get("rules", []):
+            length = len(str(rule.get("expression", "")))
+            if BUDGET_CHARACTERS < length <= MAX_EXPRESSION_CHARACTERS:
+                problems.append(
+                    f"{path.stem}:{rule.get('ref')}: {length:,} of {MAX_EXPRESSION_CHARACTERS:,} "
+                    f"characters, past the {BUDGET_CHARACTERS:,} budget line; escalate to the "
+                    "reviewer before adding tokens (docs/04 §6)"
                 )
     return problems

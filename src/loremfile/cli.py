@@ -1020,10 +1020,10 @@ EXPRESSION_TOO_LONG = 4
 def crawler_watch_command(url: str, as_json: bool) -> None:
     """AI agents nobody here has decided about yet (docs/09 §3.4). Needs no credentials.
 
-    It never edits a rule: blocking an agent is a decision, and the run only reports. Exit
-    0 nothing new, 1 new agents to weigh, 3 the list could not be read — which says nothing
-    about crawlers, so the caller must leave the advisory issue alone — and 4 a committed
-    rule expression that Cloudflare would now refuse.
+    It never edits a rule: the run only reports, and docs/04 §6 says who acts. Exit 0
+    nothing new, 1 new agents to weigh or a rule past the 75% budget line, 3 the list could
+    not be read — which says nothing about crawlers, so the caller must leave the advisory
+    issue alone — and 4 a committed rule expression that Cloudflare would now refuse.
     """
     root = Path.cwd()
     over_long = crawlers_module.over_long_expressions(root)
@@ -1051,17 +1051,23 @@ def crawler_watch_command(url: str, as_json: bool) -> None:
         sys.exit(COULD_NOT_READ)
     blocked = crawlers_module.blocked_tokens(root)
     found = crawlers_module.unreviewed(known, blocked, crawlers_module.seen_names(root))
+    over_budget = crawlers_module.over_budget_expressions(root)
     for agent in found:
         click.echo(f"  {agent.render()}", err=True)
     _emit(
         "crawler-watch",
-        ok=not found,
-        summary={"listed": len(known), "blocked": len(blocked), "new": len(found)},
+        ok=not found and not over_budget,
+        summary={
+            "listed": len(known),
+            "blocked": len(blocked),
+            "new": len(found),
+            "over_budget": len(over_budget),
+        },
         items=[{"path": a.name, "status": "new", "detail": a.render()} for a in found],
-        errors=[f"not yet decided: {a.render()}" for a in found],
+        errors=[f"not yet decided: {a.render()}" for a in found] + over_budget,
         as_json=as_json,
     )
-    sys.exit(NEW_AGENTS if found else NOTHING_NEW)
+    sys.exit(NEW_AGENTS if found or over_budget else NOTHING_NEW)
 
 
 @main.command("tokens-due")

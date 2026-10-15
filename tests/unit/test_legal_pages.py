@@ -54,6 +54,10 @@ AI_TOKENS = {
     # Keenable-User is user-directed and was refused under the same rule as qodercli.
     "KeenableBot",
     "Keenable-User",
+    # Weighed 2026-10-15 (#96) under docs/04 §6's standing rule. xAI documents neither;
+    # both are the list's spelling.
+    "GrokBot",
+    "GrokAppAndroid",
     "Google-Extended",
     "Applebot-Extended",
 }

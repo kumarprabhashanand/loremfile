@@ -97,6 +97,49 @@ def test_an_expression_over_the_limit_is_refused(tmp_path: Path) -> None:
     assert f"{crawlers.MAX_EXPRESSION_CHARACTERS + 1:,}" in problem
 
 
+def rules_of(tmp_path: Path, length: int) -> Path:
+    rules = tmp_path / "infra" / "rulesets"
+    rules.mkdir(parents=True)
+    (rules / "http_request_firewall_custom.json").write_text(
+        json.dumps({"rules": [{"ref": "growing", "expression": "x" * length}]})
+    )
+    return tmp_path
+
+
+def test_every_committed_rule_expression_is_under_the_budget_line() -> None:
+    """docs/04 §6: past 75% of the limit, adding tokens is the reviewer's call. A pull request
+    that crosses the line fails here, which is where the escalation starts."""
+    assert crawlers.BUDGET_CHARACTERS == 3072
+    assert crawlers.over_budget_expressions(ROOT) == []
+
+
+def test_control_the_budget_scan_reads_the_committed_rule(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The test above would pass on a scan that found nothing; lowered, the line must name it."""
+    monkeypatch.setattr(crawlers, "BUDGET_CHARACTERS", 1000)
+    [problem] = crawlers.over_budget_expressions(ROOT)
+    assert "loremfile_legal_pages_ai_agents" in problem
+
+
+@pytest.mark.parametrize(
+    ("length", "reported"),
+    [
+        (crawlers.BUDGET_CHARACTERS, False),
+        (crawlers.BUDGET_CHARACTERS + 1, True),
+        (crawlers.MAX_EXPRESSION_CHARACTERS, True),
+        # Over the limit is the other guard's finding, and exit 4, not a budget warning.
+        (crawlers.MAX_EXPRESSION_CHARACTERS + 1, False),
+    ],
+)
+def test_the_budget_line_fires_just_past_three_quarters(
+    tmp_path: Path, length: int, *, reported: bool
+) -> None:
+    problems = crawlers.over_budget_expressions(rules_of(tmp_path, length))
+    assert bool(problems) is reported
+    if reported:
+        assert "growing" in problems[0]
+        assert f"{length:,} of 4,096" in problems[0]
+
+
 # --- reading the list ---------------------------------------------------------------------
 
 
@@ -150,6 +193,17 @@ def test_nothing_new_exits_zero(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_a_new_agent_exits_one(monkeypatch: pytest.MonkeyPatch) -> None:
     assert run(monkeypatch, fetch_known=lambda *_a, **_k: known("BrandNewBot")) == cli.NEW_AGENTS
+
+
+def test_a_rule_past_the_budget_line_exits_one_with_nothing_new(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    code = run(
+        monkeypatch,
+        fetch_known=lambda *_a, **_k: known("GPTBot"),
+        over_budget_expressions=lambda _r: ["past the 3,072 budget line"],
+    )
+    assert code == cli.NEW_AGENTS
 
 
 def test_a_list_that_cannot_be_read_exits_three(monkeypatch: pytest.MonkeyPatch) -> None:

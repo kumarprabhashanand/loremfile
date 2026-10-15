@@ -1,7 +1,7 @@
 {
   "source": "https://raw.githubusercontent.com/ai-robots-txt/ai.robots.txt/main/robots.json",
   "read": "2026-09-22",
-  "note": "Agents that were already on the list when the watch was written. They are not news: the block list is a decision already taken (docs/04 section 6). `loremfile crawler-watch` reports names that are neither here nor blocked, and the owner decides whether to block the agent or add it here.",
+  "note": "Agents that were already on the list when the watch was written. They are not news: the block list is a decision already taken (docs/04 section 6). `loremfile crawler-watch` reports names that are neither here nor blocked; docs/04 section 6 says which are blocked without asking and which go to the reviewer.",
   "agents": [
     "AddSearchBot",
     "AgentTimes",

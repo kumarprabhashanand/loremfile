@@ -102,6 +102,8 @@ User-agent: Kimi-Agent
 User-agent: qodercli
 User-agent: KeenableBot
 User-agent: Keenable-User
+User-agent: GrokBot
+User-agent: GrokAppAndroid
 User-agent: Google-Extended
 User-agent: Applebot-Extended
 Content-Signal: search=yes, ai-input=yes, ai-train=yes
