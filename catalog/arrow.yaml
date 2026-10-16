@@ -16,15 +16,6 @@ fixtures:
     expect: { rows: 1000, columns: 14, row_groups: 1 }
     size_class: free
     label: "IPC file"
-  - name: people-1000-zstd.arrow
-    phase: 1
-    generator: columnar.arrow_people
-    params: { rows: 1000, compression: zstd }
-    description: "The same 1,000 people rows as an IPC file whose buffers are zstd-compressed, which a reader built without that codec cannot open."
-    tags: [data, dataset-people]
-    expect: { rows: 1000, columns: 14, row_groups: 1, ipc_format: file, compression: zstd }
-    size_class: free
-    label: "zstd buffers"
   - name: people-1000.arrows
     phase: 1
     generator: columnar.arrow_people
@@ -35,6 +26,15 @@ fixtures:
     expect: { rows: 1000, columns: 14, row_groups: 1, ipc_format: stream, compression: none }
     size_class: free
     label: "IPC stream"
+  - name: people-1000-zstd.arrow
+    phase: 1
+    generator: columnar.arrow_people
+    params: { rows: 1000, compression: zstd }
+    description: "The same 1,000 people rows as an IPC file whose buffers are zstd-compressed, which a reader built without that codec cannot open."
+    tags: [data, dataset-people]
+    expect: { rows: 1000, columns: 14, row_groups: 1, ipc_format: file, compression: zstd }
+    size_class: free
+    label: "zstd buffers"
   - name: people-1000-10-batches.arrow
     phase: 1
     generator: columnar.arrow_people

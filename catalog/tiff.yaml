@@ -7,15 +7,6 @@ description: >-
 seo_title: "Sample TIFF image for testing, free and CC0"
 related: [png, bmp, jpg]
 fixtures:
-  - name: rgb-640x480.tiff
-    phase: 1
-    generator: image.testcard
-    params: { width: 640, height: 480, fmt: TIFF, compression: raw }
-    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, uncompressed RGB TIFF."
-    tags: [image]
-    expect: { width: 640, height: 480, mode: RGB }
-    size_class: free
-    label: "uncompressed RGB"
   - name: lzw-640x480.tiff
     phase: 1
     generator: image.testcard
@@ -52,3 +43,12 @@ fixtures:
     expect: { width: 640, height: 480, mode: CMYK, bits_per_sample: [8, 8, 8, 8] }
     size_class: free
     label: "CMYK"
+  - name: rgb-640x480.tiff
+    phase: 1
+    generator: image.testcard
+    params: { width: 640, height: 480, fmt: TIFF, compression: raw }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, uncompressed RGB TIFF."
+    tags: [image]
+    expect: { width: 640, height: 480, mode: RGB }
+    size_class: free
+    label: "uncompressed RGB"
