@@ -1,8 +1,8 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.9.0",
-  "generated_at": "2026-10-16T09:42:07Z",
+  "catalog_version": "1.9.1",
+  "generated_at": "2026-10-16T21:19:41Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
@@ -148,7 +148,11 @@
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 2,
-        "bitrate_kbps": 130.6
+        "bitrate_kbps": 130.6,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
       },
       "generator": "media_audio.encoded",
       "generator_params": {
@@ -186,7 +190,11 @@
         "sample_rate": 44100,
         "channels": 2,
         "bitrate_kbps": 1411.2,
-        "bit_depth": 16
+        "bit_depth": 16,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
       },
       "generator": "media_audio.pcm",
       "generator_params": {
@@ -617,7 +625,10 @@
         "profile": "Simple Profile",
         "acodec": "mp3",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "media_video.avi",
       "generator_params": {
@@ -2999,7 +3010,11 @@
         "acodec": "flac",
         "sample_rate": 48000,
         "channels": 2,
-        "bitrate_kbps": 107.6
+        "bitrate_kbps": 107.6,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
       },
       "generator": "media_audio.encoded",
       "generator_params": {
@@ -3351,7 +3366,10 @@
         "level": "3.0",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "hls.member",
       "generator_params": {
@@ -3395,7 +3413,10 @@
         "level": "3.0",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "hls.member",
       "generator_params": {
@@ -3439,7 +3460,10 @@
         "level": "3.0",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "hls.member",
       "generator_params": {
@@ -3483,7 +3507,10 @@
         "level": "3.0",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "hls.member",
       "generator_params": {
@@ -3527,7 +3554,10 @@
         "level": "3.0",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "hls.member",
       "generator_params": {
@@ -3605,7 +3635,10 @@
         "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "hls.member",
       "generator_params": {
@@ -3649,7 +3682,10 @@
         "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "hls.member",
       "generator_params": {
@@ -3693,7 +3729,10 @@
         "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "hls.member",
       "generator_params": {
@@ -3737,7 +3776,10 @@
         "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "hls.member",
       "generator_params": {
@@ -3781,7 +3823,10 @@
         "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "hls.member",
       "generator_params": {
@@ -4950,7 +4995,11 @@
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 2,
-        "bitrate_kbps": 128.1
+        "bitrate_kbps": 128.1,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
       },
       "generator": "media_audio.encoded",
       "generator_params": {
@@ -4988,7 +5037,11 @@
         "acodec": "aac",
         "sample_rate": 44100,
         "channels": 2,
-        "bitrate_kbps": 64.3
+        "bitrate_kbps": 64.3,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
       },
       "generator": "media_audio.encoded",
       "generator_params": {
@@ -5192,7 +5245,10 @@
         "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "media_video.mp4",
       "generator_params": {
@@ -5236,7 +5292,10 @@
         "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "media_video.mp4",
       "generator_params": {
@@ -5276,7 +5335,11 @@
         "acodec": "mp3",
         "sample_rate": 48000,
         "channels": 2,
-        "bitrate_kbps": 128.0
+        "bitrate_kbps": 128.0,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
       },
       "generator": "media_audio.mp3_sized",
       "generator_params": {
@@ -5312,7 +5375,11 @@
         "acodec": "mp3",
         "sample_rate": 48000,
         "channels": 2,
-        "bitrate_kbps": 128.0
+        "bitrate_kbps": 128.0,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
       },
       "generator": "media_audio.mp3_sized",
       "generator_params": {
@@ -5385,7 +5452,11 @@
         "acodec": "mp3",
         "sample_rate": 48000,
         "channels": 2,
-        "bitrate_kbps": 128.0
+        "bitrate_kbps": 128.0,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
       },
       "generator": "media_audio.encoded",
       "generator_params": {
@@ -5422,7 +5493,11 @@
         "acodec": "mp3",
         "sample_rate": 48000,
         "channels": 2,
-        "bitrate_kbps": 128.0
+        "bitrate_kbps": 128.0,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
       },
       "generator": "media_audio.encoded",
       "generator_params": {
@@ -5459,7 +5534,11 @@
         "acodec": "mp3",
         "sample_rate": 48000,
         "channels": 2,
-        "bitrate_kbps": 128.0
+        "bitrate_kbps": 128.0,
+        "tone_hz": [
+          440.0,
+          880.0
+        ]
       },
       "generator": "media_audio.encoded",
       "generator_params": {
@@ -5501,7 +5580,11 @@
         "acodec": "mp3",
         "sample_rate": 48000,
         "channels": 2,
-        "bitrate_kbps": 128.0
+        "bitrate_kbps": 128.0,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
       },
       "generator": "media_audio.mp3_tagged",
       "generator_params": {
@@ -5543,7 +5626,10 @@
         "level": "4.0",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "media_video.mp4",
       "generator_params": {
@@ -5587,7 +5673,10 @@
         "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "media_video.mp4_sized",
       "generator_params": {
@@ -5629,7 +5718,10 @@
         "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "media_video.mp4_sized",
       "generator_params": {
@@ -5671,7 +5763,10 @@
         "level": "3.0",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "media_video.mp4",
       "generator_params": {
@@ -5715,7 +5810,10 @@
         "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "media_video.mp4_sized",
       "generator_params": {
@@ -5757,7 +5855,10 @@
         "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "media_video.mp4",
       "generator_params": {
@@ -5800,7 +5901,10 @@
         "level": "3.0",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "media_video.mp4",
       "generator_params": {
@@ -5886,6 +5990,9 @@
         "acodec": "aac",
         "sample_rate": 48000,
         "channels": 1,
+        "tone_hz": [
+          440.0
+        ],
         "faststart": false,
         "moov_at_end": true
       },
@@ -5930,7 +6037,10 @@
         "level": "4.0",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "media_video.mp4",
       "generator_params": {
@@ -6006,7 +6116,21 @@
         "tags": {
           "ENCODER": "Lavc libvorbis"
         },
-        "bitrate_kbps": 27.4
+        "bitrate_kbps": 27.4,
+        "tone_hz": [
+          440.0,
+          440.0
+        ],
+        "chain_tone_hz": [
+          [
+            440.0,
+            440.0
+          ],
+          [
+            880.0,
+            880.0
+          ]
+        ]
       },
       "generator": "media_audio.chained",
       "generator_params": {
@@ -6047,7 +6171,11 @@
         "channels": 2,
         "chains": 1,
         "header_pages": 2,
-        "bitrate_kbps": 107.6
+        "bitrate_kbps": 107.6,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
       },
       "generator": "media_audio.encoded",
       "generator_params": {
@@ -6088,7 +6216,11 @@
         "tags": {
           "ENCODER": "Lavc libvorbis"
         },
-        "bitrate_kbps": 23.6
+        "bitrate_kbps": 23.6,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
       },
       "generator": "media_audio.encoded",
       "generator_params": {
@@ -6142,7 +6274,11 @@
           "width": 640,
           "height": 480
         },
-        "bitrate_kbps": 23.8
+        "bitrate_kbps": 23.8,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
       },
       "generator": "media_audio.vorbis_tagged",
       "generator_params": {
@@ -6188,7 +6324,10 @@
         "tags": {
           "ENCODER": "Lavc libvorbis"
         },
-        "bitrate_kbps": 9.0
+        "bitrate_kbps": 9.0,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "media_audio.encoded",
       "generator_params": {
@@ -6229,7 +6368,10 @@
         "fps": 30.0,
         "acodec": "vorbis",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "media_video.ogv",
       "generator_params": {
@@ -6266,7 +6408,11 @@
         "acodec": "opus",
         "sample_rate": 48000,
         "channels": 2,
-        "bitrate_kbps": 114.0
+        "bitrate_kbps": 114.0,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
       },
       "generator": "media_audio.encoded",
       "generator_params": {
@@ -6280,42 +6426,46 @@
       "supersededBy": null
     },
     {
-      "added_in": "1.7.0",
-      "bytes": 122539,
-      "deprecated": false,
-      "description": "Thirty seconds of a sine tone, stereo Opus encoded at a constant 32 kbps, for code that reads, limits or transcodes by bitrate.",
-      "edge_case": false,
-      "ext": "opus",
-      "format": "opus",
-      "generator": "media_audio.encoded",
-      "generator_params": {
-        "bitrate": "32k",
-        "codec": "opus",
-        "constant": true,
-        "duration": 30
-      },
-      "mime": "audio/opus",
       "path": "opus/cbr-32k-30s.opus",
-      "phase": 2,
-      "props": {
-        "acodec": "opus",
-        "audio_streams": 1,
-        "bitrate_kbps": 32.0,
-        "channels": 2,
-        "duration_ms": 30006,
-        "sample_rate": 48000,
-        "subtitle_streams": 0,
-        "video_streams": 0
-      },
+      "url": "https://loremfile.dev/opus/cbr-32k-30s.opus",
+      "format": "opus",
+      "ext": "opus",
+      "mime": "audio/opus",
+      "bytes": 122539,
       "sha256": "5e518230b738e74ae305ae81282666d0d89fb585c8a95616148c95b12da508f0",
       "size_class": "free",
-      "status": "active",
-      "supersededBy": null,
+      "phase": 2,
+      "description": "Thirty seconds of a sine tone, stereo Opus encoded at a constant 32 kbps, for code that reads, limits or transcodes by bitrate.",
       "tags": [
         "audio",
         "codec-opus"
       ],
-      "url": "https://loremfile.dev/opus/cbr-32k-30s.opus"
+      "edge_case": false,
+      "props": {
+        "duration_ms": 30006,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "opus",
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 32.0,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "opus",
+        "duration": 30,
+        "bitrate": "32k",
+        "constant": true
+      },
+      "added_in": "1.7.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
     },
     {
       "path": "otf/loremfile-sans.otf",
@@ -8064,7 +8214,10 @@
         "level": "3.1",
         "acodec": "aac",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "media_video.mp4",
       "generator_params": {
@@ -8861,6 +9014,10 @@
         "channels": 2,
         "bitrate_kbps": 1411.2,
         "bit_depth": 16,
+        "tone_hz": [
+          440.0,
+          440.0
+        ],
         "header_format": "pcm",
         "header_bytes": 44
       },
@@ -8901,6 +9058,10 @@
         "channels": 2,
         "bitrate_kbps": 1411.2,
         "bit_depth": 16,
+        "tone_hz": [
+          440.0,
+          440.0
+        ],
         "header_format": "pcm",
         "header_bytes": 44
       },
@@ -8941,6 +9102,10 @@
         "channels": 2,
         "bitrate_kbps": 2304.0,
         "bit_depth": 24,
+        "tone_hz": [
+          440.0,
+          440.0
+        ],
         "header_format": "extensible",
         "header_bytes": 68
       },
@@ -8985,7 +9150,10 @@
         "profile": "Profile 0",
         "acodec": "opus",
         "sample_rate": 48000,
-        "channels": 1
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
       },
       "generator": "media_video.webm",
       "generator_params": {

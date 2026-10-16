@@ -23,7 +23,8 @@ from mutagen.oggvorbis import OggVorbis
 from PIL import Image
 
 from loremfile.catalog import Fixture
-from loremfile.util.ffmpeg import FfmpegError, packet_bytes, probe
+from loremfile.util import tone
+from loremfile.util.ffmpeg import FfmpegError, decode_pcm, packet_bytes, probe
 from loremfile.validators import ValidationError, register
 
 #: Formats whose props come from ffprobe. HLS playlists are text and handled separately.
@@ -139,6 +140,57 @@ def _ogg_checks(data: bytes, fixture: Fixture, props: dict[str, Any]) -> dict[st
                 f"its chains last {props['duration_ms']} ms, not the {expected} ms asked for"
             )
     return extra
+
+
+def _tone_of(data: bytes, suffix: str, channels: int) -> list[float | None]:
+    """Each channel's tone over one decoded second, a quarter of a second in (util/tone)."""
+    with tempfile.TemporaryDirectory() as temporary:
+        path = Path(temporary) / f"fixture{suffix}"
+        path.write_bytes(data)
+        try:
+            pcm = decode_pcm(
+                path, channels=channels, start=tone.START_S, seconds=tone.SECONDS, rate=tone.RATE
+            )
+        except FfmpegError as exc:
+            raise ValidationError(
+                f"ffmpeg could not decode the audio to measure it: {exc}"
+            ) from exc
+    return tone.tone_hz(pcm, tone.RATE)
+
+
+def _tone_props(data: bytes, suffix: str, props: dict[str, Any]) -> dict[str, Any]:
+    """`tone_hz` per channel, published only when some channel holds a tone.
+
+    A chained Ogg file decodes as its first chain alone, so each chain is also measured from
+    its own bytes, as `chain_tone_hz`: the file that moves from 440 Hz to 880 Hz says so.
+    """
+    if not props.get("audio_streams"):
+        return {}
+    channels = int(props["channels"])
+    found: dict[str, Any] = {}
+    measured = _tone_of(data, suffix, channels)
+    if any(value is not None for value in measured):
+        found["tone_hz"] = measured
+    if props.get("chains", 1) > 1:
+        found["chain_tone_hz"] = [
+            _tone_of(chain, suffix, channels) for chain in _ogg_chain_bytes(data)
+        ]
+    return found
+
+
+def _ogg_chain_bytes(data: bytes) -> list[bytes]:
+    """The file split where each logical bitstream begins."""
+    offset, starts = 0, []
+    while offset < len(data):
+        if data[offset + 5] & OGG_BOS:
+            starts.append(offset)
+        count = data[offset + 26]
+        offset += (
+            OGG_HEADER_BYTES
+            + count
+            + sum(data[offset + OGG_HEADER_BYTES : offset + OGG_HEADER_BYTES + count])
+        )
+    return [data[a:b] for a, b in zip(starts, [*starts[1:], len(data)], strict=True)]
 
 
 def _probe(data: bytes, suffix: str) -> dict[str, Any]:
@@ -299,6 +351,7 @@ def make_media_validator(fmt: str, suffix: str) -> None:
             chained = props.get("chains", 1) > 1
             seconds = props["duration_ms"] / 1000 if chained else None
             props.update(_audio_rates(data, suffix, report, seconds))
+        props.update(_tone_props(data, suffix, props))
         if fmt == "wav":
             props.update(_wav_header(data))
 
@@ -380,7 +433,7 @@ def validate_hls(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
         props = _common_props(_probe(data, ".ts"))
         if not props["video_streams"]:
             raise ValidationError("a segment with no video stream")
-        return props
+        return {**props, **_tone_props(data, ".ts", props)}
 
     try:
         text = data.decode("utf-8")

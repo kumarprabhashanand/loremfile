@@ -6,6 +6,13 @@
   example `/pdf/index.md`, linked from the page and described in `llms.txt`. The pages'
   structured data now gives each file's size and SHA-256.
 
+## [1.9.1] - 2026-10-16
+
+- Every file with audio now records the tone it carries, measured per channel from the
+  decoded audio as `tone_hz`: 440 Hz on 45 files, 440 Hz left and 880 Hz right on
+  `mp3/stereo-lr-5s.mp3`, and nothing on the silent `mp3/silence-5s.mp3`. The chained Ogg
+  file records each chain's tone. The files are unchanged.
+
 ## [1.9.0] - 2026-10-16
 
 - Four new files each on three pages that held one. `ogg/`: FLAC in Ogg, mono 22.05 kHz
