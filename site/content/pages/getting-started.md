@@ -48,6 +48,21 @@ not match is not written at all. Exit codes: `0` fine, `1` a file failed verific
 missing, `2` the request was wrong, `3` loremfile.dev could not be read. Both install a command
 named `loremfile`; on a machine with both, whichever comes first on `PATH` runs.
 
+## In a pytest suite
+
+For files too big to commit, such as multi-megabyte video, audio and archives, the Python
+client gives pytest a `loremfile` fixture. `pip install loremfile` is the whole setup.
+
+```python
+def test_reads_a_real_mp4(loremfile):
+    video = loremfile("mp4/10mb.mp4")  # a pathlib.Path, checked against the manifest
+```
+
+The first call downloads the file into `.pytest_cache` and checks its SHA-256, and a file that
+does not match is never returned. Published files never change at their path, so after that the
+suite needs no network for it; in CI, cache `.pytest_cache/d/loremfile` between runs. If your
+tests may not touch the network, or the file you need is a 4 KB PDF, commit the file instead.
+
 ## Check the size first
 
 ```bash
