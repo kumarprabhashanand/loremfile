@@ -227,6 +227,19 @@ AFTER_LAUNCH = (
     "hls/360p-10s/seg-004.ts",
     "hls/multi-bitrate/master.m3u8",
     "jpg/cmyk-640x640.jpg",
+    # 1.9.0: four variants each on three single-fixture format pages.
+    "ogg/flac-10s.ogg",
+    "ogg/vorbis-mono-22k-10s.ogg",
+    "ogg/vorbis-cover-art-10s.ogg",
+    "ogg/chained-2-streams-10s.ogg",
+    "tiff/lzw-640x480.tiff",
+    "tiff/multipage-3pages.tiff",
+    "tiff/16bit-gray-big-endian-640x480.tiff",
+    "tiff/cmyk-640x480.tiff",
+    "arrow/people-1000-zstd.arrow",
+    "arrow/people-1000.arrows",
+    "arrow/people-1000-10-batches.arrow",
+    "arrow/all-types.arrow",
 )
 
 

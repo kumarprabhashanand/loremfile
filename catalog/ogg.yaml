@@ -16,3 +16,48 @@ fixtures:
     tags: [audio]
     expect: { acodec: vorbis, sample_rate: 48000, channels: 2 }
     size_class: free
+    label: "Vorbis stereo"
+  - name: flac-10s.ogg
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: flac, duration: 10, container: ogg }
+    description: "Ten seconds of a 440 Hz sine as lossless FLAC in an Ogg container, 48 kHz stereo, for code that assumes an Ogg file holds Vorbis."
+    tags: [audio]
+    expect: { acodec: flac, sample_rate: 48000, channels: 2, chains: 1 }
+    size_class: free
+    label: "FLAC in Ogg"
+  - name: vorbis-mono-22k-10s.ogg
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: vorbis, duration: 10, sample_rate: 22050, channels: 1, quality: "4" }
+    description: "Ten seconds of a 440 Hz sine as mono Vorbis at 22.05 kHz, the single-channel low-rate case that voice recordings produce."
+    tags: [audio]
+    expect: { acodec: vorbis, sample_rate: 22050, channels: 1, chains: 1 }
+    size_class: free
+    label: "mono 22.05 kHz"
+  - name: vorbis-cover-art-10s.ogg
+    phase: 1
+    generator: media_audio.vorbis_tagged
+    params:
+      duration: 10
+      cover: "jpg/640x480.jpg"
+      tags: { TITLE: "Lorem ipsum", ARTIST: "Dolor Sit", ALBUM: "Amet", DATE: "2020" }
+    description: "Ten seconds of 440 Hz Vorbis with title, artist, album and date comments and the published 640x480 JPEG as front cover, which spreads the comment header over several Ogg pages."
+    tags: [audio]
+    expect:
+      acodec: vorbis
+      chains: 1
+      cover: { format: jpeg, width: 640, height: 480 }
+      tags: { ALBUM: "Amet", ARTIST: "Dolor Sit", DATE: "2020", TITLE: "Lorem ipsum" }
+    size_class: free
+    depends_on: ["jpg/640x480.jpg"]
+    label: "cover art"
+  - name: chained-2-streams-10s.ogg
+    phase: 1
+    generator: media_audio.chained
+    params: { codec: vorbis, segment: 5, frequencies: [440, 880] }
+    description: "Two Vorbis streams chained back to back, a 440 Hz sine and then an 880 Hz one, ten seconds in all; a reader that stops after the first chain reports half the length."
+    tags: [audio]
+    expect: { acodec: vorbis, sample_rate: 48000, channels: 2, chains: 2 }
+    size_class: free
+    label: "2 chained streams"

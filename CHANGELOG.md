@@ -6,6 +6,17 @@
   example `/pdf/index.md`, linked from the page and described in `llms.txt`. The pages'
   structured data now gives each file's size and SHA-256.
 
+## [1.9.0] - 2026-10-16
+
+- Four new files each on three pages that held one. `ogg/`: FLAC in Ogg, mono 22.05 kHz
+  Vorbis, Vorbis with four comments and a cover that spans several header pages, and two
+  chained streams. `tiff/`: LZW, three pages, 16-bit big-endian grayscale, CMYK. `arrow/`:
+  zstd-compressed buffers, the IPC stream format (`people-1000.arrows`, served as
+  `application/vnd.apache.arrow.stream`), ten record batches, and nested and logical types.
+- New measured props, existing bytes unchanged: TIFF compression, byte order and bits per
+  sample; Ogg chains, header pages, comments and cover; Arrow IPC format, buffer
+  compression, column types and null counts.
+
 ## [1.8.0] - 2026-10-11
 
 - Format titles without em dashes: all 79 that carried one, each of which reaches its page's

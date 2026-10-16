@@ -17,6 +17,7 @@ from typing import Any
 
 from lxml import etree
 from PIL import Image, ImageFile, ImageOps
+from PIL.TiffImagePlugin import TiffImageFile
 
 from loremfile.catalog import Fixture
 from loremfile.util.ffmpeg import FfmpegError, tool
@@ -74,10 +75,41 @@ def _raster_props(data: bytes) -> dict[str, Any]:
     return props
 
 
+#: TIFF tag 258. One value per sample: (8, 8, 8) for RGB, (16,) for 16-bit grayscale.
+BITS_PER_SAMPLE_TAG = 258
+#: The first two bytes of a TIFF name its byte order: Intel (little-endian) or Motorola.
+TIFF_BYTE_ORDERS = (b"II", b"MM")
+
+
+def _tiff_props(data: bytes) -> dict[str, Any]:
+    """What a TIFF reader has to support to read this file, read from the file itself.
+
+    Compression and bits per sample come from the first page's tags as Pillow parses them;
+    the byte order is the header's first two bytes, which no decoder reports.
+    """
+    order = data[:2]
+    if order not in TIFF_BYTE_ORDERS:
+        raise ValidationError(f"does not start with a TIFF byte-order mark: {order!r}")
+    with Image.open(io.BytesIO(data)) as image:
+        if not isinstance(image, TiffImageFile):
+            raise ValidationError(f"Pillow reads it as {image.format}, not as a TIFF")
+        bits = image.tag_v2.get(BITS_PER_SAMPLE_TAG)
+        compression = image.info.get("compression")
+    if bits is None or compression is None:
+        raise ValidationError("has no BitsPerSample tag or no compression Pillow can name")
+    return {
+        "compression": str(compression),
+        "byte_order": order.decode("ascii"),
+        "bits_per_sample": [int(b) for b in bits] if isinstance(bits, tuple) else [int(bits)],
+    }
+
+
 def _register_raster(fmt: str) -> None:
     @register(fmt)
     def _validate(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
         props = _raster_props(data)
+        if fmt == "tiff":
+            props.update(_tiff_props(data))
         if fixture.generator == "image.exif_rotated":
             with Image.open(io.BytesIO(data)) as image:
                 displayed = ImageOps.exif_transpose(image)

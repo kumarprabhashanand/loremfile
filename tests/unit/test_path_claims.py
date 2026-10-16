@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[2]
 AUDIO = frozenset({"mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"})
 UNITS = {"b": 1, "kb": 10**3, "mb": 10**6, "gb": 10**9, "kib": 2**10, "mib": 2**20}
 #: Bits per pixel for the image modes a name's `24bit` can refer to.
-MODE_BITS = {"1": 1, "L": 8, "P": 8, "RGB": 24, "RGBA": 32, "CMYK": 32}
+MODE_BITS = {"1": 1, "L": 8, "P": 8, "RGB": 24, "RGBA": 32, "CMYK": 32, "I;16": 16, "I;16B": 16}
 #: The tolerance an approximate size class allows (docs/05 §6).
 APPROXIMATE = 0.05
 DURATION_TOLERANCE_MS = 150

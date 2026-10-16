@@ -172,6 +172,11 @@ class Edge(BaseModel):
         return self
 
 
+#: Long enough for "16-bit big-endian" or "FLAC in Ogg"; short enough that several fit in
+#: a 60-character title.
+MAX_LABEL_CHARS = 24
+
+
 class Fixture(BaseModel):
     """One row of ``catalog/{format}.yaml``. Field rules are docs/06 §3."""
 
@@ -214,6 +219,11 @@ class Fixture(BaseModel):
     #: The path that replaces this one (docs/03 §7.3). This path stays served, frozen; its
     #: entry gains `supersededBy` and `deprecated`, and the site lists the replacement.
     superseded_by: str | None = Field(default=None, min_length=1)
+    #: A few words naming what sets this file apart on its page, for the page title and
+    #: description (docs/05 §1 rule 9). Authored, not measured: it may hold a number only
+    #: if a validator measures that number, which tests/unit/test_labels.py checks against
+    #: the manifest. A format page switches to the labelled title once every file has one.
+    label: str | None = Field(default=None, min_length=2, max_length=MAX_LABEL_CHARS)
 
     # The owning format, injected by the loader so a Fixture can compute its own path.
     format: str = Field(pattern=FORMAT_RE.pattern)
@@ -238,6 +248,8 @@ class Fixture(BaseModel):
         if self.status is Status.ACTIVE and self.removed is not None:
             raise ValueError("removed is only allowed when status is 'removed'")
         self._check_contains_text()
+        if self.label is not None and self.label != self.label.strip(" .,;:"):
+            raise ValueError(f"label {self.label!r} has surrounding spaces or punctuation")
         self._check_named_dimensions()
         return self
 

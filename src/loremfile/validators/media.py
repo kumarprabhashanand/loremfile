@@ -10,11 +10,17 @@ These validators assert structure, not parseability (docs/06 §13).
 
 from __future__ import annotations
 
+import base64
+import io
 import re
 import struct
 import tempfile
 from pathlib import Path
 from typing import Any
+
+from mutagen.flac import Picture
+from mutagen.oggvorbis import OggVorbis
+from PIL import Image
 
 from loremfile.catalog import Fixture
 from loremfile.util.ffmpeg import FfmpegError, packet_bytes, probe
@@ -33,6 +39,106 @@ MP4_BOX_HEADER_BYTES = 8
 
 #: Top-level box names worth walking past to find where `moov` sits.
 MP4_TOPLEVEL_ATOMS = (b"ftyp", b"moov", b"mdat", b"free", b"skip", b"wide")
+
+
+#: An Ogg page (RFC 3533 §6): "OggS", version, flags, granule position, serial number,
+#: sequence number and CRC in 27 bytes, then a segment table whose sum is the payload size.
+OGG_CAPTURE = b"OggS"
+OGG_HEADER_BYTES = 27
+#: Header-type flag for the first page of a logical bitstream.
+OGG_BOS = 0x02
+#: A Vorbis identification header: packet type 1, "vorbis", then version, channels and
+#: the sample rate as a little-endian u32 at byte 12.
+VORBIS_ID = b"\x01vorbis"
+VORBIS_RATE_OFFSET = 12
+#: The Vorbis comment that carries a FLAC picture block, base64-encoded.
+PICTURE_COMMENT = "metadata_block_picture"
+
+
+def _ogg_pages(data: bytes) -> list[tuple[int, int, int, bytes]]:
+    """(flags, serial, granule, payload) for every page, walked from byte 0.
+
+    A gap or a truncated page stops validation instead of being skipped: a fixture is a
+    complete file, and a walker that resynchronised would count what is not there.
+    """
+    pages = []
+    offset = 0
+    while offset < len(data):
+        if data[offset : offset + 4] != OGG_CAPTURE or len(data) < offset + OGG_HEADER_BYTES:
+            raise ValidationError(f"no Ogg page at byte {offset}")
+        flags = data[offset + 5]
+        granule, serial = struct.unpack_from("<qI", data, offset + 6)
+        count = data[offset + 26]
+        start = offset + OGG_HEADER_BYTES + count
+        end = start + sum(data[offset + OGG_HEADER_BYTES : start])
+        if end > len(data):
+            raise ValidationError(f"the Ogg page at byte {offset} is truncated")
+        pages.append((flags, serial, granule, data[start:end]))
+        offset = end
+    return pages
+
+
+def _ogg_structure(data: bytes) -> dict[str, Any]:
+    """Chains and header pages, read from the pages themselves rather than from ffprobe.
+
+    ffprobe reports a chained file's first stream alone, so a chained file's duration is
+    the sum over its chains: each chain's last granule position, which counts samples,
+    over the sample rate its own identification header declares.
+    """
+    pages = _ogg_pages(data)
+    starts = [(serial, payload) for flags, serial, _, payload in pages if flags & OGG_BOS]
+    if not starts:
+        raise ValidationError("no Ogg page starts a logical bitstream")
+    first = starts[0][0]
+    header_pages = 0
+    for _, serial, granule, _ in pages:
+        if serial != first:
+            continue
+        if granule > 0:
+            break
+        header_pages += 1
+    props: dict[str, Any] = {"chains": len(starts), "header_pages": header_pages}
+    if len(starts) > 1:
+        seconds = 0.0
+        for serial, payload in starts:
+            if not payload.startswith(VORBIS_ID):
+                raise ValidationError("a chain is not Vorbis, so its duration is not measured")
+            (rate,) = struct.unpack_from("<I", payload, VORBIS_RATE_OFFSET)
+            seconds += max(g for _, s, g, _ in pages if s == serial) / rate
+        props["duration_ms"] = round(seconds * 1000)
+    return props
+
+
+def _vorbis_comments(data: bytes) -> dict[str, Any]:
+    """The comments of the first chain, and its cover decoded to measure what it is."""
+    comments: list[tuple[str, str]] = list(OggVorbis(io.BytesIO(data)).tags or [])
+    props: dict[str, Any] = {}
+    tags = {key.upper(): value for key, value in comments if key.lower() != PICTURE_COMMENT}
+    if tags:
+        props["tags"] = dict(sorted(tags.items()))
+    pictures = [value for key, value in comments if key.lower() == PICTURE_COMMENT]
+    if pictures:
+        picture = Picture(base64.b64decode(pictures[0]))
+        with Image.open(io.BytesIO(picture.data)) as cover:
+            props["cover"] = {
+                "format": (cover.format or "").lower(),
+                "width": cover.width,
+                "height": cover.height,
+            }
+    return props
+
+
+def _ogg_checks(data: bytes, fixture: Fixture, props: dict[str, Any]) -> dict[str, Any]:
+    """Comments for Vorbis, and a chained file's total held to the length it asked for."""
+    extra = _vorbis_comments(data) if props["acodec"] == "vorbis" else {}
+    segment, frequencies = fixture.params.get("segment"), fixture.params.get("frequencies")
+    if segment is not None and frequencies:
+        expected = round(float(segment) * len(frequencies) * 1000)
+        if abs(props["duration_ms"] - expected) > DURATION_TOLERANCE_MS:
+            raise ValidationError(
+                f"its chains last {props['duration_ms']} ms, not the {expected} ms asked for"
+            )
+    return extra
 
 
 def _probe(data: bytes, suffix: str) -> dict[str, Any]:
@@ -87,7 +193,9 @@ def _common_props(report: dict[str, Any]) -> dict[str, Any]:
     return props
 
 
-def _audio_rates(data: bytes, suffix: str, report: dict[str, Any]) -> dict[str, Any]:
+def _audio_rates(
+    data: bytes, suffix: str, report: dict[str, Any], seconds: float | None = None
+) -> dict[str, Any]:
     """`bitrate_kbps` from the audio packets themselves, and `bit_depth` for PCM.
 
     The rate is the audio packets' bytes over the stream's duration: what the codec
@@ -97,7 +205,11 @@ def _audio_rates(data: bytes, suffix: str, report: dict[str, Any]) -> dict[str, 
     asked for 96k, libopus averaged 114.
     """
     audio = _streams(report, "audio")[0]
-    seconds = float(audio.get("duration") or report.get("format", {}).get("duration") or 0)
+    # A chained Ogg file passes its measured total: ffprobe's duration is the first chain
+    # while its packet list runs through every chain (34,198 bytes against 14,937 for the
+    # first chain alone, measured 2026-10-16), so its own figure would double the rate.
+    if seconds is None:
+        seconds = float(audio.get("duration") or report.get("format", {}).get("duration") or 0)
     if seconds <= 0:
         raise ValidationError("the audio stream reports no duration to divide by")
     with tempfile.TemporaryDirectory() as temporary:
@@ -180,8 +292,13 @@ def make_media_validator(fmt: str, suffix: str) -> None:
             raise ValidationError("has no video stream")
         if fmt in AUDIO_FORMATS and not props["audio_streams"]:
             raise ValidationError("has no audio stream")
+        if fmt == "ogg":
+            props.update(_ogg_structure(data))
+            props.update(_ogg_checks(data, fixture, props))
         if fmt in AUDIO_FORMATS:
-            props.update(_audio_rates(data, suffix, report))
+            chained = props.get("chains", 1) > 1
+            seconds = props["duration_ms"] / 1000 if chained else None
+            props.update(_audio_rates(data, suffix, report, seconds))
         if fmt == "wav":
             props.update(_wav_header(data))
 

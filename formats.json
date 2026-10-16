@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.8.0",
+  "catalog_version": "1.9.0",
   "formats": [
     {
       "format": "7z",
@@ -27,8 +27,8 @@
     },
     {
       "format": "arrow",
-      "count": 1,
-      "total_bytes": 260674,
+      "count": 5,
+      "total_bytes": 894992,
       "url": "https://loremfile.dev/arrow",
       "index": "https://loremfile.dev/arrow/index.json",
       "mime_default": "application/vnd.apache.arrow.file"
@@ -355,8 +355,8 @@
     },
     {
       "format": "ogg",
-      "count": 1,
-      "total_bytes": 95083,
+      "count": 5,
+      "total_bytes": 341449,
       "url": "https://loremfile.dev/ogg",
       "index": "https://loremfile.dev/ogg/index.json",
       "mime_default": "audio/ogg"
@@ -475,8 +475,8 @@
     },
     {
       "format": "tiff",
-      "count": 1,
-      "total_bytes": 921740,
+      "count": 5,
+      "total_bytes": 5555544,
       "url": "https://loremfile.dev/tiff",
       "index": "https://loremfile.dev/tiff/index.json",
       "mime_default": "image/tiff"

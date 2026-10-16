@@ -48,19 +48,62 @@ def validate_parquet(data: bytes, _fixture: Fixture, _mime: str) -> dict[str, An
 
 
 @register("arrow")
-def validate_arrow(data: bytes, _fixture: Fixture, _mime: str) -> dict[str, Any]:
+def validate_arrow(data: bytes, _fixture: Fixture, mime: str) -> dict[str, Any]:
+    """Arrow IPC in either format, told apart by the bytes and held to the served type.
+
+    The file format starts and ends with `ARROW1`; the stream format has neither. A reader
+    pointed at the wrong one fails, so a file served as a stream (or the reverse) is wrong
+    even if every row is right.
+    """
+    ipc_format = "file" if data[:6] == ARROW_MAGIC and data[-6:] == ARROW_MAGIC else "stream"
+    if mime.partition(";")[0].strip() != ARROW_TYPES[ipc_format]:
+        raise ValidationError(f"is the IPC {ipc_format} format but is served as {mime}")
     try:
-        with pyarrow.ipc.open_file(pyarrow.BufferReader(data)) as reader:
-            table = reader.read_all()
-            batches = reader.num_record_batches
+        if ipc_format == "file":
+            with pyarrow.ipc.open_file(pyarrow.BufferReader(data)) as reader:
+                table = reader.read_all()
+                batches = reader.num_record_batches
+        else:
+            with pyarrow.ipc.open_stream(pyarrow.BufferReader(data)) as reader:
+                parts = list(reader)
+                table = pyarrow.Table.from_batches(parts, schema=reader.schema)
+                batches = len(parts)
     except Exception as exc:
-        raise ValidationError(f"pyarrow could not read the IPC file: {exc}") from exc
+        raise ValidationError(f"pyarrow could not read the IPC {ipc_format}: {exc}") from exc
     return {
         "rows": table.num_rows,
         "columns": table.num_columns,
         "row_groups": batches,
         "column_names": list(table.schema.names),
+        "ipc_format": ipc_format,
+        "compression": _ipc_compression(data, ipc_format),
+        "column_types": [str(field.type) for field in table.schema],
+        "null_counts": [column.null_count for column in table.columns],
     }
+
+
+#: The file format's leading and trailing magic (the leading copy is padded to 8 bytes).
+ARROW_MAGIC = b"ARROW1"
+ARROW_TYPES = {
+    "file": "application/vnd.apache.arrow.file",
+    "stream": "application/vnd.apache.arrow.stream",
+}
+#: A compressed IPC buffer is its uncompressed length as an int64, then one codec frame.
+#: pyarrow decompresses transparently and never says which codec it met, so the frame's
+#: own magic is the measurement.
+CODEC_MAGIC = {b"\x28\xb5\x2f\xfd": "zstd", b"\x04\x22\x4d\x18": "lz4"}
+LENGTH_PREFIX_BYTES = 8
+
+
+def _ipc_compression(data: bytes, ipc_format: str) -> str:
+    """The codec of the first record batch's body, or `none`."""
+    messages = data[8:] if ipc_format == "file" else data
+    for message in pyarrow.ipc.MessageReader.open_stream(pyarrow.BufferReader(messages)):
+        if message.type != "record batch" or message.body is None:
+            continue
+        head = bytes(message.body[LENGTH_PREFIX_BYTES : LENGTH_PREFIX_BYTES + 4])
+        return CODEC_MAGIC.get(head, "none")
+    return "none"
 
 
 @register("avro")

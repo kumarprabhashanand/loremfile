@@ -290,6 +290,48 @@ def label(fmt: str) -> str:
     return LABELS.get(fmt, fmt.upper())
 
 
+#: What a results page shows of a title and a description before cutting them off.
+TITLE_LIMIT = 60
+DESCRIPTION_LIMIT = 155
+
+
+def labelled_title(name: str, labels: list[str]) -> str:
+    """`Sample {FORMAT} files: {labels}`, cut at the last whole label that fits.
+
+    No brand suffix and no adjectives: the title leads with what the page holds, in the
+    order the catalog lists it (docs/05 §1 rule 9).
+    """
+    head = f"Sample {name} file{'' if len(labels) == 1 else 's'}: "
+    shown: list[str] = []
+    for text in labels:
+        if len(head + ", ".join([*shown, text])) > TITLE_LIMIT:
+            break
+        shown.append(text)
+    return head + ", ".join(shown)
+
+
+def labelled_description(name: str, sizes: list[int], labels: list[str]) -> str:
+    """The count and size range from the manifest, then as many labels as fit.
+
+    It says "test" because that is the word people search with; the sizes are measured
+    bytes, rounded by the same formatter as everywhere else on the site.
+    """
+    count = len(sizes)
+    span = (
+        f"from {human_bytes(min(sizes))} to {human_bytes(max(sizes))}"
+        if count > 1
+        else human_bytes(sizes[0])
+    )
+    head = f"{count} {name} test file{'' if count == 1 else 's'} {span}: "
+    tail = ". Direct URLs, SHA-256 per file, CC0."
+    shown: list[str] = []
+    for text in labels:
+        if len(head + ", ".join([*shown, text]) + tail) > DESCRIPTION_LIMIT:
+            break
+        shown.append(text)
+    return head + ", ".join(shown) + tail
+
+
 def human_bytes(count: int) -> str:
     for unit, size in (("GB", 10**9), ("MB", 10**6), ("KB", 10**3)):
         if count >= size:
@@ -669,14 +711,23 @@ def format_pages(
             for e in active
         ]
         plural = "" if len(active) == 1 else "s"
+        title = f"{info.seo_title} · loremfile.dev"
+        description = (
+            f"{len(active)} sample {label(fmt)} file{plural} with stable URLs you can "
+            "hotlink. No signup, no keys, CC0."
+        )
+        # The labelled shape, only where every file on the page has a label (docs/05 §1
+        # rule 9): ogg, tiff and arrow from 1.9.0, the rest once the first three are read.
+        on_page = {e["path"] for e in active}
+        labels = [f.label for f in info.fixtures if f.path in on_page and f.label]
+        if active and len(labels) == len(active):
+            title = labelled_title(label(fmt), labels)
+            description = labelled_description(label(fmt), [e["bytes"] for e in active], labels)
         page = Page(
             key=fmt,
             h1=info.seo_title,
-            title=f"{info.seo_title} · loremfile.dev",
-            description=(
-                f"{len(active)} sample {label(fmt)} file{plural} with stable URLs you can "
-                "hotlink. No signup, no keys, CC0."
-            ),
+            title=title,
+            description=description,
             template="format.html",
             crumbs=[("Home", "/"), ("Formats", "/formats")],
             context={
@@ -1143,9 +1194,18 @@ def llms(
     return ("\n".join(lines) + "\n").encode()
 
 
+#: Indexable pages the sitemap leaves out (2026-10-16). Indexed-page count is the RISK-18
+#: tripwire (docs/17), and a sitemap that lists pages nobody wants in search makes that
+#: count wrong by construction. They stay indexable and linked from every footer; this
+#: only stops asking for them. The two operator pages are out anyway, as noindex.
+NOT_IN_SITEMAP = frozenset({"legal", "legal/license", "legal/terms"})
+
+
 def sitemap(pages: list[Page], committed: dt.datetime) -> bytes:
     lastmod = committed.date().isoformat()
-    urls = sorted(page.canonical for page in pages if page.listed)
+    urls = sorted(
+        page.canonical for page in pages if page.listed and page.key not in NOT_IN_SITEMAP
+    )
     body = "".join(
         f"  <url><loc>{xml_escape(url)}</loc><lastmod>{lastmod}</lastmod></url>\n" for url in urls
     )
