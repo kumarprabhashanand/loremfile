@@ -225,7 +225,7 @@ Response template:
 
 **When to run it:** after **any** change to `.github/workflows/health.yml`, `.github/workflows/audit.yml`, `.github/workflows/deploy.yml`, `src/loremfile/gh_issue.py` or `src/loremfile/deploy_report.py` (in the same session as the merge) and otherwise once a quarter.
 
-**The deploy drill** (Actions → `deploy` → Run workflow, `mode: deploy`, on `main`; each run is a real, idempotent deploy of `main`): `inject_failure: verify` must open **"Deploy published but did not verify"** with `inject_failure=verify` in its body and end red; a clean `mode: deploy` run must close it; `inject_failure: publish` must open **"Deploy did not publish cleanly"**, naming `Publish fixtures` with nothing completed; a clean run must close that too. Wait for each run to finish: the zone concurrency group queues them, but a newer pending run replaces an older one.
+**The deploy drill** (Actions → `deploy` → Run workflow, `mode: deploy`, on `main`; each run is a real, idempotent deploy of `main`; `mode` defaults to dry-run, and a drill left there is refused at the first step, because a dry run publishes nothing to fail): `inject_failure: verify` must open **"Deploy published but did not verify"** with `inject_failure=verify` in its body and end red; a clean `mode: deploy` run must close it; `inject_failure: publish` must open **"Deploy did not publish cleanly"**, naming `Publish fixtures` with nothing completed; a clean run must close that too. Wait for each run to finish: the zone concurrency group queues them, but a newer pending run replaces an older one.
 
 **Procedure** (Actions → `health` → Run workflow; three dispatches, in order, reading each before the next):
 

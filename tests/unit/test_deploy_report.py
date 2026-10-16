@@ -200,6 +200,19 @@ def test_the_report_job_runs_after_any_outcome_and_alone_can_write_issues() -> N
     assert step["env"]["RESULT"] == "${{ needs.deploy.result }}"
 
 
+def test_a_drill_outside_a_real_deploy_is_refused_first() -> None:
+    """Run 38891535447: a drill left at the dry-run default failed a stage that publishes
+    nothing, the report job skipped it, and the run looked like a broken deploy."""
+    guard = deploy_steps()[0]
+    assert guard["id"] == "drill_guard"
+    condition = guard["if"]
+    assert "inputs.inject_failure != 'none'" in condition
+    assert "inputs.inject_failure != ''" in condition, "a push carries no inputs and must pass"
+    assert "env.MODE != 'deploy'" in condition
+    assert "the drill needs mode: deploy" in guard["run"]
+    assert guard["run"].rstrip().endswith("exit 1")
+
+
 @pytest.mark.parametrize(
     ("stage", "step_id"), [("publish", "publish_fixtures"), ("verify", "verify")]
 )

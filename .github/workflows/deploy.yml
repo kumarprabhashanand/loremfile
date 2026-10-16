@@ -62,9 +62,10 @@ on:
         type: boolean
         default: false
       # The alerting drill (docs/11 §7.11): fail one stage on purpose, in a real deploy, and
-      # watch its issue open; the next clean deploy closes it. Never set on a push.
+      # watch its issue open; the next clean deploy closes it. Never set on a push. `mode`
+      # defaults to dry-run, so the first step refuses a drill that forgot to change it.
       inject_failure:
-        description: Drill only. Fail the publish or the verify stage on purpose
+        description: Drill only, with mode deploy. Fail the publish or the verify stage on purpose
         type: choice
         default: none
         options:
@@ -124,6 +125,16 @@ jobs:
       R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
       R2_BUCKET: ${{ vars.R2_BUCKET }}
     steps:
+      # A drill in a dry run fails a stage that publishes nothing, and the `report` job skips
+      # dry runs, so it ends red and tests nothing (run 38891535447, 2026-10-16). Refused
+      # here, first, so the obvious dispatch says what to change instead of looking broken.
+      - name: Refuse a drill outside a real deploy
+        id: drill_guard
+        if: inputs.inject_failure != '' && inputs.inject_failure != 'none' && env.MODE != 'deploy'
+        run: |
+          echo "::error title=Drill needs mode deploy::the drill needs mode: deploy; in dry-run nothing is published, so there is no publish to fail"
+          exit 1
+
       - name: Check out the repository
         id: checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

@@ -37,6 +37,7 @@ VERIFY = "verify"
 #: The deploy job's steps in order: `id`, name, and whether the step writes to production.
 #: `tests/unit/test_deploy_report.py` holds this equal to `deploy.yml`.
 STEPS: tuple[tuple[str, str, bool], ...] = (
+    ("drill_guard", "Refuse a drill outside a real deploy", False),
     ("checkout", "Check out the repository", False),
     ("install", "Install the package", False),
     ("git_safe", "Let git read the checkout", False),
