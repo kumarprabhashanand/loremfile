@@ -15,3 +15,41 @@ fixtures:
     tags: [data, dataset-people]
     expect: { rows: 1000, columns: 14, row_groups: 1 }
     size_class: free
+    label: "IPC file"
+  - name: people-1000.arrows
+    phase: 1
+    generator: columnar.arrow_people
+    params: { rows: 1000, ipc: stream }
+    mime: application/vnd.apache.arrow.stream
+    description: "The same 1,000 people rows in the Arrow IPC stream format, with no footer and no ARROW1 magic, opened by a different API from the file format."
+    tags: [data, dataset-people]
+    expect: { rows: 1000, columns: 14, row_groups: 1, ipc_format: stream, compression: none }
+    size_class: free
+    label: "IPC stream"
+  - name: people-1000-zstd.arrow
+    phase: 1
+    generator: columnar.arrow_people
+    params: { rows: 1000, compression: zstd }
+    description: "The same 1,000 people rows as an IPC file whose buffers are zstd-compressed, which a reader built without that codec cannot open."
+    tags: [data, dataset-people]
+    expect: { rows: 1000, columns: 14, row_groups: 1, ipc_format: file, compression: zstd }
+    size_class: free
+    label: "zstd buffers"
+  - name: people-1000-10-batches.arrow
+    phase: 1
+    generator: columnar.arrow_people
+    params: { rows: 1000, batch_rows: 100 }
+    description: "The same 1,000 people rows as an IPC file split into ten record batches, for readers that stop after the first batch."
+    tags: [data, dataset-people]
+    expect: { rows: 1000, columns: 14, row_groups: 10, ipc_format: file, compression: none }
+    size_class: free
+    label: "10 record batches"
+  - name: all-types.arrow
+    phase: 1
+    generator: columnar.arrow_all_types
+    params: { rows: 20, null_every: 5 }
+    description: "Twenty rows in nine columns of types readers often mishandle: list, struct, map, dictionary-encoded string, decimal, timestamp with time zone, date, time and binary, with four nulls in every column."
+    tags: [data]
+    expect: { rows: 20, columns: 9, row_groups: 1, null_counts: [4, 4, 4, 4, 4, 4, 4, 4, 4] }
+    size_class: free
+    label: "nested types"

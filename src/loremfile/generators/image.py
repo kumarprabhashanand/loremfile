@@ -83,7 +83,7 @@ def test_card(width: int, height: int, mode: str = "RGB", label: str | None = No
     return _convert(image, mode, width, height)
 
 
-def _convert(image: Image.Image, mode: str, width: int, height: int) -> Image.Image:
+def _convert(image: Image.Image, mode: str, width: int, height: int) -> Image.Image:  # noqa: PLR0911 - one return per mode
     """Move the RGB card into the requested mode, adding alpha or palette as needed."""
     if mode == "RGB":
         return image
@@ -101,6 +101,10 @@ def _convert(image: Image.Image, mode: str, width: int, height: int) -> Image.Im
         return image.convert("CMYK")
     if mode == "I;16":
         return Image.linear_gradient("L").resize((width, height)).convert("I;16")
+    if mode == "I;16B":
+        # The card itself at 16 bits, big-endian: the only mode Pillow writes in Motorola
+        # byte order ("MM"), so a TIFF reader assuming Intel order or 8-bit samples fails.
+        return image.convert("L").convert("I").point(lambda value: value * 257).convert("I;16B")
     raise ValueError(f"unsupported mode {mode!r}")
 
 
@@ -114,6 +118,14 @@ def _save(image: Image.Image, fmt: str, **options: object) -> bytes:
     buffer = io.BytesIO()
     image.save(buffer, format=fmt, **options)
     return buffer.getvalue()
+
+
+@generator()
+def multipage_tiff(_ctx: GeneratorContext, *, width: int, height: int, pages: int) -> bytes:
+    """A TIFF of `pages` test cards, each labelled with its page number, so a reader that
+    shows only the first page is visibly wrong rather than plausibly right."""
+    cards = [test_card(width, height, label=f"page {n} of {pages}") for n in range(1, pages + 1)]
+    return _save(cards[0], "TIFF", save_all=True, append_images=cards[1:], compression="raw")
 
 
 @generator()

@@ -78,11 +78,11 @@ Field rules:
 | Formats | Keys |
 |---|---|
 | pdf | `pages`, `page_width_pt`, `page_height_pt`, `encrypted`, `pdf_version`, `has_outline`, `has_images`, and for a PDF with an AcroForm only, `form_fields` and `filled_fields` (a filled field must carry its appearance stream) |
-| png, jpg, gif, webp, avif, bmp, tiff, ico | `width`, `height`, `mode` (`RGB`, `RGBA`, `L`, `P`, `CMYK`, `I;16`), `frames`, `animated`, `progressive`, `exif_orientation` (jpg), `sizes` (ico) |
+| png, jpg, gif, webp, avif, bmp, tiff, ico | `width`, `height`, `mode` (`RGB`, `RGBA`, `L`, `P`, `CMYK`, `I;16`, `I;16B`), `frames`, `animated`, `progressive`, `exif_orientation` (jpg), `sizes` (ico); for tiff (1.9.0), `compression` as Pillow names it (`raw`, `tiff_lzw`), `byte_order` (`II` or `MM`, the header's first two bytes) and `bits_per_sample` (one value per sample, from tag 258) |
 | heic | `width` and `height` (the primary item's `ispe`, which heif-convert's decode must match), `mode` (decoded), `major_brand`, `compatible_brands`, `primary_item_type` (`hvc1`), `items`, `format` |
 | svg | `width`, `height`, `viewbox` |
 | mp4, webm, mkv, mov, avi, ogv, ts, hls | `duration_ms`, `width`, `height`, `fps`, `vcodec`, `acodec`, `sample_rate`, `channels`, `video_streams`, `audio_streams`, `subtitle_streams`, `profile` (the video stream's profile as ffprobe names it, where it reports one: `High`, `Constrained Baseline`, `Profile 0`), and for H.264 `level` (`3.0`, `3.1`: the stream's level_idc over ten); mp4 and mov where the catalog sets `faststart`: `faststart`, `moov_at_end`. hls media playlists: `segments`, `target_duration_s`, `playlist_type`; hls master playlists: `variants`, and per rendition in order `bandwidths`, `resolutions` and `codecs` (a validator reads them from the playlist; a CI test re-measures each from the rendition's segments) |
-| mp3, wav, flac, ogg, opus, m4a, aac, aiff | `duration_ms`, `acodec`, `sample_rate`, `channels`, `audio_streams`, `bitrate_kbps` (the audio packets' bytes over the stream's duration: what the codec spent, without container pages, tags or cover art, and never the rate an encoder was asked for or a header declares), `bit_depth` (PCM only); wav also `header_format` (`pcm`, `extensible` or `float`, the `fmt ` chunk's tag) and `header_bytes` (where the samples start: 44 for the canonical header, 68 for the extensible one) |
+| mp3, wav, flac, ogg, opus, m4a, aac, aiff | `duration_ms`, `acodec`, `sample_rate`, `channels`, `audio_streams`, `bitrate_kbps` (the audio packets' bytes over the stream's duration: what the codec spent, without container pages, tags or cover art, and never the rate an encoder was asked for or a header declares), `bit_depth` (PCM only); wav also `header_format` (`pcm`, `extensible` or `float`, the `fmt ` chunk's tag) and `header_bytes` (where the samples start: 44 for the canonical header, 68 for the extensible one); for ogg (1.9.0), `chains` and `header_pages` from the Ogg pages themselves, a chained file's `duration_ms` and `bitrate_kbps` summed over its chains (ffprobe reports the first chain alone), and for Vorbis its comments as `tags` and its cover as `cover` (`format`, `width`, `height`, decoded with Pillow) |
 | docx | `paragraphs`, `tables`, `table_rows`, `images` (media parts), `words`, `inline_images`, `anchored_images` (floating drawings, which readers that walk inline shapes miss), `images_with_alt_text`; the tracked-changes file adds its revision props |
 | xlsx | `sheets`, `sheet_names`, `rows` and `columns` (first sheet, rows incl. header), `formulas` (every sheet; each must carry a cached value), `images`, and `cross_sheet_formulas` only where a formula reads another sheet |
 | pptx | `slides`, `has_notes`, `aspect` (`16:9`/`4:3`) |
@@ -91,7 +91,7 @@ Field rules:
 | json, ndjson, geojson, har, ipynb, jsonld | `top_type` (`object`/`array`/`string`…), `items` (array length or ndjson lines), `max_depth` |
 | xml, rss, atom, kml, gpx | `root_element`, `encoding`, `has_dtd`, `namespaces` |
 | yaml, toml | `documents` (yaml), `top_keys` |
-| parquet, avro, arrow | `rows`, `columns`, `compression` (parquet), `row_groups` |
+| parquet, avro, arrow | `rows`, `columns`, `compression` (parquet), `row_groups`; for arrow (1.9.0), `ipc_format` (`file` when the bytes start and end with `ARROW1`, else `stream`, and held to the served type), `compression` (`zstd`, `lz4` or `none`, from the codec frame's magic, which pyarrow never reports), `column_types` and `null_counts` |
 | sqlite | `tables`, `rows_total`, `page_size`, `journal_mode`, `has_fts` |
 | zip, 7z | `entries`, `directories`, `method` (`stored`/`deflate`/`lzma2`), `encrypted`, `zip64`, `comment` |
 | tar (+gz/bz2/xz/zst) | `entries`, `compression`, `has_symlinks`, `pax` |
@@ -294,6 +294,8 @@ AI crawlers are deliberately allowed (the audience includes agents). Raw fixture
 - **`Content-Signal` states what the content may be used for**: search, AI input and AI training are all allowed, which is what CC0 already grants. Syntax as contentsignals.org publishes it (read 2026-09-21): a group member line before the group's rules, `key=yes|no` pairs separated by commas. It is in **both** groups because a crawler obeys only its most specific group (RFC 9309 §2.2.1); in the `*` group alone it would never reach the AI crawlers the named group matches. It grants nothing on the two disallowed paths: a signal is about use, and those paths are not to be fetched at all.
 
 ## 7. `sitemap.xml`
+
+**The sitemap lists only pages meant to be indexed (2026-10-16).** `/legal`, `/legal/license` and `/legal/terms` stay indexable and linked from every footer, but the sitemap leaves them out (`NOT_IN_SITEMAP` in `site/build.py`). The reason is measurement, not tidiness: indexed-page count is the RISK-18 tripwire (`17`), and a sitemap that asks for pages nobody wants in search makes that count wrong by construction. The two operator pages were never listed; they are `noindex`.
 
 **Every discovery file carries `X-Robots-Tag: noindex`, and that is not a bug to fix.**
 The `files_headers` rule matches any path containing a dot, so `sitemap.xml`,

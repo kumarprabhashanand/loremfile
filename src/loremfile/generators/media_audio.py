@@ -14,10 +14,13 @@ read through `ctx.dependency` rather than a regenerated lookalike.
 
 from __future__ import annotations
 
+import base64
 import struct
 from pathlib import Path
 
+from mutagen.flac import Picture
 from mutagen.id3 import APIC, ID3, TALB, TCON, TDRC, TIT2, TPE1
+from mutagen.oggvorbis import OggVorbis
 
 from loremfile.config import APPROX_TOLERANCE
 from loremfile.generators.base import GeneratorContext, generator
@@ -264,3 +267,77 @@ def mp3_tagged(
     # v2_version=3 because ID3v2.3 is what every player reads; 2.4 is still patchy.
     tags.save(target, v2_version=3)
     return target.read_bytes()
+
+
+@generator()
+def vorbis_tagged(
+    ctx: GeneratorContext,
+    *,
+    duration: float,
+    tags: dict[str, str],
+    cover: str,
+    quality: str = "4",
+) -> bytes:
+    """Vorbis carrying comments and a front cover in METADATA_BLOCK_PICTURE.
+
+    The cover is a published JPEG read through `ctx.dependency`, as the MP3 cover is. Its
+    base64 form makes the comment header longer than one Ogg page, which is the property a
+    parser that reads one header page and starts decoding gets wrong. mutagen rewrites only
+    the header pages; their bytes depend on nothing but the input (spiked twice, 2026-10-16).
+    """
+    target = _target(ctx)
+    _encode(
+        target,
+        source="sine",
+        duration=duration,
+        codec_args=["-c:a", encoder_for("vorbis"), "-q:a", quality],
+        sample_rate=48000,
+        channels=2,
+        container="ogg",
+    )
+    vorbis = OggVorbis(target)
+    # ffmpeg writes ENCODER=Lavc libvorbis even under +bitexact; the comments here are
+    # exactly the ones the catalog names, so the measured set is the authored set.
+    for key in list(vorbis.keys()):
+        del vorbis[key]
+    for key, value in tags.items():
+        vorbis[key] = [value]
+    picture = Picture()
+    picture.type = 3  # front cover
+    picture.mime = "image/jpeg"
+    picture.desc = "Cover"
+    picture.data = ctx.dependency(cover)
+    vorbis["METADATA_BLOCK_PICTURE"] = [base64.b64encode(picture.write()).decode("ascii")]
+    vorbis.save()
+    return target.read_bytes()
+
+
+@generator()
+def chained(
+    ctx: GeneratorContext,
+    *,
+    codec: str,
+    segment: float,
+    frequencies: list[int],
+    quality: str = "4",
+) -> bytes:
+    """Chained Ogg: one logical bitstream per frequency, back to back (RFC 3533 §4).
+
+    Chaining is concatenation, valid only when each stream has its own serial number, so
+    each segment is muxed with a different `serial_offset`. ffprobe reports the first chain
+    alone, which is the reader behaviour this fixture exists to expose.
+    """
+    ctx.workdir.mkdir(parents=True, exist_ok=True)
+    parts = []
+    for index, frequency in enumerate(frequencies, start=1):
+        target = ctx.workdir / f"chain-{index}.ogg"
+        run(
+            [
+                "-f", "lavfi", "-i", f"sine=frequency={frequency}:sample_rate=48000",
+                "-t", f"{segment:g}", "-ac", "2",
+                "-c:a", encoder_for(codec), "-q:a", quality,
+                "-serial_offset", str(index), "-f", "ogg", str(target),
+            ]
+        )  # fmt: skip
+        parts.append(target.read_bytes())
+    return b"".join(parts)

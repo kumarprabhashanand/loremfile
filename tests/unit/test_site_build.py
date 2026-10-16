@@ -102,9 +102,23 @@ def test_the_legal_pages_stay_out_of_every_index(site: Path) -> None:
         page = text(site, key)
         assert f'<meta name="robots" content="{routes.LEGAL_ROBOTS}">' in page
         assert "application/ld+json" not in page
-    # Controls: the other legal pages are listed and indexable.
-    assert "https://loremfile.dev/legal/license" in text(site, "sitemap.xml")
-    assert '<meta name="robots"' not in text(site, "legal/license")
+    # Controls: the other legal pages stay indexable, and keep their structured data.
+    for key in ("legal/license", "legal/terms"):
+        assert '<meta name="robots"' not in text(site, key)
+        assert "application/ld+json" in text(site, key)
+
+
+def test_the_sitemap_asks_only_for_pages_meant_to_be_indexed(site: Path) -> None:
+    """Indexed-page count is the RISK-18 tripwire; listing pages nobody wants indexed would
+    make it wrong by construction. Indexable and linked, but not asked for."""
+    sitemap = text(site, "sitemap.xml")
+    for key in ("legal", "legal/license", "legal/terms"):
+        assert f"<loc>https://loremfile.dev/{key}</loc>" not in sitemap
+    for key in ("legal/license", "legal/terms"):  # still in every footer
+        assert f'href="/{key}"' in text(site, "pdf")
+    # Control: the filter is a list of three keys, not a rule that empties the file.
+    assert "<loc>https://loremfile.dev/pdf</loc>" in sitemap
+    assert "<loc>https://loremfile.dev/docs/getting-started</loc>" in sitemap
 
 
 def test_every_page_links_impressum_and_privacy_in_its_footer(
@@ -874,3 +888,12 @@ def test_the_popular_list_and_search_use_the_same_size_string(site: Path) -> Non
     assert all(row["size"] == build.sized(row["bytes"]) for row in rows)
     script = (ROOT / "site" / "static" / "site.js").read_text(encoding="utf-8")
     assert "row.size" in script and '"MB"' not in script, "search formats sizes its own way"
+
+
+def test_a_fully_labelled_format_page_leads_with_its_labels(site: Path) -> None:
+    """docs/05 §1 rule 9: ogg, tiff and arrow from 1.9.0; every other page keeps its title."""
+    ogg = text(site, "ogg")
+    assert "<title>Sample OGG files: FLAC in Ogg, cover art, 2 chained streams</title>" in ogg
+    assert '<meta name="description" content="5 OGG test files from ' in ogg
+    # Control: an unlabelled format is unchanged, brand suffix and all.
+    assert "· loremfile.dev</title>" in text(site, "pdf")

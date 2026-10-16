@@ -7,6 +7,42 @@ description: >-
 seo_title: "Sample TIFF image for testing, free and CC0"
 related: [png, bmp, jpg]
 fixtures:
+  - name: lzw-640x480.tiff
+    phase: 1
+    generator: image.testcard
+    params: { width: 640, height: 480, fmt: TIFF, compression: tiff_lzw }
+    description: "The colour-bar test card as an LZW-compressed RGB TIFF, the compression scanners and image editors most often write."
+    tags: [image]
+    expect: { width: 640, height: 480, mode: RGB, compression: tiff_lzw, byte_order: II }
+    size_class: free
+    label: "LZW"
+  - name: multipage-3pages.tiff
+    phase: 1
+    generator: image.multipage_tiff
+    params: { width: 640, height: 480, pages: 3 }
+    description: "Three uncompressed RGB test-card pages in one TIFF, labelled page 1 of 3 to page 3 of 3, so a reader that shows only the first page is visibly wrong."
+    tags: [image, multi-page]
+    expect: { width: 640, height: 480, mode: RGB, frames: 3, compression: raw }
+    size_class: free
+    label: "3 pages"
+  - name: 16bit-gray-big-endian-640x480.tiff
+    phase: 1
+    generator: image.testcard
+    params: { width: 640, height: 480, fmt: TIFF, mode: "I;16B", compression: raw }
+    description: "The test card as 16-bit grayscale in big-endian (Motorola) byte order, for readers that assume little-endian files or 8-bit samples."
+    tags: [image]
+    expect: { width: 640, height: 480, mode: "I;16B", byte_order: MM, bits_per_sample: [16] }
+    size_class: free
+    label: "16-bit big-endian"
+  - name: cmyk-640x480.tiff
+    phase: 1
+    generator: image.testcard
+    params: { width: 640, height: 480, fmt: TIFF, mode: CMYK, compression: raw }
+    description: "The test card as an uncompressed CMYK TIFF, the print colour space that RGB-only converters and thumbnailers mishandle."
+    tags: [image]
+    expect: { width: 640, height: 480, mode: CMYK, bits_per_sample: [8, 8, 8, 8] }
+    size_class: free
+    label: "CMYK"
   - name: rgb-640x480.tiff
     phase: 1
     generator: image.testcard
@@ -15,3 +51,4 @@ fixtures:
     tags: [image]
     expect: { width: 640, height: 480, mode: RGB }
     size_class: free
+    label: "uncompressed RGB"

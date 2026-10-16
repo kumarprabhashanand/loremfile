@@ -113,9 +113,90 @@ def parquet_people(ctx: GeneratorContext, *, rows: int, compression: str = "snap
 
 
 @generator(parallel_safe=False)
-def arrow_people(ctx: GeneratorContext, *, rows: int) -> bytes:
-    """The people dataset in the Arrow IPC *file* format (not the stream format)."""
+def arrow_people(
+    ctx: GeneratorContext,
+    *,
+    rows: int,
+    ipc: str = "file",
+    compression: str | None = None,
+    batch_rows: int | None = None,
+) -> bytes:
+    """The people dataset in Arrow IPC: the *file* format by default, or the stream format.
+
+    `compression` compresses every buffer (`zstd` or `lz4`), single-threaded so the order
+    of work cannot reach the bytes; `batch_rows` splits the rows into record batches. With
+    neither, the call is exactly the one `people-1000.arrow` was published from.
+    """
     table = _arrow_table(ctx.dataset("people", rows))
+    options = (
+        pyarrow.ipc.IpcWriteOptions(compression=compression, use_threads=False)
+        if compression
+        else None
+    )
+    opener = {"file": pyarrow.ipc.new_file, "stream": pyarrow.ipc.new_stream}[ipc]
+    sink = pyarrow.BufferOutputStream()
+    with opener(sink, table.schema, options=options) as writer:
+        writer.write_table(table, max_chunksize=batch_rows)
+    return bytes(sink.getvalue())
+
+
+#: Words for the string-valued columns of the all-types table: Lorem Ipsum, never data.
+LOREM = ("lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit")
+#: 2020-01-01T00:00:00Z, the clock every generator sees (docs/05 §1 rule 2).
+EPOCH_US = 1_577_836_800_000_000
+
+
+@generator(parallel_safe=False)
+def arrow_all_types(ctx: GeneratorContext, *, rows: int, null_every: int) -> bytes:
+    """One column per type a reader is likely to get wrong, every column with nulls.
+
+    Nested (list, struct, map), dictionary-encoded, decimal, timezone-aware timestamp,
+    date, time of day and binary. Values come from the fixture's seed; every
+    `null_every`-th row is null in every column, so each column's null count is the same
+    measured number.
+    """
+    rng = ctx.rng
+
+    def maybe(index: int, value: Any) -> Any:  # noqa: ANN401 - one value of any column type
+        return None if index % null_every == null_every - 1 else value
+
+    words = [LOREM[rng.randrange(len(LOREM))] for _ in range(rows)]
+    columns = {
+        "list_int32": pyarrow.array(
+            [maybe(i, [rng.randrange(1000) for _ in range(i % 4)]) for i in range(rows)],
+            pyarrow.list_(pyarrow.int32()),
+        ),
+        "struct": pyarrow.array(
+            [maybe(i, {"x": rng.randrange(1000), "word": words[i]}) for i in range(rows)],
+            pyarrow.struct([("x", pyarrow.int32()), ("word", pyarrow.string())]),
+        ),
+        "map_string_int32": pyarrow.array(
+            [maybe(i, [(words[i], rng.randrange(1000))]) for i in range(rows)],
+            pyarrow.map_(pyarrow.string(), pyarrow.int32()),
+        ),
+        "dictionary_string": pyarrow.array(
+            [maybe(i, words[i]) for i in range(rows)], pyarrow.string()
+        ).dictionary_encode(),
+        "decimal128": pyarrow.array(
+            [maybe(i, Decimal(rng.randrange(10**6)) / 100) for i in range(rows)],
+            pyarrow.decimal128(18, 2),
+        ),
+        "timestamp_utc": pyarrow.array(
+            [maybe(i, EPOCH_US + rng.randrange(10**12)) for i in range(rows)],
+            pyarrow.timestamp("us", tz="UTC"),
+        ),
+        "date32": pyarrow.array(
+            [maybe(i, 18262 + rng.randrange(3650)) for i in range(rows)], pyarrow.date32()
+        ),
+        "time64_us": pyarrow.array(
+            [maybe(i, rng.randrange(86_400 * 10**6)) for i in range(rows)], pyarrow.time64("us")
+        ),
+        "binary": pyarrow.array(
+            [maybe(i, bytes(rng.randrange(256) for _ in range(4))) for i in range(rows)],
+            pyarrow.binary(),
+        ),
+    }
+    table = pyarrow.table(columns)
     sink = pyarrow.BufferOutputStream()
     with pyarrow.ipc.new_file(sink, table.schema) as writer:
         writer.write_table(table)

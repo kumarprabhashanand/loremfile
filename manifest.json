@@ -1,15 +1,15 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.8.0",
-  "generated_at": "2026-10-11T16:22:51Z",
+  "catalog_version": "1.9.0",
+  "generated_at": "2026-10-16T09:42:07Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
-  "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:e334c50e6e3a68c6a7c2c4d9b824856299f8deeb3782fc104fd888b80e0c736c",
-  "count": 254,
-  "total_bytes": 607310590,
+  "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:53aed7c9c16e2471fb001682dc03d7622d05b1854981cdb4c2b7cbd6817f0f74",
+  "count": 266,
+  "total_bytes": 612825078,
   "formats": [
     "7z",
     "aac",
@@ -202,6 +202,233 @@
       "supersededBy": null
     },
     {
+      "path": "arrow/all-types.arrow",
+      "url": "https://loremfile.dev/arrow/all-types.arrow",
+      "format": "arrow",
+      "ext": "arrow",
+      "mime": "application/vnd.apache.arrow.file",
+      "bytes": 4810,
+      "sha256": "72e206e0e13e82bf02160413a053220ee12ce883c9ef35269a2a558b5604f691",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Twenty rows in nine columns of types readers often mishandle: list, struct, map, dictionary-encoded string, decimal, timestamp with time zone, date, time and binary, with four nulls in every column.",
+      "tags": [
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "rows": 20,
+        "columns": 9,
+        "row_groups": 1,
+        "column_names": [
+          "list_int32",
+          "struct",
+          "map_string_int32",
+          "dictionary_string",
+          "decimal128",
+          "timestamp_utc",
+          "date32",
+          "time64_us",
+          "binary"
+        ],
+        "ipc_format": "file",
+        "compression": "none",
+        "column_types": [
+          "list<item: int32>",
+          "struct<x: int32, word: string>",
+          "map<string, int32>",
+          "dictionary<values=string, indices=int32, ordered=0>",
+          "decimal128(18, 2)",
+          "timestamp[us, tz=UTC]",
+          "date32[day]",
+          "time64[us]",
+          "binary"
+        ],
+        "null_counts": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "generator": "columnar.arrow_all_types",
+      "generator_params": {
+        "rows": 20,
+        "null_every": 5
+      },
+      "added_in": "1.9.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "arrow/people-1000-10-batches.arrow",
+      "url": "https://loremfile.dev/arrow/people-1000-10-batches.arrow",
+      "format": "arrow",
+      "ext": "arrow",
+      "mime": "application/vnd.apache.arrow.file",
+      "bytes": 272970,
+      "sha256": "6636344e21b312ab2120d262ea01aa3562731d63707be818fb6f4be467e336e3",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The same 1,000 people rows as an IPC file split into ten record batches, for readers that stop after the first batch.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "rows": 1000,
+        "columns": 14,
+        "row_groups": 10,
+        "column_names": [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "phone",
+          "street",
+          "city",
+          "country",
+          "birth_date",
+          "signup_at",
+          "balance",
+          "is_active",
+          "tags",
+          "bio"
+        ],
+        "ipc_format": "file",
+        "compression": "none",
+        "column_types": [
+          "int32",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "date32[day]",
+          "timestamp[us, tz=UTC]",
+          "double",
+          "bool",
+          "list<item: string>",
+          "string"
+        ],
+        "null_counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "generator": "columnar.arrow_people",
+      "generator_params": {
+        "rows": 1000,
+        "batch_rows": 100
+      },
+      "added_in": "1.9.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "arrow/people-1000-zstd.arrow",
+      "url": "https://loremfile.dev/arrow/people-1000-zstd.arrow",
+      "format": "arrow",
+      "ext": "arrow",
+      "mime": "application/vnd.apache.arrow.file",
+      "bytes": 96722,
+      "sha256": "c98c4e408c094bbd167787e2f1c7c1067bc6a7facdf7c9c47c5f121348afc727",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The same 1,000 people rows as an IPC file whose buffers are zstd-compressed, which a reader built without that codec cannot open.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "rows": 1000,
+        "columns": 14,
+        "row_groups": 1,
+        "column_names": [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "phone",
+          "street",
+          "city",
+          "country",
+          "birth_date",
+          "signup_at",
+          "balance",
+          "is_active",
+          "tags",
+          "bio"
+        ],
+        "ipc_format": "file",
+        "compression": "zstd",
+        "column_types": [
+          "int32",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "date32[day]",
+          "timestamp[us, tz=UTC]",
+          "double",
+          "bool",
+          "list<item: string>",
+          "string"
+        ],
+        "null_counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "generator": "columnar.arrow_people",
+      "generator_params": {
+        "rows": 1000,
+        "compression": "zstd"
+      },
+      "added_in": "1.9.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "arrow/people-1000.arrow",
       "url": "https://loremfile.dev/arrow/people-1000.arrow",
       "format": "arrow",
@@ -236,6 +463,40 @@
           "is_active",
           "tags",
           "bio"
+        ],
+        "ipc_format": "file",
+        "compression": "none",
+        "column_types": [
+          "int32",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "date32[day]",
+          "timestamp[us, tz=UTC]",
+          "double",
+          "bool",
+          "list<item: string>",
+          "string"
+        ],
+        "null_counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
         ]
       },
       "generator": "columnar.arrow_people",
@@ -243,6 +504,87 @@
         "rows": 1000
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "arrow/people-1000.arrows",
+      "url": "https://loremfile.dev/arrow/people-1000.arrows",
+      "format": "arrow",
+      "ext": "arrows",
+      "mime": "application/vnd.apache.arrow.stream",
+      "bytes": 259816,
+      "sha256": "3d2c942be23cb55e60a170c5d422bc5138087f30ac40c43bcb624643f6a6a8fb",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The same 1,000 people rows in the Arrow IPC stream format, with no footer and no ARROW1 magic, opened by a different API from the file format.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "rows": 1000,
+        "columns": 14,
+        "row_groups": 1,
+        "column_names": [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "phone",
+          "street",
+          "city",
+          "country",
+          "birth_date",
+          "signup_at",
+          "balance",
+          "is_active",
+          "tags",
+          "bio"
+        ],
+        "ipc_format": "stream",
+        "compression": "none",
+        "column_types": [
+          "int32",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "date32[day]",
+          "timestamp[us, tz=UTC]",
+          "double",
+          "bool",
+          "list<item: string>",
+          "string"
+        ],
+        "null_counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "generator": "columnar.arrow_people",
+      "generator_params": {
+        "rows": 1000,
+        "ipc": "stream"
+      },
+      "added_in": "1.9.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -5637,6 +5979,88 @@
       "supersededBy": null
     },
     {
+      "path": "ogg/chained-2-streams-10s.ogg",
+      "url": "https://loremfile.dev/ogg/chained-2-streams-10s.ogg",
+      "format": "ogg",
+      "ext": "ogg",
+      "mime": "audio/ogg",
+      "bytes": 39304,
+      "sha256": "bbf08d4228c973179db2d8092593a44052745d16d6bf5c8cc3659eb5deec2c42",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Two Vorbis streams chained back to back, a 440 Hz sine and then an 880 Hz one, ten seconds in all; a reader that stops after the first chain reports half the length.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 10000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "vorbis",
+        "sample_rate": 48000,
+        "channels": 2,
+        "chains": 2,
+        "header_pages": 2,
+        "tags": {
+          "ENCODER": "Lavc libvorbis"
+        },
+        "bitrate_kbps": 27.4
+      },
+      "generator": "media_audio.chained",
+      "generator_params": {
+        "codec": "vorbis",
+        "segment": 5,
+        "frequencies": [
+          440,
+          880
+        ]
+      },
+      "added_in": "1.9.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "ogg/flac-10s.ogg",
+      "url": "https://loremfile.dev/ogg/flac-10s.ogg",
+      "format": "ogg",
+      "ext": "ogg",
+      "mime": "audio/ogg",
+      "bytes": 135509,
+      "sha256": "36873bde824f62f7de8a738e41d1c7ae835abff9ccf426b6c1f1a5497b59a9c8",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Ten seconds of a 440 Hz sine as lossless FLAC in an Ogg container, 48 kHz stereo, for code that assumes an Ogg file holds Vorbis.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 10000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "flac",
+        "sample_rate": 48000,
+        "channels": 2,
+        "chains": 1,
+        "header_pages": 2,
+        "bitrate_kbps": 107.6
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "flac",
+        "duration": 10,
+        "container": "ogg"
+      },
+      "added_in": "1.9.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "ogg/vorbis-30s.ogg",
       "url": "https://loremfile.dev/ogg/vorbis-30s.ogg",
       "format": "ogg",
@@ -5659,6 +6083,11 @@
         "acodec": "vorbis",
         "sample_rate": 48000,
         "channels": 2,
+        "chains": 1,
+        "header_pages": 2,
+        "tags": {
+          "ENCODER": "Lavc libvorbis"
+        },
         "bitrate_kbps": 23.6
       },
       "generator": "media_audio.encoded",
@@ -5668,6 +6097,108 @@
         "quality": "4"
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "ogg/vorbis-cover-art-10s.ogg",
+      "url": "https://loremfile.dev/ogg/vorbis-cover-art-10s.ogg",
+      "format": "ogg",
+      "ext": "ogg",
+      "mime": "audio/ogg",
+      "bytes": 56188,
+      "sha256": "d3bf97d16ac49b9fa508fb36947f13a6a6bdd18d09880f4a5b870bfdfd22c636",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Ten seconds of 440 Hz Vorbis with title, artist, album and date comments and the published 640x480 JPEG as front cover, which spreads the comment header over several Ogg pages.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 10000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 640,
+        "height": 480,
+        "vcodec": "mjpeg",
+        "fps": 0,
+        "profile": "Baseline",
+        "acodec": "vorbis",
+        "sample_rate": 48000,
+        "channels": 2,
+        "chains": 1,
+        "header_pages": 7,
+        "tags": {
+          "ALBUM": "Amet",
+          "ARTIST": "Dolor Sit",
+          "DATE": "2020",
+          "TITLE": "Lorem ipsum"
+        },
+        "cover": {
+          "format": "jpeg",
+          "width": 640,
+          "height": 480
+        },
+        "bitrate_kbps": 23.8
+      },
+      "generator": "media_audio.vorbis_tagged",
+      "generator_params": {
+        "duration": 10,
+        "cover": "jpg/640x480.jpg",
+        "tags": {
+          "TITLE": "Lorem ipsum",
+          "ARTIST": "Dolor Sit",
+          "ALBUM": "Amet",
+          "DATE": "2020"
+        }
+      },
+      "added_in": "1.9.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "ogg/vorbis-mono-22k-10s.ogg",
+      "url": "https://loremfile.dev/ogg/vorbis-mono-22k-10s.ogg",
+      "format": "ogg",
+      "ext": "ogg",
+      "mime": "audio/ogg",
+      "bytes": 15365,
+      "sha256": "8d820a02f9f14539de7b92dbdfb95c9c9a3d79f97f4a1aea7a368595b5d0e40c",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Ten seconds of a 440 Hz sine as mono Vorbis at 22.05 kHz, the single-channel low-rate case that voice recordings produce.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 10000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "vorbis",
+        "sample_rate": 22050,
+        "channels": 1,
+        "chains": 1,
+        "header_pages": 2,
+        "tags": {
+          "ENCODER": "Lavc libvorbis"
+        },
+        "bitrate_kbps": 9.0
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "vorbis",
+        "duration": 10,
+        "sample_rate": 22050,
+        "channels": 1,
+        "quality": "4"
+      },
+      "added_in": "1.9.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -7250,6 +7781,179 @@
       "supersededBy": null
     },
     {
+      "path": "tiff/16bit-gray-big-endian-640x480.tiff",
+      "url": "https://loremfile.dev/tiff/16bit-gray-big-endian-640x480.tiff",
+      "format": "tiff",
+      "ext": "tiff",
+      "mime": "image/tiff",
+      "bytes": 614522,
+      "sha256": "bedac1129495bece3a5bdace6978a242daebed4cd9993f7bdd96cf0fddd5140c",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The test card as 16-bit grayscale in big-endian (Motorola) byte order, for readers that assume little-endian files or 8-bit samples.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "I;16B",
+        "frames": 1,
+        "animated": false,
+        "format": "tiff",
+        "progressive": false,
+        "compression": "raw",
+        "byte_order": "MM",
+        "bits_per_sample": [
+          16
+        ]
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "fmt": "TIFF",
+        "mode": "I;16B",
+        "compression": "raw"
+      },
+      "added_in": "1.9.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "tiff/cmyk-640x480.tiff",
+      "url": "https://loremfile.dev/tiff/cmyk-640x480.tiff",
+      "format": "tiff",
+      "ext": "tiff",
+      "mime": "image/tiff",
+      "bytes": 1228942,
+      "sha256": "aac94c3f129008c0c97105369a8c06cd65fcb7a542330800d6798747b5d9f05a",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The test card as an uncompressed CMYK TIFF, the print colour space that RGB-only converters and thumbnailers mishandle.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "CMYK",
+        "frames": 1,
+        "animated": false,
+        "format": "tiff",
+        "progressive": false,
+        "compression": "raw",
+        "byte_order": "II",
+        "bits_per_sample": [
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "fmt": "TIFF",
+        "mode": "CMYK",
+        "compression": "raw"
+      },
+      "added_in": "1.9.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "tiff/lzw-640x480.tiff",
+      "url": "https://loremfile.dev/tiff/lzw-640x480.tiff",
+      "format": "tiff",
+      "ext": "tiff",
+      "mime": "image/tiff",
+      "bytes": 25108,
+      "sha256": "697f5bb0b53b22eec351173e2e678f7d8f34ffc35e743980a8554a9574768aa6",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The colour-bar test card as an LZW-compressed RGB TIFF, the compression scanners and image editors most often write.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "tiff",
+        "progressive": false,
+        "compression": "tiff_lzw",
+        "byte_order": "II",
+        "bits_per_sample": [
+          8,
+          8,
+          8
+        ]
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "fmt": "TIFF",
+        "compression": "tiff_lzw"
+      },
+      "added_in": "1.9.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "tiff/multipage-3pages.tiff",
+      "url": "https://loremfile.dev/tiff/multipage-3pages.tiff",
+      "format": "tiff",
+      "ext": "tiff",
+      "mime": "image/tiff",
+      "bytes": 2765232,
+      "sha256": "ad0511d5f8898596de0e057348c4a7e4f818fd5844b6e128d2011c9800c04b27",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three uncompressed RGB test-card pages in one TIFF, labelled page 1 of 3 to page 3 of 3, so a reader that shows only the first page is visibly wrong.",
+      "tags": [
+        "image",
+        "multi-page"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 3,
+        "animated": true,
+        "format": "tiff",
+        "progressive": false,
+        "compression": "raw",
+        "byte_order": "II",
+        "bits_per_sample": [
+          8,
+          8,
+          8
+        ]
+      },
+      "generator": "image.multipage_tiff",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "pages": 3
+      },
+      "added_in": "1.9.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "tiff/rgb-640x480.tiff",
       "url": "https://loremfile.dev/tiff/rgb-640x480.tiff",
       "format": "tiff",
@@ -7271,7 +7975,14 @@
         "frames": 1,
         "animated": false,
         "format": "tiff",
-        "progressive": false
+        "progressive": false,
+        "compression": "raw",
+        "byte_order": "II",
+        "bits_per_sample": [
+          8,
+          8,
+          8
+        ]
       },
       "generator": "image.testcard",
       "generator_params": {

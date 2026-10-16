@@ -168,6 +168,8 @@ PROVING_FIXTURES = [
     "xlsx/1sheet-10rows.xlsx",
     "pptx/1slide.pptx",
     "mp3/with-id3v2-tags-3s.mp3",
+    "ogg/vorbis-cover-art-10s.ogg",
+    "arrow/people-1000-zstd.arrow",
     "mp4/360p-5s.mp4",
     # M3.7: the AES salt comes from Cryptodome, which the guard now patches too.
     "zip/aes256-password-loremfile.zip",
