@@ -13,7 +13,7 @@
 | Fork PR workflows | Default (no secrets for fork PRs; `pull_request_target` is never used) |
 | Security | Private vulnerability reporting: on; Dependabot alerts + security updates: on; secret scanning + push protection: on |
 | Packages | GHCR package `loremfile-toolchain` public, linked to the repo |
-| Labels | `health`, `cost`, `rotation-due`, `determinism`, `infra-drift`, `fixture-request`, `security`, `good first fixture` |
+| Labels | `health`, `cost`, `rotation-due`, `determinism`, `infra-drift`, `deploy`, `fixture-request`, `security`, `good first fixture` |
 
 **Applied in M1.5 and verified by reading the settings back.** Ruleset id `22459996`, name `main`, enforcement `active`, targeting `~DEFAULT_BRANCH`; `GET /repos/{owner}/{repo}/rules/branches/main` confirms all five rules apply. Two things worth knowing that the table above does not say:
 
@@ -260,6 +260,13 @@ Both rules that carry the `/index.html` exclusion have that exclusion untested, 
 
 **Where the bytes come from.** `--carry-forward <dir>` is the second gate's other half. The deploy resolves the pull request that produced the merge commit, finds that pull request's successful `ci.yml` run, and downloads its `carry-forward-fixtures` artifact. **That lookup does not have to be trusted**: `upload --fixtures` hashes every byte it is about to publish against the manifest and refuses anything that does not match, so an artifact from the wrong run cannot pass and provenance is established by content rather than by a run id. A missing artifact is likewise not an error in that step: most merges carry no `expected_drift` fixture, and the gate, which knows which paths need one, is what decides whether the absence matters.
 
+**A failed deploy opens an issue (2026-10-16).** Until then this was the one workflow that writes to production and the one that failed silently: run `38774620886` went red on a transient edge error and nobody was told. A `report` job now runs after every real deploy (`always()`, so after a timeout or a cancellation too; never after a dry run) and hands the deploy job's step conclusions to `loremfile.deploy_report`, which opens one of two `deploy` issues through `gh_issue`:
+
+- **"Deploy did not publish cleanly"**: a step before the check failed, or the job ended without reporting its steps. The body names the failing step, every publishing step that had completed, and whether production is untouched, may be half-updated, or unknown.
+- **"Deploy published but did not verify"**: every publishing step completed and `verify-live` failed. Production is probably fine but unverified; the body carries the check's `error:` lines, which also keeps them past the log's 90 days.
+
+Both are de-duplicated by label and title, so a transient error that recurs comments on the open issue. A full green deploy closes both; a check failure closes the publish issue; a staged run (`only`) opens but never closes. Every deploy step has an `id`, because `toJSON(steps)` sees no other, and `tests/unit/test_deploy_report.py` holds the steps, the job wiring and the `gh` calls. Only the `report` job holds `issues: write`. The drill is `inject_failure` (`publish` or `verify`) on a `mode: deploy` dispatch (`11` §7.11).
+
 ### 3.2b `infra.yml`: on demand (maintainer operations without local credentials)
 
 ```yaml
@@ -392,7 +399,7 @@ The cost and rotation thresholds are applied in the workflow rather than inside 
 
 - **Quiet on success.** `infra audit` prints one line of counts unless something drifts or cannot be read, and then the full report as before. `usage` prints the R2 counts and the scanner share; every row returns when a read fails, and `health.yml` prints them from `usage.json` when reads cross the cost threshold. `tokens-due` prints one line until a token is due, and the deploy's `infra apply --dry-run` prints its counts unless something would change, needs the dashboard, warns or fails. `verify-live` and the determinism audit were already quiet. While `url-normalization` stays unreadable, the audit and the dry-run print every row by that rule. **The account and zone ids were committed as constants in two test files from 2026-09-09 to 2026-10-07.** The tree now uses made-up ones, and both real values belong in `FORBIDDEN_STRINGS` (the owner's list, §1), whose `git grep` over the whole tree fails the next deploy and the daily health check if either comes back. History is deliberately not rewritten: the ids authorise nothing, logs mask them, and rewriting a public repository's history costs every clone and link more than it would hide. This is decided; do not reopen it. Tests in `test_quiet_logs.py` watch each failure path stay verbose.
 - **Masked in issues, not only in logs.** Actions masks secrets in the log alone, and `gh_issue` copies a report's summary and errors into public text, so it masks `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_ZONE_ID` itself before posting. The audit's summary no longer carries `zone_id`, and the Cloudflare client's errors name the zone by hostname and show API paths as `/zones/{zone}`.
-- **Checked once for every path into public text:** the nine `gh_issue` calls (infra audit, determinism, crawler watch, could-not-run, health, cost, rotation, and the two did-not-complete steps), CI's manifest job summary (catalog entries only), `toolchain.yml`'s summary and digest-bump pull request (the image digest), and release notes and `redact`'s note (the changelog excerpt, a path and a date). Only the audit's summary and the client's error messages carried an id.
+- **Checked once for every path into public text:** the nine `gh_issue` calls (infra audit, determinism, crawler watch, could-not-run, health, cost, rotation, and the two did-not-complete steps) and, since 2026-10-16, `deploy.yml`'s `report` job (step names, the run link, the commit and `verify-live`'s `error:` lines, which never show a legal value), CI's manifest job summary (catalog entries only), `toolchain.yml`'s summary and digest-bump pull request (the image digest), and release notes and `redact`'s note (the changelog excerpt, a path and a date). Only the audit's summary and the client's error messages carried an id.
 
 ### 3.4 `audit.yml`: weekly (Mondays) and on demand
 

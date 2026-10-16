@@ -18,9 +18,11 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 
 ## 2. Weekly session (≤ 60 minutes)
 
-1. **Triage issues** labelled `health`, `infra-drift`, `determinism`, `security`, `fixture-request`. For each: read the latest comment; follow the matching procedure in §7.
+1. **Triage issues** labelled `deploy`, `health`, `infra-drift`, `determinism`, `security`, `fixture-request`. For each: read the latest comment; follow the matching procedure in §7.
 2. **Merge Dependabot PRs** that are green. For Python or Docker updates the PR must include the regenerated lock and new digest (CI enforces). If determinism tests fail on a toolchain bump, open a `determinism` issue and do not merge.
 3. **Look at cost** (2 minutes, A): read the latest rows of `ops-log.md` on the `ops-log` branch (`https://github.com/kumarprabhashanand/loremfile/blob/ops-log/ops-log.md`), committed every Monday by `health.yml` through `ops_log.py`: one row per UTC day with R2 Class A operations, R2 Class B operations and missing-key GETs, then a notes column. That is the whole line, and it is complete as it is. R2 Class B stays under 5 M a month, the threshold the health check's `cost` step fails on (the free tier is 10 M, §7.4). If no row is newer than a week, `health.yml` is not running; check Actions.
+
+   **Most R2 operations are this project's own CI, not visitors.** Each push deploy HEADs every published fixture and every site key before it writes (`r2.live_hashes`, one Class B each), then reads the site back after its purge. Fitted against the ops log for 21 September to 12 October 2026 (22 days, 62 deploys, 70,044 Class B; the run history before the 21st went with the old repository), reads were about 1,300 a day plus about 670 per deploy, r = 0.94: deploys alone were 59%, and the daily remainder holds the health check as well as visitors, which R2 does not tell apart. The cycle from 16 September to 16 October read 0.609 GB of 10 GB storage (6.1%), Class A 3,163 of 1,000,000 (0.3%) and Class B 100,142 of 10,000,000 (1.0%), nothing above a third. Read a Class B rise against the deploy count before reading it as traffic.
 
    **Audience numbers never go in a public place.** Visitor counts, unique addresses, page views, search impressions, clicks, positions and package download counts are never written into the repository, its issues, its pull requests or the `ops-log` branch, and neither are the requests per day, bandwidth, top paths or referrer hosts this step once listed. Read them where they live (Cloudflare analytics, Search Console, the PyPI and npm statistics) and keep anything taken from them outside the repository. The ops log is a cost record: R2 operations, missing-key reads, and dated notes on what shipped and when it went live. A design that seems to be missing its traffic columns is finished on purpose; do not complete it.
 4. **Check spend** (O, monthly is enough): Billing → current usage should be USD 0.00 apart from the domain. The agent cannot see billing; the `cost` issue from `health.yml` is the automated proxy.
@@ -53,6 +55,8 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 
 | Signal | Source | Meaning | Procedure |
 |---|---|---|---|
+| Issue `Deploy did not publish cleanly` | `deploy.yml` `report` job | A deploy step before the check failed; production may be half-updated | §7.7 |
+| Issue `Deploy published but did not verify` | `deploy.yml` `report` job | Everything was published and the post-deploy check failed | §7.7 |
 | Issue `Health check failing` opened/updated | `health.yml` | Some URL/headers/hash/expiry/site-integrity check failed | §7.1 |
 | Issue `R2 operations above threshold` | `health.yml` usage step | Month-to-date Class B reads > 5 M | §7.4 |
 | Issue `Token rotation due` | `health.yml` | A token expires within 30 days | §7.3 |
@@ -158,6 +162,11 @@ Practise steps 1–3 before launch (M5.5) and record the time taken. At M5.5 als
 
 ### 7.7 Deploy failed
 
+A failed deploy opens one of two `deploy` issues (`09` §3.2); the body names the failing step and links the run. Each closes itself on the next full deploy that gets past its stage, and a recurrence comments on the open one.
+
+- **"Deploy did not publish cleanly"**: read the `production` row first. `untouched` means nothing was written; fix the cause and push or re-dispatch. `may be half-updated` means some objects, the site or the zone moved and the rest did not: fix the cause and re-dispatch `mode: deploy` soon, because uploads skip what is already published and the site upload writes only what changed, so a re-run converges. `unknown` means the job timed out or was cancelled before it reported: read the log for the last step that ran.
+- **"Deploy published but did not verify"**: production is probably fine and unverified. Request each failing path by hand; if they answer correctly, the next deploy closes the issue. A 5xx or timeout nobody can explain goes into the issue in full before the log expires (90 days): run `38774620886` is the precedent, five transient failures on 2026-10-15 that all answered 200 minutes later.
+
 Read the failing step. `manifest check` hash diff → a generator drifted for a fixture that had to be regenerated (rare; both use the same image) → re-run; if persistent, open a `determinism` issue and restore the affected paths from the release archive via `infra.yml` `restore` mode. `upload --fixtures` refusing to overwrite → somebody changed a published entry; revert the PR. `upload --apply-removals` refused by a bucket lock → the takedown ordering in §7.8 was not followed (lift the lock first). `infra apply` errors → token permissions (see `08` §6); fix and re-run with `workflow_dispatch`. `verify-live smoke` failing right after upload → wait 60 s (propagation) and re-run the job.
 
 **Re-running an old tag after its release notes were edited ends red, by design.** A tag run builds `notes.md` from the CHANGELOG in the tag's own commit, finds the published release different, and stops without touching it. Nothing to fix.
@@ -214,7 +223,9 @@ Response template:
 
 **A control that has never been exercised is a hypothesis.** REQ-27's `inject_failure` existed from M4.3 and was never dispatched; the ops-log keep-alive shipped unable to run; and four scheduled health runs failed with no issue opened (`09` §3.3). The drill proves the alerting path end to end, against production, with the real `gh`.
 
-**When to run it:** after **any** change to `.github/workflows/health.yml`, `.github/workflows/audit.yml` or `src/loremfile/gh_issue.py` (in the same session as the merge) and otherwise once a quarter.
+**When to run it:** after **any** change to `.github/workflows/health.yml`, `.github/workflows/audit.yml`, `.github/workflows/deploy.yml`, `src/loremfile/gh_issue.py` or `src/loremfile/deploy_report.py` (in the same session as the merge) and otherwise once a quarter.
+
+**The deploy drill** (Actions → `deploy` → Run workflow, `mode: deploy`, on `main`; each run is a real, idempotent deploy of `main`): `inject_failure: verify` must open **"Deploy published but did not verify"** with `inject_failure=verify` in its body and end red; a clean `mode: deploy` run must close it; `inject_failure: publish` must open **"Deploy did not publish cleanly"**, naming `Publish fixtures` with nothing completed; a clean run must close that too. Wait for each run to finish: the zone concurrency group queues them, but a newer pending run replaces an older one.
 
 **Procedure** (Actions → `health` → Run workflow; three dispatches, in order, reading each before the next):
 
