@@ -383,8 +383,8 @@ def test_that_step_is_what_gates_the_apply() -> None:
     steps = yaml.safe_load(DEPLOY.read_text(encoding="utf-8"))["jobs"]["deploy"]["steps"]
     (apply,) = [s for s in steps if s.get("run", "").strip() == "loremfile infra apply"]
     assert "steps.infra_changed.outputs.changed == 'true'" in apply["if"]
-    order = [s.get("id") or s.get("name") for s in steps]
-    assert order.index("infra_changed") < order.index(apply["name"])
+    order = [s.get("id") for s in steps]
+    assert order.index("infra_changed") < steps.index(apply)
 
 
 # --- after a history rewrite ------------------------------------------------------------
