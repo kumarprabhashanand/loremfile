@@ -34,9 +34,13 @@ PUBLISH_TITLE = "Deploy did not publish cleanly"
 VERIFY_TITLE = "Deploy published but did not verify"
 #: The step whose failure means "published but unverified" rather than "not published".
 VERIFY = "verify"
+#: Where `inject_failure: publish` fails: before the step's upload call, which deploy.yml
+#: places after it, so a publish drill that fails here has written nothing, certainly.
+INJECTED_PUBLISH = "publish_fixtures"
 #: The deploy job's steps in order: `id`, name, and whether the step writes to production.
 #: `tests/unit/test_deploy_report.py` holds this equal to `deploy.yml`.
 STEPS: tuple[tuple[str, str, bool], ...] = (
+    ("drill_guard", "Refuse a drill outside a real deploy", False),
     ("checkout", "Check out the repository", False),
     ("install", "Install the package", False),
     ("git_safe", "Let git read the checkout", False),
@@ -123,15 +127,19 @@ def plan(
     completed = [
         NAMES[sid] for sid, _, _ in STEPS if sid in WRITES and _conclusion(steps, sid) == "success"
     ]
+    injected = drill == "publish" and failing == INJECTED_PUBLISH and not completed
     if failing is None:
         step = f"none reported: the job ended `{result}` before it said where"
         production = "unknown: read the run log for the last step that ran"
+    elif injected:
+        step = NAMES[failing]
+        production = f"untouched: the drill stopped {NAMES[failing]} before its upload call"
     elif completed or failing in WRITES:
         step, production = NAMES[failing], "may be half-updated"
     else:
         step, production = NAMES[failing], "untouched: the failure came before any publishing step"
     errors = [f"publishing steps that completed: {', '.join(completed) or 'none'}"]
-    if failing in WRITES:
+    if failing in WRITES and not injected:
         errors.append(f"{NAMES[failing]} may have written part of its work before it failed")
     report = {
         "command": "deploy",

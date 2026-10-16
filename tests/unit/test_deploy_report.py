@@ -121,6 +121,29 @@ def test_a_job_that_reported_no_steps_is_a_publish_failure_of_unknown_extent(res
     assert result in action.report["summary"]["failing step"]
 
 
+def test_a_publish_drill_says_production_is_untouched_because_it_is() -> None:
+    """The injection exits before the upload call, so the code knows nothing was written;
+    saying "may be half-updated" there would teach the reader to discount the field."""
+    steps = ran(*BEFORE_PUBLISHING, "manifest_check", failed="publish_fixtures")
+    [action] = run_plan("failure", steps, drill="publish")
+    assert action.report["summary"]["production"] == (
+        "untouched: the drill stopped Publish fixtures before its upload call"
+    )
+    assert not any("may have written" in line for line in action.report["errors"])
+    # Control: the same failure without the drill is a real one, and stays cautious.
+    [real] = run_plan("failure", steps)
+    assert real.report["summary"]["production"] == "may be half-updated"
+    # The verify drill's wording is unchanged: its stage really did publish.
+    [_, verify] = run_plan("failure", ran(*EVERYTHING_BUT_VERIFY, failed="verify"), drill="verify")
+    assert verify.report["summary"]["production"].startswith("published")
+
+
+def test_the_publish_injection_runs_before_the_upload_call() -> None:
+    """What makes "untouched" true: the drill's exit precedes the upload in the step itself."""
+    run = next(s for s in deploy_steps() if s["id"] == "publish_fixtures")["run"]
+    assert run.index('"publish" ]; then') < run.index("exit 1") < run.index("loremfile upload")
+
+
 def test_a_drill_says_so_in_the_body() -> None:
     [action] = run_plan(
         "failure",
@@ -198,6 +221,19 @@ def test_the_report_job_runs_after_any_outcome_and_alone_can_write_issues() -> N
     step = report["steps"][-1]
     assert step["run"] == "python -m loremfile.deploy_report report"
     assert step["env"]["RESULT"] == "${{ needs.deploy.result }}"
+
+
+def test_a_drill_outside_a_real_deploy_is_refused_first() -> None:
+    """Run 38891535447: a drill left at the dry-run default failed a stage that publishes
+    nothing, the report job skipped it, and the run looked like a broken deploy."""
+    guard = deploy_steps()[0]
+    assert guard["id"] == "drill_guard"
+    condition = guard["if"]
+    assert "inputs.inject_failure != 'none'" in condition
+    assert "inputs.inject_failure != ''" in condition, "a push carries no inputs and must pass"
+    assert "env.MODE != 'deploy'" in condition
+    assert "the drill needs mode: deploy" in guard["run"]
+    assert guard["run"].rstrip().endswith("exit 1")
 
 
 @pytest.mark.parametrize(
