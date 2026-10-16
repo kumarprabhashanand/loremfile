@@ -3,20 +3,22 @@
 A sweep before 1.7.0 found the rule had never been checked: an Opus file described at the
 encoder's 96 kbps averages 114, an ADTS stream said 128 kbps where its frames average
 130.6, and a Vorbis file named an encoder quality no reader can recover. A sweep fixes
-numbers once; this keeps them fixed. Five kinds of number are checked: bitrates, sample
-rates, bit depths, durations and H.264 levels. A claim with no measurement behind it fails.
+numbers once; this keeps them fixed. Six kinds of number are checked: bitrates, sample
+rates, bit depths, durations, H.264 levels and, since 1.9.1, tones in Hz, each held within
+0.5 Hz to a channel's measured `tone_hz` or, for a chained file, a chain's `chain_tone_hz`.
+A claim with no measurement behind it fails.
 
 The same numbers are checked in the format pages' prose, where a reader meets them: a
 sentence is held to the fixture it names, or to the one its paragraph names, or to the page's
-only file. A number no single fixture can be held to is listed in KNOWINGLY_UNCHECKED rather
-than passed, so a new one fails until it is tied to a file or added there on purpose. An
+only file. A tone a format page names for the whole format is held to every file of that
+format that measured one. A number no single fixture can be held to is listed in
+KNOWINGLY_UNCHECKED rather than passed, so a new one fails until it is tied to a file or
+added there on purpose. An
 explanation that is wrong without a wrong number, like the MP3 page's "rounds up to a whole
 frame", is beyond any pattern here.
 
-Knowingly unchecked until they are measured: frequencies in Hz (the 440 Hz the sine
-fixtures name), which wait for a Goertzel measurement over the decoded PCM in a piece of
-their own; and profile names such as "Baseline", which `profile` records but no pattern
-here reads.
+Knowingly unchecked until they are measured: profile names such as "Baseline", which
+`profile` records but no pattern here reads.
 """
 
 from __future__ import annotations
@@ -44,6 +46,10 @@ KHZ = re.compile(rf"\b({NUMBER}) kHz")
 BITS = re.compile(r"\b(\d+)-bit\b")
 MILLISECONDS = re.compile(rf"\b({NUMBER}) ms\b")
 LEVEL = re.compile(r"\blevel (\d+\.\d+)\b")
+HZ = re.compile(rf"\b({NUMBER}) Hz\b")
+#: The Goertzel measurement's worst error on the published files was 0.035 Hz, with a
+#: between-bin bias of 0.17 Hz (util/tone, 2026-10-12); half a hertz covers both.
+HZ_TOLERANCE = 0.5
 DURATION = re.compile(
     r"\b(about |roughly |just under )?("
     + NUMBER
@@ -61,7 +67,24 @@ def value(number: str) -> float:
     return float(number.replace(",", ""))
 
 
-CHECKED = (KBPS, KHZ, BITS, LEVEL, MILLISECONDS, DURATION)
+CHECKED = (KBPS, KHZ, BITS, LEVEL, MILLISECONDS, DURATION, HZ)
+
+
+def tones(props: dict[str, Any]) -> list[float]:
+    """Every measured tone: each channel's, and each chain's channels for a chained file."""
+    found = [v for v in props.get("tone_hz") or [] if v is not None]
+    for chain in props.get("chain_tone_hz") or []:
+        found += [v for v in chain if v is not None]
+    return found
+
+
+def hz_problems(text: str, props: dict[str, Any]) -> list[str]:
+    measured = tones(props)
+    return [
+        f"{match.group(0)}, measured {measured or None}"
+        for match in HZ.finditer(text)
+        if not any(abs(value(match.group(1)) - m) <= HZ_TOLERANCE for m in measured)
+    ]
 
 
 def claims(text: str) -> list[str]:
@@ -89,7 +112,7 @@ def problems(description: str, props: dict[str, Any]) -> list[str]:
     for match in MILLISECONDS.finditer(description):
         if props.get("duration_ms") != value(match.group(1)):
             found.append(f"{match.group(0)}, measured {props.get('duration_ms')}")
-    return found + _duration_problems(description, props)
+    return found + _duration_problems(description, props) + hz_problems(description, props)
 
 
 def _duration_problems(description: str, props: dict[str, Any]) -> list[str]:
@@ -186,6 +209,14 @@ def prose_claims(
                 if not found:
                     continue
                 path = attribute(sentence, paragraph, own, marked)
+                toned = [p for p in sorted(own) if tones(entries[p].get("props") or {})]
+                if path is None and toned and HZ.search(sentence):
+                    # A tone the page names for its format: every file that has one.
+                    for each in toned:
+                        checked.append((name, each, hz_problems(sentence, entries[each]["props"])))
+                    found = [claim for claim in found if not HZ.fullmatch(claim)]
+                    if not found:
+                        continue
                 if path is None:
                     unchecked += [(name, claim) for claim in found]
                 else:
@@ -230,6 +261,11 @@ def test_the_check_finds_the_claims_it_is_meant_to_check() -> None:
     assert DURATION.search(entries["mp3/10mb.mp3"]).group(1) == "roughly "  # type: ignore[union-attr]
     assert DURATION.search(entries["hls/720p-10s/index.m3u8"])
     assert LEVEL.search(entries["mp4/h264-baseline-720p-5s.mp4"])
+    assert [m.group(1) for m in HZ.finditer(entries["mp3/stereo-lr-5s.mp3"])] == ["440", "880"]
+    assert [m.group(1) for m in HZ.finditer(entries["ogg/chained-2-streams-10s.ogg"])] == [
+        "440",
+        "880",
+    ]
 
 
 @pytest.mark.parametrize(
@@ -247,6 +283,10 @@ def test_the_check_finds_the_claims_it_is_meant_to_check() -> None:
         ("Five seconds of tone.", {}),
         ("Baseline profile at level 3.0.", {"level": "3.1"}),
         ("Baseline profile at level 3.0.", {}),
+        ("A 450 Hz sine.", {"tone_hz": [440.0, 440.0]}),
+        ("A 440 Hz sine.", {}),
+        ("A 440 Hz sine.", {"tone_hz": [None]}),
+        ("A 440 Hz sine, then an 880 Hz one.", {"tone_hz": [440.0, 440.0]}),
     ],
     ids=[
         "wrong bitrate",
@@ -261,6 +301,10 @@ def test_the_check_finds_the_claims_it_is_meant_to_check() -> None:
         "unmeasured duration",
         "wrong level",
         "unmeasured level",
+        "wrong tone",
+        "unmeasured tone",
+        "a channel with no tone",
+        "a second chain nobody measured",
     ],
 )
 def test_each_kind_of_wrong_or_unmeasured_number_is_reported(
@@ -321,3 +365,22 @@ def test_just_under_is_an_upper_bound() -> None:
     assert problems("just under 57 seconds", {"duration_ms": 56_689}) == []
     assert problems("just under 57 seconds", {"duration_ms": 57_100})
     assert problems("just under 57 seconds", {"duration_ms": 40_000})
+
+
+def test_a_chained_files_second_tone_is_held_to_its_own_chain() -> None:
+    props = {"tone_hz": [440.0, 440.0], "chain_tone_hz": [[440.0, 440.0], [880.0, 880.0]]}
+    assert problems("A 440 Hz sine, then an 880 Hz one.", props) == []
+    assert problems("A 440 Hz sine, then a 990 Hz one.", props)
+
+
+def test_a_format_wide_tone_is_held_to_every_file_of_the_format() -> None:
+    """mp4.md names 440 Hz for the format; each of its files is checked, not none of them."""
+    checked, unchecked = prose_claims(
+        {"mp4": "Every clip carries a 440 Hz sine on its audio track.\n"}
+    )
+    paths = {path for _, path, _ in checked}
+    assert {"mp4/720p-5s.mp4", "mp4/50mb.mp4"} <= paths
+    assert all(found == [] for _, _, found in checked)
+    assert unchecked == []
+    wrong, _ = prose_claims({"mp4": "Every clip carries a 450 Hz sine on its audio track.\n"})
+    assert wrong and all(found for _, _, found in wrong)
