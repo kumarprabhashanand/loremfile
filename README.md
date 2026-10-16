@@ -79,6 +79,10 @@ npx loremfile get --format pdf
 loremfile get pdf/minimal.pdf mp4/720p-5s.mp4    # after pip install loremfile
 ```
 
+**Neither has a dependency.** The Python package declares `dependencies = []` and uses only the
+standard library; the npm package's `package.json` lists no dependencies and uses only Node's
+built-ins. Installing either installs that one package.
+
 ### MCP server
 
 Both packages also run a Model Context Protocol server over stdio, with three read-only

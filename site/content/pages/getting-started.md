@@ -30,7 +30,9 @@ the action downloads one file at a time and backs off if it is rate limited.
 ## From the command line
 
 The same small client is published for Python and for Node: `get`, `list` and `verify`, with
-the same flags and exit codes.
+the same flags and exit codes. **Neither has a dependency.** The Python package declares
+`dependencies = []` and uses only the standard library; the npm package's `package.json` lists
+no dependencies and uses only Node's built-ins. Installing either installs that one package.
 
 ```bash
 # Python 3.11 or newer
