@@ -1,0 +1,15 @@
+# actionlint is informational here (docs/06 §9); GitHub is the validator that decides.
+# actionlint 1.7.12 does not know the `queue` key of `concurrency`, which GitHub documents,
+# accepts and honours (ADR-029; probe runs 39021284958, 39021291133 and 39021297969 queued
+# and all completed on 2026-10-17, while the control without the key cancelled 39021532109).
+# This silences that one diagnostic, in the three workflows that use the key, and nothing else.
+paths:
+  .github/workflows/deploy.yml:
+    ignore:
+      - 'unexpected key "queue" for "concurrency" section'
+  .github/workflows/infra.yml:
+    ignore:
+      - 'unexpected key "queue" for "concurrency" section'
+  .github/workflows/audit.yml:
+    ignore:
+      - 'unexpected key "queue" for "concurrency" section'

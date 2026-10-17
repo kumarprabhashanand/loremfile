@@ -17,8 +17,9 @@ documentation only, it says so. Commits, pull requests and issues cited elsewher
 - With the implicit `success()`, one failing step skips every later step; independent steps need
   `if: ${{ !cancelled() }}`.
 - A concurrency group keeps one pending run, and a newer arrival replaces it: a replaced run's
-  commit is never deployed by its own run. `queue` is documented by GitHub and rejected by
-  actionlint 1.7.12.
+  commit is never deployed by its own run. `queue: max` changes that (up to 100 pending, in
+  order): GitHub accepts and honours it (probe, 2026-10-17, ADR-029) though actionlint 1.7.12
+  rejects it, so verify a key on GitHub before trusting either linter or documentation.
 - `GITHUB_TOKEN` cannot create or update files under `.github/workflows/`, and pull requests it
   opens run no workflows. `container.image: ${{ needs.setup.outputs.digest }}` works on
   GitHub-hosted runners; without `needs: setup` it resolves to an empty string and the job runs on

@@ -42,12 +42,25 @@ def test_they_share_one_group_and_never_cancel_a_run_in_progress() -> None:
         assert block["cancel-in-progress"] is False, where
 
 
-def test_no_queue_key_is_relied_on() -> None:
-    """GitHub documents `queue`; actionlint 1.7.12 rejects it (ADR-029). Until both agree it
-    is not used, and the leftover risk — a pending run replaced by a newer one — is written
-    into docs/11 §7.2 instead."""
-    for where, block in serialised().items():
-        assert "queue" not in block, where
+def test_every_zone_job_queues_rather_than_replacing_a_pending_run() -> None:
+    """ADR-029: without `queue: max`, a third arrival cancels the one pending run, silently.
+    GitHub accepts the key and honours it: the probe on 2026-10-17 queued three runs and all
+    completed, while its control without the key cancelled the middle one. actionlint 1.7.12
+    does not know the key; .github/actionlint.yaml silences that diagnostic alone."""
+    blocks = serialised()
+    assert len(blocks) == 3, "control: deploy.yml, infra.yml and audit.yml's infra job"
+    for where, block in blocks.items():
+        assert block.get("queue") == "max", where
+
+
+def test_actionlint_is_told_about_queue_in_exactly_the_three_workflows() -> None:
+    config = yaml.safe_load((WORKFLOWS.parent / "actionlint.yaml").read_text(encoding="utf-8"))
+    paths = config["paths"]
+    assert set(paths) == {
+        f".github/workflows/{name}" for name in ("deploy.yml", "infra.yml", "audit.yml")
+    }
+    for rules in paths.values():
+        assert rules == {"ignore": ['unexpected key "queue" for "concurrency" section']}
 
 
 def test_the_determinism_job_and_health_stay_outside_the_group() -> None:

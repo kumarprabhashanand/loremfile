@@ -63,6 +63,7 @@ jobs:
     # rule at 22:45:16, and reported drift that was only a timing artefact.
     concurrency:
       group: loremfile-zone
+      queue: max  # ADR-029: a scheduled audit waits behind a deploy instead of being cancelled
       cancel-in-progress: false
     # Environment secrets, so Actions masks them in the log. Job-level so the issue steps
     # see them too: `gh_issue` masks these values in every body it posts (docs/09 §4).
