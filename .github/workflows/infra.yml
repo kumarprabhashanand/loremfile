@@ -54,6 +54,7 @@ permissions:
 # read the zone mid-apply. Never cancelled midway.
 concurrency:
   group: loremfile-zone
+  queue: max  # ADR-029: queued in order, never cancelled while pending
   cancel-in-progress: false
 
 jobs:

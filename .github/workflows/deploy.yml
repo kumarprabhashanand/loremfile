@@ -76,10 +76,13 @@ on:
 # One group for every job that reads or writes the zone's desired state: this workflow,
 # infra.yml, and audit.yml's `infra` job (ADR-029). Never cancel one midway: a cancelled
 # upload or apply leaves the zone in a state nothing described. health.yml stays outside.
-# No `queue:` key — GitHub documents it, but actionlint 1.7.12 rejects it — so a pending run
-# can still be replaced by a newer one in this group (ADR-029, docs/11 §7.2).
+# `queue: max` keeps up to 100 runs pending, in order, instead of letting a newer arrival
+# cancel the one pending (ADR-029). GitHub accepts it and honours it (probe runs 39021284958,
+# 39021291133, 39021297969, 2026-10-17); actionlint 1.7.12 does not know the key, and
+# .github/actionlint.yaml silences that one diagnostic.
 concurrency:
   group: loremfile-zone
+  queue: max
   cancel-in-progress: false
 
 permissions:
@@ -290,8 +293,8 @@ jobs:
         run: loremfile purge --site
 
       # Changed since the zone last converged: the head of the most recent successful push
-      # run of this workflow on main, other than this run (ADR-029). Not HEAD~1 — a pending
-      # deploy replaced in the concurrency group never runs, so an infra/ change in its commit
+      # run of this workflow on main, other than this run (ADR-029). Not HEAD~1 — a deploy
+      # cancelled before it ran never runs, so an infra/ change in its commit
       # was invisible from a newer commit that did not touch infra/. No such run: changed. A
       # lookup that fails fails this step and is never read as either answer, because an
       # apply nobody needed is not harmless: it converges `security_level` and switches off
