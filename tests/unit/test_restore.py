@@ -476,3 +476,31 @@ def test_the_workflow_guard_refuses_everything_else(
     code, output = guard(tmp_path, sources, only)
     assert code != 0
     assert output == ""
+
+
+def verify_call() -> list[str]:
+    run = next(s for s in restore_steps() if s.get("name") == "Verify the restored fixtures")["run"]
+    lines = run.splitlines()
+    index = next(i for i, line in enumerate(lines) if "loremfile verify-live" in line)
+    return [lines[index - 1].strip(), lines[index].strip()]
+
+
+def arguments(call: str) -> int:
+    """How many arguments `loremfile` receives from the step's own line, run by bash."""
+    script = f'loremfile() {{ echo "$#"; }}; paths="--only a/1.bin --only b/2.bin"; {call}'
+    done = subprocess.run(["bash", "-c", script], capture_output=True, text=True, check=True)  # noqa: S603, S607
+    return int(done.stdout.strip())
+
+
+def test_the_restored_paths_reach_verify_live_as_separate_arguments() -> None:
+    """`$paths` is unquoted on purpose: SC2086's fix, quoting it, would pass one argument and
+    silently stop the restore's verification. The directive says so, and this holds the line
+    to what bash actually does with it: verify-live, --mode, full and two --only pairs."""
+    directive, call = verify_call()
+    assert directive == "# shellcheck disable=SC2086"
+    assert arguments(call) == 7
+
+
+def test_control_the_quoted_form_shellcheck_suggests_would_pass_one_argument() -> None:
+    _, call = verify_call()
+    assert arguments(call.replace("$paths", '"$paths"')) == 4

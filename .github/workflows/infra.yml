@@ -274,6 +274,9 @@ jobs:
         run: |
           paths=$(python -c 'import json; print(" ".join("--only " + i["path"] for i in json.load(open("restore.json"))["items"] if i["status"] == "written"))')
           if [ -z "$paths" ]; then echo "nothing was written; nothing to verify"; exit 0; fi
+          # $paths is "--only a --only b" and must split into separate arguments; quoted, it
+          # would reach verify-live as one argument and the check would stop meaning anything.
+          # shellcheck disable=SC2086
           loremfile verify-live --mode full $paths
 
   # docs/09 §10, ADR-031. `redact-dry-run` names the releases that would change; `redact`
