@@ -1,12 +1,13 @@
 """IndexNow: what a deploy announces, to whom, and why it can never fail the deploy.
 
 docs/04 §12. Every rule here has a control beside it: the legal pages are excluded *and* a
-normal page is not, the cap replaces the list *and* 100 pages do not trip it, a refusal
-leaves exit 0 *and* the status is still reported.
+normal page is not, the cap replaces the list *and* `MAX_URLS` pages do not trip it, a
+refusal leaves exit 0 *and* the status is still reported.
 """
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import re
 from pathlib import Path
@@ -18,12 +19,13 @@ from click.testing import CliRunner
 
 from loremfile import cli, config
 from loremfile.infra import indexnow, upload
-from loremfile.site import checks, routes
+from loremfile.site import build, checks, routes
 
 ROOT = Path(__file__).resolve().parents[2]
 DEPLOY = ROOT / ".github" / "workflows" / "deploy.yml"
 HOME = "https://loremfile.dev/"
 SITEMAP = "https://loremfile.dev/sitemap.xml"
+WHEN = dt.datetime(2026, 10, 21, 12, 0, tzinfo=dt.UTC)
 
 
 def report(keys: list[str], *, dry_run: bool = False, written: int | None = None) -> dict:
@@ -40,6 +42,17 @@ def report(keys: list[str], *, dry_run: bool = False, written: int | None = None
         "items": [{"path": key, "status": "upload", "detail": ""} for key in keys],
         "errors": [],
     }
+
+
+@pytest.fixture(scope="module")
+def built_site(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    out = tmp_path_factory.mktemp("built") / "site"
+    build.build(out, root=ROOT, committed=WHEN)
+    return out
+
+
+def sitemap_locs(site: Path) -> list[str]:
+    return re.findall(r"<loc>([^<]+)</loc>", (site / "sitemap.xml").read_text(encoding="utf-8"))
 
 
 # --- what is announced -------------------------------------------------------------------
@@ -72,6 +85,13 @@ def test_the_legal_pages_are_never_announced() -> None:
     pages = indexnow.changed_pages(uploaded)
     assert pages == ["https://loremfile.dev/docs/faq"]
     assert not any("/legal/" in url for url in pages)
+
+
+def test_pages_the_sitemap_leaves_out_are_never_announced() -> None:
+    """`/legal` passes never_legal (its path has no trailing slash), so this is its only filter.
+    The control is the page beside them, which is announced."""
+    pages = indexnow.changed_pages([*build.NOT_IN_SITEMAP, "docs/faq"])
+    assert pages == ["https://loremfile.dev/docs/faq"]
 
 
 def test_the_last_filter_drops_any_legal_url_whatever_built_the_list() -> None:
@@ -112,6 +132,23 @@ def test_up_to_the_cap_every_page_is_sent() -> None:
 def test_over_the_cap_the_home_page_and_the_sitemap_are_sent_instead() -> None:
     pages = [f"https://loremfile.dev/p{i}" for i in range(indexnow.MAX_URLS + 1)]
     assert indexnow.url_list(pages) == [HOME, SITEMAP]
+
+
+def test_the_cap_is_indexnows_documented_per_request_limit() -> None:
+    """indexnow.org: "up to 10,000 URLs per post" (read 2026-10-21)."""
+    assert indexnow.MAX_URLS == 10_000
+
+
+def test_a_deploy_that_changes_every_page_announces_exactly_the_sitemap(built_site: Path) -> None:
+    """A template change rewrites every page: 101 with the three the sitemap leaves out, over
+    the old cap of 100, so it sent the home page and the sitemap. Now it is the sitemap's own
+    list; this fails if the site outgrows the cap or the deploy asks for a page it does not."""
+    pages = indexnow.never_legal(
+        indexnow.url_list(indexnow.changed_pages(routes.site_files(built_site)))
+    )
+    assert sorted(pages) == sitemap_locs(built_site)
+    for url in (HOME, "https://loremfile.dev/pdf", "https://loremfile.dev/docs/getting-started"):
+        assert url in pages, url
 
 
 # --- what comes back, and why it never fails the deploy -----------------------------------
