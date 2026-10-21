@@ -9,30 +9,6 @@ description: >-
 seo_title: "Sample MP4 video files for testing, free, CC0 and hotlinkable"
 related: [webm, mkv, mov, mp3]
 fixtures:
-  - name: non-faststart-720p-5s.mp4
-    phase: 2
-    generator: media_video.mp4
-    params: { width: 1280, height: 720, duration: 5, faststart: false }
-    description: "1280x720 at 30 fps, five seconds, H.264 plus AAC. Unlike mp4/720p-5s.mp4, moov follows mdat at the file end, so sequential progressive playback waits for the whole file."
-    tags: [video, codec-h264, codec-aac]
-    expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, fps: 30.0, video_streams: 1, audio_streams: 1, faststart: false, moov_at_end: true }
-    size_class: free
-  - name: 360p-5s.mp4
-    phase: 1
-    generator: media_video.mp4
-    params: { width: 640, height: 360, duration: 5 }
-    description: "640x360 at 30 fps, five seconds, H.264 plus AAC. The small one, for quick tests."
-    tags: [video, codec-h264, codec-aac]
-    expect: { width: 640, height: 360, vcodec: h264, acodec: aac, video_streams: 1, audio_streams: 1 }
-    size_class: free
-  - name: 720p-5s.mp4
-    phase: 1
-    generator: media_video.mp4
-    params: { width: 1280, height: 720, duration: 5 }
-    description: "1280x720 at 30 fps, five seconds, H.264 plus AAC. The default sample if you need just one."
-    tags: [video, codec-h264, codec-aac]
-    expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, fps: 30.0 }
-    size_class: free
   - name: 1080p-10s.mp4
     expected_drift: >-
       Not byte-reproducible off the CI reference fleet: libvpx/libopus/libx264 choos
@@ -45,14 +21,16 @@ fixtures:
     tags: [video, codec-h264, codec-aac]
     expect: { width: 1920, height: 1080, vcodec: h264, acodec: aac }
     size_class: free
-  - name: vertical-1080x1920-5s.mp4
+    label: "1080p"
+  - name: 720p-5s.mp4
     phase: 1
     generator: media_video.mp4
-    params: { width: 1080, height: 1920, duration: 5 }
-    description: "Portrait 1080x1920, the shape phones record and social apps expect. Five seconds."
-    tags: [video, codec-h264]
-    expect: { width: 1080, height: 1920, vcodec: h264 }
+    params: { width: 1280, height: 720, duration: 5 }
+    description: "1280x720 at 30 fps, five seconds, H.264 plus AAC. The default sample if you need just one."
+    tags: [video, codec-h264, codec-aac]
+    expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, fps: 30.0 }
     size_class: free
+    label: "720p"
   - name: no-audio-720p-5s.mp4
     phase: 1
     generator: media_video.mp4
@@ -61,6 +39,25 @@ fixtures:
     tags: [video, codec-h264]
     expect: { width: 1280, height: 720, audio_streams: 0, video_streams: 1 }
     size_class: free
+    label: "no audio"
+  - name: non-faststart-720p-5s.mp4
+    phase: 2
+    generator: media_video.mp4
+    params: { width: 1280, height: 720, duration: 5, faststart: false }
+    description: "1280x720 at 30 fps, five seconds, H.264 plus AAC. Unlike mp4/720p-5s.mp4, moov follows mdat at the file end, so sequential progressive playback waits for the whole file."
+    tags: [video, codec-h264, codec-aac]
+    expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, fps: 30.0, video_streams: 1, audio_streams: 1, faststart: false, moov_at_end: true }
+    size_class: free
+    label: "moov at end"
+  - name: vertical-1080x1920-5s.mp4
+    phase: 1
+    generator: media_video.mp4
+    params: { width: 1080, height: 1920, duration: 5 }
+    description: "Portrait 1080x1920, the shape phones record and social apps expect. Five seconds."
+    tags: [video, codec-h264]
+    expect: { width: 1080, height: 1920, vcodec: h264 }
+    size_class: free
+    label: "vertical 1080x1920"
   - name: h264-baseline-720p-5s.mp4
     phase: 1
     generator: media_video.mp4
@@ -69,6 +66,16 @@ fixtures:
     tags: [video, codec-h264, codec-aac]
     expect: { width: 1280, height: 720, vcodec: h264 }
     size_class: free
+    label: "H.264 Baseline"
+  - name: 360p-5s.mp4
+    phase: 1
+    generator: media_video.mp4
+    params: { width: 640, height: 360, duration: 5 }
+    description: "640x360 at 30 fps, five seconds, H.264 plus AAC. The small one, for quick tests."
+    tags: [video, codec-h264, codec-aac]
+    expect: { width: 640, height: 360, vcodec: h264, acodec: aac, video_streams: 1, audio_streams: 1 }
+    size_class: free
+    label: "360p"
   - name: 1mb.mp4
     phase: 1
     generator: media_video.mp4_sized
@@ -78,6 +85,7 @@ fixtures:
     expect: { width: 1280, height: 720, vcodec: h264 }
     size_class: approx
     nominal_bytes: 1000000
+    label: "1 MB"
   - name: 10mb.mp4
     expected_drift: >-
       Not byte-reproducible off the CI reference fleet: libvpx/libopus/libx264 choos
@@ -91,6 +99,7 @@ fixtures:
     expect: { width: 1280, height: 720, vcodec: h264 }
     size_class: approx
     nominal_bytes: 10000000
+    label: "10 MB"
   - name: 50mb.mp4
     expected_drift: >-
       Not byte-reproducible off the CI reference fleet: libvpx/libopus/libx264 choos
@@ -104,3 +113,4 @@ fixtures:
     expect: { width: 1280, height: 720, vcodec: h264 }
     size_class: approx
     nominal_bytes: 50000000
+    label: "50 MB"

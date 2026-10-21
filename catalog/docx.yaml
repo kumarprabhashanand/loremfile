@@ -21,19 +21,21 @@ fixtures:
       - "Tracked changes"
       - "The delivery status is"
       - "Review the updated delivery status"
-  - name: 1page.docx
+    label: "tracked changes"
+  - name: with-table.docx
     phase: 1
-    generator: office.docx_basic
-    params: { paragraphs: 3 }
-    description: "One page: a heading and three paragraphs of Lorem Ipsum in the default Word styles. The page count is what Word renders it as; .docx stores no page count of its own."
-    tags: [document, text]
-    expect: { paragraphs: 4, tables: 0, images: 0 }
+    generator: office.docx_with_table
+    params: { rows: 10 }
+    description: "A ten-row table of the shared people dataset with a bold header row, in the Table Grid style."
+    tags: [document, dataset-people]
+    expect: { tables: 1, table_rows: 11, images: 0 }
     size_class: free
     contains_text:
-      - "Autem aute laborum eaque"
-      - "Amet fuga veniam alias"
-      - "Ea dolor aute cupidatat"
-      - "Explicabo tempora qui sequitur"
+      - "first_name"
+      - "Bucharest"
+      - "Gothenburg"
+      - "Montreal"
+    label: "table"
   - name: with-images.docx
     phase: 1
     generator: office.docx_with_images
@@ -48,37 +50,7 @@ fixtures:
       - "Ex quis dicta esse"
       - "Architecto vitae sunt irure"
     depends_on: ["png/100x100.png", "png/640x480.png"]
-  - name: with-table.docx
-    phase: 1
-    generator: office.docx_with_table
-    params: { rows: 10 }
-    description: "A ten-row table of the shared people dataset with a bold header row, in the Table Grid style."
-    tags: [document, dataset-people]
-    expect: { tables: 1, table_rows: 11, images: 0 }
-    size_class: free
-    contains_text:
-      - "first_name"
-      - "Bucharest"
-      - "Gothenburg"
-      - "Montreal"
-  - name: 1mb.docx
-    phase: 1
-    generator: office.docx_sized
-    params: { size: 1000000 }
-    description: "About 1MB: one Lorem Ipsum paragraph per embedded incompressible seeded-noise PNG, so the size is honest rather than padded."
-    tags: [document, sized, image]
-    expect: { tables: 0 }
-    size_class: approx
-    nominal_bytes: 1000000
-  - name: 10mb.docx
-    phase: 1
-    generator: office.docx_sized
-    params: { size: 10000000 }
-    description: "About 10MB: one Lorem Ipsum paragraph per embedded incompressible seeded-noise PNG, so the size is honest rather than padded."
-    tags: [document, sized, image, large]
-    expect: { tables: 0 }
-    size_class: approx
-    nominal_bytes: 10000000
+    label: "2 images"
   - name: anchored-image-with-alt-text.docx
     phase: 2
     generator: office.docx_anchored_image
@@ -93,3 +65,38 @@ fixtures:
       - "Saepe voluptatem nulla proident"
       - "Possimus laboris tempor quia"
     depends_on: ["jpg/640x480.jpg"]
+    label: "anchored image"
+  - name: 1page.docx
+    phase: 1
+    generator: office.docx_basic
+    params: { paragraphs: 3 }
+    description: "One page: a heading and three paragraphs of Lorem Ipsum in the default Word styles. The page count is what Word renders it as; .docx stores no page count of its own."
+    tags: [document, text]
+    expect: { paragraphs: 4, tables: 0, images: 0 }
+    size_class: free
+    contains_text:
+      - "Autem aute laborum eaque"
+      - "Amet fuga veniam alias"
+      - "Ea dolor aute cupidatat"
+      - "Explicabo tempora qui sequitur"
+    label: "plain text"
+  - name: 1mb.docx
+    phase: 1
+    generator: office.docx_sized
+    params: { size: 1000000 }
+    description: "About 1MB: one Lorem Ipsum paragraph per embedded incompressible seeded-noise PNG, so the size is honest rather than padded."
+    tags: [document, sized, image]
+    expect: { tables: 0 }
+    size_class: approx
+    nominal_bytes: 1000000
+    label: "1 MB"
+  - name: 10mb.docx
+    phase: 1
+    generator: office.docx_sized
+    params: { size: 10000000 }
+    description: "About 10MB: one Lorem Ipsum paragraph per embedded incompressible seeded-noise PNG, so the size is honest rather than padded."
+    tags: [document, sized, image, large]
+    expect: { tables: 0 }
+    size_class: approx
+    nominal_bytes: 10000000
+    label: "10 MB"

@@ -18,21 +18,16 @@ fixtures:
     tags: [archive, stress]
     expect: { entries: 70000, zip64: true, zip64_entries: 70000, max_member_bytes: 0, uncompressed_bytes: 0, encrypted: false }
     size_class: free
-  - name: 3-text-files.zip
+    label: "ZIP64"
+  - name: aes256-password-loremfile.zip
     phase: 1
-    generator: archive.zip_text_files
-    params: { count: 3 }
-    description: "Three small Lorem Ipsum text files, deflated, with fixed timestamps and permissions."
-    tags: [archive, text]
-    expect: { entries: 3, method: deflate, encrypted: false }
+    generator: archive.zip_aes
+    params: { password: loremfile, count: 3 }
+    description: "AES-256 encrypted with the password 'loremfile', published here on purpose because an encrypted fixture nobody can open would be useless."
+    tags: [archive, encrypted, text]
+    expect: { entries: 3, encrypted: true }
     size_class: free
-  - name: nested-directories.zip
-    phase: 1
-    generator: archive.zip_nested
-    description: "Four entries in a three-level directory tree, for extractors that must create directories."
-    tags: [archive, text]
-    expect: { entries: 4 }
-    size_class: free
+    label: "encrypted"
   - name: empty.zip
     phase: 1
     generator: archive.zip_empty
@@ -41,6 +36,15 @@ fixtures:
     expect: { entries: 0 }
     size_class: exact
     nominal_bytes: 22
+    label: "empty"
+  - name: nested-directories.zip
+    phase: 1
+    generator: archive.zip_nested
+    description: "Four entries in a three-level directory tree, for extractors that must create directories."
+    tags: [archive, text]
+    expect: { entries: 4 }
+    size_class: free
+    label: "nested folders"
   - name: mixed-fixtures.zip
     phase: 1
     generator: archive.zip_of_fixtures
@@ -50,14 +54,16 @@ fixtures:
     expect: { entries: 4 }
     size_class: free
     depends_on: ["pdf/minimal.pdf", "png/100x100.png", "csv/people-10.csv", "json/people-10.json"]
-  - name: aes256-password-loremfile.zip
+    label: "mixed file types"
+  - name: 3-text-files.zip
     phase: 1
-    generator: archive.zip_aes
-    params: { password: loremfile, count: 3 }
-    description: "AES-256 encrypted with the password 'loremfile', published here on purpose because an encrypted fixture nobody can open would be useless."
-    tags: [archive, encrypted, text]
-    expect: { entries: 3, encrypted: true }
+    generator: archive.zip_text_files
+    params: { count: 3 }
+    description: "Three small Lorem Ipsum text files, deflated, with fixed timestamps and permissions."
+    tags: [archive, text]
+    expect: { entries: 3, method: deflate, encrypted: false }
     size_class: free
+    label: "3 text files"
   - name: 1mb.zip
     phase: 1
     generator: archive.zip_sized
@@ -67,6 +73,7 @@ fixtures:
     expect: { entries: 1 }
     size_class: approx
     nominal_bytes: 1000000
+    label: "1 MB"
   - name: 10mb.zip
     phase: 1
     generator: archive.zip_sized
@@ -76,6 +83,7 @@ fixtures:
     expect: { entries: 1 }
     size_class: approx
     nominal_bytes: 10000000
+    label: "10 MB"
   - name: 100mb.zip
     phase: 1
     generator: archive.zip_sized
@@ -85,3 +93,4 @@ fixtures:
     expect: { entries: 1 }
     size_class: approx
     nominal_bytes: 100000000
+    label: "100 MB"

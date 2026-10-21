@@ -9,53 +9,6 @@ description: >-
 seo_title: "Sample PDF files for testing, free, CC0 and hotlinkable"
 related: [png, jpg, docx, epub, edge]
 fixtures:
-  - name: scanned-1page.pdf
-    phase: 2
-    generator: pdf.image_only
-    params: {}
-    description: "One A4 page with a raster scan of synthetic text and no text layer. Text extraction returns an empty string even though the page looks readable; OCR is required."
-    tags: [document, image]
-    expect: { pages: 1, has_images: true, images: 1, text_characters: 0, image_only: true, encrypted: false }
-    size_class: free
-  - name: a4-1page.pdf
-    phase: 1
-    generator: pdf.basic
-    params: { pages: 1 }
-    description: "A4 portrait, 1 page of Lorem Ipsum in the Helvetica core font. No embedded fonts."
-    tags: [document, text]
-    expect: { pages: 1, page_width_pt: 595.28, page_height_pt: 841.89, encrypted: false }
-    size_class: free
-    contains_text:
-      - "Rerum repellat quia elit"
-      - "Saepe enim eu placeat"
-      - "Modi debitis necessitatibus qui"
-      - "Omnis quia neque elit"
-  - name: a4-3pages.pdf
-    phase: 1
-    generator: pdf.basic
-    params: { pages: 3, page_numbers: true }
-    description: "A4 portrait, 3 pages of Lorem Ipsum in the Helvetica core font with page numbers. No embedded fonts."
-    tags: [document, multi-page, text]
-    expect: { pages: 3, page_width_pt: 595.28, page_height_pt: 841.89, encrypted: false }
-    size_class: free
-    contains_text:
-      - "Lorem sequitur modi debitis"
-      - "Do fugiat anim tempor"
-      - "Adipiscing maiores minim necessitatibus"
-      - "Commodo assumenda voluptas quis"
-  - name: a4-10pages.pdf
-    phase: 1
-    generator: pdf.basic
-    params: { pages: 10, page_numbers: true }
-    description: "A4 portrait, 10 pages of Lorem Ipsum in the Helvetica core font with page numbers. No embedded fonts."
-    tags: [document, multi-page, text]
-    expect: { pages: 10, page_width_pt: 595.28, page_height_pt: 841.89, encrypted: false }
-    size_class: free
-    contains_text:
-      - "Quae cillum in fuga"
-      - "Ea deserunt fugiat non"
-      - "Similique ut pariatur ut"
-      - "Modi similique elit esse"
   - name: form-fields-1page.pdf
     phase: 2
     generator: pdf.form
@@ -69,54 +22,7 @@ fixtures:
       - "Full name"
       - "Send me the newsletter"
       - "I accept the terms"
-  - name: letter-1page.pdf
-    phase: 1
-    generator: pdf.basic
-    params: { pages: 1, page_size: letter }
-    description: "US Letter portrait, one page. Same content as the A4 fixture, different page box."
-    tags: [document, text]
-    expect: { pages: 1, page_width_pt: 612.0, page_height_pt: 792.0 }
-    size_class: free
-    contains_text:
-      - "Pariatur dolor cillum temporibus"
-      - "Architecto nesciunt maiores earum"
-      - "Mollit earum explicabo delectus"
-      - "Fugiat consectetur debitis sed"
-  - name: a4-landscape-1page.pdf
-    phase: 1
-    generator: pdf.basic
-    params: { pages: 1, orientation: landscape }
-    description: "A4 landscape, one page: the page box is wider than it is tall."
-    tags: [document, text]
-    expect: { pages: 1, page_width_pt: 841.89, page_height_pt: 595.28 }
-    size_class: free
-    contains_text:
-      - "Assumenda cupidatat tenetur laborum"
-      - "Consectetur consequat excepteur totam"
-      - "Architecto eius doloribus magnam"
-      - "Itaque fuga fugiat nostrud"
-  - name: a4-with-images-2pages.pdf
-    phase: 1
-    generator: pdf.with_images
-    params: { png: "png/640x480.png", jpg: "jpg/640x480.jpg" }
-    description: "Two pages, each embedding a published image fixture: the 640x480 PNG and the 640x480 JPEG. Built from the published bytes, not regenerated."
-    tags: [document, image, multi-page]
-    expect: { pages: 2, has_images: true }
-    size_class: free
-    depends_on: ["png/640x480.png", "jpg/640x480.jpg"]
-  - name: a4-with-table-1page.pdf
-    phase: 1
-    generator: pdf.with_table
-    params: { rows: 10 }
-    description: "One page holding a ten-row table of the shared people dataset."
-    tags: [document, dataset-people]
-    expect: { pages: 1, has_images: false }
-    size_class: free
-    contains_text:
-      - "first_name"
-      - "Bucharest"
-      - "Gothenburg"
-      - "Montreal"
+    label: "form fields"
   - name: a4-encrypted-1page.pdf
     phase: 1
     generator: pdf.encrypted
@@ -130,6 +36,68 @@ fixtures:
       - "Mollit incidunt quia explicabo"
       - "Aliquip proident maiores sequi"
       - "Debitis porro repudiandae esse"
+    label: "encrypted"
+  - name: scanned-1page.pdf
+    phase: 2
+    generator: pdf.image_only
+    params: {}
+    description: "One A4 page with a raster scan of synthetic text and no text layer. Text extraction returns an empty string even though the page looks readable; OCR is required."
+    tags: [document, image]
+    expect: { pages: 1, has_images: true, images: 1, text_characters: 0, image_only: true, encrypted: false }
+    size_class: free
+    label: "scanned (no text layer)"
+  - name: a4-with-table-1page.pdf
+    phase: 1
+    generator: pdf.with_table
+    params: { rows: 10 }
+    description: "One page holding a ten-row table of the shared people dataset."
+    tags: [document, dataset-people]
+    expect: { pages: 1, has_images: false }
+    size_class: free
+    contains_text:
+      - "first_name"
+      - "Bucharest"
+      - "Gothenburg"
+      - "Montreal"
+    label: "table"
+  - name: a4-with-images-2pages.pdf
+    phase: 1
+    generator: pdf.with_images
+    params: { png: "png/640x480.png", jpg: "jpg/640x480.jpg" }
+    description: "Two pages, each embedding a published image fixture: the 640x480 PNG and the 640x480 JPEG. Built from the published bytes, not regenerated."
+    tags: [document, image, multi-page]
+    expect: { pages: 2, has_images: true }
+    size_class: free
+    depends_on: ["png/640x480.png", "jpg/640x480.jpg"]
+    label: "images"
+  - name: a4-10pages.pdf
+    phase: 1
+    generator: pdf.basic
+    params: { pages: 10, page_numbers: true }
+    description: "A4 portrait, 10 pages of Lorem Ipsum in the Helvetica core font with page numbers. No embedded fonts."
+    tags: [document, multi-page, text]
+    expect: { pages: 10, page_width_pt: 595.28, page_height_pt: 841.89, encrypted: false }
+    size_class: free
+    contains_text:
+      - "Quae cillum in fuga"
+      - "Ea deserunt fugiat non"
+      - "Similique ut pariatur ut"
+      - "Modi similique elit esse"
+    label: "10 pages"
+  - name: a4-3pages.pdf
+    phase: 1
+    generator: pdf.basic
+    params: { pages: 3, page_numbers: true }
+    description: "A4 portrait, 3 pages of Lorem Ipsum in the Helvetica core font with page numbers. No embedded fonts."
+    tags: [document, multi-page, text]
+    expect: { pages: 3, page_width_pt: 595.28, page_height_pt: 841.89, encrypted: false }
+    size_class: free
+    contains_text:
+      - "Lorem sequitur modi debitis"
+      - "Do fugiat anim tempor"
+      - "Adipiscing maiores minim necessitatibus"
+      - "Commodo assumenda voluptas quis"
+    label: "3 pages"
   - name: blank-1page.pdf
     phase: 1
     generator: pdf.blank
@@ -138,6 +106,7 @@ fixtures:
     tags: [document]
     expect: { pages: 1, has_images: false, encrypted: false }
     size_class: free
+    label: "blank page"
   - name: minimal.pdf
     phase: 1
     generator: pdf.minimal
@@ -146,6 +115,49 @@ fixtures:
     tags: [document]
     expect: { pages: 1 }
     size_class: free
+    label: "minimal"
+  - name: letter-1page.pdf
+    phase: 1
+    generator: pdf.basic
+    params: { pages: 1, page_size: letter }
+    description: "US Letter portrait, one page. Same content as the A4 fixture, different page box."
+    tags: [document, text]
+    expect: { pages: 1, page_width_pt: 612.0, page_height_pt: 792.0 }
+    size_class: free
+    contains_text:
+      - "Pariatur dolor cillum temporibus"
+      - "Architecto nesciunt maiores earum"
+      - "Mollit earum explicabo delectus"
+      - "Fugiat consectetur debitis sed"
+    label: "US Letter"
+  - name: a4-landscape-1page.pdf
+    phase: 1
+    generator: pdf.basic
+    params: { pages: 1, orientation: landscape }
+    description: "A4 landscape, one page: the page box is wider than it is tall."
+    tags: [document, text]
+    expect: { pages: 1, page_width_pt: 841.89, page_height_pt: 595.28 }
+    size_class: free
+    contains_text:
+      - "Assumenda cupidatat tenetur laborum"
+      - "Consectetur consequat excepteur totam"
+      - "Architecto eius doloribus magnam"
+      - "Itaque fuga fugiat nostrud"
+    label: "landscape"
+  - name: a4-1page.pdf
+    phase: 1
+    generator: pdf.basic
+    params: { pages: 1 }
+    description: "A4 portrait, 1 page of Lorem Ipsum in the Helvetica core font. No embedded fonts."
+    tags: [document, text]
+    expect: { pages: 1, page_width_pt: 595.28, page_height_pt: 841.89, encrypted: false }
+    size_class: free
+    contains_text:
+      - "Rerum repellat quia elit"
+      - "Saepe enim eu placeat"
+      - "Modi debitis necessitatibus qui"
+      - "Omnis quia neque elit"
+    label: "A4 portrait"
   - name: 1mb.pdf
     phase: 1
     generator: pdf.sized
@@ -155,6 +167,7 @@ fixtures:
     expect: { has_images: true }
     size_class: approx
     nominal_bytes: 1000000
+    label: "1 MB"
   - name: 10mb.pdf
     phase: 1
     generator: pdf.sized
@@ -164,3 +177,4 @@ fixtures:
     expect: { has_images: true }
     size_class: approx
     nominal_bytes: 10000000
+    label: "10 MB"

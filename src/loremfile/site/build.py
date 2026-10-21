@@ -297,21 +297,54 @@ def label(fmt: str) -> str:
 #: What a results page shows of a title and a description before cutting them off.
 TITLE_LIMIT = 60
 DESCRIPTION_LIMIT = 155
+#: The twelve formats with search demand (2026-10-22). Their labelled titles lead with the
+#: query and keep "for testing" where a label still fits; ogg, tiff and arrow keep 1.9.0's.
+DEMAND_FORMATS = frozenset(
+    {"mp3", "mp4", "parquet", "docx", "pptx", "mkv", "png", "jpg", "pdf", "csv", "zip", "wav"}
+)
+#: Where the query is not "sample {format}": "mp3 test file" is typed as it stands.
+QUERY_HEADS = {"mp3": "{name} test file{s}"}
 
 
-def labelled_title(name: str, labels: list[str]) -> str:
-    """`Sample {FORMAT} files: {labels}`, cut at the last whole label that fits.
+def title_heads(fmt: str) -> tuple[str, ...]:
+    """The heads a labelled title may take, preferred first (docs/05 §1 rule 9)."""
+    if fmt in QUERY_HEADS:
+        return (QUERY_HEADS[fmt],)
+    if fmt in DEMAND_FORMATS:
+        return ("Sample {name} file{s} for testing", "Sample {name} file{s}")
+    return ("Sample {name} file{s}",)
+
+
+def labelled_title(
+    name: str, labels: list[str], heads: tuple[str, ...] = ("Sample {name} file{s}",)
+) -> str:
+    """`{head}: {labels}`, cut at the last whole label that fits.
 
     No brand suffix and no adjectives: the title leads with what the page holds, in the
-    order the catalog lists it (docs/05 §1 rule 9).
+    order the catalog lists it (docs/05 §1 rule 9). The first head that leaves room for a
+    label is used, so "for testing" stays only where it costs no more than the other labels.
     """
-    head = f"Sample {name} file{'' if len(labels) == 1 else 's'}: "
+    plural = "" if len(labels) == 1 else "s"
+    options = [f"{template.format(name=name, s=plural)}: " for template in heads]
+    head = next((h for h in options if labels and len(h + labels[0]) <= TITLE_LIMIT), options[-1])
     shown: list[str] = []
     for text in labels:
         if len(head + ", ".join([*shown, text])) > TITLE_LIMIT:
             break
         shown.append(text)
     return head + ", ".join(shown)
+
+
+def page_labels(info: FormatCatalog, served: list[dict[str, Any]]) -> list[str]:
+    """One label per recommended file, in catalog order; empty unless every one has a label.
+
+    A superseded file never contributes one: titles and descriptions advertise what to use,
+    and the page names the replacement below the table. Skipped by its entry, not by where
+    the catalog happens to list it.
+    """
+    recommended = {e["path"] for e in served if not e.get("supersededBy")}
+    labels = [f.label for f in info.fixtures if f.path in recommended and f.label]
+    return labels if recommended and len(labels) == len(recommended) else []
 
 
 def labelled_description(name: str, sizes: list[int], labels: list[str]) -> str:
@@ -324,7 +357,7 @@ def labelled_description(name: str, sizes: list[int], labels: list[str]) -> str:
     span = (
         f"from {human_bytes(min(sizes))} to {human_bytes(max(sizes))}"
         if count > 1
-        else human_bytes(sizes[0])
+        else f"of {human_bytes(sizes[0])}"
     )
     head = f"{count} {name} test file{'' if count == 1 else 's'} {span}: "
     tail = ". Direct URLs, SHA-256 per file, CC0."
@@ -733,12 +766,11 @@ def format_pages(
             f"{len(active)} sample {label(fmt)} file{plural} with stable URLs you can "
             "hotlink. No signup, no keys, CC0."
         )
-        # The labelled shape, only where every file on the page has a label (docs/05 §1
-        # rule 9): ogg, tiff and arrow from 1.9.0, the rest once the first three are read.
-        on_page = {e["path"] for e in active}
-        labels = [f.label for f in info.fixtures if f.path in on_page and f.label]
-        if active and len(labels) == len(active):
-            title = labelled_title(label(fmt), labels)
+        # The labelled shape, only where every recommended file has a label (docs/05 §1
+        # rule 9): ogg, tiff and arrow from 1.9.0, the twelve demand formats from 2026-10-22.
+        labels = page_labels(info, served)
+        if labels:
+            title = labelled_title(label(fmt), labels, title_heads(fmt))
             description = labelled_description(label(fmt), [e["bytes"] for e in active], labels)
         page = Page(
             key=fmt,

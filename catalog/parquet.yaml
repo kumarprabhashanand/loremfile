@@ -15,6 +15,7 @@ fixtures:
     tags: [data, dataset-people]
     expect: { rows: 1000, columns: 14, row_groups: 1, compression: snappy }
     size_class: free
+    label: "1,000 rows"
   - name: people-100k.parquet
     phase: 1
     generator: columnar.parquet_people
@@ -23,3 +24,4 @@ fixtures:
     tags: [data, dataset-people]
     expect: { rows: 100000, columns: 14, row_groups: 1, compression: snappy }
     size_class: free
+    label: "100,000 rows"
