@@ -25,7 +25,7 @@ from markupsafe import Markup
 from loremfile import config
 from loremfile.catalog import Catalog, FormatCatalog
 from loremfile.manifest import Manifest
-from loremfile.site import icons, markdown, routes
+from loremfile.site import icons, markdown, page_dates, routes
 
 #: docs/05 §8, in order.
 POPULAR = (
@@ -254,6 +254,10 @@ class BuildReport:
     keys: int = 0
     pages: int = 0
     bytes: int = 0
+    #: Every sitemap page's date as this build gave it, and the keys that differ from the
+    #: committed record (docs/04 §7): empty when `page-dates.json` is current.
+    dates: page_dates.Record = field(default_factory=dict)
+    stale: list[str] = field(default_factory=list)
 
     def render(self) -> str:
         return f"  {self.keys} keys, {self.pages} pages, {self.bytes:,} bytes"
@@ -647,14 +651,21 @@ def article(page: Page, *, modified: dt.date | None = None) -> list[dict[str, An
 
 
 def dataset(
-    name: str, description: str, url: str, entries: list[dict[str, Any]], *, modified: dt.date
+    name: str,
+    description: str,
+    url: str,
+    entries: list[dict[str, Any]],
+    *,
+    modified: dt.date | None,
 ) -> dict[str, Any]:
     """docs/04 §10: a page of files is a Dataset whose distribution is those files.
 
-    `dateModified` is the commit date the sitemap gives as `lastmod`; `contentSize` and
-    `sha256` are the manifest's, so a crawler can tell the file it fetched is the one listed.
+    `dateModified` is the page's date in `page-dates.json`, which the sitemap gives as
+    `lastmod`; None leaves it out, for the undated rendering that date is hashed from.
+    `contentSize` and `sha256` are the manifest's, so a crawler can tell the file it fetched
+    is the one listed.
     """
-    return {
+    node: dict[str, Any] = {
         "@context": "https://schema.org",
         "@type": "Dataset",
         "name": name,
@@ -662,25 +673,31 @@ def dataset(
         "url": url,
         "license": config.LICENSE_URL,
         "isAccessibleForFree": True,
-        "dateModified": modified.isoformat(),
-        "distribution": [
-            {
-                "@type": "DataDownload",
-                "contentUrl": f"{config.BASE_URL}{e['path']}",
-                "encodingFormat": e["mime"],
-                "contentSize": f"{e['bytes']} bytes",
-                "sha256": e["sha256"],
-            }
-            for e in entries
-        ],
     }
+    if modified is not None:
+        node["dateModified"] = modified.isoformat()
+    node["distribution"] = [
+        {
+            "@type": "DataDownload",
+            "contentUrl": f"{config.BASE_URL}{e['path']}",
+            "encodingFormat": e["mime"],
+            "contentSize": f"{e['bytes']} bytes",
+            "sha256": e["sha256"],
+        }
+        for e in entries
+    ]
+    return node
 
 
 # --- pages ------------------------------------------------------------------------------------
 
 
+#: A page's date by key: `page-dates.json`'s, or None for the undated rendering (docs/04 §7).
+DateOf = Callable[[str], dt.date | None]
+
+
 def format_pages(
-    root: Path, manifest: Manifest, catalogs: dict[str, FormatCatalog], *, modified: dt.date
+    root: Path, manifest: Manifest, catalogs: dict[str, FormatCatalog], *, date_of: DateOf
 ) -> list[Page]:
     formats = sorted({entry["format"] for entry in manifest.entries})
     pages: list[Page] = []
@@ -759,7 +776,7 @@ def format_pages(
                 " ".join(info.description.split()),
                 page.canonical,
                 active,
-                modified=modified,
+                modified=date_of(fmt),
             ),
             breadcrumbs(page.crumbs, label(fmt), page.canonical),
         ]
@@ -933,7 +950,7 @@ def doc_pages(root: Path) -> list[Page]:
     return [index, *pages]
 
 
-def testing_pages(root: Path, manifest: Manifest, *, modified: dt.date) -> list[Page]:
+def testing_pages(root: Path, manifest: Manifest, *, date_of: DateOf) -> list[Page]:
     """Guides by job: prose that names files and says why, their facts from the manifest."""
     active = {entry["path"]: entry for entry in manifest.current}
     crumbs = [("Home", "/"), ("Testing", "/testing")]
@@ -953,7 +970,7 @@ def testing_pages(root: Path, manifest: Manifest, *, modified: dt.date) -> list[
         )
         listed = [active[path] for path in named]
         page.jsonld = [
-            dataset(title, description, page.canonical, listed, modified=modified),
+            dataset(title, description, page.canonical, listed, modified=date_of(key)),
             breadcrumbs(crumbs, title, page.canonical),
         ]
         page.twin = twin(page, text, f"site/content/{source}", active)
@@ -1201,13 +1218,16 @@ def llms(
 NOT_IN_SITEMAP = frozenset({"legal", "legal/license", "legal/terms"})
 
 
-def sitemap(pages: list[Page], committed: dt.datetime) -> bytes:
-    lastmod = committed.date().isoformat()
-    urls = sorted(
-        page.canonical for page in pages if page.listed and page.key not in NOT_IN_SITEMAP
-    )
+def in_sitemap(page: Page) -> bool:
+    return page.listed and page.key not in NOT_IN_SITEMAP
+
+
+def sitemap(pages: list[Page], dates: page_dates.Record) -> bytes:
+    """Each page's `lastmod` is the day its content last changed (docs/04 §7)."""
+    rows = sorted((page.canonical, dates[page.key].date) for page in pages if in_sitemap(page))
     body = "".join(
-        f"  <url><loc>{xml_escape(url)}</loc><lastmod>{lastmod}</lastmod></url>\n" for url in urls
+        f"  <url><loc>{xml_escape(url)}</loc><lastmod>{day.isoformat()}</lastmod></url>\n"
+        for url, day in rows
     )
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -1302,7 +1322,37 @@ def render_page(env: Environment, page: Page, site: dict[str, Any]) -> bytes:
     return html.encode("utf-8")
 
 
-def build(out: Path, *, root: Path, committed: dt.datetime) -> BuildReport:
+def site_pages(
+    root: Path,
+    manifest: Manifest,
+    catalogs: dict[str, FormatCatalog],
+    *,
+    committed: dt.datetime,
+    date_of: DateOf,
+) -> list[Page]:
+    """Every page a build renders, in the order `build` writes them."""
+    testing = testing_pages(root, manifest, date_of=date_of)
+    return [
+        home_page(root, manifest, catalogs, guides(testing)),
+        *format_pages(root, manifest, catalogs, date_of=date_of),
+        formats_page(manifest, catalogs),
+        *testing,
+        *doc_pages(root),
+        *legal_pages(root, committed),
+        changelog_page(root),
+        status_page(),
+    ]
+
+
+def build(
+    out: Path,
+    *,
+    root: Path,
+    committed: dt.datetime,
+    previous: page_dates.Record | None = None,
+) -> BuildReport:
+    """Render the site into `out`. `previous` is the page-dates record to date pages from;
+    None reads the committed one. A page whose content changed is dated `committed`."""
     manifest = Manifest.load(root / "manifest.json")
     catalogs = {c.format: c for c in Catalog.load(root / "catalog").formats}
     env = Environment(
@@ -1331,18 +1381,19 @@ def build(out: Path, *, root: Path, committed: dt.datetime) -> BuildReport:
         "og_image": routes.absolute_url("assets/og.png"),
         "source": config.SOURCE_URL,
     }
-    modified = committed.date()
-    testing = testing_pages(root, manifest, modified=modified)
-    pages = [
-        home_page(root, manifest, catalogs, guides(testing)),
-        *format_pages(root, manifest, catalogs, modified=modified),
-        formats_page(manifest, catalogs),
-        *testing,
-        *doc_pages(root),
-        *legal_pages(root, committed),
-        changelog_page(root),
-        status_page(),
-    ]
+    if previous is None:
+        previous = page_dates.load(root / page_dates.FILE)
+    # Hashed with no date at all, so neither a page's own date nor another's can move it.
+    undated = site_pages(root, manifest, catalogs, committed=committed, date_of=lambda _: None)
+    hashes = {p.key: sha256(render_page(env, p, site)) for p in undated if in_sitemap(p)}
+    dates = page_dates.update(previous, hashes, committed.date())
+
+    def date_of(key: str) -> dt.date:
+        if key not in dates:
+            raise SiteError(f"{key}: a dated page that the sitemap does not list")
+        return dates[key].date
+
+    pages = site_pages(root, manifest, catalogs, committed=committed, date_of=date_of)
     for page in pages:
         if page.key.endswith(".html") and page.key != "index.html":
             raise SiteError(
@@ -1364,9 +1415,9 @@ def build(out: Path, *, root: Path, committed: dt.datetime) -> BuildReport:
                 root / "src/loremfile/schema/manifest-v1.json"
             ).read_bytes(),
             "search-index.json": search_index(manifest),
-            "llms.txt": llms(manifest, catalogs, guides(testing), full=False),
-            "llms-full.txt": llms(manifest, catalogs, guides(testing), full=True),
-            "sitemap.xml": sitemap(pages, committed),
+            "llms.txt": llms(manifest, catalogs, guides(pages), full=False),
+            "llms-full.txt": llms(manifest, catalogs, guides(pages), full=True),
+            "sitemap.xml": sitemap(pages, dates),
             "robots.txt": ROBOTS_TXT.encode(),
             ".well-known/security.txt": security_txt(committed),
             routes.INDEXNOW_KEY_FILE: config.INDEXNOW_KEY.encode("utf-8"),
@@ -1382,4 +1433,10 @@ def build(out: Path, *, root: Path, committed: dt.datetime) -> BuildReport:
         path.write_bytes(data)
     not_found = Page("404", "Not found", "No page or fixture lives at this address.", "404.html")
     (out.parent / "site-404.html").write_bytes(render_page(env, not_found, site))
-    return BuildReport(keys=len(files), pages=len(pages), bytes=sum(map(len, files.values())))
+    return BuildReport(
+        keys=len(files),
+        pages=len(pages),
+        bytes=sum(map(len, files.values())),
+        dates=dates,
+        stale=page_dates.stale(previous, dates),
+    )
