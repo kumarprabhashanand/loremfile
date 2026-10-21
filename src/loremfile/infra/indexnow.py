@@ -6,9 +6,10 @@ names the pages a deploy actually wrote, read from the site upload's own report,
 and Amazon take part; Google does not.
 
 Three things are never sent. Fixtures: they are files, not pages, and the site upload never
-writes one. The two legal pages: they are kept out of every index (ADR-028), and announcing
-them would contradict their `noindex` header and the WAF rule that refuses AI agents on them.
-And more than `MAX_URLS`: a deploy that changed more announces the home page and the sitemap.
+writes one. A page the sitemap leaves out: the two operator pages are kept out of every index
+(ADR-028), and announcing them would contradict their `noindex` header and the WAF rule that
+refuses AI agents on them; the three `NOT_IN_SITEMAP` pages are not asked for anywhere. And
+more than `MAX_URLS`: a deploy that changed more announces the home page and the sitemap.
 
 Nothing here can fail a deploy. Any answer is logged and the command exits 0; an engine
 refusing a notification changes nothing about what was published.
@@ -26,9 +27,11 @@ from urllib.parse import urlsplit
 
 from loremfile.config import INDEXNOW_KEY, SITE_HOST
 from loremfile.site import routes
+from loremfile.site.build import NOT_IN_SITEMAP
 
 ENDPOINT: Final = "https://api.indexnow.org/indexnow"
-MAX_URLS: Final = 100
+#: IndexNow's per-request limit: "up to 10,000 URLs per post" (indexnow.org, read 2026-10-21).
+MAX_URLS: Final = 10_000
 #: 200 is "URL submitted successfully", 202 "URL received. IndexNow key validation pending."
 ACCEPTED: Final = frozenset({200, 202})
 TIMEOUT_SECONDS: Final = 30
@@ -37,12 +40,12 @@ Post = Callable[[str, bytes], int]
 
 
 def changed_pages(uploaded: Iterable[str]) -> list[str]:
-    """The absolute URLs of the uploaded keys that are pages, minus the legal ones."""
-    legal = {*routes.LEGAL_KEYS, *routes.LEGAL_TWINS}
+    """The absolute URLs of the uploaded keys that are pages the sitemap lists."""
+    left_out = {*routes.LEGAL_KEYS, *routes.LEGAL_TWINS, *NOT_IN_SITEMAP}
     return [
         routes.absolute_url(key)
         for key in sorted(set(uploaded))
-        if routes.is_page(key) and key not in legal
+        if routes.is_page(key) and key not in left_out
     ]
 
 
