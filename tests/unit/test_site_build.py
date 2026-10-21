@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from loremfile.infra import locks, purge
-from loremfile.site import build, checks, icons, legal, routes
+from loremfile.site import build, checks, icons, legal, page_dates, routes
 
 ROOT = Path(__file__).resolve().parents[2]
 WHEN = dt.datetime(2026, 9, 15, 12, 0, tzinfo=dt.UTC)
@@ -224,11 +224,16 @@ def test_robots_txt_is_the_one_docs_04_specifies(site: Path) -> None:
     assert text(site, "robots.txt") == match.group(1)
 
 
-def test_the_only_dates_come_from_the_commit(site: Path) -> None:
+def test_the_only_dates_come_from_the_commit_and_the_page_dates(site: Path) -> None:
+    """security.txt from the commit; each `lastmod` from page-dates.json, never the commit's
+    date unless that page changed then (docs/04 §7)."""
     assert "Expires: 2027-09-15T12:00:00Z\n" in text(site, ".well-known/security.txt")
-    assert set(re.findall(r"<lastmod>([^<]+)</lastmod>", text(site, "sitemap.xml"))) == {
-        "2026-09-15"
-    }
+    recorded = page_dates.load(ROOT / page_dates.FILE)
+    rows = re.findall(r"<loc>([^<]+)</loc><lastmod>([^<]+)</lastmod>", text(site, "sitemap.xml"))
+    assert len(rows) == len(recorded), "control: one row per recorded page"
+    for url, lastmod in rows:
+        key = routes.key_for(url.removeprefix("https://loremfile.dev"))
+        assert lastmod == recorded[key].date.isoformat(), url
 
 
 def test_a_format_index_has_the_manifest_shape_for_one_format(site: Path) -> None:
@@ -559,7 +564,7 @@ def test_a_guide_that_names_an_unpublished_file_stops_the_build(tmp_path: Path) 
     guide.write_text(guide.read_text() + "\n<!-- file: bin/never-published.bin -->\n")
     manifest = build.Manifest.load(ROOT / "manifest.json")
     with pytest.raises(build.SiteError, match=re.escape("bin/never-published.bin")):
-        build.testing_pages(tmp_path, manifest, modified=WHEN.date())
+        build.testing_pages(tmp_path, manifest, date_of=lambda _: WHEN.date())
 
 
 # --- superseded entries ---------------------------------------------------------------
@@ -618,11 +623,12 @@ def test_every_data_download_carries_the_manifest_size_and_hash(
 
 
 def test_every_dataset_is_dated_like_its_sitemap_entry(site: Path, keys: dict[str, Path]) -> None:
-    lastmods = set(re.findall(r"<lastmod>([^<]+)</lastmod>", text(site, "sitemap.xml")))
-    assert lastmods == {WHEN.date().isoformat()}
+    rows = re.findall(r"<loc>([^<]+)</loc><lastmod>([^<]+)</lastmod>", text(site, "sitemap.xml"))
+    lastmods = {routes.key_for(url.removeprefix("https://loremfile.dev")): day for url, day in rows}
     found = datasets(site, keys)
-    assert len(found) > 80 and "pdf" in found
-    assert {block["dateModified"] for block in found.values()} == lastmods
+    assert len(found) > 80 and "pdf" in found and "testing/uploads" in found
+    for key, block in found.items():
+        assert block["dateModified"] == lastmods[key], key
 
 
 def test_the_formats_page_is_a_collection_of_every_format_page(site: Path) -> None:

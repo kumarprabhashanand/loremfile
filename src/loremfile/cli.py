@@ -56,6 +56,7 @@ from loremfile.manifest import (
 from loremfile.site import build as site_build_module
 from loremfile.site import checks as site_checks
 from loremfile.site import legal as legal_module
+from loremfile.site import page_dates as page_dates_module
 from loremfile.site import routes as site_routes
 from loremfile.site import serve as site_serve_module
 
@@ -1573,9 +1574,17 @@ def site() -> None:
     is_flag=True,
     help="Fill the legal pages from IMPRINT_* (production jobs only, docs/13 §3b).",
 )
+@click.option(
+    "--update-dates",
+    is_flag=True,
+    help="Rewrite page-dates.json for the pages whose content changed (docs/04 §7).",
+)
 @click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
-def site_build(out: Path | None, legal_env: bool, as_json: bool) -> None:
-    """Render the site and check it (docs/07 §4). Reports counts, never a legal page."""
+def site_build(out: Path | None, legal_env: bool, update_dates: bool, as_json: bool) -> None:
+    """Render the site and check it (docs/07 §4). Reports counts, never a legal page.
+
+    Refuses a stale page-dates.json unless --update-dates rewrites it; commit what it writes.
+    """
     errors: list[str] = []
     summary: dict[str, Any] = {}
     root = config.repo_root()
@@ -1585,6 +1594,13 @@ def site_build(out: Path | None, legal_env: bool, as_json: bool) -> None:
         report = site_build_module.build(target, root=root, committed=committed)
         click.echo(report.render(), err=True)
         summary = {"keys": report.keys, "pages": report.pages, "bytes": report.bytes}
+        summary["dates_changed"] = report.stale
+        for key in report.stale:
+            entry = report.dates.get(key)
+            click.echo(f"  dated {key}: {entry.date if entry else 'dropped'}", err=True)
+        errors += page_dates_module.settle(
+            report.dates, report.stale, root / page_dates_module.FILE, write=update_dates
+        )
         summary["legal"] = "placeholders"
         if legal_env:
             values = legal_module.values_from(os.environ)

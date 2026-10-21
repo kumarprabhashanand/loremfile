@@ -34,6 +34,7 @@ def test_a_production_build_fills_the_pages_and_prints_no_value(tmp_path: Path) 
         "keys": report(result.output)["summary"]["keys"],  # type: ignore[index]
         "pages": report(result.output)["summary"]["pages"],  # type: ignore[index]
         "bytes": report(result.output)["summary"]["bytes"],  # type: ignore[index]
+        "dates_changed": [],
         "legal": "filled",
     }
     assert all(value not in result.output for value in VALUES.values())
