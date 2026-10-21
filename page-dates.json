@@ -40,16 +40,16 @@
     "sha256": "0ec264ab9150b8faa087ba61a673fc38264973ed86541fb5a96dee7406736158"
   },
   "changelog": {
-    "date": "2026-10-17",
-    "sha256": "38646a5872711c687345339daa0e3d1ac1327ce14d9dec30952347b997809191"
+    "date": "2026-10-21",
+    "sha256": "144cf6b9b852f6a13c89a9a6f9db152a91a04fb629803647e8bec0308b01e78f"
   },
   "css": {
     "date": "2026-10-17",
     "sha256": "62e34281a08bae64b23efb184b988b1e4331f5f09f1250ddabebd65303024bdc"
   },
   "csv": {
-    "date": "2026-10-17",
-    "sha256": "8fb2b3aacc1002113b55ac07319c2557887ecfd9a2366d749c58f1b1f3213828"
+    "date": "2026-10-21",
+    "sha256": "e20ba6b89db97f0d0e87508adde4c49ca3bdd4f0227ce19c17a0eb82d1f8e24c"
   },
   "der": {
     "date": "2026-10-17",
@@ -96,8 +96,8 @@
     "sha256": "8add16bc643a50ba7e908ab9bc925f7f31c103ece6a8caf62fa9821bd37f04c0"
   },
   "docx": {
-    "date": "2026-10-17",
-    "sha256": "5bb75c536f8d6fbda7cc024358aa37a2b1aeb6bca5cca3b0f4a9ac2e45182e92"
+    "date": "2026-10-21",
+    "sha256": "ddde9c3c161fd74b03b4ed5b0bf6c4ce152b850364a1bcbab6cc56bf5b84d9e7"
   },
   "edge": {
     "date": "2026-10-17",
@@ -172,8 +172,8 @@
     "sha256": "fde20bd621f04666c8a23f173681b257f74c192e1c668f391cbcebc92f24bb57"
   },
   "jpg": {
-    "date": "2026-10-17",
-    "sha256": "a951564b84e6df4dbdc15e0f05c8ad0a64d02a4d8c252e8856f68b367c3ddee1"
+    "date": "2026-10-21",
+    "sha256": "60f47d176ed555913c8bdeb9075a34143c763fa9e37627d010e771846a5ea273"
   },
   "js": {
     "date": "2026-10-17",
@@ -208,20 +208,20 @@
     "sha256": "fd6924b1e411a0e365f7fe2327b8886ab51e56ffd08c4dbd17ee5025e5959b47"
   },
   "mkv": {
-    "date": "2026-10-17",
-    "sha256": "66cafb6f8aff43938b6b84b7815b83a6137c38f790c2e9ffab74361aa994e26a"
+    "date": "2026-10-21",
+    "sha256": "f53eae2f7abd4e352c7213953512177103b94b899f0b292e180aaf868f8a4db0"
   },
   "mov": {
     "date": "2026-10-17",
     "sha256": "51a165092b4730adbedb82daa5c70cecaaa3e6e39de3878989926836513369cd"
   },
   "mp3": {
-    "date": "2026-10-17",
-    "sha256": "62cd95cd1ca062679e65a8a8463616f02b63a8b4055d15f738d23d1c098f9f7f"
+    "date": "2026-10-21",
+    "sha256": "af453eb021a680c733aa37bc38a988727c4e7bf1b9eac763eb702665738c71a7"
   },
   "mp4": {
-    "date": "2026-10-17",
-    "sha256": "991116d5ef77206158fb305d92516f08470e5e5fe59dd40242d113150e73f22e"
+    "date": "2026-10-21",
+    "sha256": "83f6ca36d7524b3a3b5bb74dec191cfd95aded35c80649ce746fa8261fb436a5"
   },
   "ndjson": {
     "date": "2026-10-17",
@@ -244,24 +244,24 @@
     "sha256": "73dd830138a0fecbbdcadd1c72f1400ad1ab9df716e4e319fd15f2611623fcd0"
   },
   "parquet": {
-    "date": "2026-10-17",
-    "sha256": "748c86da790a0d5d0bf2f18671b414bd437fdfadec9a5f4957e5606dfd9cc14f"
+    "date": "2026-10-21",
+    "sha256": "713d0475308792277ce1484accd210fa36ea5bfd06ae89f90555fa5c57784c83"
   },
   "pdf": {
-    "date": "2026-10-17",
-    "sha256": "a4b3349d2406d87461af4016996ae5649be04ae5d42146847be41efa57a6761c"
+    "date": "2026-10-21",
+    "sha256": "23227224e69bdfde150e88bc4a2b9ac8c317a1419e0f502a95c894714d37f786"
   },
   "pem": {
     "date": "2026-10-17",
     "sha256": "20448bda3684bc31a27aa33d7f8e3b30b4f2ba1456547ef850b85f55d99bb251"
   },
   "png": {
-    "date": "2026-10-17",
-    "sha256": "d28127316719dfd4583952e4751b677cbdd653f6cf9145c504d3a99c045ffa49"
+    "date": "2026-10-21",
+    "sha256": "6f6ecd3b8fdd58aac605f5abf6d1eaf363e37a41acad761f334db692169b16b7"
   },
   "pptx": {
-    "date": "2026-10-17",
-    "sha256": "3d9a4228709387083bfa005ee29da6fdbb941986da59bf6290a4b8038a13bc8c"
+    "date": "2026-10-21",
+    "sha256": "b205fff7772143d844d9eca8fc9a9e9945ae28df38bd1bf662f39b5b5784e91f"
   },
   "rtf": {
     "date": "2026-10-17",
@@ -344,8 +344,8 @@
     "sha256": "068d52dd2228d14dfa985317d91fdd179d3074e8b37881d031769036365a536d"
   },
   "wav": {
-    "date": "2026-10-17",
-    "sha256": "9a191909d749af7366b205c0a4e61fae6a81595145e038b09247b01d48d140f6"
+    "date": "2026-10-21",
+    "sha256": "4c663a6666302364fde271c8f0c2ee7d9906df779d29d7d0d32ddccf0cd54221"
   },
   "webm": {
     "date": "2026-10-17",
@@ -384,8 +384,8 @@
     "sha256": "7b27056920671c6b2b49f279094a7e872808194cbafbd1b8f0cd6055ebaa59e7"
   },
   "zip": {
-    "date": "2026-10-17",
-    "sha256": "99f4181a4361308929d87c932363e2f2e2302321fda5c6826074fc57d69bea69"
+    "date": "2026-10-21",
+    "sha256": "445607ede2e469d8cd100e2acc2506ef8e652e4589604dbfc08f5ac7ee655c0f"
   },
   "zst": {
     "date": "2026-10-17",
