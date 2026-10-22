@@ -184,6 +184,8 @@ def test_nothing_unmarked_is_quietly_exempt(catalog: Catalog) -> None:
         "opus/30s.opus",
         "opus/cbr-32k-30s.opus",
         "webm/720p-5s-vp9.webm",
+        # 1.11.0: the same VP9 and Opus encode in Matroska (docs/11 §7.9b).
+        "mkv/vp9-opus-720p-5s.mkv",
     }, f"expected_drift set changed: {sorted(marked)}"
 
 
