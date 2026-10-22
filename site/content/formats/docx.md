@@ -3,24 +3,16 @@ Word's default styles.
 
 <!-- file: docx/1page.docx -->
 
-DOCX is Microsoft Word's format: a ZIP archive of XML parts. These documents were written by
-python-docx and then normalised, so their bytes do not move between builds and the hash in
-the manifest stays true. The page count of `docx/1page.docx` is what Word renders, because a
-.docx stores no page count of its own.
+`docx/with-tracked-changes.docx` holds one deletion of "cancelled", one insertion of
+"confirmed" and one comment: an extractor that reads the XML naively returns the deleted word
+as current text, and only accepting the changes leaves "confirmed".
 
-`docx/with-images.docx` embeds two published PNG fixtures as pictures, and
-`docx/with-table.docx` holds a ten-row table of the shared people dataset with a bold header
-row. `docx/with-tracked-changes.docx` has a tracked deletion of “cancelled”, an insertion of
-“confirmed” and one anchored comment. The current delivery status is confirmed. Joining all
-XML text includes the deleted word as well, so an extractor must choose a revision view. Its
-props record the inserted, deleted and current text, plus the comment count.
+`docx/anchored-image-with-alt-text.docx` floats its 1 image in an anchor with alt text, where
+`docx/with-images.docx` places its 2 inline: a converter or accessibility checker that looks
+only for inline pictures misses the first. `docx/with-table.docx` holds a native table of 11
+rows, header included, for extractors that flatten tables into text or drop them.
 
-For size limits, `docx/1mb.docx` and `docx/10mb.docx` reach their size with embedded
-incompressible noise images rather than padding, so a compressing upload path cannot shrink
-them. None of the files contains macros; a .docx cannot carry them.
-
-`docx/anchored-image-with-alt-text.docx` floats one JPEG beside its text, anchored to a
-paragraph and carrying alt text; an extractor that walks only inline pictures misses it.
-
-Use them to test document upload forms, text extraction, converters and previewers. Related
-formats: [PDF](/pdf), [RTF](/rtf) and [XLSX](/xlsx).
+`docx/1page.docx` stores no page count of its own, so "one page" is what Word renders, and a
+page-count check on a .docx needs a renderer. `docx/1mb.docx` and `docx/10mb.docx` reach
+1,024,867 and 10,110,885 bytes with 5 and 51 embedded images, for upload limits that should be
+hit by a real document.

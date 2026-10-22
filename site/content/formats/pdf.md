@@ -1,22 +1,16 @@
-PDF is the format upload forms, viewers and parsers are tested against most, so there are
-more files here than for any other document format. None embeds fonts or scripts.
+`pdf/scanned-1page.pdf` is one page of image with 0 characters of text, so extraction returns
+an empty string and a pipeline that expects text from every PDF needs OCR for it.
+`pdf/form-fields-1page.pdf` has 6 form fields, 3 of them filled, for form extraction and
+filling. `pdf/a4-encrypted-1page.pdf` is encrypted, PDF 1.5, and opens with the password
+loremfile, published so the test can pass.
 
-For page handling, `pdf/a4-1page.pdf`, `pdf/a4-3pages.pdf` and `pdf/a4-10pages.pdf` are A4
-portrait pages of Lorem Ipsum in the Helvetica core font, the longer two with page numbers.
-`pdf/letter-1page.pdf` has the same content on a US Letter page box, and
-`pdf/a4-landscape-1page.pdf` is wider than it is tall.
+`pdf/a4-landscape-1page.pdf` measures 841.89 by 595.28 points and `pdf/letter-1page.pdf` 612 by
+792: a renderer that assumes A4 portrait crops both. `pdf/blank-1page.pdf` is a valid page with
+nothing on it, and `pdf/minimal.pdf` is the smallest valid PDF here at 586 bytes, for parsers
+that must not crash on the minimum.
 
-For content, `pdf/a4-with-images-2pages.pdf` embeds the published 640x480 PNG and JPEG, and
-`pdf/a4-with-table-1page.pdf` holds a ten-row table of the shared people dataset.
-`pdf/a4-encrypted-1page.pdf` is AES-128 encrypted with the user password `loremfile` and the
-owner password `loremfile-owner`. `pdf/blank-1page.pdf` has one page and no content, and
-`pdf/minimal.pdf` is a hand-written file with one page and the word Hello.
-`pdf/form-fields-1page.pdf` has a fillable form of four text fields and two checkboxes, half
-of them filled, for testing form extraction and filling.
-
-`pdf/scanned-1page.pdf` looks like a document but contains one raster image and no text
-layer. Its extracted text is an empty string, the scanned-document case that silently
-breaks text pipelines. Use OCR to read it; the validator measures image and text counts.
-
-For size limits, `pdf/1mb.pdf` and `pdf/10mb.pdf` embed incompressible noise images rather
-than padding. Related formats: [DOCX](/docx), [EPUB](/epub), [PNG](/png) and [JPEG](/jpg).
+`pdf/a4-with-table-1page.pdf` holds a table and `pdf/a4-with-images-2pages.pdf` 2 pages that
+embed images, for extractors that must keep structure and pull pictures out.
+`pdf/a4-1page.pdf`, `pdf/a4-3pages.pdf` and `pdf/a4-10pages.pdf` are 1, 3 and 10 pages of text,
+for page counting. `pdf/1mb.pdf` and `pdf/10mb.pdf` are 976,137 and 9,924,917 bytes over 4 and
+42 pages, for upload limits.

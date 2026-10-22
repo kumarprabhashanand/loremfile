@@ -1,20 +1,13 @@
-JPEG is the default photo format, and the one every image upload accepts. These files are the
-loremfile colour-bar test card at the sizes people actually need, plus the variants that
-break naive decoders.
+`jpg/exif-orientation-6-640x480.jpg` and `jpg/exif-orientation-8-640x480.jpg` store their
+pixels at 480x640 and carry EXIF orientations 6 and 8: a viewer that honours the tag shows them
+upright at 640x480, and one that ignores it shows them sideways.
 
-`jpg/100x100.jpg`, `jpg/640x480.jpg`, `jpg/1920x1080.jpg` and `jpg/4000x3000.jpg` are
-baseline JPEGs at quality 85 with 4:2:0 chroma subsampling. `jpg/progressive-1920x1080.jpg`
-is the same card saved as a progressive scan, which renders coarse to fine.
+`jpg/cmyk-640x640.jpg` is CMYK, which a pipeline that assumes RGB converts wrongly or refuses.
+`jpg/progressive-1920x1080.jpg` is progressive, decoded in passes, where `jpg/1920x1080.jpg` is
+baseline at the same size: 30,994 bytes against 56,817, and a decoder that supports only
+baseline fails on the first.
 
-Two files target specific bugs. `jpg/cmyk-640x640.jpg` uses the CMYK colour space, which
-pipelines expecting RGB mishandle. `jpg/exif-orientation-6-640x480.jpg` carries orientation
-6, but its stored rotation makes the label upside down when the tag is applied. Use the
-orientation-8 fixture for a tag that restores upright pixels.
-
-`jpg/exif-orientation-8-640x480.jpg` stores a clockwise-rotated card at 480x640 with
-orientation 8. Applying the tag rotates it counterclockwise and restores the upright UP
-label at 640x480. Its props distinguish stored and displayed dimensions.
-
-For size limits, `jpg/1mb.jpg` and `jpg/10mb.jpg` are seeded noise at quality 95 with 4:4:4
-sampling, so their size is honest. Related formats: [PNG](/png), [WebP](/webp),
-[AVIF](/avif) and [TIFF](/tiff).
+`jpg/4000x3000.jpg` is 4000x3000 in 279,204 bytes, for decoders and thumbnailers that must
+downscale a large frame. `jpg/100x100.jpg` and `jpg/640x480.jpg` are small RGB test cards,
+4,615 and 14,992 bytes. `jpg/1mb.jpg` and `jpg/10mb.jpg` are 991,379 and 10,006,097 bytes of
+seeded noise, for upload limits that need a real image of a known size.

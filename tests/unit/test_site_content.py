@@ -231,10 +231,9 @@ def test_the_legal_dash_check_finds_one() -> None:
 
 # --- selection guides: every sentence names a file, every number is measured ----------------
 
-#: Format pages rewritten as "which of these files do I need, and what breaks without it?"
-#: (2026-10-22, docs/07 §5). The first four, the thinnest with search demand; once all twelve
-#: are converted this becomes `build.DEMAND_FORMATS`, so the set lives in one place.
-GUIDES = ("mkv", "parquet", "pptx", "wav")
+#: Format pages written as "which of these files do I need, and what breaks without it?"
+#: (2026-10-22, docs/07 §5): all twelve demand formats, the set `build.py` keeps.
+GUIDES = tuple(sorted(build.DEMAND_FORMATS))
 SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[`A-Z])")
 NUMBER = re.compile(r"\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?")
 #: Names whose digits are part of the name (H.264, VP9, MP4), not a quantity.
@@ -249,9 +248,12 @@ def manifest_entries() -> dict[str, dict]:
 
 
 def measured(value: object) -> set[float]:
-    """Every number in a props value, and its thousandth (kHz from Hz)."""
+    """Every number in a props value, and its thousandth (kHz from Hz); a numeric string
+    such as an H.264 level ("3.1") or a PDF version ("1.5") is a measured number too."""
     if isinstance(value, bool):
         return set()
+    if isinstance(value, str):
+        return {float(value)} if re.fullmatch(r"\d+(?:\.\d+)?", value) else set()
     if isinstance(value, int | float):
         return {float(value), round(value / 1000, 6)}
     if isinstance(value, dict):
@@ -322,3 +324,6 @@ def test_control_the_guide_rule_catches_each_way_to_break_it() -> None:
     assert guide_problems("`pptx/aspect-4-3-5slides.pptx` is 4:3.", entries) == []
     assert guide_problems("`mkv/720p-5s.mkv` works where the MP4 fails.", entries) == []
     assert guide_problems("`mkv/720p-5s.mkv` has 4 tracks.", entries), "a count beside one is"
+    baseline = "`mp4/h264-baseline-720p-5s.mp4`"
+    assert guide_problems(f"{baseline} is at level 3.0.", entries) == []
+    assert guide_problems(f"{baseline} is at level 4.2.", entries), "a numeric string must match"
