@@ -9,6 +9,18 @@
   have titles and descriptions that name what sets their files apart, for example
   `Sample MP3 test files: L/R channels, ID3v2 tags`.
 
+## [1.10.0] - 2026-10-22
+
+- Four new files each on three pages that held two or three, and three on a fourth. `wav/`:
+  mono, 8-bit (which WAV stores unsigned), 32-bit float behind format tag 3, and a LIST/INFO
+  chunk that moves the samples to byte 94. `mkv/`: two audio tracks (440 Hz and 880 Hz), an
+  SRT subtitle track, and three chapters. `parquet/`: zstd, gzip, ten row groups, and nested
+  types (structs and a map). `pptx/`: 4:3 slides, a native table, a native chart, and a
+  hidden slide.
+- New measured props, existing bytes unchanged: `info_tags` for WAV; `track_tone_hz`,
+  `scodec` and `chapters` for video, only where present; `column_types` for every Parquet
+  file; `tables`, `charts` and `hidden_slides` for every PPTX file.
+
 ## [1.9.1] - 2026-10-16
 
 - Every file with audio now records the tone it carries, measured per channel from the

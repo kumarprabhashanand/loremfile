@@ -8,6 +8,33 @@ description: >-
 seo_title: "Sample MKV video files for testing, free, CC0 and hotlinkable"
 related: [mp4, webm, mov]
 fixtures:
+  - name: multi-audio-2-tracks-720p-5s.mkv
+    phase: 1
+    generator: media_video.mkv_tracks
+    params: { width: 1280, height: 720, duration: 5, tones: [440, 880] }
+    description: "1280x720 at 30 fps, five seconds, H.264 with two AAC audio tracks: 440 Hz on the first and 880 Hz on the second, so a player or converter that only ever takes track one is easy to catch."
+    tags: [video, codec-h264, codec-aac]
+    expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, audio_streams: 2, track_tone_hz: [[440.0], [880.0]] }
+    size_class: free
+    label: "2 audio tracks"
+  - name: with-subtitles-720p-5s.mkv
+    phase: 1
+    generator: media_video.mkv_tracks
+    params: { width: 1280, height: 720, duration: 5, subtitles: true }
+    description: "1280x720 H.264 plus AAC, five seconds, with an embedded SRT subtitle track of two cues, for players and converters that drop or mis-map text tracks."
+    tags: [video, codec-h264, codec-aac, text]
+    expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, subtitle_streams: 1, scodec: subrip }
+    size_class: free
+    label: "SRT subtitles"
+  - name: with-chapters-720p-10s.mkv
+    phase: 1
+    generator: media_video.mkv_tracks
+    params: { width: 1280, height: 720, duration: 10, chapters: 3 }
+    description: "1280x720 H.264 plus AAC, ten seconds, with three equal chapters in the Matroska chapter list, for seek menus and chapter navigation."
+    tags: [video, codec-h264, codec-aac]
+    expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, chapters: 3 }
+    size_class: free
+    label: "3 chapters"
   - name: 720p-5s.mkv
     phase: 1
     generator: media_video.mp4

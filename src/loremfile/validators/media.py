@@ -142,14 +142,19 @@ def _ogg_checks(data: bytes, fixture: Fixture, props: dict[str, Any]) -> dict[st
     return extra
 
 
-def _tone_of(data: bytes, suffix: str, channels: int) -> list[float | None]:
+def _tone_of(data: bytes, suffix: str, channels: int, stream: int = 0) -> list[float | None]:
     """Each channel's tone over one decoded second, a quarter of a second in (util/tone)."""
     with tempfile.TemporaryDirectory() as temporary:
         path = Path(temporary) / f"fixture{suffix}"
         path.write_bytes(data)
         try:
             pcm = decode_pcm(
-                path, channels=channels, start=tone.START_S, seconds=tone.SECONDS, rate=tone.RATE
+                path,
+                channels=channels,
+                start=tone.START_S,
+                seconds=tone.SECONDS,
+                rate=tone.RATE,
+                stream=stream,
             )
         except FfmpegError as exc:
             raise ValidationError(
@@ -175,6 +180,24 @@ def _tone_props(data: bytes, suffix: str, props: dict[str, Any]) -> dict[str, An
         found["chain_tone_hz"] = [
             _tone_of(chain, suffix, channels) for chain in _ogg_chain_bytes(data)
         ]
+    return found
+
+
+def _container_props(data: bytes, suffix: str, report: dict[str, Any]) -> dict[str, Any]:
+    """What only some files carry, published only when present, so no other entry changes:
+    each audio track's tone when there is more than one, the subtitle codec, and chapters."""
+    found: dict[str, Any] = {}
+    tracks = _streams(report, "audio")
+    if len(tracks) > 1:
+        found["track_tone_hz"] = [
+            _tone_of(data, suffix, int(track["channels"]), stream=index)
+            for index, track in enumerate(tracks)
+        ]
+    subtitles = _streams(report, "subtitle")
+    if subtitles:
+        found["scodec"] = subtitles[0]["codec_name"]
+    if report.get("chapters"):
+        found["chapters"] = len(report["chapters"])
     return found
 
 
@@ -291,20 +314,37 @@ def _wav_header(data: bytes) -> dict[str, Any]:
     """
     if data[:4] != b"RIFF" or data[8:12] != b"WAVE":
         raise ValidationError("not a RIFF/WAVE file")
-    offset, tag = 12, None
+    offset, tag, info = 12, None, {}
     while offset + RIFF_CHUNK_HEADER_BYTES <= len(data):
         chunk = data[offset : offset + 4]
         (size,) = struct.unpack("<I", data[offset + 4 : offset + 8])
         if chunk == b"fmt ":
             (tag,) = struct.unpack("<H", data[offset + 8 : offset + 10])
+        elif chunk == b"LIST" and data[offset + 8 : offset + 12] == b"INFO":
+            info = _info_tags(data[offset + 12 : offset + 8 + size])
         elif chunk == b"data":
             if tag is None:
                 raise ValidationError("the data chunk comes before any fmt chunk")
             if tag not in WAV_FORMAT_TAGS:
                 raise ValidationError(f"unknown WAVE format tag 0x{tag:04x}")
-            return {"header_format": WAV_FORMAT_TAGS[tag], "header_bytes": offset + 8}
+            found = {"header_format": WAV_FORMAT_TAGS[tag], "header_bytes": offset + 8}
+            return found | ({"info_tags": info} if info else {})
         offset += RIFF_CHUNK_HEADER_BYTES + size + (size & 1)
     raise ValidationError("no data chunk")
+
+
+def _info_tags(body: bytes) -> dict[str, str]:
+    """A LIST/INFO chunk's tags: four-character ids, each a NUL-terminated string."""
+    tags, offset = {}, 0
+    while offset + RIFF_CHUNK_HEADER_BYTES <= len(body):
+        key = body[offset : offset + 4].decode("ascii", "replace")
+        (size,) = struct.unpack("<I", body[offset + 4 : offset + 8])
+        value = body[offset + 8 : offset + 8 + size]
+        if len(value) < size:
+            raise ValidationError(f"the INFO tag {key} is truncated")
+        tags[key] = value.split(b"\0", 1)[0].decode("utf-8")
+        offset += RIFF_CHUNK_HEADER_BYTES + size + (size & 1)
+    return tags
 
 
 def _atoms(data: bytes) -> list[str]:
@@ -352,6 +392,7 @@ def make_media_validator(fmt: str, suffix: str) -> None:
             seconds = props["duration_ms"] / 1000 if chained else None
             props.update(_audio_rates(data, suffix, report, seconds))
         props.update(_tone_props(data, suffix, props))
+        props.update(_container_props(data, suffix, report))
         if fmt == "wav":
             props.update(_wav_header(data))
 

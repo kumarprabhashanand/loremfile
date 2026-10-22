@@ -44,6 +44,7 @@ def validate_parquet(data: bytes, _fixture: Fixture, _mime: str) -> dict[str, An
         "row_groups": metadata.num_row_groups,
         "compression": sorted(compressions)[0].lower() if compressions else "none",
         "column_names": list(table.schema.names),
+        "column_types": [str(field.type) for field in table.schema],
     }
 
 

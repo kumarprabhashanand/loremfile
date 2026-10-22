@@ -7,6 +7,42 @@ description: >-
 seo_title: "Sample Parquet files for testing data pipelines, free and CC0"
 related: [arrow, avro, csv, sqlite]
 fixtures:
+  - name: nested-types.parquet
+    phase: 1
+    generator: columnar.parquet_nested
+    params: { rows: 1000 }
+    description: "The same 1,000 people reshaped into nested columns: name and address as structs, contacts as a map of email and phone, and tags as a list. For readers and loaders that flatten everything to scalar columns."
+    tags: [data, dataset-people]
+    expect: { rows: 1000, row_groups: 1, compression: snappy, column_types: ["int32", "struct<first: string, last: string>", "struct<street: string, city: string, country: string>", "map<string, string ('contacts')>", "list<element: string>"] }
+    size_class: free
+    label: "nested types"
+  - name: people-1000-zstd.parquet
+    phase: 1
+    generator: columnar.parquet_people
+    params: { rows: 1000, compression: zstd }
+    description: "The same 1,000 people rows as people-1000.parquet, compressed with zstd instead of snappy. A reader built without zstd support reads the footer and fails on the data."
+    tags: [data, dataset-people]
+    expect: { rows: 1000, columns: 14, row_groups: 1, compression: zstd }
+    size_class: free
+    label: "zstd"
+  - name: people-1000-gzip.parquet
+    phase: 1
+    generator: columnar.parquet_people
+    params: { rows: 1000, compression: gzip }
+    description: "The same 1,000 people rows as people-1000.parquet, compressed with gzip instead of snappy."
+    tags: [data, dataset-people]
+    expect: { rows: 1000, columns: 14, row_groups: 1, compression: gzip }
+    size_class: free
+    label: "gzip"
+  - name: people-1000-10-row-groups.parquet
+    phase: 1
+    generator: columnar.parquet_people
+    params: { rows: 1000, row_group_size: 100 }
+    description: "The same 1,000 people rows in ten row groups of 100. A reader that only reads the first row group returns 100 rows and no error."
+    tags: [data, dataset-people]
+    expect: { rows: 1000, columns: 14, row_groups: 10, compression: snappy }
+    size_class: free
+    label: "10 row groups"
   - name: people-1000.parquet
     phase: 1
     generator: columnar.parquet_people
@@ -15,7 +51,7 @@ fixtures:
     tags: [data, dataset-people]
     expect: { rows: 1000, columns: 14, row_groups: 1, compression: snappy }
     size_class: free
-    label: "1,000 rows"
+    label: "snappy"
   - name: people-100k.parquet
     phase: 1
     generator: columnar.parquet_people

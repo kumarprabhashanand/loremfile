@@ -38,6 +38,9 @@ NAMES = re.compile(r"\b(?:ID3v2|H\.264|ZIP64|UTF-8|A4)\b")
 #: A size in a label is the catalog's nominal size, which the size-class validator holds the
 #: published bytes to (exactly, or within 5%); a free-size file has no size to name.
 SIZE = re.compile(r"(\d+(?:\.\d+)?) (KB|MB|GB)\b")
+#: An aspect ratio ("4:3") is measured when the props hold both dimensions in that ratio.
+RATIO = re.compile(r"\b(\d+):(\d+)\b")
+DIMENSIONS = (("slide_width_emu", "slide_height_emu"), ("width", "height"))
 UNITS = {"KB": 10**3, "MB": 10**6, "GB": 10**9}
 
 
@@ -68,7 +71,14 @@ def unmeasured(text: str, props: dict[str, Any], fixture: Fixture | None = None)
             problems.append(match.group(0))
         if "exactly" in text and (fixture is None or fixture.size_class is not SizeClass.EXACT):
             problems.append("exactly")
-    rest = NAMES.sub(" ", SIZE.sub(" ", text))
+    for match in RATIO.finditer(text):
+        across, down = (int(n) for n in match.groups())
+        if not any(
+            w in props and h in props and props[w] * down == props[h] * across
+            for w, h in DIMENSIONS
+        ):
+            problems.append(match.group(0))
+    rest = NAMES.sub(" ", RATIO.sub(" ", SIZE.sub(" ", text)))
     known = measured_numbers(props)
     return problems + [n for n in NUMBER.findall(rest) if float(n.replace(",", "")) not in known]
 
@@ -110,6 +120,13 @@ def test_control_digits_in_a_name_are_not_counted_but_a_count_beside_one_is() ->
     rows = MANIFEST["csv/people-100k.csv"]["props"]
     assert unmeasured("100,000 rows", rows) == []
     assert unmeasured("100,002 rows", rows) == ["100,002"], "100,001 is measured: lines"
+
+
+def test_control_a_ratio_must_be_the_measured_one() -> None:
+    four_three = {"slide_width_emu": 9144000, "slide_height_emu": 6858000}
+    assert unmeasured("4:3 slides", four_three) == []
+    assert unmeasured("16:9 slides", four_three) == ["16:9"]
+    assert unmeasured("4:3 slides", {"slides": 5}) == ["4:3"], "no dimensions, no ratio"
 
 
 def test_control_an_invented_number_is_caught() -> None:

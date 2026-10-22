@@ -285,6 +285,9 @@ def validate_pptx(data: bytes, _fixture: Fixture, _mime: str) -> dict[str, Any]:
         "slide_width_emu": presentation.slide_width,
         "slide_height_emu": presentation.slide_height,
         "notes": sum(1 for slide in slides if slide.has_notes_slide),
+        "tables": sum(1 for slide in slides for shape in slide.shapes if shape.has_table),
+        "charts": sum(1 for slide in slides for shape in slide.shapes if shape.has_chart),
+        "hidden_slides": sum(1 for slide in slides if slide._element.get("show") == "0"),
     }
 
 

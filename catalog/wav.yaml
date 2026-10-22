@@ -10,6 +10,15 @@ description: >-
 seo_title: "Sample WAV audio files for testing, free, CC0 and hotlinkable"
 related: [mp3, flac, aiff]
 fixtures:
+  - name: sine-440hz-3s-44k-32bit-float-stereo.wav
+    phase: 1
+    generator: media_audio.wav_float
+    params: { duration: 3, sample_rate: 44100, channels: 2 }
+    description: "Three seconds of a 440 Hz sine as 32-bit IEEE float stereo at 44.1 kHz, behind the plain float header: format tag 3, an 18-byte fmt chunk and the fact chunk every non-integer WAV carries, so the samples start at byte 58. A reader that only knows integer PCM refuses it or plays noise."
+    tags: [audio]
+    expect: { acodec: pcm_f32le, sample_rate: 44100, channels: 2, bit_depth: 32, header_format: float, header_bytes: 58 }
+    size_class: free
+    label: "32-bit float"
   - name: sine-440hz-3s-48k-24bit-stereo.wav
     phase: 2
     generator: media_audio.pcm
@@ -19,6 +28,33 @@ fixtures:
     expect: { acodec: pcm_s24le, sample_rate: 48000, channels: 2, bit_depth: 24, header_format: extensible, header_bytes: 68 }
     size_class: free
     label: "24-bit 48 kHz"
+  - name: with-list-chunk-3s.wav
+    phase: 1
+    generator: media_audio.pcm
+    params: { duration: 3, sample_rate: 44100, bits: 16, channels: 2, info: { INAM: "Lorem ipsum", IART: "Dolor Sit" } }
+    description: "Three seconds of 440 Hz as 44.1 kHz, 16-bit stereo PCM with a LIST/INFO chunk (an INAM title and an IART artist) between fmt and data, as recorders and editors write. The samples start at byte 94: a reader that skips a fixed 44-byte header plays the tags as audio."
+    tags: [audio]
+    expect: { acodec: pcm_s16le, channels: 2, bit_depth: 16, header_format: pcm, header_bytes: 94, info_tags: { IART: "Dolor Sit", INAM: "Lorem ipsum" } }
+    size_class: free
+    label: "LIST chunk"
+  - name: sine-440hz-3s-44k-8bit-stereo.wav
+    phase: 1
+    generator: media_audio.pcm
+    params: { duration: 3, sample_rate: 44100, bits: 8, channels: 2 }
+    description: "Three seconds of a 440 Hz sine as 8-bit stereo PCM at 44.1 kHz. WAV stores 8-bit samples unsigned, centred on 128, where every wider depth is signed: a reader that assumes signed samples turns silence into full scale."
+    tags: [audio]
+    expect: { acodec: pcm_u8, sample_rate: 44100, channels: 2, bit_depth: 8, header_format: pcm, header_bytes: 44 }
+    size_class: free
+    label: "8-bit unsigned"
+  - name: sine-440hz-3s-44k-16bit-mono.wav
+    phase: 1
+    generator: media_audio.pcm
+    params: { duration: 3, sample_rate: 44100, bits: 16, channels: 1 }
+    description: "A 440 Hz sine wave: three seconds of 44.1 kHz, 16-bit PCM in a single channel, the mono twin of the CD-format file, for code that assumes two."
+    tags: [audio]
+    expect: { acodec: pcm_s16le, sample_rate: 44100, channels: 1, bit_depth: 16, header_format: pcm, header_bytes: 44 }
+    size_class: free
+    label: "mono"
   - name: sine-440hz-3s-44k-16bit-stereo.wav
     phase: 1
     generator: media_audio.pcm
