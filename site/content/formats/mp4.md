@@ -1,21 +1,17 @@
-MP4 with H.264 video and AAC audio is the format every player and upload form accepts. These
-clips use synthetic test patterns and a 440 Hz tone, with no third-party footage.
-Faststart files put the index first, so progressive playback works.
+`mp4/non-faststart-720p-5s.mp4` is `mp4/720p-5s.mp4` with the moov atom moved after mdat: the
+same 1,974,574 bytes, but a player that streams it cannot show the first frame until the
+whole file has arrived, and nothing reports an error.
 
-`mp4/720p-5s.mp4` is the default if you need just one file: 1280x720 at 30 frames per second
-for five seconds. `mp4/360p-5s.mp4` is the small one, 640x360, for quick tests, and
-`mp4/vertical-1080x1920-5s.mp4` is portrait, the shape phones record and social apps expect.
+`mp4/no-audio-720p-5s.mp4` has no audio track at all, for code that assumes every video has
+one. `mp4/h264-baseline-720p-5s.mp4` uses the Constrained Baseline profile at level 3.0, which
+older devices and some hardware decoders need. `mp4/720p-5s.mp4` uses the High profile at
+level 3.1, the default most encoders write.
 
-`mp4/non-faststart-720p-5s.mp4` has the same resolution, duration and codecs as
-`mp4/720p-5s.mp4`, but its `moov` metadata comes after `mdat` at the end. Sequential
-playback waits for the whole download; a player with range support can fetch the tail
-first. The validator measures that layout instead of treating every parseable MP4 alike.
+`mp4/vertical-1080x1920-5s.mp4` is 1080x1920, taller than wide, for players and thumbnailers
+that assume landscape. `mp4/360p-5s.mp4` (640x360), `mp4/720p-5s.mp4` (1280x720) and
+`mp4/1080p-10s.mp4` (1920x1080) are the same H.264 and AAC, for responsive players and
+transcode ladders.
 
-Two files target specific assumptions. `mp4/no-audio-720p-5s.mp4` has no audio track at all,
-for code paths that assume every video has one, and `mp4/h264-baseline-720p-5s.mp4` uses the
-constrained Baseline profile that old devices and some hardware decoders need.
-
-For size limits, `mp4/1mb.mp4`, `mp4/10mb.mp4` and `mp4/50mb.mp4` reach their sizes through
-two-pass encoding at a flat bitrate rather than padding, so the sizes are honest.
-`mp4/1080p-10s.mp4` is full HD for ten seconds. Related formats: [MKV](/mkv), [MOV](/mov) and
-[MP3](/mp3).
+`mp4/1mb.mp4`, `mp4/10mb.mp4` and `mp4/50mb.mp4` are 1280x720 encoded at a flat bitrate to
+979,114, 10,062,489 and 50,081,140 bytes, for upload limits and progress bars that need a real
+video of a known size.

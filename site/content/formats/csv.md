@@ -1,19 +1,13 @@
-CSV looks trivial and is not. These files hold the shared synthetic people dataset, the same
-records as the JSON, Parquet and SQLite people files, plus the variants that break naive
-parsers.
+`csv/people-10-utf8-bom.csv` starts with a UTF-8 byte-order mark, which a reader that does not
+strip it attaches to the first column name. `csv/people-10-semicolon.csv` uses `;` as its
+delimiter, as European locales export, where `csv/people-10.csv` uses `,`.
 
-The plain files come in three row counts, `csv/people-10.csv`, `csv/people-1000.csv` and
-`csv/people-100k.csv`, each with a header row. Each variant carries ten rows:
-`csv/people-10-semicolon.csv` uses semicolons, as European locales export;
-`csv/people-10-quoted-newlines.csv` has a real newline inside a quoted field, which is where
-splitting on line breaks goes wrong; `csv/people-10-quoted-commas.csv` puts a comma there
-instead, which is where splitting on commas goes wrong; `csv/people-10-crlf.csv` ends every
-record in CR LF, which leaves a stray carriage return on the last column of a reader that
-splits on LF alone; and `csv/people-10-utf8-bom.csv` starts with a byte-order mark that many
-readers leave attached to the first column name.
+`csv/people-10-crlf.csv` ends every record in CR LF, so a reader that splits on LF alone leaves
+a carriage return on the last column. `csv/people-10-quoted-newlines.csv` has a newline inside
+a quoted field, so its 10 rows take 20 lines and a reader that splits on lines gets the row
+count wrong. `csv/people-10-quoted-commas.csv` has a comma inside a quoted field, which breaks
+splitting on commas.
 
-For size limits there are `csv/1mb.csv` and `csv/10mb.csv`, fitted to within 5% of their
-nominal size and still a prefix of the same dataset.
-
-Use them to test import dialogs, streaming parsers and spreadsheet uploads. Related formats:
-[TSV](/tsv), [JSON](/json), [NDJSON](/ndjson) and [SQL](/sql).
+`csv/people-1000.csv` and `csv/people-100k.csv` hold 1,000 and 100,000 rows of the same 14
+columns in 249,645 and 25,395,296 bytes. `csv/1mb.csv` and `csv/10mb.csv` are 965,447 and
+9,749,583 bytes, prefixes of the same rows, for upload limits.
