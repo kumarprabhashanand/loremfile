@@ -78,6 +78,85 @@ def mp4(
     return _encode(ctx, suffix, args)
 
 
+#: The subtitle cues `mkv_tracks` embeds: (start, end, text), plain SRT.
+SUBTITLE_CUES = (
+    (0.5, 2.0, "Lorem ipsum dolor sit amet."),
+    (2.5, 4.5, "Consectetur adipiscing elit."),
+)
+
+
+def _srt(cues: tuple[tuple[float, float, str], ...]) -> str:
+    def stamp(seconds: float) -> str:
+        whole, millis = divmod(round(seconds * 1000), 1000)
+        return f"00:00:{whole:02d},{millis:03d}"
+
+    blocks = [f"{n}\n{stamp(a)} --> {stamp(b)}\n{text}\n" for n, (a, b, text) in enumerate(cues, 1)]
+    return "\n".join(blocks)
+
+
+def _chapters(count: int, duration: float) -> str:
+    """An ffmetadata file splitting `duration` into `count` equal chapters."""
+    step = round(duration * 1000) // count
+    lines = [";FFMETADATA1"]
+    for index in range(count):
+        lines += [
+            "[CHAPTER]",
+            "TIMEBASE=1/1000",
+            f"START={index * step}",
+            f"END={(index + 1) * step}",
+            f"title=Chapter {index + 1}",
+        ]
+    return "\n".join(lines) + "\n"
+
+
+@generator(parallel_safe=False)
+def mkv_tracks(
+    ctx: GeneratorContext,
+    *,
+    width: int,
+    height: int,
+    duration: float,
+    fps: int = 30,
+    tones: tuple[int, ...] = (440,),
+    subtitles: bool = False,
+    chapters: int = 0,
+) -> bytes:
+    """H.264 in Matroska with one AAC track per tone, and optionally SRT and chapters.
+
+    What sets each mkv fixture apart lives in the container, not the codec: a second
+    audio track, an embedded subtitle track, or a chapter list (docs/05 §3.3).
+    """
+    ctx.workdir.mkdir(parents=True, exist_ok=True)
+    workdir = ctx.workdir
+    args = ["-f", "lavfi", "-i", f"testsrc2=size={width}x{height}:rate={fps}"]
+    maps = ["-map", "0:v"]
+    for index, hz in enumerate(tones, 1):
+        args += ["-f", "lavfi", "-i", f"sine=frequency={hz}:sample_rate=48000"]
+        maps += ["-map", f"{index}:a"]
+    extra = [
+        "-c:v",
+        encoder_for("h264"),
+        *X264_ARGS,
+        "-c:a",
+        encoder_for("aac"),
+        "-b:a",
+        AUDIO_BITRATE,
+    ]
+    if subtitles:
+        srt = workdir / "subtitles.srt"
+        srt.write_text(_srt(SUBTITLE_CUES), encoding="utf-8")
+        maps += ["-map", f"{len(tones) + 1}:s"]
+        args += ["-i", str(srt)]
+        extra += ["-c:s", "srt"]
+    if chapters:
+        meta = workdir / "chapters.txt"
+        meta.write_text(_chapters(chapters, duration), encoding="utf-8")
+        args += ["-i", str(meta)]
+        extra += ["-map_chapters", str(len(tones) + 1 + int(subtitles))]
+    args += ["-t", f"{duration:g}", *maps, *extra, "-f", "matroska"]
+    return _encode(ctx, ".mkv", args)
+
+
 @generator(parallel_safe=False)
 def webm(
     ctx: GeneratorContext,

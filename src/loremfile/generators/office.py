@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import datetime as dt
 import io
+import re
 import zipfile
 from typing import Any
 
@@ -46,6 +47,8 @@ from openpyxl.styles import Alignment, Font
 from openpyxl.worksheet.worksheet import Worksheet
 from PIL import Image
 from pptx import Presentation
+from pptx.chart.data import CategoryChartData
+from pptx.enum.chart import XL_CHART_TYPE
 from pptx.presentation import Presentation as PresentationDocument
 from pptx.util import Inches as PptxInches
 from pptx.util import Pt
@@ -537,15 +540,21 @@ def xlsx_sized(ctx: GeneratorContext, *, size: int) -> bytes:
 # --- pptx ------------------------------------------------------------------
 
 
-#: python-pptx's built-in template is 4:3 (10 x 7.5 inches). Every fixture here is
-#: widescreen, which is what current PowerPoint and Keynote produce; the 4:3 shape gets
-#: its own named fixture (`4x3-5slides.pptx`, P1b) rather than being the silent default.
+#: python-pptx's built-in template is 4:3 (10 x 7.5 inches). Every fixture here but one is
+#: widescreen, which is what current PowerPoint and Keynote produce; the 4:3 shape is its
+#: own named fixture (`aspect-4-3-5slides.pptx`, 1.10.0) rather than a silent default.
 SLIDE_16_9 = (PptxInches(13.333), PptxInches(7.5))
+#: The 4:3 size PowerPoint used before 2013, which older decks and templates still carry.
+SLIDE_4_3 = (PptxInches(10), PptxInches(7.5))
+SLIDE_SIZES = {"16:9": SLIDE_16_9, "4:3": SLIDE_4_3}
+#: A chart's numbers, fixed so the embedded workbook holds the same cells every build.
+CHART_CATEGORIES = ("Q1", "Q2", "Q3", "Q4")
+CHART_VALUES = (12.0, 19.0, 7.0, 15.0)
 
 
-def _new_presentation(ctx: GeneratorContext) -> PresentationDocument:
+def _new_presentation(ctx: GeneratorContext, aspect: str = "16:9") -> PresentationDocument:
     presentation = Presentation()
-    presentation.slide_width, presentation.slide_height = SLIDE_16_9
+    presentation.slide_width, presentation.slide_height = SLIDE_SIZES[aspect]
     core = presentation.core_properties
     core.author = core.last_modified_by = AUTHOR
     core.title = TITLE
@@ -569,13 +578,90 @@ def _title_and_body(presentation: PresentationDocument, title: str, body: str) -
 
 
 @generator()
-def pptx_basic(ctx: GeneratorContext, *, slides: int = 1) -> bytes:
-    """Title-and-content slides of Lorem Ipsum, 16:9."""
-    presentation = _new_presentation(ctx)
+def pptx_basic(
+    ctx: GeneratorContext,
+    *,
+    slides: int = 1,
+    aspect: str = "16:9",
+    table_rows: int = 0,
+    chart: bool = False,
+    hidden: tuple[int, ...] = (),
+) -> bytes:
+    """Title-and-content slides of Lorem Ipsum, 16:9 unless `aspect` says 4:3.
+
+    `table_rows` adds a slide with a native table of that many people (plus a header row),
+    `chart` a slide with a native column chart, and `hidden` marks those slides (1-based)
+    hidden, the `show="0"` a converter that renders every slide gets wrong.
+    """
+    presentation = _new_presentation(ctx, aspect)
     rng = ctx.rng
     for index in range(slides):
         _title_and_body(presentation, f"Slide {index + 1}", lorem.paragraph(rng))
+    if table_rows:
+        _table_slide(presentation, ctx.dataset("people", table_rows))
+    if chart:
+        _chart_slide(ctx, presentation)
+    for number in hidden:
+        # python-pptx has no API for it: a hidden slide is `show="0"` on its <p:sld>.
+        presentation.slides[number - 1]._element.set("show", "0")
     return _save_presentation(presentation)
+
+
+def _table_slide(presentation: PresentationDocument, people: list[dict[str, Any]]) -> None:
+    slide = presentation.slides.add_slide(presentation.slide_layouts[5])
+    slide.shapes.title.text = "People"
+    columns = ("first_name", "last_name", "city", "country")
+    shape = slide.shapes.add_table(
+        len(people) + 1,
+        len(columns),
+        PptxInches(0.5),
+        PptxInches(1.8),
+        PptxInches(9),
+        PptxInches(3),
+    )
+    for col, name in enumerate(columns):
+        shape.table.cell(0, col).text = name
+        for row, person in enumerate(people, 1):
+            shape.table.cell(row, col).text = str(person[name])
+
+
+def _chart_slide(ctx: GeneratorContext, presentation: PresentationDocument) -> None:
+    slide = presentation.slides.add_slide(presentation.slide_layouts[5])
+    slide.shapes.title.text = "Quarterly signups"
+    data = CategoryChartData()
+    data.categories = CHART_CATEGORIES
+    data.add_series("Signups", CHART_VALUES)
+    frame = slide.shapes.add_chart(
+        XL_CHART_TYPE.COLUMN_CLUSTERED,
+        PptxInches(0.5),
+        PptxInches(1.8),
+        PptxInches(9),
+        PptxInches(4.5),
+        data,
+    )
+    workbook = frame.chart.part.chart_workbook
+    workbook.update_from_xlsx_blob(_pinned_workbook(ctx, workbook.xlsx_part.blob))
+
+
+def _pinned_workbook(ctx: GeneratorContext, blob: bytes) -> bytes:
+    """The chart's embedded workbook with its two core-properties dates set to the epoch.
+
+    XlsxWriter, which python-pptx writes chart data through, stamps the wall clock into
+    `docProps/core.xml` from below the layer the determinism guard patches: two builds a
+    minute apart differed there and nowhere else (docs/06 §4, found by the 1.10.0 spike).
+    """
+    stamp = _epoch(ctx).strftime("%Y-%m-%dT%H:%M:%SZ")
+    with zipfile.ZipFile(io.BytesIO(blob)) as source:
+        members = {name: source.read(name) for name in source.namelist()}
+    core = members["docProps/core.xml"].decode("utf-8")
+    members["docProps/core.xml"] = re.sub(
+        r"(<dcterms:(?:created|modified)\b[^>]*>)[^<]*", rf"\g<1>{stamp}", core
+    ).encode("utf-8")
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w") as target:
+        for name, payload in members.items():
+            target.writestr(name, payload)
+    return zipnorm.normalize(out.getvalue())
 
 
 @generator(parallel_safe=False)

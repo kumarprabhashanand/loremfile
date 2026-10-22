@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.9.1",
+  "catalog_version": "1.10.0",
   "formats": [
     {
       "format": "7z",
@@ -315,8 +315,8 @@
     },
     {
       "format": "mkv",
-      "count": 1,
-      "total_bytes": 1971254,
+      "count": 4,
+      "total_bytes": 7966205,
       "url": "https://loremfile.dev/mkv",
       "index": "https://loremfile.dev/mkv/index.json",
       "mime_default": "video/x-matroska"
@@ -387,8 +387,8 @@
     },
     {
       "format": "parquet",
-      "count": 2,
-      "total_bytes": 9870481,
+      "count": 6,
+      "total_bytes": 10262327,
       "url": "https://loremfile.dev/parquet",
       "index": "https://loremfile.dev/parquet/index.json",
       "mime_default": "application/vnd.apache.parquet"
@@ -419,8 +419,8 @@
     },
     {
       "format": "pptx",
-      "count": 3,
-      "total_bytes": 1094475,
+      "count": 7,
+      "total_bytes": 1223476,
       "url": "https://loremfile.dev/pptx",
       "index": "https://loremfile.dev/pptx/index.json",
       "mime_default": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
@@ -547,8 +547,8 @@
     },
     {
       "format": "wav",
-      "count": 3,
-      "total_bytes": 11393312,
+      "count": 7,
+      "total_bytes": 13510352,
       "url": "https://loremfile.dev/wav",
       "index": "https://loremfile.dev/wav/index.json",
       "mime_default": "audio/wav"

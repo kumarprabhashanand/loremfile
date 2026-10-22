@@ -112,7 +112,7 @@ def run(args: list[str], *, cwd: Path | None = None, timeout: int = 600) -> None
 
 
 def probe(path: Path, *, timeout: int = 120) -> dict[str, Any]:
-    """``ffprobe -show_streams -show_format`` as a dict. Used by the media validators."""
+    """``ffprobe -show_streams -show_format -show_chapters`` as a dict, for the media validators."""
     command = [
         tool("ffprobe"),
         "-hide_banner",
@@ -122,6 +122,7 @@ def probe(path: Path, *, timeout: int = 120) -> dict[str, Any]:
         "json",
         "-show_streams",
         "-show_format",
+        "-show_chapters",
         str(path),
     ]
     completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
@@ -185,9 +186,16 @@ def available_encoders() -> set[str]:
 
 
 def decode_pcm(
-    path: Path, *, channels: int, start: float, seconds: float, rate: int, timeout: int = 120
+    path: Path,
+    *,
+    channels: int,
+    start: float,
+    seconds: float,
+    rate: int,
+    stream: int = 0,
+    timeout: int = 120,
 ) -> list[array[int]]:
-    """The first audio stream as signed 16-bit samples, one array per channel.
+    """One audio stream (the first by default) as signed 16-bit samples, one array per channel.
 
     Decoded by ffmpeg from ``start`` for ``seconds`` and resampled to ``rate``, keeping the
     stream's own channel layout so each channel can be measured on its own.
@@ -205,7 +213,7 @@ def decode_pcm(
         "-i",
         str(path),
         "-map",
-        "0:a:0",
+        f"0:a:{stream}",
         "-ar",
         str(rate),
         "-acodec",

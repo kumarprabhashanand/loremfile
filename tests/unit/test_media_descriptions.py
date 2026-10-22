@@ -71,10 +71,11 @@ CHECKED = (KBPS, KHZ, BITS, LEVEL, MILLISECONDS, DURATION, HZ)
 
 
 def tones(props: dict[str, Any]) -> list[float]:
-    """Every measured tone: each channel's, and each chain's channels for a chained file."""
+    """Every measured tone: each channel's, each chain's channels for a chained file, and
+    each audio track's channels for a file with more than one (1.10.0)."""
     found = [v for v in props.get("tone_hz") or [] if v is not None]
-    for chain in props.get("chain_tone_hz") or []:
-        found += [v for v in chain if v is not None]
+    for group in [*(props.get("chain_tone_hz") or []), *(props.get("track_tone_hz") or [])]:
+        found += [v for v in group if v is not None]
     return found
 
 
@@ -287,6 +288,7 @@ def test_the_check_finds_the_claims_it_is_meant_to_check() -> None:
         ("A 440 Hz sine.", {}),
         ("A 440 Hz sine.", {"tone_hz": [None]}),
         ("A 440 Hz sine, then an 880 Hz one.", {"tone_hz": [440.0, 440.0]}),
+        ("880 Hz on the second track.", {"tone_hz": [440.0], "track_tone_hz": [[440.0], [440.0]]}),
     ],
     ids=[
         "wrong bitrate",
@@ -305,6 +307,7 @@ def test_the_check_finds_the_claims_it_is_meant_to_check() -> None:
         "unmeasured tone",
         "a channel with no tone",
         "a second chain nobody measured",
+        "a second track nobody measured",
     ],
 )
 def test_each_kind_of_wrong_or_unmeasured_number_is_reported(

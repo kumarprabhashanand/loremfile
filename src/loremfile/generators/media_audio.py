@@ -40,6 +40,10 @@ PCM_ENCODERS = {8: "pcm_u8", 16: "pcm_s16le", 24: "pcm_s24le", 32: "pcm_f32le"}
 #: header. ffmpeg writes exactly this under `+bitexact`, which is what makes the sized
 #: WAV fixtures exactly the size they claim.
 WAV_HEADER_BYTES = 44
+#: WAVE_FORMAT_EXTENSIBLE's IEEE-float sub-format, which ffmpeg writes for 32-bit float.
+IEEE_FLOAT_GUID = bytes.fromhex("0300000000001000800000aa00389b71")
+WAVE_FORMAT_EXTENSIBLE = 0xFFFE
+WAVE_FORMAT_IEEE_FLOAT = 3
 
 #: Bytes ffmpeg adds around an MP3 frame stream: the Xing/LAME header frame.
 MP3_BITRATE = 128_000
@@ -149,16 +153,26 @@ def pcm(
     bits: int = 16,
     channels: int = 2,
     container: str = "wav",
+    info: dict[str, str] | None = None,
 ) -> bytes:
-    """Uncompressed PCM: WAV or AIFF."""
+    """Uncompressed PCM: WAV or AIFF.
+
+    `info` becomes a RIFF LIST/INFO chunk (INAM, IART, ...) written before `data`, the
+    metadata real recorders add and the reason samples need not start at byte 44.
+    """
     if bits not in PCM_ENCODERS:
         raise ValueError(f"no PCM encoder for {bits}-bit; known: {sorted(PCM_ENCODERS)}")
     encoder = "pcm_s16be" if container == "aiff" else PCM_ENCODERS[bits]
+    tags = [
+        arg
+        for key, value in sorted((info or {}).items())
+        for arg in ("-metadata", f"{key}={value}")
+    ]
     return _encode(
         _target(ctx),
         source=source,
         duration=duration,
-        codec_args=["-c:a", encoder, "-ar", str(sample_rate), "-ac", str(channels)],
+        codec_args=["-c:a", encoder, "-ar", str(sample_rate), "-ac", str(channels), *tags],
         sample_rate=sample_rate,
         channels=channels,
         container=container,
@@ -207,6 +221,54 @@ def wav_sized(
     struct.pack_into("<I", trimmed, 4, size - 8)
     struct.pack_into("<I", trimmed, 40, payload)
     return bytes(trimmed)
+
+
+def ieee_float_header(data: bytes) -> bytes:
+    """ffmpeg's extensible 32-bit float WAV with the plain IEEE-float header instead.
+
+    The samples are kept byte for byte. The header becomes an 18-byte `fmt ` with format
+    tag 3 and no extension, then the `fact` chunk (frame count) that every WAV whose format
+    is not integer PCM must carry, then `data`.
+    """
+    chunks: dict[bytes, bytes] = {}
+    offset = 12
+    while offset + 8 <= len(data):
+        (size,) = struct.unpack("<I", data[offset + 4 : offset + 8])
+        chunks[data[offset : offset + 4]] = data[offset + 8 : offset + 8 + size]
+        if data[offset : offset + 4] == b"data":
+            break
+        offset += 8 + size + (size & 1)
+    fmt, samples = chunks.get(b"fmt ", b""), chunks.get(b"data")
+    tag, channels, rate, per_second, align, bits = struct.unpack("<HHIIHH", fmt[:16])
+    if (tag, bits, fmt[24:40]) != (WAVE_FORMAT_EXTENSIBLE, 32, IEEE_FLOAT_GUID) or not samples:
+        raise ValueError(f"not an extensible 32-bit float WAV: tag 0x{tag:04x}, {bits}-bit")
+    frames = len(samples) // align
+    body = (
+        b"WAVE"
+        + b"fmt "
+        + struct.pack(
+            "<IHHIIHHH", 18, WAVE_FORMAT_IEEE_FLOAT, channels, rate, per_second, align, bits, 0
+        )
+        + b"fact"
+        + struct.pack("<II", 4, frames)
+        + b"data"
+        + struct.pack("<I", len(samples))
+        + samples
+    )
+    return b"RIFF" + struct.pack("<I", len(body)) + body
+
+
+@generator(parallel_safe=False)
+def wav_float(
+    ctx: GeneratorContext, *, duration: float, sample_rate: int = 44100, channels: int = 2
+) -> bytes:
+    """32-bit float samples behind format tag 3, WAVE_FORMAT_IEEE_FLOAT (docs/05 §3.4).
+
+    ffmpeg writes float as WAVE_FORMAT_EXTENSIBLE, a header the 24-bit fixture already
+    covers, so its samples are kept and its header rewritten (`ieee_float_header`).
+    """
+    extensible = pcm(ctx, duration=duration, sample_rate=sample_rate, bits=32, channels=channels)
+    return ieee_float_header(extensible)
 
 
 @generator(parallel_safe=False)

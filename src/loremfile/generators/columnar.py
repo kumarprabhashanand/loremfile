@@ -90,26 +90,67 @@ def _arrow_table(rows: list[dict[str, Any]]) -> pyarrow.Table:
     return pyarrow.Table.from_pydict(columns, schema=schema)
 
 
-@generator(parallel_safe=False)
-def parquet_people(ctx: GeneratorContext, *, rows: int, compression: str = "snappy") -> bytes:
-    """The people dataset as Parquet.
-
-    ``store_schema=False`` for the pandas metadata block: it would otherwise embed a
+def _parquet_bytes(table: pyarrow.Table, *, compression: str, row_group_size: int) -> bytes:
+    """``store_schema=False`` for the pandas metadata block: it would otherwise embed a
     pandas version string, which the toolchain pin does not cover because pandas is not
-    a dependency at all.
-    """
-    table = _arrow_table(ctx.dataset("people", rows))
+    a dependency at all."""
     sink = pyarrow.BufferOutputStream()
     pyarrow.parquet.write_table(
         table,
         sink,
         compression=compression,
-        row_group_size=ROW_GROUP_SIZE,
+        row_group_size=row_group_size,
         store_schema=False,
         write_statistics=True,
         version="2.6",
     )
     return bytes(sink.getvalue())
+
+
+@generator(parallel_safe=False)
+def parquet_people(
+    ctx: GeneratorContext,
+    *,
+    rows: int,
+    compression: str = "snappy",
+    row_group_size: int = ROW_GROUP_SIZE,
+) -> bytes:
+    """The people dataset as Parquet; `row_group_size` below `rows` splits it into groups."""
+    table = _arrow_table(ctx.dataset("people", rows))
+    return _parquet_bytes(table, compression=compression, row_group_size=row_group_size)
+
+
+@generator(parallel_safe=False)
+def parquet_nested(ctx: GeneratorContext, *, rows: int) -> bytes:
+    """The same people reshaped: name and address as structs, contacts as a map.
+
+    The flat people files already hold one list column (`tags`); what this adds is the
+    two nested types a reader that flattens to scalars and lists cannot represent.
+    """
+    people = ctx.dataset("people", rows)
+    text = pyarrow.string()
+    name = pyarrow.struct([("first", text), ("last", text)])
+    address = pyarrow.struct([("street", text), ("city", text), ("country", text)])
+    schema = pyarrow.schema(
+        [
+            ("id", pyarrow.int32()),
+            ("name", name),
+            ("address", address),
+            ("contacts", pyarrow.map_(text, text)),
+            ("tags", pyarrow.list_(text)),
+        ]
+    )
+    columns = {
+        "id": [p["id"] for p in people],
+        "name": [{"first": p["first_name"], "last": p["last_name"]} for p in people],
+        "address": [
+            {"street": p["street"], "city": p["city"], "country": p["country"]} for p in people
+        ],
+        "contacts": [[("email", p["email"]), ("phone", p["phone"])] for p in people],
+        "tags": [p["tags"] for p in people],
+    }
+    table = pyarrow.Table.from_pydict(columns, schema=schema)
+    return _parquet_bytes(table, compression="snappy", row_group_size=ROW_GROUP_SIZE)
 
 
 @generator(parallel_safe=False)

@@ -1,15 +1,15 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.9.1",
-  "generated_at": "2026-10-16T21:19:41Z",
+  "catalog_version": "1.10.0",
+  "generated_at": "2026-10-22T10:33:49Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:53aed7c9c16e2471fb001682dc03d7622d05b1854981cdb4c2b7cbd6817f0f74",
-  "count": 266,
-  "total_bytes": 612825078,
+  "count": 281,
+  "total_bytes": 621457916,
   "formats": [
     "7z",
     "aac",
@@ -5263,6 +5263,161 @@
       "supersededBy": null
     },
     {
+      "path": "mkv/multi-audio-2-tracks-720p-5s.mkv",
+      "url": "https://loremfile.dev/mkv/multi-audio-2-tracks-720p-5s.mkv",
+      "format": "mkv",
+      "ext": "mkv",
+      "mime": "video/x-matroska",
+      "bytes": 2052109,
+      "sha256": "140888949b76280c9e9bf8c2ed36a8dbb98b123279326dc2449b33cc6e5ff86e",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1280x720 at 30 fps, five seconds, H.264 with two AAC audio tracks: 440 Hz on the first and 880 Hz on the second, so a player or converter that only ever takes track one is easy to catch.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5021,
+        "video_streams": 1,
+        "audio_streams": 2,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ],
+        "track_tone_hz": [
+          [
+            440.0
+          ],
+          [
+            880.0
+          ]
+        ]
+      },
+      "generator": "media_video.mkv_tracks",
+      "generator_params": {
+        "width": 1280,
+        "height": 720,
+        "duration": 5,
+        "tones": [
+          440,
+          880
+        ]
+      },
+      "added_in": "1.10.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mkv/with-chapters-720p-5s.mkv",
+      "url": "https://loremfile.dev/mkv/with-chapters-720p-5s.mkv",
+      "format": "mkv",
+      "ext": "mkv",
+      "mime": "video/x-matroska",
+      "bytes": 1971331,
+      "sha256": "e6309f5d8b4c036795931bbcc980e9bc0ecb9733c59fce326128f6d954cf9d74",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1280x720 H.264 plus AAC, five seconds, with three equal chapters in the Matroska chapter list, for seek menus and chapter navigation.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5021,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ],
+        "chapters": 3
+      },
+      "generator": "media_video.mkv_tracks",
+      "generator_params": {
+        "width": 1280,
+        "height": 720,
+        "duration": 5,
+        "chapters": 3
+      },
+      "added_in": "1.10.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mkv/with-subtitles-720p-5s.mkv",
+      "url": "https://loremfile.dev/mkv/with-subtitles-720p-5s.mkv",
+      "format": "mkv",
+      "ext": "mkv",
+      "mime": "video/x-matroska",
+      "bytes": 1971511,
+      "sha256": "247d6d534c2ea84657ebbf224d8f328b044e75894c38a7d05965cae52431f6e7",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1280x720 H.264 plus AAC, five seconds, with an embedded SRT subtitle track of two cues, for players and converters that drop or mis-map text tracks.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5021,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 1,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ],
+        "scodec": "subrip"
+      },
+      "generator": "media_video.mkv_tracks",
+      "generator_params": {
+        "width": 1280,
+        "height": 720,
+        "duration": 5,
+        "subtitles": true
+      },
+      "added_in": "1.10.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "mov/720p-5s.mov",
       "url": "https://loremfile.dev/mov/720p-5s.mov",
       "format": "mov",
@@ -6501,6 +6656,243 @@
       "supersededBy": null
     },
     {
+      "path": "parquet/nested-types.parquet",
+      "url": "https://loremfile.dev/parquet/nested-types.parquet",
+      "format": "parquet",
+      "ext": "parquet",
+      "mime": "application/vnd.apache.parquet",
+      "bytes": 47369,
+      "sha256": "6446952ebb32b72d0618b42bf6b15077f30b1bec3718ed2e9eefb12df8ca2db5",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The same 1,000 people reshaped into nested columns: name and address as structs, contacts as a map of email and phone, and tags as a list. For readers and loaders that flatten everything to scalar columns.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "rows": 1000,
+        "columns": 9,
+        "row_groups": 1,
+        "compression": "snappy",
+        "column_names": [
+          "id",
+          "name",
+          "address",
+          "contacts",
+          "tags"
+        ],
+        "column_types": [
+          "int32",
+          "struct<first: string, last: string>",
+          "struct<street: string, city: string, country: string>",
+          "map<string, string ('contacts')>",
+          "list<element: string>"
+        ]
+      },
+      "generator": "columnar.parquet_nested",
+      "generator_params": {
+        "rows": 1000
+      },
+      "added_in": "1.10.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "parquet/people-1000-10-row-groups.parquet",
+      "url": "https://loremfile.dev/parquet/people-1000-10-row-groups.parquet",
+      "format": "parquet",
+      "ext": "parquet",
+      "mime": "application/vnd.apache.parquet",
+      "bytes": 174780,
+      "sha256": "122124f01360b16c31e3b91bbea8f8a6c41633fb08f10ac9f5f5dbca99ee2ea7",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The same 1,000 people rows in ten row groups of 100. A reader that only reads the first row group returns 100 rows and no error.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "rows": 1000,
+        "columns": 14,
+        "row_groups": 10,
+        "compression": "snappy",
+        "column_names": [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "phone",
+          "street",
+          "city",
+          "country",
+          "birth_date",
+          "signup_at",
+          "balance",
+          "is_active",
+          "tags",
+          "bio"
+        ],
+        "column_types": [
+          "int32",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "date32[day]",
+          "timestamp[us, tz=UTC]",
+          "double",
+          "bool",
+          "list<element: string>",
+          "string"
+        ]
+      },
+      "generator": "columnar.parquet_people",
+      "generator_params": {
+        "rows": 1000,
+        "row_group_size": 100
+      },
+      "added_in": "1.10.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "parquet/people-1000-gzip.parquet",
+      "url": "https://loremfile.dev/parquet/people-1000-gzip.parquet",
+      "format": "parquet",
+      "ext": "parquet",
+      "mime": "application/vnd.apache.parquet",
+      "bytes": 83002,
+      "sha256": "f7a2598d105f6ac4a66f710a4f64b19e74c5c68914af008bf56c35e76de9ee0d",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The same 1,000 people rows as people-1000.parquet, compressed with gzip instead of snappy.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "rows": 1000,
+        "columns": 14,
+        "row_groups": 1,
+        "compression": "gzip",
+        "column_names": [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "phone",
+          "street",
+          "city",
+          "country",
+          "birth_date",
+          "signup_at",
+          "balance",
+          "is_active",
+          "tags",
+          "bio"
+        ],
+        "column_types": [
+          "int32",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "date32[day]",
+          "timestamp[us, tz=UTC]",
+          "double",
+          "bool",
+          "list<element: string>",
+          "string"
+        ]
+      },
+      "generator": "columnar.parquet_people",
+      "generator_params": {
+        "rows": 1000,
+        "compression": "gzip"
+      },
+      "added_in": "1.10.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "parquet/people-1000-zstd.parquet",
+      "url": "https://loremfile.dev/parquet/people-1000-zstd.parquet",
+      "format": "parquet",
+      "ext": "parquet",
+      "mime": "application/vnd.apache.parquet",
+      "bytes": 86695,
+      "sha256": "c3af4e04f51546ec8bdcc7c37ad317f47b7446ef48c55af4db808e42ceb205f8",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The same 1,000 people rows as people-1000.parquet, compressed with zstd instead of snappy. A reader built without zstd support reads the footer and fails on the data.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "rows": 1000,
+        "columns": 14,
+        "row_groups": 1,
+        "compression": "zstd",
+        "column_names": [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "phone",
+          "street",
+          "city",
+          "country",
+          "birth_date",
+          "signup_at",
+          "balance",
+          "is_active",
+          "tags",
+          "bio"
+        ],
+        "column_types": [
+          "int32",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "date32[day]",
+          "timestamp[us, tz=UTC]",
+          "double",
+          "bool",
+          "list<element: string>",
+          "string"
+        ]
+      },
+      "generator": "columnar.parquet_people",
+      "generator_params": {
+        "rows": 1000,
+        "compression": "zstd"
+      },
+      "added_in": "1.10.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "parquet/people-1000.parquet",
       "url": "https://loremfile.dev/parquet/people-1000.parquet",
       "format": "parquet",
@@ -6536,6 +6928,22 @@
           "is_active",
           "tags",
           "bio"
+        ],
+        "column_types": [
+          "int32",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "date32[day]",
+          "timestamp[us, tz=UTC]",
+          "double",
+          "bool",
+          "list<element: string>",
+          "string"
         ]
       },
       "generator": "columnar.parquet_people",
@@ -6583,6 +6991,22 @@
           "is_active",
           "tags",
           "bio"
+        ],
+        "column_types": [
+          "int32",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "string",
+          "date32[day]",
+          "timestamp[us, tz=UTC]",
+          "double",
+          "bool",
+          "list<element: string>",
+          "string"
         ]
       },
       "generator": "columnar.parquet_people",
@@ -7473,6 +7897,9 @@
         "slide_width_emu": 12191695,
         "slide_height_emu": 6858000,
         "notes": 0,
+        "tables": 0,
+        "charts": 0,
+        "hidden_slides": 0,
         "contains_text": [
           "Perferendis mollit non fugiat",
           "Ipsum fuga adipisci voluptate",
@@ -7512,7 +7939,10 @@
         "images": 5,
         "slide_width_emu": 12191695,
         "slide_height_emu": 6858000,
-        "notes": 5
+        "notes": 5,
+        "tables": 0,
+        "charts": 0,
+        "hidden_slides": 0
       },
       "generator": "office.pptx_sized",
       "generator_params": {
@@ -7546,6 +7976,9 @@
         "slide_width_emu": 12191695,
         "slide_height_emu": 6858000,
         "notes": 0,
+        "tables": 0,
+        "charts": 0,
+        "hidden_slides": 0,
         "contains_text": [
           "Proident culpa et aliqua",
           "Proident quia occaecat magna",
@@ -7558,6 +7991,157 @@
         "slides": 1
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pptx/aspect-4-3-5slides.pptx",
+      "url": "https://loremfile.dev/pptx/aspect-4-3-5slides.pptx",
+      "format": "pptx",
+      "ext": "pptx",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "bytes": 32862,
+      "sha256": "3600a45fc45524f7e40b358b2ff026ea8874846114ae523fc1432052126356d4",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Five title-and-content slides of Lorem Ipsum at 4:3, the slide size PowerPoint used before 2013, where every other deck here is 16:9.",
+      "tags": [
+        "document",
+        "multi-page",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "slides": 5,
+        "layouts": 1,
+        "images": 0,
+        "slide_width_emu": 9144000,
+        "slide_height_emu": 6858000,
+        "notes": 0,
+        "tables": 0,
+        "charts": 0,
+        "hidden_slides": 0
+      },
+      "generator": "office.pptx_basic",
+      "generator_params": {
+        "slides": 5,
+        "aspect": "4:3"
+      },
+      "added_in": "1.10.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pptx/with-chart.pptx",
+      "url": "https://loremfile.dev/pptx/with-chart.pptx",
+      "format": "pptx",
+      "ext": "pptx",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "bytes": 35731,
+      "sha256": "bde236c43e2b6857fd7a3820597999464320426376fa41c8edeac5bea775d0cd",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A title-and-content slide and a slide with a native column chart, its numbers kept in the workbook PowerPoint embeds beside it. For converters that render charts or read their data.",
+      "tags": [
+        "document"
+      ],
+      "edge_case": false,
+      "props": {
+        "slides": 2,
+        "layouts": 2,
+        "images": 0,
+        "slide_width_emu": 12191695,
+        "slide_height_emu": 6858000,
+        "notes": 0,
+        "tables": 0,
+        "charts": 1,
+        "hidden_slides": 0
+      },
+      "generator": "office.pptx_basic",
+      "generator_params": {
+        "slides": 1,
+        "chart": true
+      },
+      "added_in": "1.10.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pptx/with-hidden-slide.pptx",
+      "url": "https://loremfile.dev/pptx/with-hidden-slide.pptx",
+      "format": "pptx",
+      "ext": "pptx",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "bytes": 30681,
+      "sha256": "a5aaeb2db2b211bc31c687a3fad72aa0607c08240c25626d3b7f036ea7bc2f5f",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three slides of Lorem Ipsum with the second marked hidden. A slideshow skips it; a converter that renders every slide shows it, and a counter that ignores the flag says three.",
+      "tags": [
+        "document",
+        "multi-page",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "slides": 3,
+        "layouts": 1,
+        "images": 0,
+        "slide_width_emu": 12191695,
+        "slide_height_emu": 6858000,
+        "notes": 0,
+        "tables": 0,
+        "charts": 0,
+        "hidden_slides": 1
+      },
+      "generator": "office.pptx_basic",
+      "generator_params": {
+        "slides": 3,
+        "hidden": [
+          2
+        ]
+      },
+      "added_in": "1.10.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pptx/with-table.pptx",
+      "url": "https://loremfile.dev/pptx/with-table.pptx",
+      "format": "pptx",
+      "ext": "pptx",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "bytes": 29727,
+      "sha256": "2c83500235a01b97787901078f5e3386ca00a063cb940efceaf3768526f5c8a6",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A title-and-content slide and a slide with a native table of five people from the shared dataset under a header row: a table, not a picture of one, for extractors that only read text frames.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "slides": 2,
+        "layouts": 2,
+        "images": 0,
+        "slide_width_emu": 12191695,
+        "slide_height_emu": 6858000,
+        "notes": 0,
+        "tables": 1,
+        "charts": 0,
+        "hidden_slides": 0
+      },
+      "generator": "office.pptx_basic",
+      "generator_params": {
+        "slides": 1,
+        "table_rows": 5
+      },
+      "added_in": "1.10.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -9034,6 +9618,49 @@
       "supersededBy": null
     },
     {
+      "path": "wav/sine-440hz-3s-44k-16bit-mono.wav",
+      "url": "https://loremfile.dev/wav/sine-440hz-3s-44k-16bit-mono.wav",
+      "format": "wav",
+      "ext": "wav",
+      "mime": "audio/wav",
+      "bytes": 264644,
+      "sha256": "72e287d3226d1d27537980eca453ac8abdf31816343f1bd5b542bf965b0706f2",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A 440 Hz sine wave: three seconds of 44.1 kHz, 16-bit PCM in a single channel, the mono twin of the CD-format file, for code that assumes two.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 3000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "pcm_s16le",
+        "sample_rate": 44100,
+        "channels": 1,
+        "bitrate_kbps": 705.6,
+        "bit_depth": 16,
+        "tone_hz": [
+          440.0
+        ],
+        "header_format": "pcm",
+        "header_bytes": 44
+      },
+      "generator": "media_audio.pcm",
+      "generator_params": {
+        "duration": 3,
+        "sample_rate": 44100,
+        "bits": 16,
+        "channels": 1
+      },
+      "added_in": "1.10.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "wav/sine-440hz-3s-44k-16bit-stereo.wav",
       "url": "https://loremfile.dev/wav/sine-440hz-3s-44k-16bit-stereo.wav",
       "format": "wav",
@@ -9078,6 +9705,93 @@
       "supersededBy": null
     },
     {
+      "path": "wav/sine-440hz-3s-44k-32bit-float-stereo.wav",
+      "url": "https://loremfile.dev/wav/sine-440hz-3s-44k-32bit-float-stereo.wav",
+      "format": "wav",
+      "ext": "wav",
+      "mime": "audio/wav",
+      "bytes": 1058458,
+      "sha256": "040b6944f931020080d02f36e8d6a21a5f2787cf6d6ad372f6a5dd2981456383",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three seconds of a 440 Hz sine as 32-bit IEEE float stereo at 44.1 kHz, behind the plain float header: format tag 3, an 18-byte fmt chunk and the fact chunk every non-integer WAV carries, so the samples start at byte 58. A reader that only knows integer PCM refuses it or plays noise.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 3000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "pcm_f32le",
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 2822.4,
+        "bit_depth": 32,
+        "tone_hz": [
+          440.0,
+          440.0
+        ],
+        "header_format": "float",
+        "header_bytes": 58
+      },
+      "generator": "media_audio.wav_float",
+      "generator_params": {
+        "duration": 3,
+        "sample_rate": 44100,
+        "channels": 2
+      },
+      "added_in": "1.10.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "wav/sine-440hz-3s-44k-8bit-stereo.wav",
+      "url": "https://loremfile.dev/wav/sine-440hz-3s-44k-8bit-stereo.wav",
+      "format": "wav",
+      "ext": "wav",
+      "mime": "audio/wav",
+      "bytes": 264644,
+      "sha256": "c3073ea697d72ad2583001c31b9b04396d082bad56ce2848073c390b91a49c52",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three seconds of a 440 Hz sine as 8-bit stereo PCM at 44.1 kHz. WAV stores 8-bit samples unsigned, centred on 128, where every wider depth is signed: a reader that assumes signed samples turns silence into full scale.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 3000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "pcm_u8",
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 705.6,
+        "bit_depth": 8,
+        "tone_hz": [
+          440.0,
+          440.0
+        ],
+        "header_format": "pcm",
+        "header_bytes": 44
+      },
+      "generator": "media_audio.pcm",
+      "generator_params": {
+        "duration": 3,
+        "sample_rate": 44100,
+        "bits": 8,
+        "channels": 2
+      },
+      "added_in": "1.10.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "wav/sine-440hz-3s-48k-24bit-stereo.wav",
       "url": "https://loremfile.dev/wav/sine-440hz-3s-48k-24bit-stereo.wav",
       "format": "wav",
@@ -9117,6 +9831,58 @@
         "channels": 2
       },
       "added_in": "1.7.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "wav/with-list-chunk-3s.wav",
+      "url": "https://loremfile.dev/wav/with-list-chunk-3s.wav",
+      "format": "wav",
+      "ext": "wav",
+      "mime": "audio/wav",
+      "bytes": 529294,
+      "sha256": "9ec8fe0492070740821975c1b3f7b6ff2d754cdd6802a1e1c6380452ff525792",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three seconds of 440 Hz as 44.1 kHz, 16-bit stereo PCM with a LIST/INFO chunk (an INAM title and an IART artist) between fmt and data, as recorders and editors write. The samples start at byte 94: a reader that skips a fixed 44-byte header plays the tags as audio.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 3000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "pcm_s16le",
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 1411.2,
+        "bit_depth": 16,
+        "tone_hz": [
+          440.0,
+          440.0
+        ],
+        "header_format": "pcm",
+        "header_bytes": 94,
+        "info_tags": {
+          "IART": "Dolor Sit",
+          "INAM": "Lorem ipsum"
+        }
+      },
+      "generator": "media_audio.pcm",
+      "generator_params": {
+        "duration": 3,
+        "sample_rate": 44100,
+        "bits": 16,
+        "channels": 2,
+        "info": {
+          "INAM": "Lorem ipsum",
+          "IART": "Dolor Sit"
+        }
+      },
+      "added_in": "1.10.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null

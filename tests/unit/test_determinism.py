@@ -178,6 +178,8 @@ PROVING_FIXTURES = [
     # Catalog 1.5.0: x265 through heif-enc, and pypdf as a writer for the first time.
     "heic/640x480.heic",
     "pdf/form-fields-1page.pdf",
+    # Catalog 1.10.0: XlsxWriter's clock, which the guard does not reach, pinned by hand.
+    "pptx/with-chart.pptx",
 ]
 
 DETERMINISM_TABLE_HEADER = "| Library | Claim | Proving fixture | Verified |"

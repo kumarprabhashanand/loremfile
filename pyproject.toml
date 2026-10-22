@@ -115,7 +115,9 @@ show_error_codes = true
 # annotations, so every `TIT2(...)` is an untyped call in a strict context. This excludes
 # calls *into* mutagen from that one check — our own code is still fully checked, which a
 # per-module `disallow_untyped_calls = false` on generators/media_audio.py would not be.
-untyped_calls_exclude = ["mutagen"]
+# python-pptx's chart data classes (`CategoryChartData`, `add_series`) are unannotated in
+# the same way; the chart fixture is the only caller (catalogue 1.10.0).
+untyped_calls_exclude = ["mutagen", "pptx.chart.data"]
 
 [[tool.mypy.overrides]]
 module = ["tests.*"]

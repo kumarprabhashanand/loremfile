@@ -240,6 +240,22 @@ AFTER_LAUNCH = (
     "arrow/people-1000.arrows",
     "arrow/people-1000-10-batches.arrow",
     "arrow/all-types.arrow",
+    # 1.10.0: four files each for wav, parquet and pptx, three for mkv (its fourth ships alone).
+    "wav/sine-440hz-3s-44k-32bit-float-stereo.wav",
+    "wav/with-list-chunk-3s.wav",
+    "wav/sine-440hz-3s-44k-8bit-stereo.wav",
+    "wav/sine-440hz-3s-44k-16bit-mono.wav",
+    "mkv/multi-audio-2-tracks-720p-5s.mkv",
+    "mkv/with-subtitles-720p-5s.mkv",
+    "mkv/with-chapters-720p-5s.mkv",
+    "parquet/nested-types.parquet",
+    "parquet/people-1000-zstd.parquet",
+    "parquet/people-1000-gzip.parquet",
+    "parquet/people-1000-10-row-groups.parquet",
+    "pptx/with-chart.pptx",
+    "pptx/with-table.pptx",
+    "pptx/with-hidden-slide.pptx",
+    "pptx/aspect-4-3-5slides.pptx",
 )
 
 

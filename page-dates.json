@@ -41,7 +41,7 @@
   },
   "changelog": {
     "date": "2026-10-22",
-    "sha256": "cbfd122e1b71ca97b8493032e942bba31e836c4a945a27e71df2d95384d74445"
+    "sha256": "8120bff94f7a63bd31a8fc30b76f20cbb07865b771161398339edae9f7fa89d5"
   },
   "css": {
     "date": "2026-10-17",
@@ -80,8 +80,8 @@
     "sha256": "972e96449d19576f54f9f249b271b30fe49a4275095cb4b4e13a4b92f3f18e62"
   },
   "docs/manifest": {
-    "date": "2026-10-21",
-    "sha256": "d704e0b3b73629d42f49eb5016518b7130b74b0db323357a61032779fd9926db"
+    "date": "2026-10-22",
+    "sha256": "976f6126d0c10002ebcd2704286ec3eefa2cf2670d293940064335383d628a2b"
   },
   "docs/mcp": {
     "date": "2026-10-17",
@@ -116,8 +116,8 @@
     "sha256": "041c6b8861605ff2f663f6285bb88f67aa327a70295f2bef272b6f65e489557f"
   },
   "formats": {
-    "date": "2026-10-17",
-    "sha256": "16e922dc12314dd944fea338528c0491addb3d29796b8b38e56913aa32452e48"
+    "date": "2026-10-22",
+    "sha256": "762b2f43c1ed232651851d880b6eb5c54fbea227eec3bee7716faa3d5c30c837"
   },
   "geojson": {
     "date": "2026-10-17",
@@ -160,8 +160,8 @@
     "sha256": "321cb29b556186924af9b8dce0ac8fd69e59fa48d0e296106c1c510093dbfeac"
   },
   "index.html": {
-    "date": "2026-10-17",
-    "sha256": "6b60cc3ecb24bfb4816a6d50b8fd8a4c40ce2c19553195b648cda41f897ce162"
+    "date": "2026-10-22",
+    "sha256": "c7871a30fb17d8c4627240e2d847a0d930b3795ea50846d7cd92455243f6cfdd"
   },
   "ini": {
     "date": "2026-10-17",
@@ -208,8 +208,8 @@
     "sha256": "fd6924b1e411a0e365f7fe2327b8886ab51e56ffd08c4dbd17ee5025e5959b47"
   },
   "mkv": {
-    "date": "2026-10-21",
-    "sha256": "f53eae2f7abd4e352c7213953512177103b94b899f0b292e180aaf868f8a4db0"
+    "date": "2026-10-22",
+    "sha256": "c5ec9cb26b14290f4912f8fb1c447cfdb6574a75f9d77ae19306295ada0b08b4"
   },
   "mov": {
     "date": "2026-10-17",
@@ -244,8 +244,8 @@
     "sha256": "73dd830138a0fecbbdcadd1c72f1400ad1ab9df716e4e319fd15f2611623fcd0"
   },
   "parquet": {
-    "date": "2026-10-21",
-    "sha256": "713d0475308792277ce1484accd210fa36ea5bfd06ae89f90555fa5c57784c83"
+    "date": "2026-10-22",
+    "sha256": "19389d7aecfeb1c142b1d7b93f4fb414957ce512e178d0fc66e95984aee122d5"
   },
   "pdf": {
     "date": "2026-10-21",
@@ -260,8 +260,8 @@
     "sha256": "6f6ecd3b8fdd58aac605f5abf6d1eaf363e37a41acad761f334db692169b16b7"
   },
   "pptx": {
-    "date": "2026-10-21",
-    "sha256": "b205fff7772143d844d9eca8fc9a9e9945ae28df38bd1bf662f39b5b5784e91f"
+    "date": "2026-10-22",
+    "sha256": "f556fa743351b1b7d9494ab8912300d39971439e60066625dd625c6e7af9a10d"
   },
   "rtf": {
     "date": "2026-10-17",
@@ -344,8 +344,8 @@
     "sha256": "068d52dd2228d14dfa985317d91fdd179d3074e8b37881d031769036365a536d"
   },
   "wav": {
-    "date": "2026-10-21",
-    "sha256": "4c663a6666302364fde271c8f0c2ee7d9906df779d29d7d0d32ddccf0cd54221"
+    "date": "2026-10-22",
+    "sha256": "88b15e00c089f56b7613a85e6faccb18343aedb7dc291ef1a1d2123f5ad1c073"
   },
   "webm": {
     "date": "2026-10-17",
