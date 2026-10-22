@@ -26,6 +26,19 @@ fixtures:
     expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, subtitle_streams: 1, scodec: subrip }
     size_class: free
     label: "SRT subtitles"
+  - name: vp9-opus-720p-5s.mkv
+    expected_drift: >-
+      Not byte-reproducible off the CI reference fleet: libvpx and libopus choose SIMD kernels
+      from the CPU features they find, and no ffmpeg flag reaches that choice (docs/06
+      section 4, RISK-21).
+    phase: 1
+    generator: media_video.webm
+    params: { width: 1280, height: 720, duration: 5, container: matroska }
+    description: "1280x720 at 30 fps, five seconds, VP9 video with Opus audio in general Matroska rather than WebM: the codecs of webm/720p-5s-vp9.webm in the container that also holds H.264, for players and sniffers that tie VP9 to the .webm extension."
+    tags: [video, codec-vp9, codec-opus]
+    expect: { width: 1280, height: 720, vcodec: vp9, acodec: opus }
+    size_class: free
+    label: "VP9 + Opus"
   - name: with-chapters-720p-5s.mkv
     phase: 1
     generator: media_video.mkv_tracks

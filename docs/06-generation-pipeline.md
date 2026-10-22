@@ -372,7 +372,7 @@ git push                              # green
 
 `manifest adopt` refuses any path already published on the base branch, so this loop can only ever set the bytes of a fixture the branch is *adding*. Everything that is not media matched on every machine through M3.1–M3.6, and needs one round trip as before.
 
-**If `manifest check` fails locally on a media path that is already committed, check `expected_drift` in its catalog entry before assuming a regression**: six paths carry it today (`mp4/1080p-10s`, `mp4/10mb`, `mp4/50mb`, `opus/30s`, `opus/cbr-32k-30s`, `webm/720p-5s-vp9`), and `build --audit` reports them separately for exactly this reason.
+**If `manifest check` fails locally on a media path that is already committed, check `expected_drift` in its catalog entry before assuming a regression**: seven paths carry it today (`mp4/1080p-10s`, `mp4/10mb`, `mp4/50mb`, `opus/30s`, `opus/cbr-32k-30s`, `webm/720p-5s-vp9`, and since 1.11.0 `mkv/vp9-opus-720p-5s`), and `build --audit` reports them separately for exactly this reason.
 
 ## 12. Performance budget
 

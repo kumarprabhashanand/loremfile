@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.10.0",
+  "catalog_version": "1.11.0",
   "formats": [
     {
       "format": "7z",
@@ -315,8 +315,8 @@
     },
     {
       "format": "mkv",
-      "count": 4,
-      "total_bytes": 7966205,
+      "count": 5,
+      "total_bytes": 8587486,
       "url": "https://loremfile.dev/mkv",
       "index": "https://loremfile.dev/mkv/index.json",
       "mime_default": "video/x-matroska"
