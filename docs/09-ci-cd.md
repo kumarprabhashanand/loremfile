@@ -641,7 +641,9 @@ and dataset, so it is one deliberate pull request with a determinism audit
 Dependabot update. 3.12 → 3.14 was taken that way.
 
 Python updates change `requirements.in`; the pull request regenerates `requirements.lock`
-(`pip-compile --generate-hashes`) and, when the lock moves, bumps the toolchain digest.
+inside the image with exactly the flags `tools/check_lock.py` uses,
+`pip-compile --allow-unsafe --generate-hashes --no-emit-index-url --strip-extras --output-file=tools/requirements.lock tools/requirements.in`,
+and, when the lock moves, bumps the toolchain digest. Any other flag set writes a lock CI rejects.
 
 `tools/check_lock.sh` in `ci.yml` asks three things, two of them of the artifacts rather
 than of the diff (rewritten 2026-09-28):
