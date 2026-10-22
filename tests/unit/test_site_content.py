@@ -232,7 +232,8 @@ def test_the_legal_dash_check_finds_one() -> None:
 # --- selection guides: every sentence names a file, every number is measured ----------------
 
 #: Format pages rewritten as "which of these files do I need, and what breaks without it?"
-#: (2026-10-22). The first four, the thinnest with search demand; the other eight follow.
+#: (2026-10-22, docs/07 §5). The first four, the thinnest with search demand; once all twelve
+#: are converted this becomes `build.DEMAND_FORMATS`, so the set lives in one place.
 GUIDES = ("mkv", "parquet", "pptx", "wav")
 SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[`A-Z])")
 NUMBER = re.compile(r"\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?")

@@ -8,8 +8,8 @@ its own slide: an extractor that reads only text frames finds none of the table'
 the first, and a converter that cannot draw charts leaves a hole in the second, whose numbers
 live in the workbook PowerPoint embeds beside it.
 
-`pptx/aspect-4-3-5slides.pptx` measures 9144000 by 6858000 EMU, 4:3, where `pptx/1slide.pptx`
-measures 12191695 by 6858000, widescreen: a thumbnailer or converter that assumes widescreen
+`pptx/aspect-4-3-5slides.pptx` measures 9,144,000 by 6,858,000 EMU, 4:3, where `pptx/1slide.pptx`
+measures 12,191,695 by 6,858,000, widescreen: a thumbnailer or converter that assumes widescreen
 crops or letterboxes it. `pptx/1mb.pptx` has speaker notes on all 5 of its slides and 5
 embedded images, for extraction tools that must find notes. `pptx/10slides.pptx` has 10
 titled slides for slide counting and per-slide text, and `pptx/1slide.pptx` is the smallest,
