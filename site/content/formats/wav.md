@@ -3,20 +3,20 @@ download.
 
 <!-- file: wav/sine-440hz-3s-44k-16bit-stereo.wav -->
 
-WAV is the format most audio software assumes by default.
-`wav/sine-440hz-3s-44k-16bit-stereo.wav` is a sine tone at 44.1 kHz, 16-bit stereo, behind the
-canonical 44-byte header: the simple layout that hand-written readers expect and that extra
-chunks break.
+`wav/sine-440hz-3s-44k-16bit-stereo.wav` starts its samples at byte 44, behind the canonical
+header that hand-written readers assume. A reader that skips that header by length instead
+of walking the chunks breaks on `wav/sine-440hz-3s-48k-24bit-stereo.wav`, whose extensible header
+puts the samples at byte 68, on `wav/sine-440hz-3s-44k-32bit-float-stereo.wav`, whose float
+header and `fact` chunk put them at 58, and on `wav/with-list-chunk-3s.wav`, whose LIST/INFO
+chunk of title and artist tags pushes them to 94.
 
-`wav/10mb.wav` is exactly 10,000,000 bytes: the same 44-byte header plus 2,499,989 frames of the
-same kind of audio. Uncompressed audio is the one format where a byte count is arithmetic
-rather than an estimate. Each stereo frame takes four bytes, so the duration follows from the
-size: just under 57 seconds.
+`wav/sine-440hz-3s-44k-32bit-float-stereo.wav` also breaks code that reads only integers: its
+32-bit samples are IEEE float, which such a reader refuses or plays as noise.
+`wav/sine-440hz-3s-44k-8bit-stereo.wav` holds 8-bit samples, which WAV stores unsigned with
+silence at the midpoint, so a reader that treats them as signed turns that silence into full
+scale.
 
-`wav/sine-440hz-3s-48k-24bit-stereo.wav` is 48 kHz, 24-bit stereo, and its header is 68 bytes: it uses
-the extensible format tag, whose longer `fmt ` chunk moves the samples further in. A reader
-that skips a fixed 44 bytes instead of walking the chunks plays the end of the header as audio.
-
-Use them to test audio players, upload size limits with a real media file, speech and audio
-processing pipelines, and converters. Compare them with the big-endian [AIFF](/aiff) file, or
-with [FLAC](/flac) and [MP3](/mp3) for compressed versions of the tone.
+`wav/sine-440hz-3s-44k-16bit-mono.wav` is the canonical file in one channel, for code that
+assumes two. `wav/10mb.wav` is exactly 10,000,000 bytes, the 44-byte header plus 16-bit stereo
+frames of four bytes each, so its 56,689 ms follow from its size: the file for upload limits
+that must be hit to the byte.

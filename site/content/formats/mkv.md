@@ -1,12 +1,12 @@
-Matroska is the container that will hold almost anything: any codec, several audio and
-subtitle tracks, chapters and attachments. `mkv/720p-5s.mkv` keeps it simple on purpose, with
-H.264 video and AAC audio, the same codecs as the MP4 fixture.
+`mkv/720p-5s.mkv` carries H.264 video and AAC audio at 1280x720, the codecs of
+`mp4/720p-5s.mp4`, so between the two the container is the only variable: a player,
+thumbnailer or upload validator that handles the MP4 and fails on the MKV has a Matroska
+problem, not a codec problem. `mkv/vp9-opus-720p-5s.mkv` turns that round, with the VP9 and
+Opus of `webm/720p-5s-vp9.webm` in general Matroska, for sniffers that tie VP9 to the .webm
+extension or Matroska to H.264.
 
-That makes the container the only variable. If a player, thumbnailer or upload validator
-handles `mp4/720p-5s.mp4` and fails on this file, the problem is its Matroska support, not
-the codec. `mkv/720p-5s.mkv` is 1280x720 at 30 frames per second, five seconds long, and
-generated synthetically. WebM is Matroska underneath too, restricted to royalty-free codecs.
-
-Use it to test media servers, transcoding pipelines, browser playback, which varies because
-not every browser plays Matroska, and format sniffers that recognise the EBML header.
-Related formats: [MP4](/mp4) and [MOV](/mov) for the same codecs in other containers.
+`mkv/multi-audio-2-tracks-720p-5s.mkv` has two audio tracks, measured at 440 Hz and 880 Hz,
+so a converter or player that only ever takes the first track is caught by the tone it plays.
+`mkv/with-subtitles-720p-5s.mkv` adds an SRT (`subrip`) subtitle track, which a remux that
+drops or mis-maps text tracks loses. `mkv/with-chapters-720p-5s.mkv` adds 3 chapters to its
+Matroska chapter list, for seek menus and chapter navigation that need something to show.
