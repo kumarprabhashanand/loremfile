@@ -48,8 +48,8 @@
     "sha256": "62e34281a08bae64b23efb184b988b1e4331f5f09f1250ddabebd65303024bdc"
   },
   "csv": {
-    "date": "2026-10-21",
-    "sha256": "e20ba6b89db97f0d0e87508adde4c49ca3bdd4f0227ce19c17a0eb82d1f8e24c"
+    "date": "2026-10-22",
+    "sha256": "643343f6bf66081fa2bf90a050aa0c2ef6ce7e917b5dd691adab748dfeddebb2"
   },
   "der": {
     "date": "2026-10-17",
@@ -96,8 +96,8 @@
     "sha256": "8add16bc643a50ba7e908ab9bc925f7f31c103ece6a8caf62fa9821bd37f04c0"
   },
   "docx": {
-    "date": "2026-10-21",
-    "sha256": "ddde9c3c161fd74b03b4ed5b0bf6c4ce152b850364a1bcbab6cc56bf5b84d9e7"
+    "date": "2026-10-22",
+    "sha256": "25d81ec661a877855ba9b0ce5bc1b17023459bb4cef5c54bbfb0a400ad5d02e4"
   },
   "edge": {
     "date": "2026-10-17",
@@ -173,7 +173,7 @@
   },
   "jpg": {
     "date": "2026-10-22",
-    "sha256": "57988fa51fe9261c956a343016d5b937bf0dbc4104eddc12b2f0d5bf54aa6dd0"
+    "sha256": "f2ad64f6b6df6665e2787aac3fd44f823c4fe59a61f6857616ca5c949eaa10db"
   },
   "js": {
     "date": "2026-10-17",
@@ -217,11 +217,11 @@
   },
   "mp3": {
     "date": "2026-10-22",
-    "sha256": "7e27460276861077a3d5bb735d6e64320df9bec0463f33e83254480f88dce2a3"
+    "sha256": "ab03b3d6aba0743b13610366039f31c62bfb4d030467419e5eb77865bbfdc10b"
   },
   "mp4": {
-    "date": "2026-10-21",
-    "sha256": "83f6ca36d7524b3a3b5bb74dec191cfd95aded35c80649ce746fa8261fb436a5"
+    "date": "2026-10-22",
+    "sha256": "efb8539591f943da13a0c7799a449d649c6083d5e3add042f15f51a7e908a253"
   },
   "ndjson": {
     "date": "2026-10-17",
@@ -248,16 +248,16 @@
     "sha256": "c4760dc6148bffeabdead504aa3f7c3a59454bd4a15e062d148136d8800251fb"
   },
   "pdf": {
-    "date": "2026-10-21",
-    "sha256": "23227224e69bdfde150e88bc4a2b9ac8c317a1419e0f502a95c894714d37f786"
+    "date": "2026-10-22",
+    "sha256": "baea0c4fc882bb357e2fccc564661eb0241b884e3ea44c94c02f21252c4d483b"
   },
   "pem": {
     "date": "2026-10-17",
     "sha256": "20448bda3684bc31a27aa33d7f8e3b30b4f2ba1456547ef850b85f55d99bb251"
   },
   "png": {
-    "date": "2026-10-21",
-    "sha256": "6f6ecd3b8fdd58aac605f5abf6d1eaf363e37a41acad761f334db692169b16b7"
+    "date": "2026-10-22",
+    "sha256": "2191e2c11de510ddc994a0372c85e2033db53061afc1ea18c485750a561fe7e9"
   },
   "pptx": {
     "date": "2026-10-22",
@@ -384,8 +384,8 @@
     "sha256": "7b27056920671c6b2b49f279094a7e872808194cbafbd1b8f0cd6055ebaa59e7"
   },
   "zip": {
-    "date": "2026-10-21",
-    "sha256": "445607ede2e469d8cd100e2acc2506ef8e652e4589604dbfc08f5ac7ee655c0f"
+    "date": "2026-10-22",
+    "sha256": "7550464465172271074f47c5d2428a73a6e027f6c693b9df67c29a9f64969d91"
   },
   "zst": {
     "date": "2026-10-17",
