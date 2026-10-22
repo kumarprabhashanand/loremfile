@@ -58,6 +58,17 @@ AI_TOKENS = {
     # both are the list's spelling.
     "GrokBot",
     "GrokAppAndroid",
+    # Weighed 2026-10-22 (#110) under the standing rule: no operator publishes a crawler page
+    # for these four, so they are the list's spelling.
+    "Hunyuan",
+    "MoonshotBot",
+    "xAI-Grok",
+    "YiBot",
+    # A separate decision the same day: Moonshot documents these three, in this casing, on
+    # its own crawler page; all are on the 2026-09-22 snapshot, so the watch cannot raise them.
+    "KimiBot",
+    "Kimi-SearchBot",
+    "Kimi-User",
     "Google-Extended",
     "Applebot-Extended",
 }
