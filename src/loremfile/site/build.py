@@ -302,8 +302,9 @@ DESCRIPTION_LIMIT = 155
 DEMAND_FORMATS = frozenset(
     {"mp3", "mp4", "parquet", "docx", "pptx", "mkv", "png", "jpg", "pdf", "csv", "zip", "wav"}
 )
-#: Where the query differs from "sample {format} files for testing": "mp3 test file".
-QUERY_HEADS = {"mp3": "Sample {name} test file{s}"}
+#: Where the query differs from "sample {format} files for testing": "mp3 test file", and
+#: "jpg", which people type where the format's name (and its label) is JPEG.
+QUERY_HEADS = {"mp3": "Sample {name} test file{s}", "jpg": "Sample JPG file{s} for testing"}
 
 
 def title_head(fmt: str) -> str:

@@ -163,6 +163,7 @@ def test_the_labelled_titles_and_descriptions_fit_and_say_test() -> None:
             assert title.startswith("Sample ") and "test" in title, "both words people type"
             assert title.split(":")[0] in {
                 "Sample MP3 test files",
+                "Sample JPG files for testing",
                 f"Sample {label(fmt)} files for testing",
                 f"Sample {label(fmt)} file for testing",
             }, title
@@ -178,6 +179,25 @@ def test_the_labelled_titles_and_descriptions_fit_and_say_test() -> None:
         assert description.startswith(
             f"{len(sizes)} {label(fmt)} test file{'s' if len(sizes) > 1 else ''} {span}: "
         ), "the count and the size range come from the manifest"
+
+
+def rendered_head(fmt: str, files: int = 2) -> str:
+    return title_head(fmt).format(name=label(fmt), s="" if files == 1 else "s")
+
+
+def test_every_demand_head_names_its_format_as_people_type_it() -> None:
+    """docs/05 §1 rule 9: the format key is a keyword too. JPEG is jpg's name and label,
+    but people type "jpg"; Parquet passes because the match ignores case."""
+    for fmt in sorted(DEMAND_FORMATS):
+        assert fmt in rendered_head(fmt).lower(), (fmt, rendered_head(fmt))
+    assert rendered_head("jpg") == "Sample JPG files for testing"
+    assert label("jpg") == "JPEG", "the format's name stays in the prose and the description"
+
+
+def test_control_the_default_head_would_lose_jpg() -> None:
+    """Without its query head, jpg's title would say JPEG and never jpg."""
+    default = "Sample {name} files for testing".format(name=label("jpg"))
+    assert "jpg" not in default.lower()
 
 
 def test_a_label_that_would_cut_a_keyword_stops_the_build() -> None:
