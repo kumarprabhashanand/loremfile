@@ -9,8 +9,8 @@ level 3.1, the default most encoders write.
 
 `mp4/vertical-1080x1920-5s.mp4` is 1080x1920, taller than wide, for players and thumbnailers
 that assume landscape. `mp4/360p-5s.mp4` (640x360), `mp4/720p-5s.mp4` (1280x720) and
-`mp4/1080p-10s.mp4` (1920x1080) are the same H.264 and AAC at three sizes, for responsive
-players and transcode ladders.
+`mp4/1080p-10s.mp4` (1920x1080) are the same H.264 and AAC, for responsive players and
+transcode ladders.
 
 `mp4/1mb.mp4`, `mp4/10mb.mp4` and `mp4/50mb.mp4` are 1280x720 encoded at a flat bitrate to
 979,114, 10,062,489 and 50,081,140 bytes, for upload limits and progress bars that need a real

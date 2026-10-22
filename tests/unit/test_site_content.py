@@ -272,13 +272,25 @@ def guide_sentences(text: str) -> list[str]:
     return [s for p in paragraphs for s in SENTENCE_END.split(" ".join(p.split()))]
 
 
+#: A count of our files in prose ("three sizes"): forbidden outright in a guide rather than
+#: counted, because the catalogue grows and only the page's table should count its files.
+#: Counting inside one published file ("three seconds", "one deletion") is fine: those bytes
+#: are frozen. Paragraph-scoped counting, as `variant_claims` does, misreads a list here.
+FILE_COUNT = re.compile(
+    r"\b(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+"
+    r"(?:variants?|sizes?|files?|cards?)\b",
+    re.IGNORECASE,
+)
+
+
 def guide_problems(sentence: str, entries: dict[str, dict]) -> list[str]:
+    counted = [f"counts our files in prose: {m.group(0)!r}" for m in FILE_COUNT.finditer(sentence)]
     named = [p for p in named_paths(sentence) if p in entries]
     if not named:
-        return [f"names none of our files: {sentence!r}"]
+        return [*counted, f"names none of our files: {sentence!r}"]
     props = [entries[p].get("props") or {} for p in named]
     known = {float(entries[p]["bytes"]) for p in named}.union(*(measured(p) for p in props))
-    problems = []
+    problems = counted
     for match in RATIO.finditer(sentence):
         across, down = (int(n) for n in match.groups())
         if not any(
@@ -324,6 +336,15 @@ def test_control_the_guide_rule_catches_each_way_to_break_it() -> None:
     assert guide_problems("`pptx/aspect-4-3-5slides.pptx` is 4:3.", entries) == []
     assert guide_problems("`mkv/720p-5s.mkv` works where the MP4 fails.", entries) == []
     assert guide_problems("`mkv/720p-5s.mkv` has 4 tracks.", entries), "a count beside one is"
+    cards = "`png/100x100.png` and `png/640x480.png`"
+    assert guide_problems(f"{cards} are test cards at three sizes.", entries) == [
+        "counts our files in prose: 'three sizes'"
+    ]
+    assert guide_problems(f"{cards} are two files.", entries), "digits or words, files too"
+    assert guide_problems("`zip/mixed-fixtures.zip` holds 4 published files.", entries) == [], (
+        "what is inside one file may be counted"
+    )
+    assert guide_problems("`mp3/sine-440hz-3s.mp3` lasts three seconds.", entries) == []
     baseline = "`mp4/h264-baseline-720p-5s.mp4`"
     assert guide_problems(f"{baseline} is at level 3.0.", entries) == []
     assert guide_problems(f"{baseline} is at level 4.2.", entries), "a numeric string must match"
