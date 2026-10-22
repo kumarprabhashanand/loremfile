@@ -12,17 +12,20 @@ import re
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from loremfile.catalog import Catalog, Fixture, SizeClass
 from loremfile.site.build import (
     DEMAND_FORMATS,
     DESCRIPTION_LIMIT,
     TITLE_LIMIT,
+    SiteError,
     human_bytes,
     label,
     labelled_description,
     labelled_title,
     page_labels,
-    title_heads,
+    title_head,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -151,15 +154,15 @@ def test_the_labelled_titles_and_descriptions_fit_and_say_test() -> None:
         labels = page_labels(info, served)
         sizes = [MANIFEST[f.path]["bytes"] for f in recommended(fmt)]
         assert len(labels) == len(sizes), fmt
-        title = labelled_title(label(fmt), labels, title_heads(fmt))
+        title = labelled_title(label(fmt), labels, title_head(fmt))
         description = labelled_description(label(fmt), sizes, labels)
         assert len(title) <= TITLE_LIMIT, title
         assert "loremfile.dev" not in title
         assert not {"free", "CC0", "hotlink"} & set(re.findall(r"[\w-]+", title)), title
         if fmt in DEMAND_FORMATS:
-            assert "test" in title, title
+            assert title.startswith("Sample ") and "test" in title, "both words people type"
             assert title.split(":")[0] in {
-                "MP3 test files",
+                "Sample MP3 test files",
                 f"Sample {label(fmt)} files for testing",
                 f"Sample {label(fmt)} file for testing",
             }, title
@@ -177,19 +180,18 @@ def test_the_labelled_titles_and_descriptions_fit_and_say_test() -> None:
         ), "the count and the size range come from the manifest"
 
 
-def test_for_testing_stays_only_while_a_label_still_fits_after_it() -> None:
-    heads = title_heads("pdf")
-    assert (
-        labelled_title("PDF", ["form fields"], heads) == "Sample PDF file for testing: form fields"
-    )
-    long = "x" * 24
-    assert (
-        labelled_title("PDF", [long, "seven c"], heads) == f"Sample PDF files for testing: {long}"
-    )
+def test_a_label_that_would_cut_a_keyword_stops_the_build() -> None:
+    """docs/05 §1 rule 9: shorten a label before dropping a keyword. The head is never cut;
+    a first label too long to follow it is an error naming the head. The control is the
+    longest first label that fits, which is kept whole."""
+    head = title_head("pdf")
     wide = "Sample PDF file for testing: "  # one label, so "file"
-    too_long = "y" * (TITLE_LIMIT - len(wide) + 1)
-    assert labelled_title("PDF", [too_long], heads).startswith("Sample PDF file: "), "control"
-    assert title_heads("ogg") == ("Sample {name} file{s}",), "1.9.0's three keep their shape"
+    fits = "x" * (TITLE_LIMIT - len(wide))
+    assert labelled_title("PDF", [fits], head) == wide + fits
+    with pytest.raises(SiteError, match="shorten the first label"):
+        labelled_title("PDF", [fits + "x"], head)
+    assert title_head("mp3") == "Sample {name} test file{s}"
+    assert title_head("ogg") == "Sample {name} file{s}", "1.9.0's three keep their head"
 
 
 def test_a_superseded_file_never_contributes_a_label() -> None:

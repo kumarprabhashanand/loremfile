@@ -297,36 +297,35 @@ def label(fmt: str) -> str:
 #: What a results page shows of a title and a description before cutting them off.
 TITLE_LIMIT = 60
 DESCRIPTION_LIMIT = 155
-#: The twelve formats with search demand (2026-10-22). Their labelled titles lead with the
-#: query and keep "for testing" where a label still fits; ogg, tiff and arrow keep 1.9.0's.
+#: The twelve formats with search demand (2026-10-22). Their labelled titles keep both words
+#: people type, "Sample" and "test"; ogg, tiff and arrow keep 1.9.0's head.
 DEMAND_FORMATS = frozenset(
     {"mp3", "mp4", "parquet", "docx", "pptx", "mkv", "png", "jpg", "pdf", "csv", "zip", "wav"}
 )
-#: Where the query is not "sample {format}": "mp3 test file" is typed as it stands.
-QUERY_HEADS = {"mp3": "{name} test file{s}"}
+#: Where the query differs from "sample {format} files for testing": "mp3 test file".
+QUERY_HEADS = {"mp3": "Sample {name} test file{s}"}
 
 
-def title_heads(fmt: str) -> tuple[str, ...]:
-    """The heads a labelled title may take, preferred first (docs/05 §1 rule 9)."""
+def title_head(fmt: str) -> str:
+    """The head of a format's labelled title (docs/05 §1 rule 9)."""
     if fmt in QUERY_HEADS:
-        return (QUERY_HEADS[fmt],)
+        return QUERY_HEADS[fmt]
     if fmt in DEMAND_FORMATS:
-        return ("Sample {name} file{s} for testing", "Sample {name} file{s}")
-    return ("Sample {name} file{s}",)
+        return "Sample {name} file{s} for testing"
+    return "Sample {name} file{s}"
 
 
-def labelled_title(
-    name: str, labels: list[str], heads: tuple[str, ...] = ("Sample {name} file{s}",)
-) -> str:
+def labelled_title(name: str, labels: list[str], head: str = "Sample {name} file{s}") -> str:
     """`{head}: {labels}`, cut at the last whole label that fits.
 
     No brand suffix and no adjectives: the title leads with what the page holds, in the
-    order the catalog lists it (docs/05 §1 rule 9). The first head that leaves room for a
-    label is used, so "for testing" stays only where it costs no more than the other labels.
+    order the catalog lists it (docs/05 §1 rule 9). The head is never cut: a word people
+    type is worth more than a label, so a first label too long to follow it stops the build
+    until it is shortened.
     """
-    plural = "" if len(labels) == 1 else "s"
-    options = [f"{template.format(name=name, s=plural)}: " for template in heads]
-    head = next((h for h in options if labels and len(h + labels[0]) <= TITLE_LIMIT), options[-1])
+    head = f"{head.format(name=name, s='' if len(labels) == 1 else 's')}: "
+    if not labels or len(head + labels[0]) > TITLE_LIMIT:
+        raise SiteError(f"{head!r}: shorten the first label to fit within {TITLE_LIMIT}")
     shown: list[str] = []
     for text in labels:
         if len(head + ", ".join([*shown, text])) > TITLE_LIMIT:
@@ -770,7 +769,7 @@ def format_pages(
         # rule 9): ogg, tiff and arrow from 1.9.0, the twelve demand formats from 2026-10-22.
         labels = page_labels(info, served)
         if labels:
-            title = labelled_title(label(fmt), labels, title_heads(fmt))
+            title = labelled_title(label(fmt), labels, title_head(fmt))
             description = labelled_description(label(fmt), [e["bytes"] for e in active], labels)
         page = Page(
             key=fmt,
