@@ -178,7 +178,10 @@ def basic(ctx: GeneratorContext, *, pages: int, page_size: str = "A4",
   a heterogeneous pool. The second reading explains both observations, so it is the one
   recorded here: **CPU-dependence, not nondeterminism.** `ci.yml` logs each runner's CPU
   model and SIMD flags so the correlation can be made from the artifacts rather than
-  argued. If it ever becomes worth paying for, homogeneous hardware (a larger-runner
+  argued. **A clean case, 1.11.0 (#119):** for `mkv/vp9-opus-720p-5s.mkv` the author's
+  machine (Intel Core i5-8210Y) built `03f01f39…`, run `39786941074` on an AMD EPYC 7763
+  built `d5785dfa…`, and runs `39788348860` and `39789889036`, both on an AMD EPYC 9V74,
+  reproduced `d5785dfa…`: two server models agreeing and the author's machine not. If it ever becomes worth paying for, homogeneous hardware (a larger-runner
   label or a self-hosted runner) recovers reproducibility; nothing recovers it if the
   encoders are truly nondeterministic, which is why the distinction is worth keeping
   straight.
@@ -285,7 +288,7 @@ Validation failures are hard errors in CI and print a table of path → failed c
 
 `loremfile build --all --audit` regenerates **every** fixture including published ones (dependencies still come from published bytes, §4) and compares hashes with the manifest. Output: a Markdown report listing drifted paths with generator names. Run monthly by `audit.yml`; drift is a warning that opens a `determinism` issue, never a deploy blocker (published bytes are canonical; the generator gets fixed or the drift is documented in `notes`).
 
-The report has **two sections**. A fixture whose catalog entry sets `expected_drift` is known not to reproduce off the reference fleet (§4) and is listed separately; it does not fail the run. Everything else is real drift (a generator or dependency change) and does. Without the split, the five media fixtures that carry it would appear in every audit that runs on a differently-provisioned runner, and an issue that reports expected behaviour every month is one nobody reads.
+The report has **two sections**. A fixture whose catalog entry sets `expected_drift` is known not to reproduce off the reference fleet (§4) and is listed separately; it does not fail the run. Everything else is real drift (a generator or dependency change) and does. Without the split, the seven media fixtures that carry it would appear in every audit that runs on a differently-provisioned runner, and an issue that reports expected behaviour every month is one nobody reads.
 
 ## 9. Toolchain container (`tools/Dockerfile`)
 
