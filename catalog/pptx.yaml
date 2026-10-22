@@ -36,7 +36,7 @@ fixtures:
     expect: { slides: 3, hidden_slides: 1 }
     size_class: free
     label: "hidden slide"
-  - name: 4x3-5slides.pptx
+  - name: aspect-4-3-5slides.pptx
     phase: 1
     generator: office.pptx_basic
     params: { slides: 5, aspect: "4:3" }

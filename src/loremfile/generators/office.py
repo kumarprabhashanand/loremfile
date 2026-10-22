@@ -540,9 +540,9 @@ def xlsx_sized(ctx: GeneratorContext, *, size: int) -> bytes:
 # --- pptx ------------------------------------------------------------------
 
 
-#: python-pptx's built-in template is 4:3 (10 x 7.5 inches). Every fixture here is
-#: widescreen, which is what current PowerPoint and Keynote produce; the 4:3 shape gets
-#: its own named fixture (`4x3-5slides.pptx`, P1b) rather than being the silent default.
+#: python-pptx's built-in template is 4:3 (10 x 7.5 inches). Every fixture here but one is
+#: widescreen, which is what current PowerPoint and Keynote produce; the 4:3 shape is its
+#: own named fixture (`aspect-4-3-5slides.pptx`, 1.10.0) rather than a silent default.
 SLIDE_16_9 = (PptxInches(13.333), PptxInches(7.5))
 #: The 4:3 size PowerPoint used before 2013, which older decks and templates still carry.
 SLIDE_4_3 = (PptxInches(10), PptxInches(7.5))

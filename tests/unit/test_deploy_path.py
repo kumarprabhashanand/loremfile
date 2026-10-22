@@ -255,7 +255,7 @@ AFTER_LAUNCH = (
     "pptx/with-chart.pptx",
     "pptx/with-table.pptx",
     "pptx/with-hidden-slide.pptx",
-    "pptx/4x3-5slides.pptx",
+    "pptx/aspect-4-3-5slides.pptx",
 )
 
 

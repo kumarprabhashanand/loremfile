@@ -40,7 +40,7 @@ PATHS = (
     "pptx/with-chart.pptx",
     "pptx/with-table.pptx",
     "pptx/with-hidden-slide.pptx",
-    "pptx/4x3-5slides.pptx",
+    "pptx/aspect-4-3-5slides.pptx",
 )
 CATALOG = Catalog.load()
 load_generators()
@@ -189,7 +189,7 @@ def test_each_deck_is_refused_without_its_difference(tmp_path):
         "pptx/with-chart.pptx": {"chart": False},
         "pptx/with-table.pptx": {"table_rows": 0},
         "pptx/with-hidden-slide.pptx": {"hidden": ()},
-        "pptx/4x3-5slides.pptx": {"aspect": "16:9"},
+        "pptx/aspect-4-3-5slides.pptx": {"aspect": "16:9"},
     }
     for path, without in cases.items():
         assert refused(path, build(path, tmp_path / path.split("/")[1], **without)), path

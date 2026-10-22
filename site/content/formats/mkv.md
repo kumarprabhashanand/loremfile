@@ -4,8 +4,8 @@ H.264 video and AAC audio, the same codecs as the MP4 fixture.
 
 That makes the container the only variable. If a player, thumbnailer or upload validator
 handles `mp4/720p-5s.mp4` and fails on this file, the problem is its Matroska support, not
-the codec. The clip is 1280x720 at 30 frames per second, five seconds long, and generated
-synthetically. WebM is Matroska underneath too, restricted to royalty-free codecs.
+the codec. `mkv/720p-5s.mkv` is 1280x720 at 30 frames per second, five seconds long, and
+generated synthetically. WebM is Matroska underneath too, restricted to royalty-free codecs.
 
 Use it to test media servers, transcoding pipelines, browser playback, which varies because
 not every browser plays Matroska, and format sniffers that recognise the EBML header.
