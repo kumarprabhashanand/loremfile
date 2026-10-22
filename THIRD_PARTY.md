@@ -13,7 +13,7 @@ otherwise).
 
 | Package | Licence | Used for | Redistributed? |
 |---|---|---|---|
-| ffmpeg and its codec libraries (libx264, libvpx, libopus, libvorbis, libmp3lame, aac, flac, theora, prores_ks) | LGPL-2.1-or-later / GPL-2.0-or-later depending on the build | Generating the audio and video fixtures | **No** — used as a build tool; only its output (which is not copyrightable third-party content) is published |
+| ffmpeg and its codec libraries (libx264, libvpx, libopus, libvorbis, libmp3lame, aac, flac, theora, prores_ks) | LGPL-2.1-or-later / GPL-2.0-or-later depending on the build | Generating the audio and video fixtures | **No**: used as a build tool; only its output (which is not copyrightable third-party content) is published |
 | qpdf | Apache-2.0 | PDF linearisation and validation | No |
 | libavif-bin, zstd, xz-utils, bzip2, sqlite3 | BSD-2/3-Clause, Public domain (SQLite) | AVIF, archive and SQLite fixtures | No |
 | libheif-examples, libheif1, libde265-0 (x265 itself comes with ffmpeg) | LGPL-3.0-or-later (libheif, libde265), MIT (`heif-enc`, `heif-convert`), GPL-2.0-or-later (x265), read from each package's copyright file in the image on 2026-10-07 | Encoding the HEIC fixture, and decoding it back to validate it | No |
@@ -31,7 +31,7 @@ hashes; regenerate the table with `tools/licences.py` after any dependency chang
 | Library | Version | Licence | Used for |
 |---|---|---|---|
 | `fpdf2` | 2.8.9 | LGPL-3.0-only | PDF generation |
-| `pypdf` | 6.20.1 | BSD-3-Clause | PDF validation, and adding the form to `pdf/form-fields-1page.pdf` |
+| `pypdf` | 6.21.2 | BSD-3-Clause | PDF validation, and adding the form to `pdf/form-fields-1page.pdf` |
 | `python-docx` | 1.2.0 | MIT | DOCX |
 | `openpyxl` | 3.1.5 | MIT | XLSX |
 | `python-pptx` | 1.0.2 | MIT | PPTX |
@@ -78,7 +78,7 @@ backport of `compression.zstd` pulled in by `py7zr`.
 Three of the above are copyleft: `fpdf2` (LGPL-3.0-only), `py7zr` (LGPL-2.1-or-later) and
 **`mutagen` (GPL-2.0-or-later)**. They are *build-time tools*, on the same footing as
 ffmpeg: this repository ships MIT-licensed source and a `Dockerfile` that installs them
-from PyPI when the image is built. No combined work is distributed — no binary, no
+from PyPI when the image is built. No combined work is distributed: no binary, no
 vendored copy, no wheel. What is published on loremfile.dev is generated *data* (PDFs,
 archives, audio files), which is not a derivative work of the library that wrote it, and
 which carries CC0 in any case.
@@ -86,15 +86,15 @@ which carries CC0 in any case.
 The one worth the owner's attention is `mutagen`, because GPL is stronger than the LGPL
 of the other two and because it is imported into the same Python process rather than run
 as a subprocess. It is used only to read audio tags back during validation. If the owner
-would prefer no GPL import at all, `ffprobe` already covers most of the same ground — but
+would prefer no GPL import at all, `ffprobe` already covers most of the same ground, but
 that is a preference, not a licence problem with the current arrangement.
 
 ## Licences of what this repository publishes
 
 | What | Licence |
 |---|---|
-| Generated fixtures (everything under a format path) | CC0 1.0 Universal — [`LICENSES/CC0-1.0.txt`](LICENSES/CC0-1.0.txt) |
-| Source code, templates, documentation | MIT — [`LICENSE`](LICENSE) |
+| Generated fixtures (everything under a format path) | CC0 1.0 Universal, [`LICENSES/CC0-1.0.txt`](LICENSES/CC0-1.0.txt) |
+| Source code, templates, documentation | MIT, [`LICENSE`](LICENSE) |
 | Website text and graphics | CC BY 4.0, attribute "loremfile.dev" |
 
 See [`docs/13-legal-and-policy.md`](docs/13-legal-and-policy.md) §1 for the reasoning.
