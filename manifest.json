@@ -2,14 +2,14 @@
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
   "catalog_version": "1.10.0",
-  "generated_at": "2026-10-22T10:07:28Z",
+  "generated_at": "2026-10-22T10:33:49Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:53aed7c9c16e2471fb001682dc03d7622d05b1854981cdb4c2b7cbd6817f0f74",
   "count": 281,
-  "total_bytes": 623427922,
+  "total_bytes": 621457916,
   "formats": [
     "7z",
     "aac",
@@ -5321,16 +5321,16 @@
       "supersededBy": null
     },
     {
-      "path": "mkv/with-chapters-720p-10s.mkv",
-      "url": "https://loremfile.dev/mkv/with-chapters-720p-10s.mkv",
+      "path": "mkv/with-chapters-720p-5s.mkv",
+      "url": "https://loremfile.dev/mkv/with-chapters-720p-5s.mkv",
       "format": "mkv",
       "ext": "mkv",
       "mime": "video/x-matroska",
-      "bytes": 3941337,
-      "sha256": "4751b030571ed7043e671cb2573e28e85f1b526050d7ed029cd89a6691ef727e",
+      "bytes": 1971331,
+      "sha256": "e6309f5d8b4c036795931bbcc980e9bc0ecb9733c59fce326128f6d954cf9d74",
       "size_class": "free",
       "phase": 1,
-      "description": "1280x720 H.264 plus AAC, ten seconds, with three equal chapters in the Matroska chapter list, for seek menus and chapter navigation.",
+      "description": "1280x720 H.264 plus AAC, five seconds, with three equal chapters in the Matroska chapter list, for seek menus and chapter navigation.",
       "tags": [
         "video",
         "codec-h264",
@@ -5338,7 +5338,7 @@
       ],
       "edge_case": false,
       "props": {
-        "duration_ms": 10021,
+        "duration_ms": 5021,
         "video_streams": 1,
         "audio_streams": 1,
         "subtitle_streams": 0,
@@ -5360,7 +5360,7 @@
       "generator_params": {
         "width": 1280,
         "height": 720,
-        "duration": 10,
+        "duration": 5,
         "chapters": 3
       },
       "added_in": "1.10.0",

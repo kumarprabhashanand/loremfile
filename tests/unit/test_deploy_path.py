@@ -247,7 +247,7 @@ AFTER_LAUNCH = (
     "wav/sine-440hz-3s-44k-16bit-mono.wav",
     "mkv/multi-audio-2-tracks-720p-5s.mkv",
     "mkv/with-subtitles-720p-5s.mkv",
-    "mkv/with-chapters-720p-10s.mkv",
+    "mkv/with-chapters-720p-5s.mkv",
     "parquet/nested-types.parquet",
     "parquet/people-1000-zstd.parquet",
     "parquet/people-1000-gzip.parquet",

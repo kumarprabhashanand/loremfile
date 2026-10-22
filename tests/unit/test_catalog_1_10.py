@@ -32,7 +32,7 @@ PATHS = (
     "wav/sine-440hz-3s-44k-16bit-mono.wav",
     "mkv/multi-audio-2-tracks-720p-5s.mkv",
     "mkv/with-subtitles-720p-5s.mkv",
-    "mkv/with-chapters-720p-10s.mkv",
+    "mkv/with-chapters-720p-5s.mkv",
     "parquet/nested-types.parquet",
     "parquet/people-1000-zstd.parquet",
     "parquet/people-1000-gzip.parquet",
@@ -151,7 +151,7 @@ def test_info_tags_are_read_and_a_truncated_one_is_refused() -> None:
 def test_each_mkv_is_refused_without_its_track_or_chapters(tmp_path):
     two = "mkv/multi-audio-2-tracks-720p-5s.mkv"
     subtitled = "mkv/with-subtitles-720p-5s.mkv"
-    chaptered = "mkv/with-chapters-720p-10s.mkv"
+    chaptered = "mkv/with-chapters-720p-5s.mkv"
     assert refused(two, build(two, tmp_path / "one", tones=[440]))
     assert refused(two, build(two, tmp_path / "same", tones=[440, 440])), "the tone is measured"
     assert refused(subtitled, build(subtitled, tmp_path / "bare", subtitles=False))
@@ -160,10 +160,10 @@ def test_each_mkv_is_refused_without_its_track_or_chapters(tmp_path):
 
 def test_the_subtitles_and_chapters_are_written_as_their_formats_expect() -> None:
     assert _srt(SUBTITLE_CUES).startswith("1\n00:00:00,500 --> 00:00:02,000\nLorem ipsum")
-    chapters = _chapters(3, 10)
+    chapters = _chapters(3, 5)
     assert chapters.startswith(";FFMETADATA1\n")
     assert chapters.count("[CHAPTER]") == 3
-    assert "START=6666\nEND=9999\ntitle=Chapter 3" in chapters
+    assert "START=3332\nEND=4998\ntitle=Chapter 3" in chapters
 
 
 # --- parquet --------------------------------------------------------------------------------

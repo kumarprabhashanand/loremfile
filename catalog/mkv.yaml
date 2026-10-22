@@ -26,11 +26,11 @@ fixtures:
     expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, subtitle_streams: 1, scodec: subrip }
     size_class: free
     label: "SRT subtitles"
-  - name: with-chapters-720p-10s.mkv
+  - name: with-chapters-720p-5s.mkv
     phase: 1
     generator: media_video.mkv_tracks
-    params: { width: 1280, height: 720, duration: 10, chapters: 3 }
-    description: "1280x720 H.264 plus AAC, ten seconds, with three equal chapters in the Matroska chapter list, for seek menus and chapter navigation."
+    params: { width: 1280, height: 720, duration: 5, chapters: 3 }
+    description: "1280x720 H.264 plus AAC, five seconds, with three equal chapters in the Matroska chapter list, for seek menus and chapter navigation."
     tags: [video, codec-h264, codec-aac]
     expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, chapters: 3 }
     size_class: free
