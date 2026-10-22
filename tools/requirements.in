@@ -4,13 +4,14 @@
 # floats and is pinned exactly by tools/requirements.lock.
 #
 # Regenerate the lock inside the image after any change here:
-#   pip-compile --generate-hashes --output-file=tools/requirements.lock tools/requirements.in
+#   pip-compile --allow-unsafe --generate-hashes --no-emit-index-url --strip-extras --output-file=tools/requirements.lock tools/requirements.in
+# (the flags tools/check_lock.py regenerates with; any other set writes a lock CI rejects)
 # and bump tools/TOOLCHAIN_DIGEST in the same pull request — tools/check_lock.sh
 # fails the build otherwise (docs/09 §4).
 
 # --- documents -------------------------------------------------------------
 fpdf2>=2.8.9
-pypdf>=6.20.1               # reads every PDF; writes only pdf/form-fields-1page.pdf's form
+pypdf>=6.21.0               # reads every PDF; writes only pdf/form-fields-1page.pdf's form
 python-docx>=1.2          # comments API
 openpyxl
 python-pptx
