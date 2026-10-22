@@ -104,6 +104,13 @@ User-agent: KeenableBot
 User-agent: Keenable-User
 User-agent: GrokBot
 User-agent: GrokAppAndroid
+User-agent: Hunyuan
+User-agent: MoonshotBot
+User-agent: xAI-Grok
+User-agent: YiBot
+User-agent: KimiBot
+User-agent: Kimi-SearchBot
+User-agent: Kimi-User
 User-agent: Google-Extended
 User-agent: Applebot-Extended
 Content-Signal: search=yes, ai-input=yes, ai-train=yes
