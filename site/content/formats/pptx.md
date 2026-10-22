@@ -1,15 +1,16 @@
-PPTX is PowerPoint's format, a ZIP archive of XML parts like DOCX and XLSX. These
-presentations use widescreen 16:9 title-and-content slides of Lorem Ipsum, the default shape
-of a new deck.
+`pptx/with-hidden-slide.pptx` has 3 slides, 1 of them marked hidden. A slideshow skips it,
+but a renderer or PDF converter that draws every slide of `pptx/with-hidden-slide.pptx` shows
+it, and a counter that ignores the flag reports all 3: the one failure here that looks like
+success.
 
-`pptx/1slide.pptx` is a single slide, the smallest useful presentation for upload forms and
-thumbnailers. `pptx/10slides.pptx` has ten slides, each with its own title, which is enough
-to test slide counting, navigation, per-slide text extraction and conversion to PDF or
-images.
+`pptx/with-table.pptx` holds a native table and `pptx/with-chart.pptx` a native chart, each on
+its own slide: an extractor that reads only text frames finds none of the table's text in
+the first, and a converter that cannot draw charts leaves a hole in the second, whose numbers
+live in the workbook PowerPoint embeds beside it.
 
-`pptx/1mb.pptx` reaches about 1 MB with one slide per embedded incompressible noise image,
-each with a speaker note, so its size is honest and its notes give extraction tools something
-to find. None of the files contains macros; a .pptx cannot carry them.
-
-Use them to test document converters, preview generators, search indexers and upload forms
-that accept presentations. Related formats: [DOCX](/docx) and [PDF](/pdf).
+`pptx/aspect-4-3-5slides.pptx` measures 9144000 by 6858000 EMU, 4:3, where `pptx/1slide.pptx`
+measures 12191695 by 6858000, widescreen: a thumbnailer or converter that assumes widescreen
+crops or letterboxes it. `pptx/1mb.pptx` has speaker notes on all 5 of its slides and 5
+embedded images, for extraction tools that must find notes. `pptx/10slides.pptx` has 10
+titled slides for slide counting and per-slide text, and `pptx/1slide.pptx` is the smallest,
+for upload forms and thumbnailers.

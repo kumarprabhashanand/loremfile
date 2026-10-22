@@ -227,3 +227,97 @@ def dashed_bodies(bodies: dict[str, str]) -> list[str]:
 
 def test_the_legal_dash_check_finds_one() -> None:
     assert dashed_bodies({"legal/a": "fine", "legal/b": f"a {EM_DASH} b"}) == ["legal/b"]
+
+
+# --- selection guides: every sentence names a file, every number is measured ----------------
+
+#: Format pages rewritten as "which of these files do I need, and what breaks without it?"
+#: (2026-10-22). The first four, the thinnest with search demand; the other eight follow.
+GUIDES = ("mkv", "parquet", "pptx", "wav")
+SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[`A-Z])")
+NUMBER = re.compile(r"\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?")
+#: Names whose digits are part of the name (H.264, VP9, MP4), not a quantity.
+NAMES = re.compile(r"\b(?:H\.264|VP9|MP3|MP4|ID3v2|ZIP64|UTF-8|A4)\b")
+RATIO = re.compile(r"\b(\d+):(\d+)\b")
+DIMENSIONS = (("slide_width_emu", "slide_height_emu"), ("width", "height"))
+
+
+def manifest_entries() -> dict[str, dict]:
+    document = json.loads((ROOT / "manifest.json").read_text())
+    return {e["path"]: e for e in document["fixtures"]}
+
+
+def measured(value: object) -> set[float]:
+    """Every number in a props value, and its thousandth (kHz from Hz)."""
+    if isinstance(value, bool):
+        return set()
+    if isinstance(value, int | float):
+        return {float(value), round(value / 1000, 6)}
+    if isinstance(value, dict):
+        return set().union(set(), *(measured(v) for v in value.values()))
+    if isinstance(value, list):
+        return set().union(set(), *(measured(v) for v in value))
+    return set()
+
+
+def guide_sentences(text: str) -> list[str]:
+    """The guide's sentences: the leading one-sentence answer and its file marker, which
+    `test_the_ranking_pages_open_with_one_sentence_and_then_their_file` owns, are left out."""
+    paragraphs = [p for p in re.split(r"\n\s*\n", text) if p.strip()]
+    if FILE_MARKER.search(text):
+        paragraphs = paragraphs[2:]
+    return [s for p in paragraphs for s in SENTENCE_END.split(" ".join(p.split()))]
+
+
+def guide_problems(sentence: str, entries: dict[str, dict]) -> list[str]:
+    named = [p for p in named_paths(sentence) if p in entries]
+    if not named:
+        return [f"names none of our files: {sentence!r}"]
+    props = [entries[p].get("props") or {} for p in named]
+    known = {float(entries[p]["bytes"]) for p in named}.union(*(measured(p) for p in props))
+    problems = []
+    for match in RATIO.finditer(sentence):
+        across, down = (int(n) for n in match.groups())
+        if not any(
+            w in p and h in p and p[w] * down == p[h] * across for p in props for w, h in DIMENSIONS
+        ):
+            problems.append(f"{match.group(0)} is no measured ratio of {named}")
+    rest = NAMES.sub(" ", RATIO.sub(" ", re.sub(r"`[^`]*`", " ", sentence)))
+    for number in NUMBER.findall(rest):
+        if float(number.replace(",", "")) not in known:
+            problems.append(f"{number} is not measured for {named}")
+    return problems
+
+
+def test_some_pages_are_guides() -> None:
+    """The empty-set control: the rule below holds of nothing if no guide is found."""
+    for name in GUIDES:
+        assert guide_sentences((CONTENT / "formats" / f"{name}.md").read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("name", GUIDES)
+def test_every_guide_sentence_names_a_file_and_every_number_is_measured(name: str) -> None:
+    entries = manifest_entries()
+    text = (CONTENT / "formats" / f"{name}.md").read_text(encoding="utf-8")
+    problems = [p for s in guide_sentences(text) for p in guide_problems(s, entries)]
+    assert problems == []
+
+
+def test_control_the_guide_rule_catches_each_way_to_break_it() -> None:
+    entries = manifest_entries()
+    eight = "`wav/sine-440hz-3s-44k-8bit-stereo.wav`"
+    assert guide_problems(f"{eight} holds 8-bit samples.", entries) == []
+    assert guide_problems(f"{eight} is centred on 128.", entries) == [
+        "128 is not measured for ['wav/sine-440hz-3s-44k-8bit-stereo.wav']"
+    ]
+    assert guide_problems("WAV is the format most software assumes.", entries)[0].startswith(
+        "names none of our files"
+    )
+    wide = "`pptx/1slide.pptx`"
+    assert guide_problems(f"{wide} measures 12191695 by 6858000.", entries) == []
+    assert guide_problems(f"{wide} is 16:9.", entries) == [
+        "16:9 is no measured ratio of ['pptx/1slide.pptx']"
+    ], "12191695 by 6858000 is not exactly 16:9"
+    assert guide_problems("`pptx/aspect-4-3-5slides.pptx` is 4:3.", entries) == []
+    assert guide_problems("`mkv/720p-5s.mkv` works where the MP4 fails.", entries) == []
+    assert guide_problems("`mkv/720p-5s.mkv` has 4 tracks.", entries), "a count beside one is"
