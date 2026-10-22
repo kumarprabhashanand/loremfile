@@ -34,7 +34,7 @@ MANIFEST = {e["path"]: e for e in json.loads((ROOT / "manifest.json").read_text(
 #: "100,000" is one number, not 100 and 000.
 NUMBER = re.compile(r"\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?")
 #: Names whose digits are part of the name, not a quantity: removed before numbers are read.
-NAMES = re.compile(r"\b(?:ID3v2|H\.264|ZIP64|UTF-8|A4)\b")
+NAMES = re.compile(r"\b(?:ID3v2|H\.264|VP9|ZIP64|UTF-8|A4)\b")
 #: A size in a label is the catalog's nominal size, which the size-class validator holds the
 #: published bytes to (exactly, or within 5%); a free-size file has no size to name.
 SIZE = re.compile(r"(\d+(?:\.\d+)?) (KB|MB|GB)\b")

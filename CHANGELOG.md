@@ -9,6 +9,12 @@
   have titles and descriptions that name what sets their files apart, for example
   `Sample MP3 test files: L/R channels, ID3v2 tags`.
 
+## [1.11.0] - 2026-10-22
+
+- `mkv/vp9-opus-720p-5s.mkv`: VP9 video with Opus audio in general Matroska, the codecs of
+  `webm/720p-5s-vp9.webm` in the container that also holds H.264. Published from the bytes CI
+  built, because VP9 and Opus encoders do not reproduce across processors.
+
 ## [1.10.0] - 2026-10-22
 
 - Four new files each on three pages that held two or three, and three on a fourth. `wav/`:

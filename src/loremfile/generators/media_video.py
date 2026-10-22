@@ -166,8 +166,12 @@ def webm(
     duration: float,
     fps: int = 30,
     bitrate: str = "1M",
+    container: str = "webm",
 ) -> bytes:
-    """VP9 video with Opus audio. `-row-mt 0` keeps the encode single-threaded."""
+    """VP9 video with Opus audio, in WebM or (`container: matroska`) general Matroska.
+
+    `-row-mt 0` keeps the encode single-threaded.
+    """
     args = _inputs(width, height, fps, duration, audio=True)
     args += [
         "-c:v",
@@ -189,9 +193,9 @@ def webm(
         "-b:a",
         "96k",
         "-f",
-        "webm",
+        container,
     ]
-    return _encode(ctx, ".webm", args)
+    return _encode(ctx, {"webm": ".webm", "matroska": ".mkv"}[container], args)
 
 
 @generator(parallel_safe=False)

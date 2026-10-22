@@ -73,7 +73,8 @@ def test_the_batch_is_fifteen_files_in_four_formats() -> None:
     counts = {fmt: sum(p.startswith(f"{fmt}/") for p in PATHS) for fmt in ("wav", "mkv")}
     assert counts == {"wav": 4, "mkv": 3}
     assert {path.split("/")[0] for path in PATHS} == {"wav", "mkv", "parquet", "pptx"}
-    assert "mkv/vp9-opus-720p-5s.mkv" not in CATALOG.by_path, "it ships alone (§7.9b)"
+    vp9 = CATALOG.by_path["mkv/vp9-opus-720p-5s.mkv"]
+    assert vp9.expected_drift and vp9.path not in PATHS, "it shipped alone in 1.11.0 (§7.9b)"
 
 
 @pytest.mark.container

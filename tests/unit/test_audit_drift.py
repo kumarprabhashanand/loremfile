@@ -33,6 +33,8 @@ KNOWN_SENSITIVE = {
     "opus/30s.opus",
     "opus/cbr-32k-30s.opus",
     "webm/720p-5s-vp9.webm",
+    # 1.11.0: the same VP9 and Opus encode in Matroska, marked before CI saw it (docs/11 §7.9b).
+    "mkv/vp9-opus-720p-5s.mkv",
 }
 
 

@@ -41,7 +41,7 @@
   },
   "changelog": {
     "date": "2026-10-22",
-    "sha256": "8120bff94f7a63bd31a8fc30b76f20cbb07865b771161398339edae9f7fa89d5"
+    "sha256": "6014f781b04aa8391463d9b16699ee0abc6f63a8e616ee24d64fa107af4d8bd4"
   },
   "css": {
     "date": "2026-10-17",
@@ -117,7 +117,7 @@
   },
   "formats": {
     "date": "2026-10-22",
-    "sha256": "762b2f43c1ed232651851d880b6eb5c54fbea227eec3bee7716faa3d5c30c837"
+    "sha256": "ea0ad5d57f818a0c524d6ca51d4a68900f0fe874c257bf25ad63eee65fcefe63"
   },
   "geojson": {
     "date": "2026-10-17",
@@ -161,7 +161,7 @@
   },
   "index.html": {
     "date": "2026-10-22",
-    "sha256": "c7871a30fb17d8c4627240e2d847a0d930b3795ea50846d7cd92455243f6cfdd"
+    "sha256": "558e0bd38a863e8fef40596ab901849ac7ead79dbcac69dd1111984ff3c3089f"
   },
   "ini": {
     "date": "2026-10-17",
@@ -209,7 +209,7 @@
   },
   "mkv": {
     "date": "2026-10-22",
-    "sha256": "c5ec9cb26b14290f4912f8fb1c447cfdb6574a75f9d77ae19306295ada0b08b4"
+    "sha256": "cb0c978b90bfd2740e6cc942766fd9df128c90f46a7a94e58443a8f698c26fba"
   },
   "mov": {
     "date": "2026-10-17",

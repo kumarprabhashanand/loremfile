@@ -1,15 +1,15 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.10.0",
-  "generated_at": "2026-10-22T10:33:49Z",
+  "catalog_version": "1.11.0",
+  "generated_at": "2026-10-22T13:35:18Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:53aed7c9c16e2471fb001682dc03d7622d05b1854981cdb4c2b7cbd6817f0f74",
-  "count": 281,
-  "total_bytes": 621457916,
+  "count": 282,
+  "total_bytes": 622079197,
   "formats": [
     "7z",
     "aac",
@@ -5319,6 +5319,52 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "added_in": "1.11.0",
+      "bytes": 621281,
+      "deprecated": false,
+      "description": "1280x720 at 30 fps, five seconds, VP9 video with Opus audio in general Matroska rather than WebM: the codecs of webm/720p-5s-vp9.webm in the container that also holds H.264, for players and sniffers that tie VP9 to the .webm extension.",
+      "edge_case": false,
+      "ext": "mkv",
+      "format": "mkv",
+      "generator": "media_video.webm",
+      "generator_params": {
+        "container": "matroska",
+        "duration": 5,
+        "height": 720,
+        "width": 1280
+      },
+      "mime": "video/x-matroska",
+      "path": "mkv/vp9-opus-720p-5s.mkv",
+      "phase": 1,
+      "props": {
+        "acodec": "opus",
+        "audio_streams": 1,
+        "channels": 1,
+        "duration_ms": 5008,
+        "fps": 30.0,
+        "height": 720,
+        "profile": "Profile 0",
+        "sample_rate": 48000,
+        "subtitle_streams": 0,
+        "tone_hz": [
+          440.0
+        ],
+        "vcodec": "vp9",
+        "video_streams": 1,
+        "width": 1280
+      },
+      "sha256": "d5785dfaf3fafc5425c3f755dec3d55162943663176f457dc35c4ed630dd4db5",
+      "size_class": "free",
+      "status": "active",
+      "supersededBy": null,
+      "tags": [
+        "video",
+        "codec-vp9",
+        "codec-opus"
+      ],
+      "url": "https://loremfile.dev/mkv/vp9-opus-720p-5s.mkv"
     },
     {
       "path": "mkv/with-chapters-720p-5s.mkv",

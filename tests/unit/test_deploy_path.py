@@ -256,6 +256,8 @@ AFTER_LAUNCH = (
     "pptx/with-table.pptx",
     "pptx/with-hidden-slide.pptx",
     "pptx/aspect-4-3-5slides.pptx",
+    # 1.11.0: the fourth mkv file, alone because it is expected_drift (docs/11 §7.9b).
+    "mkv/vp9-opus-720p-5s.mkv",
 )
 
 
