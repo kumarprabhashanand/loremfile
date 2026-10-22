@@ -9,62 +9,6 @@ description: >-
 seo_title: "Sample CSV files for testing parsers and imports, free and CC0"
 related: [tsv, json, ndjson, sql]
 fixtures:
-  - name: people-10.csv
-    phase: 1
-    generator: data.csv_people
-    params: { rows: 10 }
-    description: "10 rows of the shared synthetic people dataset with a header row. The same rows appear in every other people-10 fixture."
-    tags: [data, dataset-people]
-    expect: { rows: 10, columns: 14, delimiter: ",", has_header: true, line_ending: lf }
-    size_class: free
-  - name: people-1000.csv
-    phase: 1
-    generator: data.csv_people
-    params: { rows: 1000 }
-    description: "1,000 rows of the shared synthetic people dataset with a header row. The same rows appear in every other people-1000 fixture."
-    tags: [data, dataset-people]
-    expect: { rows: 1000, columns: 14, delimiter: ",", has_header: true, line_ending: lf }
-    size_class: free
-  - name: people-100k.csv
-    phase: 1
-    generator: data.csv_people
-    params: { rows: 100000 }
-    description: "100,000 rows of the shared synthetic people dataset with a header row. The same rows appear in every other people-100k fixture."
-    tags: [data, dataset-people]
-    expect: { rows: 100000, columns: 14, delimiter: ",", has_header: true, line_ending: lf }
-    size_class: free
-  - name: people-10-semicolon.csv
-    phase: 1
-    generator: data.csv_people
-    params: { rows: 10, delimiter: ";" }
-    description: "The same ten people rows delimited by semicolons, as European locales export."
-    tags: [data, dataset-people]
-    expect: { rows: 10, columns: 14, delimiter: ";", has_header: true }
-    size_class: free
-  - name: people-10-quoted-newlines.csv
-    phase: 1
-    generator: data.csv_people
-    params: { rows: 10, quoted_newlines: true }
-    description: "Ten people rows where the bio field contains a real newline inside a quoted field, which is where line-by-line splitting goes wrong."
-    tags: [data, dataset-people]
-    expect: { rows: 10, columns: 14, has_header: true, quoted_fields: true }
-    size_class: free
-  - name: people-10-crlf.csv
-    phase: 1
-    generator: data.csv_people
-    params: { rows: 10, crlf: true }
-    description: "The same ten people rows with every record ending in CR LF, as RFC 4180 specifies, where people-10.csv ends them in LF. A reader that splits on LF alone leaves a carriage return on the last column."
-    tags: [data, dataset-people]
-    expect: { rows: 10, columns: 14, delimiter: ",", has_header: true, line_ending: crlf }
-    size_class: free
-  - name: people-10-quoted-commas.csv
-    phase: 1
-    generator: data.csv_people
-    params: { rows: 10, quoted_delimiters: true }
-    description: "Ten people rows where the bio field contains a comma inside a quoted field. The field-level twin of people-10-quoted-newlines.csv: that one breaks splitting on lines, this one breaks splitting on commas."
-    tags: [data, dataset-people]
-    expect: { rows: 10, columns: 14, has_header: true, quoted_fields: true, quoted_delimiter: true }
-    size_class: free
   - name: people-10-utf8-bom.csv
     phase: 1
     generator: data.csv_people
@@ -73,6 +17,70 @@ fixtures:
     tags: [data, dataset-people, encoding]
     expect: { rows: 10, columns: 14, bom: true, has_header: true }
     size_class: free
+    label: "UTF-8 BOM"
+  - name: people-10-semicolon.csv
+    phase: 1
+    generator: data.csv_people
+    params: { rows: 10, delimiter: ";" }
+    description: "The same ten people rows delimited by semicolons, as European locales export."
+    tags: [data, dataset-people]
+    expect: { rows: 10, columns: 14, delimiter: ";", has_header: true }
+    size_class: free
+    label: "semicolons"
+  - name: people-10-crlf.csv
+    phase: 1
+    generator: data.csv_people
+    params: { rows: 10, crlf: true }
+    description: "The same ten people rows with every record ending in CR LF, as RFC 4180 specifies, where people-10.csv ends them in LF. A reader that splits on LF alone leaves a carriage return on the last column."
+    tags: [data, dataset-people]
+    expect: { rows: 10, columns: 14, delimiter: ",", has_header: true, line_ending: crlf }
+    size_class: free
+    label: "CRLF"
+  - name: people-10-quoted-newlines.csv
+    phase: 1
+    generator: data.csv_people
+    params: { rows: 10, quoted_newlines: true }
+    description: "Ten people rows where the bio field contains a real newline inside a quoted field, which is where line-by-line splitting goes wrong."
+    tags: [data, dataset-people]
+    expect: { rows: 10, columns: 14, has_header: true, quoted_fields: true }
+    size_class: free
+    label: "quoted newlines"
+  - name: people-10-quoted-commas.csv
+    phase: 1
+    generator: data.csv_people
+    params: { rows: 10, quoted_delimiters: true }
+    description: "Ten people rows where the bio field contains a comma inside a quoted field. The field-level twin of people-10-quoted-newlines.csv: that one breaks splitting on lines, this one breaks splitting on commas."
+    tags: [data, dataset-people]
+    expect: { rows: 10, columns: 14, has_header: true, quoted_fields: true, quoted_delimiter: true }
+    size_class: free
+    label: "quoted commas"
+  - name: people-100k.csv
+    phase: 1
+    generator: data.csv_people
+    params: { rows: 100000 }
+    description: "100,000 rows of the shared synthetic people dataset with a header row. The same rows appear in every other people-100k fixture."
+    tags: [data, dataset-people]
+    expect: { rows: 100000, columns: 14, delimiter: ",", has_header: true, line_ending: lf }
+    size_class: free
+    label: "100,000 rows"
+  - name: people-1000.csv
+    phase: 1
+    generator: data.csv_people
+    params: { rows: 1000 }
+    description: "1,000 rows of the shared synthetic people dataset with a header row. The same rows appear in every other people-1000 fixture."
+    tags: [data, dataset-people]
+    expect: { rows: 1000, columns: 14, delimiter: ",", has_header: true, line_ending: lf }
+    size_class: free
+    label: "1,000 rows"
+  - name: people-10.csv
+    phase: 1
+    generator: data.csv_people
+    params: { rows: 10 }
+    description: "10 rows of the shared synthetic people dataset with a header row. The same rows appear in every other people-10 fixture."
+    tags: [data, dataset-people]
+    expect: { rows: 10, columns: 14, delimiter: ",", has_header: true, line_ending: lf }
+    size_class: free
+    label: "10 rows"
   - name: 1mb.csv
     phase: 1
     generator: data.csv_sized
@@ -82,6 +90,7 @@ fixtures:
     expect: { columns: 14, has_header: true }
     size_class: approx
     nominal_bytes: 1000000
+    label: "1 MB"
   - name: 10mb.csv
     phase: 1
     generator: data.csv_sized
@@ -91,3 +100,4 @@ fixtures:
     expect: { columns: 14, has_header: true }
     size_class: approx
     nominal_bytes: 10000000
+    label: "10 MB"

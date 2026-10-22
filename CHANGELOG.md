@@ -5,6 +5,9 @@
 - Every format page and testing guide has a Markdown copy at its URL plus `/index.md`, for
   example `/pdf/index.md`, linked from the page and described in `llms.txt`. The pages'
   structured data now gives each file's size and SHA-256.
+- Twelve format pages (mp3, mp4, parquet, docx, pptx, mkv, png, jpg, pdf, csv, zip, wav)
+  have titles and descriptions that name what sets their files apart, for example
+  `Sample MP3 test files: L/R channels, ID3v2 tags`.
 
 ## [1.9.1] - 2026-10-16
 

@@ -8,63 +8,6 @@ description: >-
 seo_title: "Sample JPEG images for testing uploads and viewers, free and CC0"
 related: [png, webp, avif, tiff]
 fixtures:
-  - name: exif-orientation-8-640x480.jpg
-    phase: 1
-    generator: image.exif_rotated
-    params: { width: 640, height: 480 }
-    description: "EXIF orientation 8: stored pixels are 480x640 and rotated clockwise. Honouring the tag displays the UP label upright at 640x480; ignoring it shows the image sideways."
-    tags: [image]
-    expect: { exif_orientation: 8, width: 480, height: 640, display_width: 640, display_height: 480, mode: RGB }
-    size_class: free
-  - name: 100x100.jpg
-    phase: 1
-    generator: image.testcard
-    params: { width: 100, height: 100, fmt: JPEG, quality: 85 }
-    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 100x100, quality 85, 4:2:0 chroma subsampling."
-    tags: [image]
-    expect: { width: 100, height: 100, mode: RGB }
-    size_class: free
-  - name: 640x480.jpg
-    phase: 1
-    generator: image.testcard
-    params: { width: 640, height: 480, fmt: JPEG, quality: 85 }
-    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 640x480, quality 85, 4:2:0 chroma subsampling."
-    tags: [image]
-    expect: { width: 640, height: 480, mode: RGB }
-    size_class: free
-  - name: 1920x1080.jpg
-    phase: 1
-    generator: image.testcard
-    params: { width: 1920, height: 1080, fmt: JPEG, quality: 85 }
-    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 1920x1080, quality 85, 4:2:0 chroma subsampling."
-    tags: [image]
-    expect: { width: 1920, height: 1080, mode: RGB }
-    size_class: free
-  - name: 4000x3000.jpg
-    phase: 1
-    generator: image.testcard
-    params: { width: 4000, height: 3000, fmt: JPEG, quality: 85 }
-    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 4000x3000, quality 85, 4:2:0 chroma subsampling."
-    tags: [image]
-    expect: { width: 4000, height: 3000, mode: RGB }
-    size_class: free
-  - name: progressive-1920x1080.jpg
-    phase: 1
-    generator: image.testcard
-    params: { width: 1920, height: 1080, fmt: JPEG, quality: 85, progressive: true }
-    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, saved as a progressive JPEG rather than baseline."
-    tags: [image]
-    expect: { width: 1920, height: 1080, progressive: true }
-    size_class: free
-  - name: cmyk-640x480.jpg
-    phase: 1
-    generator: image.testcard
-    params: { width: 640, height: 640, fmt: JPEG, mode: CMYK }
-    description: "A CMYK JPEG, the colour space that trips pipelines expecting RGB. Its name says 640x480, but it measures 640x640; jpg/cmyk-640x640.jpg replaces it, and this URL keeps serving the same bytes."
-    tags: [image]
-    expect: { mode: CMYK }
-    size_class: free
-    superseded_by: jpg/cmyk-640x640.jpg
   - name: cmyk-640x640.jpg
     phase: 2
     generator: image.testcard
@@ -73,6 +16,16 @@ fixtures:
     tags: [image]
     expect: { mode: CMYK, width: 640, height: 640 }
     size_class: free
+    label: "CMYK"
+  - name: progressive-1920x1080.jpg
+    phase: 1
+    generator: image.testcard
+    params: { width: 1920, height: 1080, fmt: JPEG, quality: 85, progressive: true }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, saved as a progressive JPEG rather than baseline."
+    tags: [image]
+    expect: { width: 1920, height: 1080, progressive: true }
+    size_class: free
+    label: "progressive"
   - name: exif-orientation-6-640x480.jpg
     phase: 1
     generator: image.exif_orientation
@@ -81,6 +34,52 @@ fixtures:
     tags: [image]
     expect: { exif_orientation: 6 }
     size_class: free
+    label: "EXIF orientation 6"
+  - name: exif-orientation-8-640x480.jpg
+    phase: 1
+    generator: image.exif_rotated
+    params: { width: 640, height: 480 }
+    description: "EXIF orientation 8: stored pixels are 480x640 and rotated clockwise. Honouring the tag displays the UP label upright at 640x480; ignoring it shows the image sideways."
+    tags: [image]
+    expect: { exif_orientation: 8, width: 480, height: 640, display_width: 640, display_height: 480, mode: RGB }
+    size_class: free
+    label: "EXIF orientation 8"
+  - name: 4000x3000.jpg
+    phase: 1
+    generator: image.testcard
+    params: { width: 4000, height: 3000, fmt: JPEG, quality: 85 }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 4000x3000, quality 85, 4:2:0 chroma subsampling."
+    tags: [image]
+    expect: { width: 4000, height: 3000, mode: RGB }
+    size_class: free
+    label: "4000x3000"
+  - name: 1920x1080.jpg
+    phase: 1
+    generator: image.testcard
+    params: { width: 1920, height: 1080, fmt: JPEG, quality: 85 }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 1920x1080, quality 85, 4:2:0 chroma subsampling."
+    tags: [image]
+    expect: { width: 1920, height: 1080, mode: RGB }
+    size_class: free
+    label: "1920x1080"
+  - name: 640x480.jpg
+    phase: 1
+    generator: image.testcard
+    params: { width: 640, height: 480, fmt: JPEG, quality: 85 }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 640x480, quality 85, 4:2:0 chroma subsampling."
+    tags: [image]
+    expect: { width: 640, height: 480, mode: RGB }
+    size_class: free
+    label: "640x480"
+  - name: 100x100.jpg
+    phase: 1
+    generator: image.testcard
+    params: { width: 100, height: 100, fmt: JPEG, quality: 85 }
+    description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode. 100x100, quality 85, 4:2:0 chroma subsampling."
+    tags: [image]
+    expect: { width: 100, height: 100, mode: RGB }
+    size_class: free
+    label: "100x100"
   - name: 1mb.jpg
     phase: 1
     generator: image.noise_sized
@@ -90,6 +89,7 @@ fixtures:
     expect: { mode: RGB }
     size_class: approx
     nominal_bytes: 1000000
+    label: "1 MB"
   - name: 10mb.jpg
     phase: 1
     generator: image.noise_sized
@@ -99,3 +99,13 @@ fixtures:
     expect: { mode: RGB }
     size_class: approx
     nominal_bytes: 10000000
+    label: "10 MB"
+  - name: cmyk-640x480.jpg
+    phase: 1
+    generator: image.testcard
+    params: { width: 640, height: 640, fmt: JPEG, mode: CMYK }
+    description: "A CMYK JPEG, the colour space that trips pipelines expecting RGB. Its name says 640x480, but it measures 640x640; jpg/cmyk-640x640.jpg replaces it, and this URL keeps serving the same bytes."
+    tags: [image]
+    expect: { mode: CMYK }
+    size_class: free
+    superseded_by: jpg/cmyk-640x640.jpg

@@ -16,3 +16,4 @@ fixtures:
     tags: [video, codec-h264, codec-aac]
     expect: { width: 1280, height: 720, vcodec: h264, acodec: aac }
     size_class: free
+    label: "720p H.264 + AAC"

@@ -897,9 +897,15 @@ def test_the_popular_list_and_search_use_the_same_size_string(site: Path) -> Non
 
 
 def test_a_fully_labelled_format_page_leads_with_its_labels(site: Path) -> None:
-    """docs/05 §1 rule 9: ogg, tiff and arrow from 1.9.0; every other page keeps its title."""
+    """docs/05 §1 rule 9: ogg, tiff and arrow from 1.9.0, the twelve demand formats from
+    2026-10-22 keeping "Sample" and "test" in the head; every other page keeps its title."""
     ogg = text(site, "ogg")
     assert "<title>Sample OGG files: FLAC in Ogg, cover art, 2 chained streams</title>" in ogg
     assert '<meta name="description" content="5 OGG test files from ' in ogg
+    mp3 = text(site, "mp3")
+    assert "<title>Sample MP3 test files: L/R channels, ID3v2 tags</title>" in mp3
+    assert "<title>Sample PDF files for testing: form fields, encrypted</title>" in text(
+        site, "pdf"
+    )
     # Control: an unlabelled format is unchanged, brand suffix and all.
-    assert "· loremfile.dev</title>" in text(site, "pdf")
+    assert "· loremfile.dev</title>" in text(site, "flac")
