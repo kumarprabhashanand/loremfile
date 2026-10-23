@@ -52,8 +52,8 @@
     "sha256": "643343f6bf66081fa2bf90a050aa0c2ef6ce7e917b5dd691adab748dfeddebb2"
   },
   "der": {
-    "date": "2026-10-17",
-    "sha256": "1e901699fdd3423b99b67afc7a51c2172d60e0ce4527eac4c49812af7a9e14c6"
+    "date": "2026-10-23",
+    "sha256": "8e12e4a0ca4fb909c998f020200fcb296b1cc8c56bc234951ec79e57871b6fb4"
   },
   "docs": {
     "date": "2026-10-17",
@@ -80,8 +80,8 @@
     "sha256": "972e96449d19576f54f9f249b271b30fe49a4275095cb4b4e13a4b92f3f18e62"
   },
   "docs/manifest": {
-    "date": "2026-10-22",
-    "sha256": "51e5fb41880e32b74b575364ab0e6d6b703ec95858867e13c1c6d0ede0bdc627"
+    "date": "2026-10-23",
+    "sha256": "0e0fb1b5962247f9127ebf47d209f6d805d70b6f09c3cb25bf111798c198aa87"
   },
   "docs/mcp": {
     "date": "2026-10-17",
@@ -180,8 +180,8 @@
     "sha256": "fa8c299c184f58ab0fd6e5c3f5316423bb7c6f88c2b2539e3b2adcc327908520"
   },
   "json": {
-    "date": "2026-10-17",
-    "sha256": "b22a0e70cf9501aed5886466ffca03683a987ba6e2125da675888cdb0fc2a32c"
+    "date": "2026-10-23",
+    "sha256": "2ff8378a781401d3c71ce794118cdd0a2c692e7c08608bba56bebf8d1f8d63b6"
   },
   "kml": {
     "date": "2026-10-17",
@@ -348,8 +348,8 @@
     "sha256": "6fe99786c67c43a5b7719e38fab196c8c589e9f361494f3a1b115e4614f7f606"
   },
   "webm": {
-    "date": "2026-10-17",
-    "sha256": "68ede5f7690de2acbb50006b989a6d1ab5d1b94ae9d36489a7c69f924f11e239"
+    "date": "2026-10-23",
+    "sha256": "00c7ffcb602378e5bac6beaef47020be9b1d29c077773f37ede2322736fd6804"
   },
   "webmanifest": {
     "date": "2026-10-17",
