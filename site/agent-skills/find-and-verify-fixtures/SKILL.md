@@ -10,7 +10,7 @@ path, and the manifest records each file's size and SHA-256.
 
 ## Find one
 
-- **One format:** `GET https://loremfile.dev/{format}/index.json`, for example
+- **One format:** `GET /{format}/index.json` on the site, for example
   `https://loremfile.dev/pdf/index.json`. Its `fixtures` array lists that format's files.
 - **Every format:** `GET https://loremfile.dev/manifest.json`. `formats` names each format
   and `fixtures` lists every file.

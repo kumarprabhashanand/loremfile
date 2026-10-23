@@ -1,3 +1,8 @@
+`der/self-signed-ed25519-cert.der` is a sample DER file: a self-signed Ed25519 X.509
+certificate for `fixture.example` with no private key, free to hotlink or download.
+
+<!-- file: der/self-signed-ed25519-cert.der -->
+
 DER is the binary encoding of an X.509 certificate: the form a parser actually meets inside a
 TLS handshake, a Java keystore or a certificate store, as opposed to the base64 text that gets
 pasted into configuration files.

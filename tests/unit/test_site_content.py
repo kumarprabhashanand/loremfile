@@ -85,9 +85,24 @@ def test_a_format_page_is_120_to_250_words_and_names_its_own_files(page: Path) -
     assert not text.startswith("#"), "the template supplies the H1"
 
 
-#: The pages that rank in search (Search Console, October 2026). Each opens with one
-#: sentence answering the query, then its file and measured facts, then the explanation.
-LEADING_PAGES = {"arrow", "docx", "hls", "m4a", "md", "ogg", "opus", "rtf", "tiff", "wav"}
+#: The pages that rank in search (Search Console, October 2026; webm, der and json from the
+#: 23 October export). Each opens with one sentence answering the query, then its file and
+#: measured facts, then the explanation.
+LEADING_PAGES = {
+    "arrow",
+    "der",
+    "docx",
+    "hls",
+    "json",
+    "m4a",
+    "md",
+    "ogg",
+    "opus",
+    "rtf",
+    "tiff",
+    "wav",
+    "webm",
+}
 FILE_MARKER = re.compile(r"^<!-- file: (\S+) -->$", re.M)
 
 
@@ -237,7 +252,7 @@ GUIDES = tuple(sorted(build.DEMAND_FORMATS))
 SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[`A-Z])")
 NUMBER = re.compile(r"\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?")
 #: Names whose digits are part of the name (H.264, VP9, MP4), not a quantity.
-NAMES = re.compile(r"\b(?:H\.264|VP9|MP3|MP4|ID3v2|ZIP64|UTF-8|A4)\b")
+NAMES = re.compile(r"\b(?:H\.264|VP9|MP3|MP4|ID3v2|ZIP64|UTF-8|A4|Ed25519|X\.509)\b")
 RATIO = re.compile(r"\b(\d+):(\d+)\b")
 DIMENSIONS = (("slide_width_emu", "slide_height_emu"), ("width", "height"))
 
@@ -276,6 +291,9 @@ def guide_sentences(text: str) -> list[str]:
 #: counted, because the catalogue grows and only the page's table should count its files.
 #: Counting inside one published file ("three seconds", "one deletion") is fine: those bytes
 #: are frozen. Paragraph-scoped counting, as `variant_claims` does, misreads a list here.
+#: The match is a number *immediately* before the noun, so counting what one file holds is
+#: done by naming the noun differently: "holds 4 published files" about a zip's contents
+#: passes, where "holds 4 files" would trip the guard although the rule permits it.
 FILE_COUNT = re.compile(
     r"\b(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+"
     r"(?:variants?|sizes?|files?|cards?)\b",
@@ -348,3 +366,16 @@ def test_control_the_guide_rule_catches_each_way_to_break_it() -> None:
     baseline = "`mp4/h264-baseline-720p-5s.mp4`"
     assert guide_problems(f"{baseline} is at level 3.0.", entries) == []
     assert guide_problems(f"{baseline} is at level 4.2.", entries), "a numeric string must match"
+
+
+#: Leads added from the 23 October export to pages that are not selection guides: the one
+#: sentence still follows the guide rule (docs/07 §5).
+NEW_LEADS = ("der", "json", "webm")
+
+
+@pytest.mark.parametrize("name", NEW_LEADS)
+def test_a_lead_from_the_october_export_follows_the_guide_rule(name: str) -> None:
+    text = (CONTENT / "formats" / f"{name}.md").read_text(encoding="utf-8")
+    lead = " ".join(re.split(r"\n\s*\n", text)[0].split())
+    assert set(NEW_LEADS) <= LEADING_PAGES
+    assert guide_problems(lead, manifest_entries()) == []

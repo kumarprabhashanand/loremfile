@@ -1208,10 +1208,13 @@ def llms(
         "no rate-limit keys.",
         "",
         "## How to use",
-        f"- Every fixture: {base}{{format}}/{{name}}; see the manifest for all paths.",
+        # Patterns, never absolute URLs with braces: a crawler that reads this text fetches
+        # `/{format}/{name}` literally and gets a 404 (2026-10-23).
+        f"- Every fixture: {{format}}/{{name}} under the site root, for example "
+        f"{base}pdf/a4-1page.pdf (the manifest lists every path)",
         f"- Machine-readable list of everything: {base}manifest.json (JSON, includes sha256, "
         "bytes, mime, measured properties)",
-        f"- Per-format lists: {base}{{format}}/index.json",
+        f"- Per-format lists: {{format}}/index.json, for example {base}pdf/index.json",
         "- Any format or guide page as Markdown: append /index.md to its URL, for example "
         f"{base}pdf/index.md or {base}testing/uploads/index.md",
         f"- Verify: {base}sha256sums.txt",

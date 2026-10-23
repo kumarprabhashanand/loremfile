@@ -1,3 +1,8 @@
+`webm/720p-5s-vp9.webm` is a sample WebM file: 1280x720 VP9 video with Opus audio, free
+to hotlink or download.
+
+<!-- file: webm/720p-5s-vp9.webm -->
+
 WebM is the royalty-free video format browsers play natively: a restricted Matroska container
 holding VP8, VP9 or AV1 video with Vorbis or Opus audio. These clips use ffmpeg's synthetic
 test pattern and a 440 Hz tone, with no third-party footage.

@@ -909,3 +909,29 @@ def test_a_fully_labelled_format_page_leads_with_its_labels(site: Path) -> None:
     )
     # Control: an unlabelled format is unchanged, brand suffix and all.
     assert "· loremfile.dev</title>" in text(site, "flac")
+
+
+#: A URL with a placeholder in it (`/{format}/{name}`) is a pattern, and a crawler reading
+#: plain text fetches it literally: written into a text file, it is a 404 we serve. Search
+#: Console reported one 404 that our own pages and links do not produce (2026-10-23).
+PLACEHOLDER_URL = re.compile(r"https://loremfile\.dev/[^\s\"'<>`)]*\{[a-z_]+\}")
+
+
+def test_no_text_file_offers_a_placeholder_as_a_url(site: Path, keys: dict[str, Path]) -> None:
+    textual = [
+        key
+        for key in keys
+        if not routes.is_page(key)
+        and routes.content_type(key).startswith(("text/plain", "text/markdown"))
+    ]
+    for key in (
+        "llms.txt",
+        "llms-full.txt",
+        ".well-known/agent-skills/find-and-verify-fixtures/SKILL.md",
+    ):
+        assert key in textual, f"control: {key} is read"
+    found = {key: PLACEHOLDER_URL.findall(text(site, key)) for key in textual}
+    assert {key: urls for key, urls in found.items() if urls} == {}
+    assert PLACEHOLDER_URL.findall("lists: https://loremfile.dev/{format}/index.json") == [
+        "https://loremfile.dev/{format}"
+    ], "control: the pattern finds one"

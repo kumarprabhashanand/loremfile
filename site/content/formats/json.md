@@ -1,3 +1,8 @@
+`json/people-10.json` is a sample JSON file: an array of 10 people objects, free to hotlink
+or download.
+
+<!-- file: json/people-10.json -->
+
 JSON is the common language of APIs, and most JSON parsers are fine until they meet a number,
 a string or a depth they did not expect. These files cover the everyday case and the awkward
 ones.
