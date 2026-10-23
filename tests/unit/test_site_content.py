@@ -291,6 +291,9 @@ def guide_sentences(text: str) -> list[str]:
 #: counted, because the catalogue grows and only the page's table should count its files.
 #: Counting inside one published file ("three seconds", "one deletion") is fine: those bytes
 #: are frozen. Paragraph-scoped counting, as `variant_claims` does, misreads a list here.
+#: The match is a number *immediately* before the noun, so counting what one file holds is
+#: done by naming the noun differently: "holds 4 published files" about a zip's contents
+#: passes, where "holds 4 files" would trip the guard although the rule permits it.
 FILE_COUNT = re.compile(
     r"\b(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+"
     r"(?:variants?|sizes?|files?|cards?)\b",
