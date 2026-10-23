@@ -195,9 +195,9 @@ Follow the llmstxt.org layout (H1 title, blockquote summary, H2 sections with li
 > Free, CC0, hotlink-friendly sample files and test fixtures for every common file type. Stable URLs, open CORS, byte-range support, SHA-256 manifest. No ads, no signup, no rate-limit keys.
 
 ## How to use
-- Every fixture: https://loremfile.dev/{format}/{name}; see the manifest for all paths.
+- Every fixture: {format}/{name} under the site root, for example https://loremfile.dev/pdf/a4-1page.pdf (the manifest lists every path)
 - Machine-readable list of everything: https://loremfile.dev/manifest.json (JSON, includes sha256, bytes, mime, measured properties)
-- Per-format lists: https://loremfile.dev/{format}/index.json
+- Per-format lists: {format}/index.json, for example https://loremfile.dev/pdf/index.json
 - Any format or guide page as Markdown: append /index.md to its URL, for example https://loremfile.dev/pdf/index.md or https://loremfile.dev/testing/uploads/index.md
 - Verify: https://loremfile.dev/sha256sums.txt
 - Verify from a page alone: the JSON-LD Dataset on every format and guide page gives each file's contentSize and sha256, so a download can be checked without the manifest

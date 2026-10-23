@@ -188,7 +188,8 @@ def test_the_new_files_are_purged_on_deploy() -> None:
 #: Surface -> the text that shows SKILL.md tells agents about it.
 IN_THE_SKILL = {
     "manifest.json": "https://loremfile.dev/manifest.json",
-    "{format}/index.json": "https://loremfile.dev/{format}/index.json",
+    # A pattern, not an absolute URL with braces, which a crawler would fetch as a 404.
+    "{format}/index.json": "GET /{format}/index.json",
     "sha256sums.txt": "https://loremfile.dev/sha256sums.txt",
     "llms.txt": "https://loremfile.dev/llms.txt",
     "llms-full.txt": "https://loremfile.dev/llms-full.txt",
