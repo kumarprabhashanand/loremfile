@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import http.server
 import json
+import re
 import threading
 from collections.abc import Iterator
 from pathlib import Path
@@ -68,6 +69,43 @@ def test_control_without_the_deferral_nbot_would_be_reported() -> None:
     assert agent.name == "nbot"
 
 
+#: The five #110 weighed on 2026-10-26 and did not block, with the guard in docs/04 §6 each
+#: fell under: one substring collision, four display names the list publishes beside tokens.
+DEFERRED_2026_10_26 = {
+    "Dot": "first guard",
+    "AGI Agent": "third guard",
+    "CartAI Agentic Commerce": "third guard",
+    "Grok Bot": "third guard",
+    "Payhawk Invoice Fetching Agent": "third guard",
+}
+
+
+@pytest.mark.parametrize(("name", "guard"), sorted(DEFERRED_2026_10_26.items()))
+def test_each_name_deferred_on_2026_10_26_is_weighed_and_says_which_guard(
+    name: str, guard: str
+) -> None:
+    """Deferred, not blocked, and not raised again: the record carries the date, the issue,
+    the guard it fell under and what would reopen it."""
+    deferred = json.loads((ROOT / crawlers.SEEN_FILE).read_text(encoding="utf-8"))["deferred"]
+    entry = deferred[name]
+    assert entry["weighed"] == "2026-10-26"
+    assert entry["issue"] == "#110"
+    assert guard in " ".join(entry["reasons"])
+    assert "ADR-033" in entry["reopen"]
+    assert (
+        crawlers.unreviewed(known(name), crawlers.blocked_tokens(ROOT), crawlers.seen_names(ROOT))
+        == []
+    )
+
+
+@pytest.mark.parametrize("name", sorted(DEFERRED_2026_10_26))
+def test_control_without_the_deferral_each_of_the_five_would_be_reported(name: str) -> None:
+    """Weighed, not blocked: `Grok Bot` is the one to watch, because `grokbot` *is* blocked and
+    the two are different names."""
+    [agent] = crawlers.unreviewed(known(name), crawlers.blocked_tokens(ROOT), set())
+    assert agent.name == name
+
+
 @pytest.mark.parametrize("decided", ["Amazonbot", "amazonbot", "AMAZONBOT"])
 def test_an_agent_already_blocked_is_not_reported_whatever_its_casing(decided: str) -> None:
     found = crawlers.unreviewed(known(decided), {"amazonbot"}, set())
@@ -116,6 +154,44 @@ def test_an_expression_over_the_limit_is_refused(tmp_path: Path) -> None:
     [problem] = crawlers.over_long_expressions(tmp_path)
     assert "too_long" in problem
     assert f"{crawlers.MAX_EXPRESSION_CHARACTERS + 1:,}" in problem
+
+
+RECORDED = re.compile(r"([\d,]+) characters and (\d+) tokens, ([\d.]+)% of the limit")
+
+
+def recorded_baseline(text: str) -> tuple[int, int, float]:
+    """The latest figure docs/04 §6's Baseline bullet records, as it is written there."""
+    found = RECORDED.findall(text)
+    assert found, "empty-set control: §6 records at least one baseline"
+    characters, tokens, percent = found[-1]
+    return int(characters.replace(",", "")), int(tokens), float(percent)
+
+
+def test_the_baseline_docs_04_records_is_the_committed_expression_measured() -> None:
+    """§6 says to measure with `len()` and record each change so the trend is read rather than
+    re-measured. A figure nobody holds to the rule goes stale on the first addition that forgets
+    it, and the budget decision is taken off that figure."""
+    expression = next(
+        rule["expression"]
+        for rule in json.loads(
+            (ROOT / "infra" / "rulesets" / "http_request_firewall_custom.json").read_text(
+                encoding="utf-8"
+            )
+        )["rules"]
+        if rule["ref"] == "loremfile_legal_pages_ai_agents"
+    )
+    section = (ROOT / "docs" / "04-manifest-and-discovery.md").read_text(encoding="utf-8")
+    tokens = len(crawlers.TOKEN.findall(expression))
+    percent = round(len(expression) / crawlers.MAX_EXPRESSION_CHARACTERS * 100, 1)
+    assert recorded_baseline(section) == (len(expression), tokens, percent)
+
+
+def test_the_baseline_reader_takes_the_last_figure_recorded() -> None:
+    """The negative control: it parses, and an older figure earlier in the bullet is not it."""
+    assert recorded_baseline(
+        "1,390 characters and 26 tokens, 33.9% of the limit. "
+        "**1,668 characters and 33 tokens, 40.7% of the limit**"
+    ) == (1668, 33, 40.7)
 
 
 def rules_of(tmp_path: Path, length: int) -> Path:

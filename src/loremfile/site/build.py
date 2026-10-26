@@ -111,6 +111,13 @@ User-agent: YiBot
 User-agent: KimiBot
 User-agent: Kimi-SearchBot
 User-agent: Kimi-User
+User-agent: CledaraBot
+User-agent: Codex
+User-agent: ElevenlabsBot
+User-agent: ExaUser
+User-agent: HarkBot
+User-agent: Instinct
+User-agent: Muse
 User-agent: Google-Extended
 User-agent: Applebot-Extended
 Content-Signal: search=yes, ai-input=yes, ai-train=yes

@@ -11,6 +11,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import re
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -69,6 +70,16 @@ AI_TOKENS = {
     "KimiBot",
     "Kimi-SearchBot",
     "Kimi-User",
+    # Weighed 2026-10-26 (#110) under the standing rule: user-directed agents in the list's
+    # spelling. OpenAI's and Meta's crawler pages do not name `Codex` or `Muse`; the other five
+    # have no operator to check against. `Dot` and four display names were not added (docs/04 §6).
+    "CledaraBot",
+    "Codex",
+    "ElevenlabsBot",
+    "ExaUser",
+    "HarkBot",
+    "Instinct",
+    "Muse",
     "Google-Extended",
     "Applebot-Extended",
 }
@@ -209,6 +220,41 @@ def test_the_rule_also_refuses_cloudflares_verified_ai_bot_categories() -> None:
     assert categories in expression
     for other in ("Search Engine Crawler", "Accessibility", "Feed Fetcher"):
         assert other not in expression
+
+
+# --- the third guard: product tokens, never display names (docs/04 §6) ---------------
+
+
+def whitespace_names(tokens: Iterable[str]) -> list[str]:
+    return sorted(token for token in tokens if any(ch.isspace() for ch in token))
+
+
+def test_no_token_in_the_robots_group_or_the_waf_rule_contains_whitespace() -> None:
+    """RFC 9309 §2.2.1: the product token holds only letters, underscores and hyphens. So a
+    name with a space cannot be a `User-agent:` line at all, and a case-sensitive `contains`
+    clause for one would fire only on a user agent carrying the space as written. The list the
+    weekly watch reads publishes display names (`AGI Agent`, `Grok Bot`) beside real tokens and
+    marks neither, which is why this is a guard and not a convention."""
+    agents = next(agents for agents, _rules in groups(robots_spec()) if agents & AI_TOKENS)
+    waf = re.findall(r'http\.user_agent contains "([^"]+)"', ai_agent_rule()["expression"])
+    # Empty-set control, naming specifics: both lists were found, so neither claim is vacuous.
+    assert "GPTBot" in agents and "GPTBot" in waf
+    assert whitespace_names(agents) == []
+    assert whitespace_names(waf) == []
+
+
+def test_the_whitespace_check_finds_the_display_names_it_is_for() -> None:
+    """The negative control: the four names rejected on 2026-10-26 (#110) are what it catches,
+    next to the product token `GrokBot` that `Grok Bot` turned out to be."""
+    assert whitespace_names(
+        [
+            "GrokBot",
+            "AGI Agent",
+            "CartAI Agentic Commerce",
+            "Grok Bot",
+            "Payhawk Invoice Fetching Agent",
+        ]
+    ) == ["AGI Agent", "CartAI Agentic Commerce", "Grok Bot", "Payhawk Invoice Fetching Agent"]
 
 
 # --- placeholders -----------------------------------------------------------------

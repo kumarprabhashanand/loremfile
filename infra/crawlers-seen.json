@@ -188,6 +188,48 @@
         "No published user agent: NBot (nbot.ai) publishes none, so neither the exact string nor its casing is known, and a clause in the list's lower case might never fire."
       ],
       "reopen": "When NBot publishes an exact user-agent string: block it with an exact match on that string rather than contains (ADR-033)."
+    },
+    "Dot": {
+      "weighed": "2026-10-26",
+      "issue": "#110",
+      "reasons": [
+        "Substring: at three characters a case-sensitive contains \"Dot\" also matches Moz's link-index crawler, which Moz spells DotBot in its page title and Dotbot in its prose (moz.com/help/moz-procedures/crawlers/dotbot, read 2026-10-26), so the clause would reach a crawler this group is not aimed at (docs/04 section 6, first guard).",
+        "No published user agent: the list gives Dot no operator and OpenAI's crawler page names only OAI-SearchBot, OAI-AdsBot, GPTBot and ChatGPT-User (read 2026-10-26), so neither an exact string nor a casing is known."
+      ],
+      "reopen": "When an exact user-agent string is published for Dot: block it with an exact match on that string rather than contains (ADR-033)."
+    },
+    "AGI Agent": {
+      "weighed": "2026-10-26",
+      "issue": "#110",
+      "reasons": [
+        "Display name, not a product token: the name contains whitespace, and RFC 9309 section 2.2.1 confines the robots.txt product token to letters, underscores and hyphens, so no User-agent: line can carry it and a case-sensitive contains clause would fire only on a user agent holding the name with its space (docs/04 section 6, third guard)."
+      ],
+      "reopen": "When the operator publishes a product token without whitespace, or an exact user-agent string: weigh that token under the standing rule, or block the exact string with an exact match rather than contains (ADR-033)."
+    },
+    "CartAI Agentic Commerce": {
+      "weighed": "2026-10-26",
+      "issue": "#110",
+      "reasons": [
+        "Display name, not a product token: the name contains whitespace, and RFC 9309 section 2.2.1 confines the robots.txt product token to letters, underscores and hyphens, so no User-agent: line can carry it and a case-sensitive contains clause would fire only on a user agent holding the name with its space (docs/04 section 6, third guard)."
+      ],
+      "reopen": "When the operator publishes a product token without whitespace, or an exact user-agent string: weigh that token under the standing rule, or block the exact string with an exact match rather than contains (ADR-033)."
+    },
+    "Grok Bot": {
+      "weighed": "2026-10-26",
+      "issue": "#110",
+      "reasons": [
+        "Display name, not a product token: the name contains whitespace, and RFC 9309 section 2.2.1 confines the robots.txt product token to letters, underscores and hyphens, so no User-agent: line can carry it and a case-sensitive contains clause would fire only on a user agent holding the name with its space (docs/04 section 6, third guard).",
+        "Grok Bot is xAI's, and xAI is the operator already refused here as GrokBot since #96."
+      ],
+      "reopen": "When the operator publishes a product token without whitespace, or an exact user-agent string: weigh that token under the standing rule, or block the exact string with an exact match rather than contains (ADR-033)."
+    },
+    "Payhawk Invoice Fetching Agent": {
+      "weighed": "2026-10-26",
+      "issue": "#110",
+      "reasons": [
+        "Display name, not a product token: the name contains whitespace, and RFC 9309 section 2.2.1 confines the robots.txt product token to letters, underscores and hyphens, so no User-agent: line can carry it and a case-sensitive contains clause would fire only on a user agent holding the name with its space (docs/04 section 6, third guard)."
+      ],
+      "reopen": "When the operator publishes a product token without whitespace, or an exact user-agent string: weigh that token under the standing rule, or block the exact string with an exact match rather than contains (ADR-033)."
     }
   }
 }
