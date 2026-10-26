@@ -11,13 +11,13 @@
 
 # --- documents -------------------------------------------------------------
 fpdf2>=2.8.9
-pypdf>=6.21.0               # reads every PDF; writes only pdf/form-fields-1page.pdf's form
+pypdf>=6.21.2               # reads every PDF; writes only pdf/form-fields-1page.pdf's form
 python-docx>=1.2          # comments API
 openpyxl
 python-pptx
 
 # --- images ----------------------------------------------------------------
-Pillow>=12.3              # AVIF support in the published wheels starts at 11.3.0
+Pillow>=13.0.0              # AVIF support in the published wheels starts at 11.3.0
 
 # --- data ------------------------------------------------------------------
 # Exact, not a floor: every Parquet file's footer records the writer's version
