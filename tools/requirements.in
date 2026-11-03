@@ -6,11 +6,16 @@
 # Regenerate the lock inside the image after any change here:
 #   pip-compile --allow-unsafe --generate-hashes --no-emit-index-url --strip-extras --output-file=tools/requirements.lock tools/requirements.in
 # (the flags tools/check_lock.py regenerates with; any other set writes a lock CI rejects)
-# and bump tools/TOOLCHAIN_DIGEST in the same pull request — tools/check_lock.sh
+# and bump tools/TOOLCHAIN_DIGEST in the same pull request: tools/check_lock.sh
 # fails the build otherwise (docs/09 §4).
 
 # --- documents -------------------------------------------------------------
-fpdf2>=2.9.0
+# Held below 2.9: fpdf2 2.9.0 writes a Letter page's MediaBox as "612 792" where 2.8.9 wrote
+# "612.00 792.00", which changes the published bytes of pdf/letter-1page.pdf (1,860 to 1,854)
+# and, audited over the 226 non-media fixtures, nothing else (2026-11-03, #134).
+# So the hold is about one file's frozen bytes and no other fpdf2 behaviour. It can move once
+# that file is superseded by a new path (superseded_by, as jpg/cmyk-640x480.jpg was).
+fpdf2>=2.8.9,<2.9
 pypdf>=6.21.4               # reads every PDF; writes only pdf/form-fields-1page.pdf's form
 python-docx>=1.2          # comments API
 openpyxl

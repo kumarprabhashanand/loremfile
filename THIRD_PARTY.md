@@ -30,7 +30,7 @@ hashes; regenerate the table with `tools/licences.py` after any dependency chang
 
 | Library | Version | Licence | Used for |
 |---|---|---|---|
-| `fpdf2` | 2.9.0 | LGPL-3.0-only | PDF generation |
+| `fpdf2` | 2.8.9 | LGPL-3.0-only | PDF generation |
 | `pypdf` | 6.21.4 | BSD-3-Clause | PDF validation, and adding the form to `pdf/form-fields-1page.pdf` |
 | `python-docx` | 1.2.0 | MIT | DOCX |
 | `openpyxl` | 3.1.5 | MIT | XLSX |
