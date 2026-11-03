@@ -56,17 +56,26 @@ FAMILIES = (
     ("certificates", "Certificates"),
     ("edge", "Edge cases"),
 )
+#: How each format is written in prose, where that is not its key in capitals. A label that
+#: contradicts the casing the catalog's own `seo_title` uses is held out by test_labels.py;
+#: `edge` is not a file type, so it reads "21 edge-case test files" (2026-11-03).
 LABELS = {
+    "7z": "7z",
     "arrow": "Arrow",
     "avro": "Avro",
     "bin": "binary",
+    "edge": "edge-case",
     "geojson": "GeoJSON",
     "jpg": "JPEG",
     "log": "log",
+    "mbox": "mbox",
     "md": "Markdown",
+    "opus": "Opus",
     "parquet": "Parquet",
     "sqlite": "SQLite",
     "txt": "text",
+    "webm": "WebM",
+    "webp": "WebP",
 }
 #: Top-level keys the site owns; a format of the same name would overwrite one.
 RESERVED = frozenset(
@@ -134,78 +143,102 @@ DOCS = (
     (
         "docs/getting-started",
         "Getting started",
-        "How the URLs work, how to fetch a fixture, and how to verify what you downloaded.",
+        "How the URLs work, and how to fetch a fixture from the command line, a GitHub workflow, "
+        "a pytest suite or your own code, then verify its SHA-256.",
         "content",
         "pages/getting-started.md",
     ),
     (
         "docs/naming",
         "Naming and sizes",
-        "The fixture naming grammar, and why kb and kib are different sizes.",
+        "The fixture naming grammar, why kb and kib are different sizes, how exact a size is, "
+        "how HLS is named, and why a published file's name never changes.",
         "content",
         "pages/naming.md",
     ),
     (
         "docs/http-contract",
         "HTTP contract",
-        "Every header, status code and caching rule loremfile.dev promises.",
+        "Every header, status code and caching rule loremfile.dev promises: the URL scheme, "
+        "methods, CORS, immutability and what clients should expect.",
         "repository",
         "docs/03-http-contract.md",
     ),
     (
         "docs/manifest",
         "Manifest and discovery files",
-        "manifest.json, sha256sums.txt, per-format indexes, llms.txt, robots.txt and security.txt.",
+        "manifest.json, sha256sums.txt, per-format indexes, llms.txt, robots.txt, sitemap.xml "
+        "and security.txt: what each file holds and the rules for it.",
         "repository",
         "docs/04-manifest-and-discovery.md",
     ),
     (
         "docs/languages",
         "Use it from your language",
-        "Fetching a fixture and verifying its hash, in shell, Python, JavaScript, Go and Java.",
+        "Fetch a fixture and verify its hash in shell, Python, JavaScript, Go and Java, with "
+        "examples that run in CI against this site on each change.",
         "content",
         "pages/languages.md",
     ),
     (
         "docs/mcp",
         "MCP server",
-        "Connect an agent to loremfile.dev: the npx and uvx configs, and the three read-only "
-        "tools.",
+        "Connect an agent to loremfile.dev with the npx or uvx config, then use its three "
+        "read-only tools to list fixtures, describe one and verify a local file.",
         "content",
         "pages/mcp.md",
     ),
     (
         "docs/faq",
         "FAQ",
-        "Hotlinking, rate limits, why files are not indexed, mirroring and accessibility.",
+        "Answers on hotlinking, rate limits, why there is no ?download parameter, why search "
+        "engines skip the files, mirroring, stability and where files come from.",
         "content",
         "pages/faq.md",
     ),
     (
         "docs/contributing",
         "Contributing",
-        "How to request a fixture, and what a new one needs before it is published.",
+        "How to request a fixture, the naming grammar, what loremfile will not accept, and what "
+        "a generator, a test and a dependency need before a change merges.",
         "repository",
         "CONTRIBUTING.md",
     ),
     (
         "docs/security-policy",
         "Security policy",
-        "How to report a vulnerability in loremfile.dev, and what is in scope.",
+        "How to report a vulnerability in loremfile.dev through GitHub private reporting or "
+        "email, the 7-day acknowledgement, no bounty, and what is in scope.",
         "section",
         "## 7. Disclosure policy",
     ),
 )
 #: (key, heading in docs/13, description). The quoted text is published verbatim.
 LEGAL = (
-    ("legal/license", "### 1.1 Licence page", "Licences for the files, the code and this website."),
-    ("legal/terms", "## 2. Terms of use", "The terms of use of loremfile.dev."),
+    (
+        "legal/license",
+        "### 1.1 Licence page",
+        "Licences for loremfile.dev: the files are CC0, the code is MIT, the website's text and "
+        "graphics are CC BY 4.0, and format names stay with their owners.",
+    ),
+    (
+        "legal/terms",
+        "## 2. Terms of use",
+        "The terms of use of loremfile.dev: licence, warranty, liability, acceptable use, "
+        "discontinuation and changes, and who provides the service.",
+    ),
     (
         "legal/privacy",
         "## 3. Privacy notice",
-        "What loremfile.dev processes, who is responsible, and your rights.",
+        "The privacy notice of loremfile.dev: who is responsible, what is processed and by whom, "
+        "the legal basis, sharing and transfers, and your rights.",
     ),
-    ("legal/imprint", "## 3b. Impressum", "Impressum of loremfile.dev (§ 18 Abs. 1 MStV)."),
+    (
+        "legal/imprint",
+        "## 3b. Impressum",
+        "The Impressum of loremfile.dev, published under § 18 Abs. 1 MStV: the name and postal "
+        "address of whoever provides the service, and how to contact them.",
+    ),
 )
 
 
@@ -215,7 +248,7 @@ TESTING = (
         "testing/uploads",
         "Sample files for testing file uploads",
         "Files on the edge of every upload check: exact size limits, mislabelled types, "
-        "rotated and CMYK images, hostile and encrypted archives. Free, CC0, hotlinkable.",
+        "rotated and CMYK images, hostile and encrypted archives. Free and CC0.",
         "testing/uploads.md",
     ),
     (
@@ -313,6 +346,10 @@ def label(fmt: str) -> str:
 #: What a results page shows of a title and a description before cutting them off.
 TITLE_LIMIT = 60
 DESCRIPTION_LIMIT = 155
+#: The shortest description a page may carry. On 2026-11-03 Bing Webmaster flagged ten URLs
+#: for short descriptions and 79 of the 98 sitemap pages were under 120 characters; every
+#: built page is held to [DESCRIPTION_FLOOR, DESCRIPTION_LIMIT] by test_site_build.py.
+DESCRIPTION_FLOOR = 120
 #: The twelve formats with search demand (2026-10-22). Their labelled titles keep both words
 #: people type, "Sample" and "test"; ogg, tiff and arrow keep 1.9.0's head.
 DEMAND_FORMATS = frozenset(
@@ -370,12 +407,7 @@ def labelled_description(name: str, sizes: list[int], labels: list[str]) -> str:
     bytes, rounded by the same formatter as everywhere else on the site.
     """
     count = len(sizes)
-    span = (
-        f"from {human_bytes(min(sizes))} to {human_bytes(max(sizes))}"
-        if count > 1
-        else f"of {human_bytes(sizes[0])}"
-    )
-    head = f"{count} {name} test file{'' if count == 1 else 's'} {span}: "
+    head = f"{count} {name} test file{'' if count == 1 else 's'} {size_span(sizes)}: "
     tail = ". Direct URLs, SHA-256 per file, CC0."
     shown: list[str] = []
     for text in labels:
@@ -383,6 +415,42 @@ def labelled_description(name: str, sizes: list[int], labels: list[str]) -> str:
             break
         shown.append(text)
     return head + ", ".join(shown) + tail
+
+
+def size_span(sizes: list[int]) -> str:
+    """`from {smallest} to {largest}`, or `of {size}` for one file: the manifest's bytes."""
+    if len(sizes) > 1:
+        return f"from {human_bytes(min(sizes))} to {human_bytes(max(sizes))}"
+    return f"of {human_bytes(sizes[0])}"
+
+
+#: What an unlabelled format page says after its count and sizes (2026-11-03). Singular and
+#: plural are separate sentences so that one file never reads "a SHA-256 for each".
+MEASURED_TAIL = (
+    "Direct URLs, a SHA-256 for each and CC0, so curl and CI can fetch them with no signup "
+    "and no keys."
+)
+MEASURED_TAIL_ONE = (
+    "A direct URL, the file's SHA-256 and CC0, so curl and CI can fetch it with no signup and "
+    "no keys."
+)
+
+
+def measured_description(name: str, sizes: list[int]) -> str:
+    """The labelled description without its labels, for a format whose files carry none.
+
+    Every number is the manifest's, so no page needs authoring (docs/05 §1 rule 9), and it
+    says "test" because that is the word people search with. A format with no file left to
+    count (a takedown of the last one) still gets a sentence instead of stopping the build.
+    """
+    if not sizes:
+        return (
+            f"No {name} test file is served at the moment. The other formats have direct URLs, "
+            "a SHA-256 for each file and CC0, with no signup and no keys."
+        )
+    count = len(sizes)
+    tail = MEASURED_TAIL_ONE if count == 1 else MEASURED_TAIL
+    return f"{count} {name} test file{'' if count == 1 else 's'} {size_span(sizes)}. {tail}"
 
 
 def human_bytes(count: int) -> str:
@@ -776,12 +844,8 @@ def format_pages(
             }
             for e in active
         ]
-        plural = "" if len(active) == 1 else "s"
         title = f"{info.seo_title} · loremfile.dev"
-        description = (
-            f"{len(active)} sample {label(fmt)} file{plural} with stable URLs you can "
-            "hotlink. No signup, no keys, CC0."
-        )
+        description = measured_description(label(fmt), [e["bytes"] for e in active])
         # The labelled shape, only where every recommended file has a label (docs/05 §1
         # rule 9): ogg, tiff and arrow from 1.9.0, the twelve demand formats from 2026-10-22.
         labels = page_labels(info, served)
@@ -934,7 +998,11 @@ def formats_page(manifest: Manifest, catalogs: dict[str, FormatCatalog]) -> Page
     page = Page(
         key="formats",
         h1="All formats",
-        description=f"Every format on loremfile.dev: {len(rows)} formats, {len(active)} files.",
+        description=(
+            f"All {len(rows)} formats on loremfile.dev and their {len(active)} files: each "
+            "format's family, file count, total size and default MIME type, with a link to "
+            "its page."
+        ),
         template="formats.html",
         crumbs=[("Home", "/")],
         context={"rows": rows},
@@ -989,7 +1057,8 @@ def doc_pages(root: Path) -> list[Page]:
     index = Page(
         "docs",
         "Documentation",
-        "Guides, the HTTP contract and the manifest format for loremfile.dev.",
+        "Documentation for loremfile.dev: getting started, naming, HTTP contract, manifest "
+        "files, language examples, MCP server, FAQ, contributing, security policy.",
         "doc.html",
         crumbs=[("Home", "/")],
         context={"body": trusted(""), "items": [(f"/{p.key}", p.h1, p.description) for p in pages]},
@@ -1027,8 +1096,8 @@ def testing_pages(root: Path, manifest: Manifest, *, date_of: DateOf) -> list[Pa
     index = Page(
         "testing",
         "Testing guides",
-        "Sample files chosen for a job rather than a format: uploads, parsers and error "
-        "handling, media playback and seeking.",
+        "Sample files chosen for the job they test rather than their format: file uploads, "
+        "parsers and error handling, and media playback and seeking. Free and CC0.",
         "doc.html",
         crumbs=[("Home", "/")],
         context={"body": trusted(""), "items": guides(pages)},
@@ -1137,7 +1206,8 @@ def legal_pages(root: Path, committed: dt.datetime) -> list[Page]:
     index = Page(
         "legal",
         "Legal",
-        "Licences, terms of use, privacy notice and Impressum of loremfile.dev.",
+        "The legal pages of loremfile.dev: licences for the files, code and website, the terms "
+        "of use, the privacy notice and the Impressum, each in full.",
         "legal.html",
         crumbs=[("Home", "/")],
         context={"body": trusted(""), "items": [(f"/{p.key}", p.h1, p.description) for p in pages]},
@@ -1151,7 +1221,8 @@ def changelog_page(root: Path) -> Page:
     page = Page(
         "changelog",
         "Changelog",
-        "Every catalog version of loremfile.dev and what it added.",
+        "Every catalog version of loremfile.dev and what it added or changed: new files and "
+        "formats, corrections, and the site features that shipped with them.",
         "changelog.html",
         crumbs=[("Home", "/")],
         context={"body": trusted(markdown.render(text, source="CHANGELOG.md"))},
@@ -1164,7 +1235,8 @@ def status_page() -> Page:
     return Page(
         "status",
         "Status",
-        "How loremfile.dev checks itself every day, and where to see a failing check.",
+        "How loremfile.dev checks itself every day, with no server for a live page: what each "
+        "check covers, where the results are written and where a failure shows.",
         "status.html",
         crumbs=[("Home", "/")],
         context={"issues": f"{config.SOURCE_URL}/issues?q=is%3Aissue+is%3Aopen+label%3Ahealth"},
