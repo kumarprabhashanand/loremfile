@@ -11,6 +11,7 @@ import struct
 import zlib
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -55,6 +56,61 @@ def test_the_checks_see_the_whole_site(keys: dict[str, Path]) -> None:
         "legal/imprint",
         "status",
     } <= pages
+
+
+META_DESCRIPTION = re.compile(r'<meta name="description" content="([^"]*)"')
+
+
+def descriptions(keys: dict[str, Path]) -> dict[str, str]:
+    """Every built page's meta description, as a browser reads it; "" when the page has none."""
+    found = {}
+    for key, path in keys.items():
+        if routes.is_page(key):
+            match = META_DESCRIPTION.search(path.read_text(encoding="utf-8"))
+            found[key] = html.unescape(match.group(1)) if match else ""
+    return found
+
+
+def outside_the_band(found: dict[str, str], floor: int, limit: int) -> list[str]:
+    return sorted(
+        f"{key}: {len(text)}" for key, text in found.items() if not floor <= len(text) <= limit
+    )
+
+
+def test_every_built_page_has_a_description_inside_the_band(keys: dict[str, Path]) -> None:
+    """2026-11-03: 79 of the 98 sitemap pages were under 120 characters when Bing flagged short
+    descriptions. Every page the build writes is held to the band, not only the labelled ones."""
+    found = descriptions(keys)
+    # Empty-set control, naming specifics: a format page of each kind, a hub, a legal page.
+    assert {
+        "index.html", "pdf", "sql", "edge", "7z", "docs", "docs/faq", "legal/terms", "status",
+        "changelog", "formats", "testing", "testing/uploads",
+    } <= set(found)  # fmt: skip
+    assert len(found) >= 100
+    assert (build.DESCRIPTION_FLOOR, build.DESCRIPTION_LIMIT) == (120, 155)
+    assert outside_the_band(found, build.DESCRIPTION_FLOOR, build.DESCRIPTION_LIMIT) == []
+    assert [key for key, text in found.items() if "\u2014" in text] == [], "no em dash"
+
+
+def test_control_the_band_check_names_a_short_a_long_and_an_absent_description() -> None:
+    found = {"a": "x" * 119, "b": "x" * 120, "c": "x" * 155, "d": "x" * 156, "e": ""}
+    assert outside_the_band(found, 120, 155) == ["a: 119", "d: 156", "e: 0"]
+
+
+def test_the_page_that_reads_edge_case_counts_its_files_and_a_one_file_page_is_singular(
+    keys: dict[str, Path],
+) -> None:
+    found = descriptions(keys)
+    edge = [e for e in fixtures_manifest() if e["format"] == "edge" and not e.get("supersededBy")]
+    sql = [e for e in fixtures_manifest() if e["format"] == "sql" and not e.get("supersededBy")]
+    assert len(edge) > 1 and len(sql) == 1, "control: one plural page and one singular page"
+    assert found["edge"].startswith(f"{len(edge)} edge-case test files from ")
+    assert found["sql"].startswith("1 SQL test file of ")
+    assert "files" not in found["sql"]
+
+
+def fixtures_manifest() -> list[dict[str, Any]]:
+    return list(json.loads((ROOT / "manifest.json").read_text())["fixtures"])
 
 
 def test_every_built_key_is_what_its_public_path_reaches(keys: dict[str, Path]) -> None:

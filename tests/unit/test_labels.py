@@ -17,13 +17,18 @@ import pytest
 from loremfile.catalog import Catalog, Fixture, SizeClass
 from loremfile.site.build import (
     DEMAND_FORMATS,
+    DESCRIPTION_FLOOR,
     DESCRIPTION_LIMIT,
+    LABELS,
+    MEASURED_TAIL,
+    MEASURED_TAIL_ONE,
     TITLE_LIMIT,
     SiteError,
     human_bytes,
     label,
     labelled_description,
     labelled_title,
+    measured_description,
     page_labels,
     title_head,
 )
@@ -258,3 +263,124 @@ def test_a_superseded_file_never_contributes_a_label() -> None:
 def test_a_label_that_does_not_fit_ends_the_title_rather_than_being_cut() -> None:
     title = labelled_title("TIFF", ["uncompressed RGB", "LZW", "3 pages", "16-bit big-endian"])
     assert title == "Sample TIFF files: uncompressed RGB, LZW, 3 pages"
+
+
+# --- the other 65 formats: the measured description, and the labels it names (2026-11-03) ----
+
+
+def served(fmt: str) -> list[dict[str, Any]]:
+    """What a format page recommends: active entries, not superseded, straight from the manifest."""
+    return [
+        e
+        for e in MANIFEST.values()
+        if e["format"] == fmt
+        and e.get("status", "active") == "active"
+        and not e.get("supersededBy")
+    ]
+
+
+UNLABELLED = sorted({f.format for f in CATALOG.formats} - LABELLED_FORMATS)
+#: What only the plural sentence says: "a SHA-256 for each", "them", "Direct URLs".
+PLURAL_MARKERS = ("each", "them", "files", "URLs")
+
+
+def head_of(fmt: str, sizes: list[int]) -> str:
+    """The count and size range as the manifest has them, written out independently."""
+    span = (
+        f"from {human_bytes(min(sizes))} to {human_bytes(max(sizes))}"
+        if len(sizes) > 1
+        else f"of {human_bytes(sizes[0])}"
+    )
+    return f"{len(sizes)} {label(fmt)} test file{'s' if len(sizes) > 1 else ''} {span}. "
+
+
+def test_the_unlabelled_formats_are_the_other_sixty_five() -> None:
+    """Empty-set control first: the parametrised tests below pass over no formats at all."""
+    assert len(UNLABELLED) == 65
+    assert {"sql", "js", "webm", "edge", "7z", "webp"} <= set(UNLABELLED)
+    assert not set(UNLABELLED) & LABELLED_FORMATS
+
+
+@pytest.mark.parametrize("fmt", UNLABELLED)
+def test_an_unlabelled_description_is_the_manifests_count_and_sizes_in_the_band(fmt: str) -> None:
+    sizes = [e["bytes"] for e in served(fmt)]
+    assert sizes, fmt
+    description = measured_description(label(fmt), sizes)
+    assert description.startswith(head_of(fmt, sizes)), "count, name and range are the manifest's"
+    assert DESCRIPTION_FLOOR <= len(description) <= DESCRIPTION_LIMIT, description
+
+
+@pytest.mark.parametrize("fmt", UNLABELLED)
+def test_a_one_file_page_never_reads_like_many_and_the_reverse(fmt: str) -> None:
+    """Old template: "1 sample SQL file with stable URLs". Number agreement, both ways."""
+    sizes = [e["bytes"] for e in served(fmt)]
+    description = measured_description(label(fmt), sizes)
+    if len(sizes) == 1:
+        assert not [w for w in PLURAL_MARKERS if w in description], description
+        assert description.endswith(MEASURED_TAIL_ONE)
+    else:
+        assert description.endswith(MEASURED_TAIL)
+        assert "the file's" not in description
+
+
+def test_control_the_old_template_fails_the_agreement_check() -> None:
+    old = "1 sample SQL file with stable URLs you can hotlink. No signup, no keys, CC0."
+    assert [w for w in PLURAL_MARKERS if w in old] == ["URLs"]
+    new = measured_description("SQL", [429_900])
+    assert new.startswith("1 SQL test file of 429.9 KB. ") and not [
+        w for w in PLURAL_MARKERS if w in new
+    ]
+
+
+def test_a_format_with_no_file_left_still_gets_a_description_in_the_band() -> None:
+    """A takedown of the last file of a format must not stop the build."""
+    description = measured_description("WebP", [])
+    assert DESCRIPTION_FLOOR <= len(description) <= DESCRIPTION_LIMIT
+    # A count would stand alone; the digits that are there sit inside CC0 and SHA-256.
+    assert not re.search(r"(?<![\w-])\d", description), "no count to get wrong"
+    assert re.search(r"(?<![\w-])\d", "0 WebP test files"), "control: a standalone count is seen"
+
+
+def test_edge_reads_edge_case_and_says_how_many() -> None:
+    sizes = [e["bytes"] for e in served("edge")]
+    assert label("edge") == "edge-case"
+    assert measured_description(label("edge"), sizes).startswith(
+        f"{len(sizes)} edge-case test files "
+    )
+    assert len(sizes) > 1, "control: the plural form is the one being read"
+
+
+def contradicting(rows: list[tuple[str, str, str]]) -> list[str]:
+    """Labels whose casing differs from the casing the format's own `seo_title` uses."""
+    found = []
+    for fmt, name, title in rows:
+        match = re.search(r"(?<![\w-])" + re.escape(name) + r"(?![\w-])", title, re.IGNORECASE)
+        if match and match.group(0) != name:
+            found.append(f"{fmt}: label {name!r}, title says {match.group(0)!r}")
+    return found
+
+
+def test_no_label_contradicts_the_casing_its_own_seo_title_uses() -> None:
+    rows = [(f.format, label(f.format), f.seo_title) for f in CATALOG.formats]
+    named = {fmt: (name, title) for fmt, name, title in rows}
+    assert "WebP" in named["webp"][1] and named["webp"][0] == "WebP", "empty-set control"
+    assert named["pdf"][0] == "PDF" and "PDF" in named["pdf"][1], "the unchanged majority"
+    assert contradicting(rows) == []
+
+
+def test_control_the_upper_cased_key_is_what_the_casing_check_catches() -> None:
+    """These five read "7Z", "MBOX", "OPUS", "WEBM" and "WEBP" before 2026-11-03."""
+    before = [
+        ("7z", "7Z", "Sample 7z archives for testing extractors, free and CC0"),
+        ("mbox", "MBOX", "Sample mbox file for testing mail importers, free and CC0"),
+        ("opus", "OPUS", "Sample Opus audio files for testing, free, CC0 and hotlinkable"),
+        ("webm", "WEBM", "Sample WebM video files for testing, free, CC0 and hotlinkable"),
+        ("webp", "WEBP", "Sample WebP images for testing, free and CC0"),
+    ]
+    assert len(contradicting(before)) == 5
+    assert contradicting([("pdf", "PDF", "Sample PDF files for testing")]) == []
+
+
+def test_every_key_in_labels_is_a_published_format() -> None:
+    assert {"edge", "7z", "webp", "jpg", "txt"} <= set(LABELS), "empty-set control"
+    assert sorted(set(LABELS) - {f.format for f in CATALOG.formats}) == []
