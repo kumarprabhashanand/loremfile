@@ -1,9 +1,13 @@
-loremfile runs as a Model Context Protocol server, so an agent can find a fixture, read its
-URL and measured properties, and check a file it already has. It returns URLs and metadata,
-never file bytes: the agent, or your test, fetches the URL. The server talks over stdio and
-reads the manifest once per process from loremfile.dev.
+An agent that writes tests often needs a real file to test with. loremfile runs as a Model
+Context Protocol server, so the agent can ask for one.
 
-## Configure your client
+It can find a fixture, read its URL and measured properties, and check a file it already has.
+The server returns URLs and metadata. It never returns file bytes. The agent, or your test,
+fetches the URL.
+
+The server talks over stdio. It reads the manifest once per process from loremfile.dev.
+
+## How do I set it up?
 
 With Node, the [npm package](https://www.npmjs.com/package/loremfile) runs the server:
 
@@ -18,12 +22,12 @@ install:
 { "mcpServers": { "loremfile": { "command": "uvx", "args": ["loremfile", "mcp"] } } }
 ```
 
-Both are the same server, tool for tool: the two packages ship one tool definition file. It
+Both are the same server, tool for tool. The two packages ship one tool definition file. It
 speaks protocol `2026-07-28` and `2025-11-25`, so clients of either era work.
 
-## Tools
+## What can the agent ask for?
 
-All three are read-only.
+There are three tools. All three are read-only.
 
 | Tool | Arguments | Returns |
 |---|---|---|
@@ -31,9 +35,11 @@ All three are read-only.
 | `describe_fixture` | `path` | One fixture's manifest entry: `url`, `mime`, `bytes`, `sha256`, `size_class`, `tags`, `description`, `props` and `added_in`. |
 | `verify_file` | `path`, `file` | Whether a local file is the published one: `ok`, `changed` or `missing`, with both hashes and sizes. The file is read to hash it and goes nowhere. |
 
-## Registry
+## Is it listed anywhere?
 
-The server is listed in the
+Yes. The server is listed in the
 [MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.kumarprabhashanand/loremfile)
-as `io.github.kumarprabhashanand/loremfile`, pointing at the npm and PyPI packages above.
-Without an agent, the same files are a URL away: see [getting started](/docs/getting-started).
+as `io.github.kumarprabhashanand/loremfile`. The listing points at the npm and PyPI packages
+above.
+
+No agent? The same files are a URL away. See [getting started](/docs/getting-started).
