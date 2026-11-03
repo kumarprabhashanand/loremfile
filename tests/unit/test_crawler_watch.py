@@ -106,6 +106,28 @@ def test_control_without_the_deferral_each_of_the_five_would_be_reported(name: s
     assert agent.name == name
 
 
+#: Reported by the 2026-11-02 run (#131) and added under the standing rule, not deferred.
+BLOCKED_2026_11_02 = ("ElevenlabsCrawler", "ScryBot")
+
+
+@pytest.mark.parametrize("name", BLOCKED_2026_11_02)
+def test_each_name_blocked_for_131_is_decided_and_no_longer_reported(name: str) -> None:
+    """Blocked, not deferred: the watch finds it in the rule and robots.txt, and stays quiet."""
+    blocked = crawlers.blocked_tokens(ROOT)
+    assert name.lower() in blocked
+    assert name.lower() not in crawlers.seen_names(ROOT), "weighed by a clause, not by deferral"
+    assert crawlers.unreviewed(known(name), blocked, crawlers.seen_names(ROOT)) == []
+
+
+@pytest.mark.parametrize("name", BLOCKED_2026_11_02)
+def test_control_without_its_clause_the_watch_would_raise_each_of_the_two_again(name: str) -> None:
+    """The negative control: take only this name out of the blocked set and it is reported, so
+    the test above is silent because of the clause and not because the finder found nothing."""
+    blocked = crawlers.blocked_tokens(ROOT) - {name.lower()}
+    [agent] = crawlers.unreviewed(known(name), blocked, crawlers.seen_names(ROOT))
+    assert agent.name == name
+
+
 @pytest.mark.parametrize("decided", ["Amazonbot", "amazonbot", "AMAZONBOT"])
 def test_an_agent_already_blocked_is_not_reported_whatever_its_casing(decided: str) -> None:
     found = crawlers.unreviewed(known(decided), {"amazonbot"}, set())

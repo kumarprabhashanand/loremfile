@@ -71,8 +71,9 @@ AI_TOKENS = {
     "Kimi-SearchBot",
     "Kimi-User",
     # Weighed 2026-10-26 (#110) under the standing rule: user-directed agents in the list's
-    # spelling. OpenAI's and Meta's crawler pages do not name `Codex` or `Muse`; the other five
-    # have no operator to check against. `Dot` and four display names were not added (docs/04 §6).
+    # spelling. OpenAI's and Meta's crawler pages do not name `Codex` or `Muse`; of the other
+    # five, only ElevenLabs publishes a page, and it names `ElevenlabsBot` (docs/04 §6).
+    # `Dot` and four display names were not added (docs/04 §6).
     "CledaraBot",
     "Codex",
     "ElevenlabsBot",
@@ -80,6 +81,10 @@ AI_TOKENS = {
     "HarkBot",
     "Instinct",
     "Muse",
+    # Weighed 2026-11-02 (#131) under the standing rule. ElevenLabs documents the first in this
+    # casing on its bots page; Scry publishes nothing, so `ScryBot` is the list's spelling.
+    "ElevenlabsCrawler",
+    "ScryBot",
     "Google-Extended",
     "Applebot-Extended",
 }
