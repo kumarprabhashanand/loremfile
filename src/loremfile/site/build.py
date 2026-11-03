@@ -118,6 +118,8 @@ User-agent: ExaUser
 User-agent: HarkBot
 User-agent: Instinct
 User-agent: Muse
+User-agent: ElevenlabsCrawler
+User-agent: ScryBot
 User-agent: Google-Extended
 User-agent: Applebot-Extended
 Content-Signal: search=yes, ai-input=yes, ai-train=yes
