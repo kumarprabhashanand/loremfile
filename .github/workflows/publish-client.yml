@@ -78,6 +78,6 @@ jobs:
       # this repository's actions policy because GitHub lists it under a verified creator
       # (marketplace listing, read 2026-09-28); the policy permits GitHub-owned and
       # verified-creator actions and nothing else.
-      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
         with:
           attestations: true
