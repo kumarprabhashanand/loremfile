@@ -212,6 +212,13 @@ def basic(ctx: GeneratorContext, *, pages: int, page_size: str = "A4",
 - PDF (fpdf2): `pdf.set_creation_date(datetime(2020,1,1,tzinfo=timezone.utc))`, `pdf.set_producer("loremfile.dev")`, `pdf.set_creator("loremfile.dev")`; fpdf2 derives the file ID from content, so output is deterministic.
 - pyarrow: pin version; Parquet `created_by` embeds the version string, so `tools/requirements.in`
   holds it at exactly 25.0.1 (26.0.0 rewrote two characters of it in both Parquet files).
+- fpdf2: held below 2.9 in `tools/requirements.in` (`fpdf2>=2.8.9,<2.9`). Version 2.9.0 writes a Letter
+  page's MediaBox as `612 792` where 2.8.9 wrote `612.00 792.00`, which changes `pdf/letter-1page.pdf`
+  (1,860 bytes become 1,854; the xref offsets and the file ID follow) and, in the audit of the 226
+  non-media fixtures (2026-11-03, #134), nothing else. A published file is frozen and
+  `expected_drift` means hardware dispatch, not a library change, so the library waits. It can move once
+  that file is superseded by a new path (`superseded_by`, as `jpg/cmyk-640x480.jpg` was). Dependabot
+  ignores fpdf2's minor and major updates, and `tests/unit/test_fpdf2_hold.py` holds the pin and its exit.
 - SQLite: `PRAGMA page_size=4096; PRAGMA journal_mode=DELETE;` run `VACUUM` at the end; the header contains the SQLite library version so the toolchain must be pinned.
 - Fonts (fontTools): set `head.created`/`head.modified` to the epoch explicitly.
 
@@ -309,7 +316,7 @@ RUN pip install --no-cache-dir --require-hashes -r /tmp/requirements.lock
 WORKDIR /work
 ```
 
-- `tools/requirements.in` lists direct deps with minimum versions where a feature depends on it: `fpdf2>=2.8`, `pypdf>=5`, `Pillow>=11.3` (AVIF support in wheels starts at 11.3.0), `python-docx>=1.2` (comments API), `openpyxl`, `python-pptx`, `pyarrow==25.0.1` (exact, §4), `fastavro`, `py7zr`, `pyzipper`, `zstandard`, `fonttools[woff]`, `brotli`, `mutagen`, `lxml`, `PyYAML`, `tomli-w`, `jsonschema`, `pydantic>=2`, `click`, `Jinja2`, `boto3`, `requests`, `icalendar`, `vobject`, `cryptography`, `markdown-it-py`, `ijson`, `html5lib`, `pytest`, `responses`, `ruff`, `mypy` plus stub packages (`types-requests`, `types-PyYAML`, `boto3-stubs[s3]`), `pip-tools`. `tools/requirements.lock` is produced by `pip-compile --generate-hashes` and pinned exactly. EPUB files are built with the standard library `zipfile` (no EPUB library); DOCX table-of-contents fields are inserted as raw `w:fldSimple` XML because python-docx has no TOC API.
+- `tools/requirements.in` lists direct deps with minimum versions where a feature depends on it: `fpdf2>=2.8.9,<2.9` (§4), `pypdf>=5`, `Pillow>=11.3` (AVIF support in wheels starts at 11.3.0), `python-docx>=1.2` (comments API), `openpyxl`, `python-pptx`, `pyarrow==25.0.1` (exact, §4), `fastavro`, `py7zr`, `pyzipper`, `zstandard`, `fonttools[woff]`, `brotli`, `mutagen`, `lxml`, `PyYAML`, `tomli-w`, `jsonschema`, `pydantic>=2`, `click`, `Jinja2`, `boto3`, `requests`, `icalendar`, `vobject`, `cryptography`, `markdown-it-py`, `ijson`, `html5lib`, `pytest`, `responses`, `ruff`, `mypy` plus stub packages (`types-requests`, `types-PyYAML`, `boto3-stubs[s3]`), `pip-tools`. `tools/requirements.lock` is produced by `pip-compile --generate-hashes` and pinned exactly. EPUB files are built with the standard library `zipfile` (no EPUB library); DOCX table-of-contents fields are inserted as raw `w:fldSimple` XML because python-docx has no TOC API.
 - Tools that run on the host, not in the image: `actionlint` (workflow lint; `.github/actionlint.yaml` silences its one known false diagnostic, the `queue` key, ADR-029), `gitleaks` (secret scan), Lighthouse (`npx lighthouse https://loremfile.dev/ --only-categories=accessibility,performance,seo --preset=desktop`); all informational except gitleaks, which must be clean once in M1.8.
 - `fonts-dejavu-core` is installed **only** for rendering label text inside images/PDF test cards where Pillow's default font is too small; it is a Debian package under the Bitstream Vera licence, which permits embedding and redistribution. The generated font family is not derived from it.
 - The image is built and pushed to `ghcr.io/kumarprabhashanand/loremfile-toolchain` by `toolchain.yml`; workflows reference it by `@sha256:` digest recorded in `tools/TOOLCHAIN_DIGEST`. Changing the digest is a reviewed PR.
