@@ -325,8 +325,6 @@ def test_the_popular_list_links_every_path(site: Path) -> None:
     assert all(f'href="/{path}"' in home for path in build.POPULAR)
 
 
-
-
 def test_the_home_page_names_four_routes_and_links_status(site: Path) -> None:
     home = text(site, "index.html")
     routes_ = {
