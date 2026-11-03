@@ -1,21 +1,31 @@
-## The URL scheme
+## How do the URLs work?
 
-Every file lives at `https://loremfile.dev/{format}/{name}`. The format is the first path
-segment and the name says what is inside: `pdf/a4-3pages.pdf` is three A4 pages, and
-`csv/people-1000.csv` is a thousand rows of synthetic people. There is nothing to sign up for
-and no key to send. [Naming and sizes](/docs/naming) explains the grammar.
+Every file lives at `https://loremfile.dev/{format}/{name}`. The format is the first part of the
+path. The name tells you what is inside.
 
-## Use the URL directly
+`pdf/a4-3pages.pdf` is three A4 pages. `csv/people-1000.csv` is a thousand rows of synthetic
+people.
 
-A web page on any origin can fetch a file directly: CORS allows `GET` and `HEAD` from every
-origin, and byte-range requests work, so a media player can seek. Query strings are ignored,
-so `?v=2` neither busts a cache nor changes what you receive. To keep a copy instead:
+There is nothing to sign up for and no key to send. [Naming and sizes](/docs/naming) explains
+how the names are built.
+
+## Can I use a file straight from a web page?
+
+Yes. A page on any origin can fetch a file. CORS allows `GET` and `HEAD` from every origin.
+Byte-range requests work too, so a media player can seek.
+
+Query strings are ignored. Adding `?v=2` does not bust a cache, and it does not change what you
+receive.
+
+If you would rather keep a copy:
 
 ```bash
 curl -O https://loremfile.dev/pdf/a4-3pages.pdf
 ```
 
-## In a GitHub workflow
+## How do I use it in a GitHub workflow?
+
+Add the action to a step and list the files you want:
 
 ```yaml
 - uses: kumarprabhashanand/loremfile/action@action-v1
@@ -23,16 +33,21 @@ curl -O https://loremfile.dev/pdf/a4-3pages.pdf
     paths: pdf/minimal.pdf mp4/720p-5s.mp4
 ```
 
-Files land in `loremfile-fixtures/`, each checked against its hash in the manifest. For every
-file of a format, add `formats: pdf` beside or in place of `paths`. Linux and macOS runners;
-the action downloads one file at a time and backs off if it is rate limited.
+The files land in `loremfile-fixtures/`. Each one is checked against its hash in the manifest.
 
-## From the command line
+To get every file of a format, add `formats: pdf` beside `paths` or in place of it.
 
-The same small client is published for Python and for Node: `get`, `list` and `verify`, with
-the same flags and exit codes. **Neither has a dependency.** The Python package declares
-`dependencies = []` and uses only the standard library; the npm package's `package.json` lists
-no dependencies and uses only Node's built-ins. Installing either installs that one package.
+The action runs on Linux and macOS runners. It downloads one file at a time and backs off if it
+is rate limited.
+
+## How do I use it from the command line?
+
+The same small client is published for Python and for Node. Both have `get`, `list` and
+`verify`, with the same flags and the same exit codes.
+
+**Neither has a dependency.** The Python package declares `dependencies = []` and uses only the
+standard library. The npm package's `package.json` lists no dependencies and uses only Node's
+built-ins. Installing either one installs that one package.
 
 ```bash
 # Python 3.11 or newer
@@ -45,27 +60,39 @@ npx loremfile get pdf/minimal.pdf
 npx loremfile get --format pdf
 ```
 
-Each file is checked against its hash in the manifest before it is written, and one that does
-not match is not written at all. Exit codes: `0` fine, `1` a file failed verification or is
-missing, `2` the request was wrong, `3` loremfile.dev could not be read. Both install a command
-named `loremfile`; on a machine with both, whichever comes first on `PATH` runs.
+Each file is checked against its hash in the manifest before it is written. A file that does
+not match is not written at all.
 
-## In a pytest suite
+The exit codes are:
 
-For files too big to commit, such as multi-megabyte video, audio and archives, the Python
-client gives pytest a `loremfile` fixture. `pip install loremfile` is the whole setup.
+- `0`: everything is fine
+- `1`: a file failed verification or is missing
+- `2`: the request was wrong
+- `3`: loremfile.dev could not be read
+
+Both clients install a command named `loremfile`. On a machine with both, whichever comes first
+on `PATH` runs.
+
+## How do I use it in a pytest suite?
+
+Some files are too big to commit: multi-megabyte video, audio and archives. For those, the
+Python client gives pytest a `loremfile` fixture. `pip install loremfile` is the whole setup.
 
 ```python
 def test_reads_a_real_mp4(loremfile):
     video = loremfile("mp4/10mb.mp4")  # a pathlib.Path, checked against the manifest
 ```
 
-The first call downloads the file into `.pytest_cache` and checks its SHA-256, and a file that
-does not match is never returned. Published files never change at their path, so after that the
-suite needs no network for it; in CI, cache `.pytest_cache/d/loremfile` between runs. If your
-tests may not touch the network, or the file you need is a 4 KB PDF, commit the file instead.
+The first call downloads the file into `.pytest_cache` and checks its SHA-256. A file that does
+not match is never returned.
 
-## Check the size first
+Published files never change at their path. So after the first call, the suite needs no network
+for that file. In CI, cache `.pytest_cache/d/loremfile` between runs.
+
+If your tests may not touch the network, or the file you need is a 4 KB PDF, commit the file
+instead.
+
+## How big is a file before I download it?
 
 ```bash
 curl -sI https://loremfile.dev/mp4/720p-5s.mp4 | grep -i content-length
@@ -73,10 +100,10 @@ curl -sI https://loremfile.dev/mp4/720p-5s.mp4 | grep -i content-length
 
 `Content-Length` equals the `bytes` field in the manifest. Do not treat the `ETag` as an MD5.
 
-## Verify what you downloaded
+## How do I check what I downloaded?
 
-Every active file is listed with its SHA-256 hash in
-[sha256sums.txt](/sha256sums.txt), in the format `sha256sum` reads:
+[sha256sums.txt](/sha256sums.txt) lists every active file with its SHA-256 hash. It uses the
+format that `sha256sum` reads:
 
 ```bash
 # Linux (coreutils)
@@ -85,14 +112,16 @@ curl -fsSL https://loremfile.dev/sha256sums.txt | sha256sum -c --ignore-missing
 curl -fsSL https://loremfile.dev/sha256sums.txt | shasum -a 256 -c --ignore-missing
 ```
 
-## From your own code
+## What if I use another language?
 
-[Use it from your language](/docs/languages) has the same fetch-and-verify in shell,
-Python, JavaScript, Go and Java, each a complete program of a dozen lines, and states the
-contract for any language not on that list.
+[Use it from your language](/docs/languages) has the same fetch-and-verify in shell, Python,
+JavaScript, Go and Java. Each one is a complete program. The page also states the contract, so
+you can write the same thing in any language that is not on that list.
 
-## Find files without a browser
+## How do I find a file without a browser?
 
 [manifest.json](/manifest.json) lists every file with its size, hash, MIME type and measured
-properties, and each format has its own list at `/{format}/index.json`. Keep automated
-traffic under 30 requests per second per IP; the action above paces its downloads for you.
+properties. Each format also has its own list at `/{format}/index.json`.
+
+Keep automated traffic under 30 requests per second per IP. The action above paces its
+downloads for you.

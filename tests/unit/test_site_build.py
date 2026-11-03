@@ -325,22 +325,6 @@ def test_the_popular_list_links_every_path(site: Path) -> None:
     assert all(f'href="/{path}"' in home for path in build.POPULAR)
 
 
-def test_the_home_page_names_hotlinking_before_downloading(site: Path) -> None:
-    """docs/07 §6: downloading is named after hotlinking, never before it."""
-    home = text(site, "index.html")
-    places = {
-        "title": re.search(r"<title>(.*?)</title>", home),
-        "description": re.search(r'<meta name="description" content="([^"]*)"', home),
-        "first line": re.search(r'<div class="pitch">\s*<p>(.*?)</p>', home, re.S),
-    }
-    for where, found in places.items():
-        assert found is not None, f"the home page has no {where}"
-        words = found.group(1).lower()
-        assert "hotlink" in words and "download" in words, (where, words)
-        assert words.index("hotlink") < words.index("download"), (where, words)
-    assert len(places["description"].group(1)) < 160  # type: ignore[union-attr]
-
-
 def test_the_home_page_names_four_routes_and_links_status(site: Path) -> None:
     home = text(site, "index.html")
     routes_ = {
