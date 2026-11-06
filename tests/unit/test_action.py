@@ -143,7 +143,7 @@ def test_ci_runs_the_published_tag_with_the_inputs_the_readme_prints() -> None:
 
 
 def test_ci_runs_the_action_from_this_ref_on_both_runner_families() -> None:
-    assert JOB["strategy"]["matrix"]["os"] == ["ubuntu-24.04", "macos-14"]
+    assert JOB["strategy"]["matrix"]["os"] == ["ubuntu-24.04", "macos-15"]
     used = [step["uses"] for step in STEPS if "uses" in step]
     assert used.count("./action") == 4, "the real pull plus the three failures"
     assert not any(u.startswith("kumarprabhashanand/loremfile") for u in used), "never a tag"
