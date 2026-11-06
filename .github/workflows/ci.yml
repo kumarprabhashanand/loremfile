@@ -86,7 +86,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-14, windows-2022]
+        os: [ubuntu-24.04, macos-15, windows-2022]
         python: ["3.11", "3.12", "3.13", "3.14"]
         pytest: [pytest]
         # The fixture's floor, on the oldest Python: the README says pytest 8.0 or newer.
@@ -120,7 +120,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-14, windows-2022]
+        os: [ubuntu-24.04, macos-15, windows-2022]
         node: ["20", "22", "24"]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
@@ -318,7 +318,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-14]
+        os: [ubuntu-24.04, macos-15]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
