@@ -221,7 +221,7 @@ Response template:
 >
 > Requests to the site are delivered by Cloudflare, Inc., which processes IP addresses and request metadata as our processor; we have no access to those raw logs. {If applicable: we forwarded your request to Cloudflare on {date}.}
 >
-> Our privacy notice is at https://loremfile.dev/legal/privacy. You may complain to your supervisory authority: in the EU the one where you live or work, in the UK the Information Commissioner's Office.
+> Our privacy notice is at https://loremfile.dev/legal/privacy. You may complain to the authority responsible for us, the Berliner Beauftragte für Datenschutz und Informationsfreiheit (datenschutz-berlin.de), or to your own supervisory authority: in the EU the one where you live or work, in the UK the Information Commissioner's Office.
 
 ### 7.11 Alerting control drill
 
