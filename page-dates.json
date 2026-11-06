@@ -40,8 +40,8 @@
     "sha256": "2d97fd02ca13e1ad6d60cef2f26bfe7185c44563d0f02f642c94eae9b0027e40"
   },
   "changelog": {
-    "date": "2026-11-03",
-    "sha256": "854a696b61687aaa4b188f17f6aaaf71724bd1817cf93019cbf3a9489590e0f3"
+    "date": "2026-11-06",
+    "sha256": "7d202f73125f52c99824b8f5e1dfbd5dd7c5fa14d95e47268bc085096fb86b7e"
   },
   "css": {
     "date": "2026-11-03",
@@ -80,8 +80,8 @@
     "sha256": "663d49c4d1e104fa0d0935e40c7dd62e62f35d780c9e2a07616b9357ddbce857"
   },
   "docs/manifest": {
-    "date": "2026-11-03",
-    "sha256": "496306a63ba2f67208eeec5e6e9dfd4b7ecc3b762dc8db9b4b57d9a834e54cd9"
+    "date": "2026-11-06",
+    "sha256": "57e1d105babc0b19835061059c7d134951848db1c97e253204d667217bb92930"
   },
   "docs/mcp": {
     "date": "2026-11-03",
