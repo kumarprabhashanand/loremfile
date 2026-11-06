@@ -85,6 +85,10 @@ AI_TOKENS = {
     # casing on its bots page; Scry publishes nothing, so `ScryBot` is the list's spelling.
     "ElevenlabsCrawler",
     "ScryBot",
+    # Weighed 2026-11-06 under the standing rule. Exa's crawler page and Lyrenth's /bot page
+    # each publish their token in this casing; both are on the 2026-09-22 snapshot (docs/04 §6).
+    "ExaSearchBot",
+    "AIWebIndex",
     "Google-Extended",
     "Applebot-Extended",
 }
@@ -260,6 +264,51 @@ def test_the_whitespace_check_finds_the_display_names_it_is_for() -> None:
             "Payhawk Invoice Fetching Agent",
         ]
     ) == ["AGI Agent", "CartAI Agentic Commerce", "Grok Bot", "Payhawk Invoice Fetching Agent"]
+
+
+# --- the first guard: no search engine's user agent holds a token (docs/04 §6) -----------
+
+#: Verbatim from the public `crawler-user-agents` list (read 2026-11-06). These crawlers must
+#: keep reaching the two pages to see their `noindex`, and the WAF clause is a case-sensitive
+#: `contains`, so a token also refuses every agent whose string holds it.
+SEARCH_ENGINE_USER_AGENTS = (
+    "Googlebot/2.1 (+http://www.google.com/bot.html)",
+    "Mozilla/5.0 (compatible; bingbot/2.0;  http://www.bing.com/bingbot.htm)",
+    "msnbot-media/1.0 (+http://search.msn.com/msnbot.htm)",
+    "Mozilla/5.0 (compatible; Yahoo! Slurp/3.0; http://help.yahoo.com/help/us/ysearch/slurp)",
+    "DuckDuckBot/1.0; (+http://duckduckgo.com/duckduckbot.html)",
+    "Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)",
+    "Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)",
+    "Sogou News Spider/4.0(+http://www.sogou.com/docs/help/webmasters.htm#07)",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/600.2.5 (KHTML, like Gecko) "
+    "Version/8.0.2 Safari/600.2.5 (Applebot/0.1)",
+    "Mozilla/5.0 (compatible; SeznamBot/3.2-test1-1; +http://napoveda.seznam.cz/en/seznambot-intro/)",
+    "Mozilla/5.0 (compatible;PetalBot;+https://webmaster.petalsearch.com/site/petalbot)",
+    "Mozilla/5.0 (compatible; Qwantify/2.0n; +https://www.qwant.com/)",
+    "Mozilla/5.0 (compatible; Yeti/1.1; +http://naver.me/bot)",
+    "MojeekBot/0.2 (archi; http://www.mojeek.com/bot.html)",
+)
+
+
+def held_by(tokens: Iterable[str], user_agents: Iterable[str]) -> dict[str, list[str]]:
+    """Each token that some user agent contains, with the agents that contain it."""
+    agents = list(user_agents)
+    return {t: [ua for ua in agents if t in ua] for t in tokens if any(t in ua for ua in agents)}
+
+
+def test_no_waf_token_is_contained_in_a_search_engines_user_agent() -> None:
+    waf = re.findall(r'http\.user_agent contains "([^"]+)"', ai_agent_rule()["expression"])
+    # Empty-set controls, naming specifics: both sides were found, so "none" is not vacuous.
+    assert "ExaSearchBot" in waf and "AIWebIndex" in waf
+    assert any("Googlebot" in ua for ua in SEARCH_ENGINE_USER_AGENTS)
+    assert held_by(waf, SEARCH_ENGINE_USER_AGENTS) == {}
+
+
+def test_the_collision_check_finds_the_token_deferred_for_this_reason() -> None:
+    """The negative control: `nbot` was weighed and deferred under the first guard because
+    `msnbot` contains it (docs/04 §6), and it is the only token here that the check reports."""
+    found = held_by(["nbot", "GPTBot"], SEARCH_ENGINE_USER_AGENTS)
+    assert found == {"nbot": ["msnbot-media/1.0 (+http://search.msn.com/msnbot.htm)"]}
 
 
 # --- placeholders -----------------------------------------------------------------

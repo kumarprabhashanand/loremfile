@@ -11,6 +11,8 @@
 - Every page's meta description is now 120 to 155 characters. The other 65 format pages
   describe their file count and size range (a single file reads `1 SQL test file`), and
   `edge` reads `21 edge-case test files`.
+- The privacy notice names the authority responsible for loremfile.dev beside the reader's
+  own, and states that the pages load no third-party resource.
 
 ## [1.11.0] - 2026-10-22
 

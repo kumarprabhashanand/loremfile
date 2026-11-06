@@ -147,7 +147,9 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 > ## Sharing
 >
 > Nothing is sold, rented, or shared for advertising, ever. The only recipient
-> of request data is Cloudflare, Inc. as our processor. If you choose to open an issue or a
+> of request data is Cloudflare, Inc. as our processor. The pages load no third-party
+> resource. Links to other sites, such as GitHub, PyPI and npm, take you there only when you
+> click; nothing is fetched from them before. If you choose to open an issue or a
 > pull request, GitHub, Inc. processes what you write there under its own terms and it is
 > public.
 >
@@ -168,8 +170,10 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 > In practice we hold nothing that identifies you except an email thread you started, so an
 > access or erasure request is normally answered with exactly that. For the data Cloudflare
 > processes on our behalf, send us the approximate time and the URL and we will pass the
-> request to Cloudflare. You may also complain to your supervisory authority: in the EU the
-> one where you live or work, in the UK the Information Commissioner's Office (ico.org.uk).
+> request to Cloudflare. You may complain to the authority responsible for us, the Berliner
+> Beauftragte für Datenschutz und Informationsfreiheit (datenschutz-berlin.de), or to your
+> own supervisory authority: in the EU the one where you live or work, in the UK the
+> Information Commissioner's Office (ico.org.uk).
 >
 > ## Changes
 >
@@ -203,6 +207,8 @@ each page must carry once filled.
 follows § 18 Abs. 1 MStV: name, a serviceable address, and hello@loremfile.dev. No telephone
 number. Any payment, advertising, sponsorship or affiliate link reopens that decision, and a
 second contact channel must be added **before** such a change ships.
+
+**Research note, unresolved: the Impressum's statutory citation (2026-11-06). For a lawyer; nothing here is legal advice.** The imprint cites § 18 Abs. 1 MStV and nothing else. § 5 DDG is the provision normally cited for an organised digital service, and loremfile.dev is a sustained, versioned service with clients on two registries, a changelog and a status page. Whether "geschäftsmäßig" is met with no revenue is the open part. § 18 Abs. 2 MStV's Verantwortlicher is deliberately not engaged, because a fixture catalogue is not a journalistic-editorial offering. This is the question behind the Legal basis paragraph above, which stays as it is: no conclusion is drawn, and the Impressum and its citation do not change on an engineer's reading of a statute.
 
 **The values are never committed.** They exist only as three separate plain secrets in the GitHub
 `production` environment — `IMPRINT_NAME`, `IMPRINT_STREET`, `IMPRINT_POSTAL_CITY` — never as a
