@@ -41,7 +41,7 @@
   },
   "changelog": {
     "date": "2026-11-08",
-    "sha256": "bcec5c2d8c3036d36b6f028a031e329ec231b639762f644789955b74bbb7afe7"
+    "sha256": "920843eba2cfa36e096b8e5f0a796fc6c4c06c90408cfbf156dc4f7f51049d50"
   },
   "css": {
     "date": "2026-11-03",
@@ -104,8 +104,8 @@
     "sha256": "dc5cfc79ee0423d618832da4b889ee3bc1dfa1a1ffc9edfdbff4f8b0a1fcf171"
   },
   "eml": {
-    "date": "2026-11-03",
-    "sha256": "cd2d7107999ab0f17b19f71c50ce000dac3dc59415791c84f518edbb973b496e"
+    "date": "2026-11-08",
+    "sha256": "6e1c96b2e5923d2e79c78d994ad7e4aad0fd0c96857ee7499f869ac7ebcf93fd"
   },
   "epub": {
     "date": "2026-11-03",
@@ -273,15 +273,15 @@
   },
   "sqlite": {
     "date": "2026-11-08",
-    "sha256": "47725e25fd0cd92d060321dc222d02f72260c36656138c42521cdd96acea92c8"
+    "sha256": "bbbd03cb69b972851fdad70be23738d8c85791d4df0595e181beb25b51ba3499"
   },
   "srt": {
     "date": "2026-11-03",
     "sha256": "62e9f47bd12018dec343917f05006596c97aad6821f7da7bbd132ed1eb58c2d7"
   },
   "status": {
-    "date": "2026-11-03",
-    "sha256": "a74f7178cfacaafb37bfd83b437998e5cd1e7db52e469127fa2028eba09c67a1"
+    "date": "2026-11-08",
+    "sha256": "60fc4e7e501018562168df25cf78d3300bde98ac8ea5e352c11402e76a5f647e"
   },
   "svg": {
     "date": "2026-11-03",
@@ -308,8 +308,8 @@
     "sha256": "be6bb64e6eae65189dbe6e1ca49ff68194d9d527ca4c4cc105e65550c8c9fdf5"
   },
   "tiff": {
-    "date": "2026-10-17",
-    "sha256": "a3d47c11d84248049291624b5e6a916b54f0f3fc0bcfe74f7a8a3587254813a4"
+    "date": "2026-11-08",
+    "sha256": "89a54662b79c08277c6d3ea8a6d7d752f70578d5f7f82da50da265ea5ba9cc98"
   },
   "toml": {
     "date": "2026-11-03",
