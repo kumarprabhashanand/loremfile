@@ -19,10 +19,11 @@ import itertools
 import textwrap
 import threading
 import time as _real_time
-from typing import Any
+from typing import Any, ClassVar
 
 import pytest
 
+from loremfile import config
 from loremfile.infra import probe
 from loremfile.infra.probe import CheckFailed, Fetched, PreconditionUnmet
 
@@ -786,3 +787,44 @@ def test_the_check_asks_every_token_on_both_pages_and_off_them(
         assert any(p == probe.OFF_PATH_CONTROL and f"{token}/" in agent for p, agent in asked), (
             token
         )
+
+
+class Answered:
+    """What an opener returns, enough for `probe.fetch`."""
+
+    status = 204
+    headers: ClassVar[dict[str, str]] = {}
+
+    def __enter__(self) -> Answered:
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        return None
+
+    def read(self) -> bytes:
+        return b""
+
+
+def test_the_probe_names_itself_and_the_agents_it_spoofs_go_as_written(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """docs/08 §5.7. The probe's own requests carry its agent; `agent_request` and the browser
+    control carry the strings they exist to send, because the legal-pages rule has to see
+    them. The opener is replaced below `fetch`, so the header read is the one that is sent."""
+    sent: list[str | None] = []
+
+    def opener(request: Any, **_: Any) -> Answered:
+        sent.append(request.get_header("User-agent"))
+        return Answered()
+
+    monkeypatch.setattr(probe._OPENER, "open", opener)
+    probe.fetch("/robots.txt")
+    probe.agent_request("/legal/imprint", "GPTBot")
+    probe.fetch("/legal/imprint", extra_headers={"User-Agent": probe.BROWSER_USER_AGENT})
+    assert sent == [
+        config.PROBE_USER_AGENT,
+        "Mozilla/5.0 (compatible; GPTBot/1.0)",
+        probe.BROWSER_USER_AGENT,
+    ]
+    assert config.PROBE_USER_AGENT != config.VERIFY_USER_AGENT
+    assert all(sent), "control: a request with no agent would read None here"

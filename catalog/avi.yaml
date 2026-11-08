@@ -13,6 +13,7 @@ fixtures:
     generator: media_video.avi
     params: { width: 640, height: 480, duration: 5 }
     description: "640x480 at 30 fps, five seconds, MPEG-4 Part 2 video with MP3 audio."
+    label: "MPEG-4 Part 2 and MP3"
     tags: [video, codec-mp3]
     expect: { width: 640, height: 480, vcodec: mpeg4, acodec: mp3 }
     size_class: free

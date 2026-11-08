@@ -39,7 +39,7 @@ MANIFEST = {e["path"]: e for e in json.loads((ROOT / "manifest.json").read_text(
 #: "100,000" is one number, not 100 and 000.
 NUMBER = re.compile(r"\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?")
 #: Names whose digits are part of the name, not a quantity: removed before numbers are read.
-NAMES = re.compile(r"\b(?:ID3v2|H\.264|VP9|ZIP64|UTF-8|A4)\b")
+NAMES = re.compile(r"\b(?:ID3v2|H\.264|VP9|ZIP64|UTF-8|A4|MPEG-4 Part 2|MP3)\b")
 #: A size in a label is the catalog's nominal size, which the size-class validator holds the
 #: published bytes to (exactly, or within 5%); a free-size file has no size to name.
 SIZE = re.compile(r"(\d+(?:\.\d+)?) (KB|MB|GB)\b")
@@ -122,6 +122,9 @@ def test_control_digits_in_a_name_are_not_counted_but_a_count_beside_one_is() ->
     props = MANIFEST["mp3/with-id3v2-tags-3s.mp3"]["props"]
     assert unmeasured("ID3v2 tags", props) == []
     assert unmeasured("3 ID3v2 frames", props) == ["3"]
+    avi = MANIFEST["avi/640x480-5s.avi"]["props"]
+    assert unmeasured("MPEG-4 Part 2 and MP3", avi) == []
+    assert unmeasured("2 MP3 tracks", avi) == ["2"], "the name is skipped, the count is not"
     rows = MANIFEST["csv/people-100k.csv"]["props"]
     assert unmeasured("100,000 rows", rows) == []
     assert unmeasured("100,002 rows", rows) == ["100,002"], "100,001 is measured: lines"
@@ -159,14 +162,16 @@ def recommended(fmt: str) -> list[Fixture]:
     ]
 
 
-def test_the_labelled_pages_are_the_first_three_and_the_twelve_demand_formats() -> None:
-    """1.9.0's three (2026-10-16) and the twelve formats with search demand (2026-10-22);
-    the other 65 stay on the plain title. A superseded file needs no label."""
+def test_the_labelled_pages_are_the_first_three_and_the_demand_formats() -> None:
+    """1.9.0's three (2026-10-16), the twelve formats with search demand (2026-10-22) and
+    avi and sqlite (2026-11-08); the other 63 stay on the plain title. A superseded file
+    needs no label."""
     complete = {
         fmt.format for fmt in CATALOG.formats if all(f.label for f in recommended(fmt.format))
     }
     assert complete == LABELLED_FORMATS
-    assert len(DEMAND_FORMATS) == 12 and {"mp3", "pptx", "mkv", "parquet"} <= DEMAND_FORMATS
+    assert len(DEMAND_FORMATS) == 14
+    assert {"mp3", "pptx", "mkv", "parquet", "avi", "sqlite"} <= DEMAND_FORMATS
 
 
 def test_the_labelled_titles_and_descriptions_fit_and_say_test() -> None:
@@ -191,7 +196,7 @@ def test_the_labelled_titles_and_descriptions_fit_and_say_test() -> None:
             }, title
         else:
             assert title.startswith(f"Sample {label(fmt)} files: "), title
-        assert len(description) <= DESCRIPTION_LIMIT, description
+        assert DESCRIPTION_FLOOR <= len(description) <= DESCRIPTION_LIMIT, description
         assert f"{label(fmt)} test file" in description
         span = (
             f"from {human_bytes(min(sizes))} to {human_bytes(max(sizes))}"
@@ -201,6 +206,22 @@ def test_the_labelled_titles_and_descriptions_fit_and_say_test() -> None:
         assert description.startswith(
             f"{len(sizes)} {label(fmt)} test file{'s' if len(sizes) > 1 else ''} {span}: "
         ), "the count and the size range come from the manifest"
+
+
+def test_a_labelled_page_with_one_file_takes_the_singular_tail_and_stays_in_the_band() -> None:
+    """avi (2026-11-08) is the first labelled format with one file. "Direct URLs" and "per
+    file" misread for one, and after a single label the plural tail leaves the description
+    under the floor; the singular tail is the one the unlabelled shape uses."""
+    one = labelled_description("AVI", [1_734_596], ["MPEG-4 Part 2 and MP3"])
+    assert one.endswith(MEASURED_TAIL_ONE)
+    assert not [w for w in PLURAL_MARKERS if w in one], one
+    assert DESCRIPTION_FLOOR <= len(one) <= DESCRIPTION_LIMIT, one
+    many = labelled_description("SQLite", [270_336, 131_072], ["foreign key and trigger"])
+    assert many.endswith(". Direct URLs, SHA-256 per file, CC0."), "two files keep theirs"
+    # Control: the plural tail on the same single file fails both checks it is here for.
+    plural = "1 AVI test file of 1.7 MB: MPEG-4 Part 2 and MP3. Direct URLs, SHA-256 per file, CC0."
+    assert len(plural) < DESCRIPTION_FLOOR
+    assert [w for w in PLURAL_MARKERS if w in plural] == ["URLs"]
 
 
 def rendered_head(fmt: str, files: int = 2) -> str:
@@ -294,9 +315,9 @@ def head_of(fmt: str, sizes: list[int]) -> str:
     return f"{len(sizes)} {label(fmt)} test file{'s' if len(sizes) > 1 else ''} {span}. "
 
 
-def test_the_unlabelled_formats_are_the_other_sixty_five() -> None:
+def test_the_unlabelled_formats_are_the_other_sixty_three() -> None:
     """Empty-set control first: the parametrised tests below pass over no formats at all."""
-    assert len(UNLABELLED) == 65
+    assert len(UNLABELLED) == 63
     assert {"sql", "js", "webm", "edge", "7z", "webp"} <= set(UNLABELLED)
     assert not set(UNLABELLED) & LABELLED_FORMATS
 

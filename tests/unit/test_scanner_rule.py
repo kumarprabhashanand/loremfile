@@ -10,14 +10,19 @@ from __future__ import annotations
 import datetime as dt
 import json
 import re
+from collections.abc import Iterable
+from pathlib import Path
 from typing import Any
 
 import pytest
 
+from loremfile.catalog import Catalog
 from loremfile.infra import probe, scanners, usage
 from loremfile.infra.apply import custom_rules_desired
 from loremfile.infra.probe import Fetched
-from loremfile.site import routes
+from loremfile.site import build, routes
+
+ROOT = Path(__file__).resolve().parents[2]
 
 TERM = re.compile(
     r'starts_with\(http\.request\.uri\.path, "(?P<prefix>[^"]+)"\)'
@@ -107,6 +112,92 @@ def test_the_evaluator_reports_a_rule_that_overreaches(expression: str, path: st
 def test_the_evaluator_refuses_an_operator_it_cannot_read() -> None:
     with pytest.raises(AssertionError, match="cannot read"):
         evaluate('(http.request.uri.path contains "wp")', "/wp")
+
+
+# --- the commercial-page dictionary (2026-11-08) -----------------------------------------
+
+#: The sixteen paths of the 2026-11-08 brief, written out here on purpose. The tests above
+#: read their paths from `scanners.EXACT`, so a path dropped from it would pass all of them.
+DICTIONARY = (
+    "/register",
+    "/quote",
+    "/contact",
+    "/booking",
+    "/referral",
+    "/signup",
+    "/support",
+    "/contact-us",
+    "/events/register",
+    "/invite",
+    "/apply",
+    "/request-a-quote",
+    "/free-estimate",
+    "/refer-a-friend",
+    "/gift-card",
+    "/test-drive",
+)
+
+
+def test_every_path_of_the_dictionary_is_blocked_whole() -> None:
+    expression = committed()["expression"]
+    assert len(DICTIONARY) == 16 == len(set(DICTIONARY))
+    assert set(scanners.COMMERCIAL) == set(DICTIONARY)
+    for path in DICTIONARY:
+        assert evaluate(expression, path), path
+        assert f'{scanners.PATH} eq "{path}"' in expression, f"{path} is matched with eq"
+        assert f'starts_with({scanners.PATH}, "{path}' not in expression, f"{path} is no prefix"
+    # Control: the same check fails on a rule that lost one of them.
+    dropped = expression.replace(f'{scanners.PATH} eq "/quote"', f'{scanners.PATH} eq "/quotes"')
+    assert not evaluate(dropped, "/quote")
+
+
+def test_a_dictionary_path_does_not_catch_a_neighbour() -> None:
+    """`starts_with` on `/contact` would also refuse a later `/contacts-something`."""
+    expression = committed()["expression"]
+    for path in DICTIONARY:
+        for neighbour in (f"{path}s-something", f"{path}/", f"{path}/x", path[:-1]):
+            if neighbour not in scanners.EXACT:
+                assert not evaluate(expression, neighbour), neighbour
+    overreaching = expression.replace(
+        f'{scanners.PATH} eq "/contact"', f'starts_with({scanners.PATH}, "/contact")'
+    )
+    assert evaluate(overreaching, "/contacts-something"), "control: a prefix would catch it"
+    assert not evaluate(expression, "/contacts-something")
+
+
+def first_segment(path: str) -> str:
+    return path.split("/")[1]
+
+
+def collisions(paths: Iterable[str], taken: set[str]) -> list[str]:
+    return sorted(path for path in paths if first_segment(path) in taken)
+
+
+def published_names() -> set[str]:
+    """The first path segment of everything the site serves: a format is one (docs/00 G3), so
+    are the pages and the keys the build reserves, and so is each fixture's."""
+    fixtures = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))["fixtures"]
+    pages = json.loads((ROOT / "page-dates.json").read_text(encoding="utf-8"))
+    return (
+        {fmt.format for fmt in Catalog.load().formats}
+        | set(build.RESERVED)
+        | {key.split("/")[0] for key in pages}
+        | {entry["path"].split("/")[0] for entry in fixtures}
+    )
+
+
+def test_no_blocked_path_begins_where_a_published_url_does() -> None:
+    """G3, never break a published URL: a blocked path can never be served later, so it must
+    not begin with a format, a page or a reserved key. Plausible future formats are not
+    mechanical; docs/08 §5.7 records the reading made on 2026-11-08."""
+    taken = published_names()
+    assert {"pdf", "avi", "sqlite", "docs", "legal", "status", "testing"} <= taken, "control"
+    assert collisions([*scanners.EXACT, *scanners.PREFIXES], taken) == []
+    # Control: the same check finds a path that would break one.
+    assert collisions(["/status", "/pdf/minimal.pdf", "/contact"], taken) == [
+        "/pdf/minimal.pdf",
+        "/status",
+    ]
 
 
 # --- the measurement counts what the rule blocks -----------------------------------------

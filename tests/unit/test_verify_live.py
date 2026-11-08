@@ -12,12 +12,18 @@ from __future__ import annotations
 import ast
 import datetime as dt
 import hashlib
+import http.server
 import inspect
 import textwrap
-from typing import Any
+import threading
+import urllib.request
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Any, ClassVar
 
 import pytest
 
+from loremfile import config
 from loremfile.infra import probe, purge, verify_live
 from loremfile.infra.verify_live import Response, Status
 
@@ -329,3 +335,85 @@ def test_the_day_comes_from_the_date_so_two_runs_agree() -> None:
     assert verify_live.rotation_day(monday + dt.timedelta(days=10)) == verify_live.rotation_day(
         monday
     )
+
+
+# --- the agent our own checks send (docs/08 §5.7) ----------------------------------------
+
+
+class Recorder(http.server.BaseHTTPRequestHandler):
+    """A loopback server that keeps the User-Agent of every request, as it came off the wire."""
+
+    seen: ClassVar[list[str]] = []
+
+    def do_GET(self) -> None:
+        type(self).seen.append(self.headers.get("User-Agent", ""))
+        self.send_response(200)
+        self.send_header("Content-Length", "2")
+        self.end_headers()
+        self.wfile.write(b"ok")
+
+    def log_message(self, *_args: Any) -> None:  # silence the request log
+        pass
+
+
+@pytest.fixture
+def loopback() -> Iterator[str]:
+    Recorder.seen = []
+    server = http.server.HTTPServer(("127.0.0.1", 0), Recorder)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    yield f"http://127.0.0.1:{server.server_address[1]}/x"
+    server.shutdown()
+    server.server_close()
+
+
+def test_verify_live_names_itself_on_the_wire_and_a_chosen_agent_goes_as_written(
+    loopback: str,
+) -> None:
+    """Read off the socket, below the header the code sets: urllib adds `Python-urllib/…` when
+    none is set, which is the agent this replaces. Two requests, then the control."""
+    verify_live._open(loopback, method="GET", headers={})
+    chosen = verify_live.REFUSED_AGENTS[0]
+    verify_live._open(loopback, method="GET", headers={"User-Agent": chosen})
+    verify_live._open(loopback, method="GET", headers={"user-agent": chosen})
+    with urllib.request.urlopen(loopback, timeout=10):  # noqa: S310 - loopback
+        pass  # control: a bare request
+    assert Recorder.seen[0] == config.VERIFY_USER_AGENT
+    assert Recorder.seen[1:3] == [chosen, chosen], "spoofed agents keep matching their tokens"
+    assert Recorder.seen[3].startswith("Python-urllib/"), "control: the default being replaced"
+
+
+def test_a_redirect_free_request_names_itself_too(loopback: str) -> None:
+    verify_live._open(loopback, method="GET", headers={}, redirects=False)
+    assert Recorder.seen == [config.VERIFY_USER_AGENT]
+
+
+def test_with_agent_leaves_a_callers_choice_alone_whatever_its_case() -> None:
+    mine = {"Range": "bytes=0-9"}
+    assert config.with_agent(mine, "me/1") == {"User-Agent": "me/1", "Range": "bytes=0-9"}
+    assert mine == {"Range": "bytes=0-9"}, "the caller's dict is not changed"
+    for name in ("User-Agent", "user-agent", "USER-AGENT"):
+        assert config.with_agent({name: "theirs"}, "me/1") == {name: "theirs"}
+
+
+# Modules under infra/ that open a URL, sorted by whose site they fetch. A new one must be put
+# in a list below, so that nothing fetches loremfile.dev under urllib's default agent unseen.
+OUR_SITE = {"probe", "verify_live"}
+OTHER_HOSTS = {"cloudflare_api", "crawlers", "indexnow", "restore", "tokens", "usage"}
+
+
+def test_every_module_that_opens_a_url_either_fetches_our_site_with_an_agent_or_another_host() -> (
+    None
+):
+    infra = Path(__file__).resolve().parents[2] / "src" / "loremfile" / "infra"
+    opening = {
+        path.stem
+        for path in infra.glob("*.py")
+        if "urllib.request.urlopen" in path.read_text(encoding="utf-8")
+        or ".open(request" in path.read_text(encoding="utf-8")
+    }
+    assert opening == OUR_SITE | OTHER_HOSTS, "a module that opens a URL is not classified here"
+    for name in OUR_SITE:
+        assert "with_agent(" in (infra / f"{name}.py").read_text(encoding="utf-8"), name
+    # Control: the sweep sees `verify_live` as opening one and the probe's opener too.
+    assert {"verify_live", "probe"} <= opening

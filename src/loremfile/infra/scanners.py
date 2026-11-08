@@ -16,8 +16,29 @@ from __future__ import annotations
 from typing import Any, Final
 
 RULE_REF: Final = "loremfile_scanner_paths"
+#: What a scanner dictionary asks of a commercial site (2026-11-08): sign-up, quote, booking
+#: and contact pages this site has never had, all 404 before the rule. Each is matched whole,
+#: so `/contact` cannot catch a later `/contacts-something` (docs/08 §5.7).
+COMMERCIAL: Final = (
+    "/register",
+    "/quote",
+    "/contact",
+    "/booking",
+    "/referral",
+    "/signup",
+    "/support",
+    "/contact-us",
+    "/events/register",
+    "/invite",
+    "/apply",
+    "/request-a-quote",
+    "/free-estimate",
+    "/refer-a-friend",
+    "/gift-card",
+    "/test-drive",
+)
 #: Matched whole.
-EXACT: Final = ("/wp-login.php", "/xmlrpc.php", "/.env")
+EXACT: Final = ("/wp-login.php", "/xmlrpc.php", "/.env", *COMMERCIAL)
 #: Matched as prefixes; each ends in `/`, so `/wp-admin` and `/.github/` stay out.
 PREFIXES: Final = ("/wp-admin/", "/.git/")
 #: Never matched. The probe asserts it is not refused.

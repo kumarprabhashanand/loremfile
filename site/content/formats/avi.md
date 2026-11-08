@@ -1,12 +1,13 @@
-AVI is an old Microsoft container that still turns up in upload forms, archives and camera
-exports. Real AVI files rarely carry H.264. They carry MPEG-4 Part 2 video, the codec family
-of Xvid and DivX, often with MP3 audio. `avi/640x480-5s.avi` uses exactly that combination,
-so it tests whether a decoder or thumbnailer quietly assumes H.264.
+`avi/640x480-5s.avi` is for code that assumes video means H.264: it carries MPEG-4 Part 2
+where `mp4/720p-5s.mp4` carries H.264, so a decoder, thumbnailer or transcoder that handles the
+MP4 and fails on this file has a codec assumption, not a container problem. The audio of
+`avi/640x480-5s.avi` is MP3, mono at 48 kHz, a 440 Hz tone with one MP3 frame to each chunk.
 
-The clip is 640x480 at 30 frames per second and five seconds long. Like every video here it
-is generated synthetically, with no real footage, so it is safe to publish, share and commit
-to a test suite.
+`avi/640x480-5s.avi` keeps its `idx1` index after the media data, so a reader that seeks has to
+reach the end of the file first, and a download cut short has no index at all.
+`avi/640x480-5s.avi` also pads its header lists with `JUNK` chunks and holds a `vprp` chunk,
+which a parser has to skip by length, not reject.
 
-Use it for upload validation, transcoding pipelines, media servers that must accept legacy
-files, and format sniffers that recognise the `RIFF` header with an `AVI` form type. For a
-modern container with comparable content, see [MP4](/mp4) or [MKV](/mkv).
+The second video chunk of `avi/640x480-5s.avi` is empty, a frame slot with no data, so a
+demuxer that takes an empty chunk for the end of the stream stops after one frame. At 640x480
+and 30 frames per second, `avi/640x480-5s.avi` runs 5.04 seconds in 1,734,596 bytes.

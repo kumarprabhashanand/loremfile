@@ -239,6 +239,39 @@ def test_control_the_budget_scan_reads_the_committed_rule(monkeypatch: pytest.Mo
     assert "loremfile_legal_pages_ai_agents" in problem
 
 
+def test_the_budget_is_one_rule_at_a_time_not_a_ruleset_total(tmp_path: Path) -> None:
+    """Cloudflare limits one rule's expression ("The maximum length of a rule expression is
+    4,096 characters"), so two rules that together pass the line are both fine (docs/08 §5.7,
+    2026-11-08). The control below it is the same figures in one rule."""
+    each = crawlers.BUDGET_CHARACTERS // 2 + 1
+    rules = tmp_path / "infra" / "rulesets"
+    rules.mkdir(parents=True)
+    (rules / "http_request_firewall_custom.json").write_text(
+        json.dumps(
+            {
+                "rules": [
+                    {"ref": "a", "expression": "x" * each},
+                    {"ref": "b", "expression": "x" * each},
+                ]
+            }
+        )
+    )
+    assert 2 * each > crawlers.BUDGET_CHARACTERS, "control: together they are past the line"
+    assert crawlers.over_budget_expressions(tmp_path) == []
+    assert crawlers.over_budget_expressions(rules_of(tmp_path / "one", 2 * each))
+
+
+def test_the_budget_scan_reads_the_scanner_rule_as_well_as_the_ai_rule(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The scan covers every committed rule, not the AI rule alone (docs/08 §5.7): with the
+    line below both lengths it names both."""
+    monkeypatch.setattr(crawlers, "BUDGET_CHARACTERS", 500)
+    found = " ".join(crawlers.over_budget_expressions(ROOT))
+    assert "loremfile_legal_pages_ai_agents" in found
+    assert "loremfile_scanner_paths" in found
+
+
 @pytest.mark.parametrize(
     ("length", "reported"),
     [

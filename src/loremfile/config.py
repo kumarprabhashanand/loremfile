@@ -9,6 +9,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
+from loremfile import __version__
+
 OWNER: Final = "kumarprabhashanand"  # Q-03
 SITE_HOST: Final = "loremfile.dev"
 BASE_URL: Final = f"https://{SITE_HOST}/"
@@ -45,6 +47,25 @@ SCHEMA_URL: Final = f"{BASE_URL}schema/manifest-v{SCHEMA_VERSION}.json"
 #: allows is telling search engines that URLs on this host changed. Moved into a secret, the
 #: build could not emit the file and every submission would come back 403.
 INDEXNOW_KEY: Final = "6f5cebccab35f5982434418d5d001e12"
+
+#: How our own monitoring names itself to the zone (docs/08 §5.7), so a reading of the edge's
+#: traffic can leave it out: `verify-live` and the release archive send the first, `probe`
+#: the second. Public, like the rest of this file. **No token of the legal-pages rule may be
+#: a substring of either**, or the two legal pages answer our own checks with 403 and the
+#: deploy fails; `test_legal_pages.py` holds both against the committed rule.
+VERIFY_USER_AGENT: Final = f"loremfile-verify/{__version__} (+{BASE_URL}status)"
+PROBE_USER_AGENT: Final = f"loremfile-probe/{__version__} (+{BASE_URL}status)"
+
+
+def with_agent(headers: dict[str, str], agent: str) -> dict[str, str]:
+    """`headers` carrying `agent` as the User-Agent, unless the caller chose one.
+
+    The legal-pages checks send other agents' strings on purpose, to see them refused, and
+    those must reach the edge as written.
+    """
+    if any(name.lower() == "user-agent" for name in headers):
+        return headers
+    return {"User-Agent": agent, **headers}
 
 
 def repo_root() -> Path:

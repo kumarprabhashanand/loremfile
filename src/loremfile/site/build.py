@@ -352,10 +352,12 @@ DESCRIPTION_LIMIT = 155
 #: for short descriptions and 79 of the 98 sitemap pages were under 120 characters; every
 #: built page is held to [DESCRIPTION_FLOOR, DESCRIPTION_LIMIT] by test_site_build.py.
 DESCRIPTION_FLOOR = 120
-#: The twelve formats with search demand (2026-10-22). Their labelled titles keep both words
-#: people type, "Sample" and "test"; ogg, tiff and arrow keep 1.9.0's head.
+#: The formats with search demand: twelve from 2026-10-22, avi and sqlite from 2026-11-08.
+#: Their labelled titles keep both words people type, "Sample" and "test"; ogg, tiff and
+#: arrow keep 1.9.0's head. What a member changes is listed in docs/05 §1 rule 9.
 DEMAND_FORMATS = frozenset(
     {"mp3", "mp4", "parquet", "docx", "pptx", "mkv", "png", "jpg", "pdf", "csv", "zip", "wav"}
+    | {"avi", "sqlite"}
 )
 #: Where the query differs from "sample {format} files for testing": "mp3 test file", and
 #: "jpg", which people type where the format's name (and its label) is JPEG.
@@ -410,7 +412,9 @@ def labelled_description(name: str, sizes: list[int], labels: list[str]) -> str:
     """
     count = len(sizes)
     head = f"{count} {name} test file{'' if count == 1 else 's'} {size_span(sizes)}: "
-    tail = ". Direct URLs, SHA-256 per file, CC0."
+    # One file takes the singular tail, as the unlabelled shape does: "Direct URLs" and "per
+    # file" misread for one, and with a single label the plural tail leaves it under the floor.
+    tail = f". {MEASURED_TAIL_ONE}" if count == 1 else ". Direct URLs, SHA-256 per file, CC0."
     shown: list[str] = []
     for text in labels:
         if len(head + ", ".join([*shown, text]) + tail) > DESCRIPTION_LIMIT:
@@ -849,7 +853,7 @@ def format_pages(
         title = f"{info.seo_title} · loremfile.dev"
         description = measured_description(label(fmt), [e["bytes"] for e in active])
         # The labelled shape, only where every recommended file has a label (docs/05 §1
-        # rule 9): ogg, tiff and arrow from 1.9.0, the twelve demand formats from 2026-10-22.
+        # rule 9): ogg, tiff and arrow from 1.9.0, the demand formats from 2026-10-22.
         labels = page_labels(info, served)
         if labels:
             title = labelled_title(label(fmt), labels, title_head(fmt))
