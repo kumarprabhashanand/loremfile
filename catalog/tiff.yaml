@@ -7,6 +7,15 @@ description: >-
 seo_title: "Sample TIFF image for testing, free and CC0"
 related: [png, bmp, jpg]
 fixtures:
+  - name: 16bit-gray-big-endian-640x480.tiff
+    phase: 1
+    generator: image.testcard
+    params: { width: 640, height: 480, fmt: TIFF, mode: "I;16B", compression: raw }
+    description: "The test card as 16-bit grayscale in big-endian (Motorola) byte order, for readers that assume little-endian files or 8-bit samples."
+    tags: [image]
+    expect: { width: 640, height: 480, mode: "I;16B", byte_order: MM, bits_per_sample: [16] }
+    size_class: free
+    label: "16-bit big-endian"
   - name: lzw-640x480.tiff
     phase: 1
     generator: image.testcard
@@ -25,15 +34,6 @@ fixtures:
     expect: { width: 640, height: 480, mode: RGB, frames: 3, compression: raw }
     size_class: free
     label: "3 pages"
-  - name: 16bit-gray-big-endian-640x480.tiff
-    phase: 1
-    generator: image.testcard
-    params: { width: 640, height: 480, fmt: TIFF, mode: "I;16B", compression: raw }
-    description: "The test card as 16-bit grayscale in big-endian (Motorola) byte order, for readers that assume little-endian files or 8-bit samples."
-    tags: [image]
-    expect: { width: 640, height: 480, mode: "I;16B", byte_order: MM, bits_per_sample: [16] }
-    size_class: free
-    label: "16-bit big-endian"
   - name: cmyk-640x480.tiff
     phase: 1
     generator: image.testcard

@@ -2,17 +2,19 @@ This is a sample TIFF file: an uncompressed RGB test card, free to hotlink or do
 
 <!-- file: tiff/rgb-640x480.tiff -->
 
-TIFF is the format of scanners, print workflows and GIS, and it is flexible enough that
-"supports TIFF" rarely means every TIFF. `tiff/rgb-640x480.tiff` is the common baseline case:
-the loremfile colour-bar test card, uncompressed RGB.
+`tiff/16bit-gray-big-endian-640x480.tiff` begins with `MM`, so every multi-byte value in it, from
+the tag offsets to its 16-bit samples, is big-endian, and a reader that assumes little-endian
+fails to open it or reads its samples byte-swapped. `tiff/rgb-640x480.tiff` begins with `II`,
+the little-endian order, so a reader that assumes big-endian fails on it, and it is also the
+baseline every reader must handle: 8-bit RGB, uncompressed, in a single strip.
 
-An uncompressed baseline TIFF is the file every TIFF reader must handle, so it is the right
-starting point. If a tool fails here, it does not really support TIFF; if it succeeds here and
-fails on a compressed or multi-page file from elsewhere, the gap is in those features. The
-test card's border, centre cross and label make orientation and channel mistakes visible at a
-glance.
+`tiff/lzw-640x480.tiff`, `tiff/cmyk-640x480.tiff` and `tiff/multipage-3pages.tiff` are
+little-endian like the baseline, so none of them shows a byte-order bug, which only
+`tiff/16bit-gray-big-endian-640x480.tiff` does. `tiff/lzw-640x480.tiff` is 640x480 RGB too,
+compressed with LZW and cut into many strips, so a decoder built without LZW, or a reader that
+expects one strip, fails on it and not on the baseline.
 
-Use it to test image upload forms, scanning pipelines, thumbnailers and converters. Most
-browsers do not display TIFF, so it also checks that an upload flow converts or previews the
-file rather than showing a broken image. Related formats: [PNG](/png), [BMP](/bmp) and
-[JPEG](/jpg).
+`tiff/multipage-3pages.tiff` chains 3 images, each 640x480 RGB and uncompressed, so a reader
+that stops after the first image shows one page of 3. `tiff/cmyk-640x480.tiff` stores cyan,
+magenta, yellow and black at 8 bits each, so an RGB-only converter or thumbnailer drops a
+channel or reads the colours wrong.

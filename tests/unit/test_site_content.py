@@ -252,7 +252,9 @@ GUIDES = tuple(sorted(build.DEMAND_FORMATS))
 SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[`A-Z])")
 NUMBER = re.compile(r"\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?")
 #: Names whose digits are part of the name (H.264, VP9, MP4), not a quantity.
-NAMES = re.compile(r"\b(?:H\.264|VP9|MP3|MP4|ID3v2|ZIP64|UTF-8|A4|Ed25519|X\.509|MPEG-4 Part 2)\b")
+NAMES = re.compile(
+    r"\b(?:H\.264|VP9|MP3|MP4|ID3v2|ZIP64|UTF-8|A4|Ed25519|X\.509|MPEG-4 Part 2|base64)\b"
+)
 RATIO = re.compile(r"\b(\d+):(\d+)\b")
 DIMENSIONS = (("slide_width_emu", "slide_height_emu"), ("width", "height"))
 
@@ -369,6 +371,12 @@ def test_control_the_guide_rule_catches_each_way_to_break_it() -> None:
     avi = "`avi/640x480-5s.avi`"
     assert guide_problems(f"{avi} carries MPEG-4 Part 2 and MP3.", entries) == []
     assert guide_problems(f"{avi} carries MPEG-4 Part 3.", entries), "only the whole name is a name"
+    eml = "`eml/with-attachments.eml`"
+    assert guide_problems(f"{eml} is base64-encoded.", entries) == [], "digits in a name"
+    assert guide_problems(f"{eml} is base32-encoded.", entries), "but not in every name"
+    sixteen = "`tiff/16bit-gray-big-endian-640x480.tiff`"
+    assert guide_problems(f"{sixteen} has 16-bit samples.", entries) == []
+    assert guide_problems(f"{sixteen} has 8-bit samples.", entries), "8 is measured for other files"
 
 
 #: Leads added from the 23 October export to pages that are not selection guides: the one

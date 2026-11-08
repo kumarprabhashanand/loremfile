@@ -162,16 +162,27 @@ def recommended(fmt: str) -> list[Fixture]:
     ]
 
 
+#: The twelve of 2026-10-22, written out: a guide is never removed because its format draws
+#: no queries (owner, 2026-11-08), so the set may grow and may not lose one of these.
+ORIGINAL_TWELVE = frozenset(
+    {"mp3", "mp4", "parquet", "docx", "pptx", "mkv", "png", "jpg", "pdf", "csv", "zip", "wav"}
+)
+#: Added on 2026-11-08 for measured query demand and no guide. tiff was already labelled.
+ADDED_2026_11_08 = frozenset({"sqlite", "tiff", "avi", "eml"})
+
+
 def test_the_labelled_pages_are_the_first_three_and_the_demand_formats() -> None:
     """1.9.0's three (2026-10-16), the twelve formats with search demand (2026-10-22) and
-    avi and sqlite (2026-11-08); the other 63 stay on the plain title. A superseded file
-    needs no label."""
+    sqlite, tiff, avi and eml (2026-11-08); the other 62 stay on the plain title. A
+    superseded file needs no label."""
     complete = {
         fmt.format for fmt in CATALOG.formats if all(f.label for f in recommended(fmt.format))
     }
     assert complete == LABELLED_FORMATS
-    assert len(DEMAND_FORMATS) == 14
-    assert {"mp3", "pptx", "mkv", "parquet", "avi", "sqlite"} <= DEMAND_FORMATS
+    assert DEMAND_FORMATS == ORIGINAL_TWELVE | ADDED_2026_11_08 and len(DEMAND_FORMATS) == 16
+    assert ORIGINAL_TWELVE.issubset(DEMAND_FORMATS), "no existing guide is removed"
+    # Control: dropping one of the twelve is what that line is here to catch.
+    assert not ORIGINAL_TWELVE.issubset(DEMAND_FORMATS - {"wav"})
 
 
 def test_the_labelled_titles_and_descriptions_fit_and_say_test() -> None:
@@ -191,6 +202,7 @@ def test_the_labelled_titles_and_descriptions_fit_and_say_test() -> None:
             assert title.split(":")[0] in {
                 "Sample MP3 test files",
                 "Sample JPG files for testing",
+                "Sample SQLite database files for testing",
                 f"Sample {label(fmt)} files for testing",
                 f"Sample {label(fmt)} file for testing",
             }, title
@@ -206,6 +218,22 @@ def test_the_labelled_titles_and_descriptions_fit_and_say_test() -> None:
         assert description.startswith(
             f"{len(sizes)} {label(fmt)} test file{'s' if len(sizes) > 1 else ''} {span}: "
         ), "the count and the size range come from the manifest"
+
+
+def test_tiffs_title_leads_with_its_big_endian_file() -> None:
+    """The catalog's order is the title's order (docs/05 §1 rule 9). tiff lists its big-endian
+    fixture first so that "big-endian" is in the title, which the demand head's extra twelve
+    characters would otherwise cut (2026-11-08)."""
+    info = CATALOG.format_by_name["tiff"]
+    served = [MANIFEST[f.path] for f in info.fixtures if f.path in MANIFEST]
+    labels = page_labels(info, served)
+    title = labelled_title(label("tiff"), labels, title_head("tiff"))
+    assert labels[0] == "16-bit big-endian" and "big-endian" in title, title
+    assert info.fixtures[0].path == "tiff/16bit-gray-big-endian-640x480.tiff"
+    # Control: the order before the move cuts it.
+    before = [*labels[1:3], labels[0], *labels[3:]]
+    assert before[2] == "16-bit big-endian"
+    assert "big-endian" not in labelled_title(label("tiff"), before, title_head("tiff"))
 
 
 def test_a_labelled_page_with_one_file_takes_the_singular_tail_and_stays_in_the_band() -> None:
@@ -235,6 +263,11 @@ def test_every_demand_head_names_its_format_as_people_type_it() -> None:
         assert fmt in rendered_head(fmt).lower(), (fmt, rendered_head(fmt))
     assert rendered_head("jpg") == "Sample JPG files for testing"
     assert label("jpg") == "JPEG", "the format's name stays in the prose and the description"
+    # sqlite keeps "database", the word its queries carry (2026-11-08); the control is the
+    # default demand head, which is what dropped it.
+    assert rendered_head("sqlite") == "Sample SQLite database files for testing"
+    default = "Sample {name} file{s} for testing".format(name=label("sqlite"), s="s")
+    assert "database" not in default
 
 
 def test_control_the_default_head_would_lose_jpg() -> None:
@@ -254,7 +287,9 @@ def test_a_label_that_would_cut_a_keyword_stops_the_build() -> None:
     with pytest.raises(SiteError, match="shorten the first label"):
         labelled_title("PDF", [fits + "x"], head)
     assert title_head("mp3") == "Sample {name} test file{s}"
-    assert title_head("ogg") == "Sample {name} file{s}", "1.9.0's three keep their head"
+    assert title_head("ogg") == "Sample {name} file{s}", "ogg and arrow keep 1.9.0's head"
+    assert title_head("arrow") == "Sample {name} file{s}"
+    assert title_head("tiff") == "Sample {name} file{s} for testing", "tiff moved on 2026-11-08"
 
 
 def test_a_superseded_file_never_contributes_a_label() -> None:
@@ -315,9 +350,9 @@ def head_of(fmt: str, sizes: list[int]) -> str:
     return f"{len(sizes)} {label(fmt)} test file{'s' if len(sizes) > 1 else ''} {span}. "
 
 
-def test_the_unlabelled_formats_are_the_other_sixty_three() -> None:
+def test_the_unlabelled_formats_are_the_other_sixty_two() -> None:
     """Empty-set control first: the parametrised tests below pass over no formats at all."""
-    assert len(UNLABELLED) == 63
+    assert len(UNLABELLED) == 62
     assert {"sql", "js", "webm", "edge", "7z", "webp"} <= set(UNLABELLED)
     assert not set(UNLABELLED) & LABELLED_FORMATS
 

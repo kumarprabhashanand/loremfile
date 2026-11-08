@@ -13,7 +13,7 @@ fixtures:
     generator: columnar.sqlite_multi_table
     params: { people: 200, orders: 500 }
     description: "Four tables with a foreign key from orders to people, two indexes, a view aggregating order totals, and an insert trigger. What a schema inspector should be tested against."
-    label: "foreign key and trigger"
+    label: "foreign key"
     tags: [data, dataset-people, dataset-orders, dataset-products]
     expect: { tables: 4, page_size: 4096, views: 1, indexes: 2, triggers: 1, has_fts: false }
     size_class: free
@@ -22,7 +22,7 @@ fixtures:
     generator: columnar.sqlite_people
     params: { rows: 1000 }
     description: "A single table holding 1,000 rows of the shared people dataset. Page size 4096, journal mode DELETE, vacuumed so the file is byte-stable."
-    label: "1,000-row flat table"
+    label: "flat table of 1,000 rows"
     tags: [data, dataset-people]
     expect: { tables: 1, rows_total: 1000, page_size: 4096, journal_mode: delete, has_fts: false }
     size_class: free
