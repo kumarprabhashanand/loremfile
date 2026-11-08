@@ -32,7 +32,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from loremfile.config import FIXTURE_CACHE_CONTROL, SITE_HOST
+from loremfile.config import FIXTURE_CACHE_CONTROL, SITE_HOST, VERIFY_USER_AGENT, with_agent
 from loremfile.site import routes
 
 
@@ -208,7 +208,9 @@ def _open(
     redirects: bool = True,
     limit: int | None = None,
 ) -> Response:
-    request = urllib.request.Request(url, method=method, headers=headers)  # noqa: S310
+    request = urllib.request.Request(  # noqa: S310
+        url, method=method, headers=with_agent(headers, VERIFY_USER_AGENT)
+    )
     opener = urllib.request.urlopen if redirects else _NO_REDIRECTS.open
     try:
         with opener(request, timeout=30) as raw:

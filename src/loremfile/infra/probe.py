@@ -27,7 +27,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Final
 
-from loremfile.config import SITE_HOST
+from loremfile.config import PROBE_USER_AGENT, SITE_HOST, with_agent
 from loremfile.infra import scanners
 from loremfile.infra.apply import CUSTOM_PHASE, custom_rules_desired, infra_dir
 
@@ -172,7 +172,9 @@ def fetch(
     flag that could be set wrongly.
     """
     request = urllib.request.Request(
-        f"https://{host}{path}", method=method, headers=extra_headers or {}
+        f"https://{host}{path}",
+        method=method,
+        headers=with_agent(extra_headers or {}, PROBE_USER_AGENT),
     )
     try:
         with _OPENER.open(request, timeout=timeout) as response:

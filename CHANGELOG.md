@@ -8,6 +8,9 @@
 - Twelve format pages (mp3, mp4, parquet, docx, pptx, mkv, png, jpg, pdf, csv, zip, wav)
   have titles and descriptions that name what sets their files apart, for example
   `Sample MP3 test files: L/R channels, ID3v2 tags`.
+- The avi and sqlite pages are selection guides too, and their titles and descriptions name
+  what sets their files apart, for example `Sample SQLite files for testing: foreign key and
+  trigger`.
 - Every page's meta description is now 120 to 155 characters. The other 65 format pages
   describe their file count and size range (a single file reads `1 SQL test file`), and
   `edge` reads `21 edge-case test files`.

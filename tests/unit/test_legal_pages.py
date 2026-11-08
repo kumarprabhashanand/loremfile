@@ -15,6 +15,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+from loremfile import config
 from loremfile.infra import verify_live
 from loremfile.site import build, legal, routes
 
@@ -309,6 +310,36 @@ def test_the_collision_check_finds_the_token_deferred_for_this_reason() -> None:
     `msnbot` contains it (docs/04 §6), and it is the only token here that the check reports."""
     found = held_by(["nbot", "GPTBot"], SEARCH_ENGINE_USER_AGENTS)
     assert found == {"nbot": ["msnbot-media/1.0 (+http://search.msn.com/msnbot.htm)"]}
+
+
+# --- the trap: our own checks against the rule that guards the legal pages (docs/08 §5.7) ---
+
+OWN_AGENTS = {"verify": config.VERIFY_USER_AGENT, "probe": config.PROBE_USER_AGENT}
+
+
+def test_no_waf_token_is_contained_in_the_agent_our_own_checks_send() -> None:
+    """`verify-live` and `probe` fetch both legal pages. A token that is a substring of their
+    agent turns every deploy's check into a 403. The tokens are read from the committed
+    expression, so one added later is held against the agents too."""
+    waf = re.findall(r'http\.user_agent contains "([^"]+)"', ai_agent_rule()["expression"])
+    # Empty-set controls, naming specifics: the 44 were found, and both agents exist.
+    assert {"Instinct", "Muse", "Codex", "ExaSearchBot"} <= set(waf) and len(waf) >= 44
+    assert all(agent.startswith("loremfile-") for agent in OWN_AGENTS.values())
+    assert held_by(waf, OWN_AGENTS.values()) == {}
+
+
+def test_the_agent_check_finds_a_cheerful_name_that_is_a_token() -> None:
+    """The negative control, and the case: `contains` is case-sensitive, so `Muse`, `Codex`
+    and `Instinct` are held and `muse` is not. The deliberately spoofed strings still match."""
+    waf = re.findall(r'http\.user_agent contains "([^"]+)"', ai_agent_rule()["expression"])
+    cheerful = [
+        f"loremfile-{name}/1.0 (+https://loremfile.dev/status)"
+        for name in ("Muse", "Codex", "Instinct")
+    ]
+    assert sorted(held_by(waf, cheerful)) == ["Codex", "Instinct", "Muse"]
+    assert held_by(waf, ["loremfile-muse/1.0"]) == {}
+    for spoofed in verify_live.REFUSED_AGENTS:
+        assert held_by(waf, [spoofed]), spoofed
 
 
 # --- placeholders -----------------------------------------------------------------

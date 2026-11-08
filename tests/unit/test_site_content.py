@@ -247,12 +247,12 @@ def test_the_legal_dash_check_finds_one() -> None:
 # --- selection guides: every sentence names a file, every number is measured ----------------
 
 #: Format pages written as "which of these files do I need, and what breaks without it?"
-#: (2026-10-22, docs/07 §5): all twelve demand formats, the set `build.py` keeps.
+#: (2026-10-22, docs/07 §5): every demand format, the set `build.py` keeps.
 GUIDES = tuple(sorted(build.DEMAND_FORMATS))
 SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[`A-Z])")
 NUMBER = re.compile(r"\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?")
 #: Names whose digits are part of the name (H.264, VP9, MP4), not a quantity.
-NAMES = re.compile(r"\b(?:H\.264|VP9|MP3|MP4|ID3v2|ZIP64|UTF-8|A4|Ed25519|X\.509)\b")
+NAMES = re.compile(r"\b(?:H\.264|VP9|MP3|MP4|ID3v2|ZIP64|UTF-8|A4|Ed25519|X\.509|MPEG-4 Part 2)\b")
 RATIO = re.compile(r"\b(\d+):(\d+)\b")
 DIMENSIONS = (("slide_width_emu", "slide_height_emu"), ("width", "height"))
 
@@ -366,6 +366,9 @@ def test_control_the_guide_rule_catches_each_way_to_break_it() -> None:
     baseline = "`mp4/h264-baseline-720p-5s.mp4`"
     assert guide_problems(f"{baseline} is at level 3.0.", entries) == []
     assert guide_problems(f"{baseline} is at level 4.2.", entries), "a numeric string must match"
+    avi = "`avi/640x480-5s.avi`"
+    assert guide_problems(f"{avi} carries MPEG-4 Part 2 and MP3.", entries) == []
+    assert guide_problems(f"{avi} carries MPEG-4 Part 3.", entries), "only the whole name is a name"
 
 
 #: Leads added from the 23 October export to pages that are not selection guides: the one
