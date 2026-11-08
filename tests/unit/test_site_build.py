@@ -15,6 +15,7 @@ from typing import Any
 
 import pytest
 
+from loremfile import __version__, config
 from loremfile.infra import locks, purge
 from loremfile.site import build, checks, icons, legal, page_dates, routes
 
@@ -947,8 +948,28 @@ def test_a_fully_labelled_format_page_leads_with_its_labels(site: Path) -> None:
     assert "<title>Sample PDF files for testing: form fields, encrypted</title>" in text(
         site, "pdf"
     )
+    # The four added on 2026-11-08, tiff from the 1.9.0 head to the demand head.
+    assert "<title>Sample TIFF files for testing: LZW, 3 pages</title>" in text(site, "tiff")
+    assert "<title>Sample SQLite database files for testing: foreign key</title>" in text(
+        site, "sqlite"
+    )
+    assert "<title>Sample AVI file for testing: MPEG-4 Part 2 and MP3</title>" in text(site, "avi")
+    assert "<title>Sample EML files for testing: PDF and PNG attachments</title>" in text(
+        site, "eml"
+    )
     # Control: an unlabelled format is unchanged, brand suffix and all.
     assert "· loremfile.dev</title>" in text(site, "flac")
+
+
+def test_the_status_page_names_the_agents_our_own_checks_send(site: Path) -> None:
+    """docs/08 §5.7: the agents point at /status, so it has to say what they are. The page
+    reads them from config, and this holds that it shows them whole."""
+    status = text(site, "status")
+    assert config.VERIFY_USER_AGENT in status and config.PROBE_USER_AGENT in status
+    assert config.VERIFY_USER_AGENT.startswith("loremfile-verify/")
+    # Controls: a page that names neither, and an agent as it would read after a version bump.
+    assert config.VERIFY_USER_AGENT not in text(site, "docs/faq")
+    assert config.VERIFY_USER_AGENT.replace(__version__, "9.9.9") not in status
 
 
 #: A URL with a placeholder in it (`/{format}/{name}`) is a pattern, and a crawler reading

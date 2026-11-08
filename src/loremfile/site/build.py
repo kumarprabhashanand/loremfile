@@ -352,16 +352,22 @@ DESCRIPTION_LIMIT = 155
 #: for short descriptions and 79 of the 98 sitemap pages were under 120 characters; every
 #: built page is held to [DESCRIPTION_FLOOR, DESCRIPTION_LIMIT] by test_site_build.py.
 DESCRIPTION_FLOOR = 120
-#: The formats with search demand: twelve from 2026-10-22, avi and sqlite from 2026-11-08.
-#: Their labelled titles keep both words people type, "Sample" and "test"; ogg, tiff and
-#: arrow keep 1.9.0's head. What a member changes is listed in docs/05 §1 rule 9.
+#: The formats with search demand: twelve from 2026-10-22, sqlite, tiff, avi and eml from
+#: 2026-11-08. Their labelled titles keep both words people type, "Sample" and "test"; ogg
+#: and arrow keep 1.9.0's head. What a member changes is listed in docs/05 §1 rule 9.
 DEMAND_FORMATS = frozenset(
     {"mp3", "mp4", "parquet", "docx", "pptx", "mkv", "png", "jpg", "pdf", "csv", "zip", "wav"}
-    | {"avi", "sqlite"}
+    | {"avi", "sqlite", "tiff", "eml"}
 )
-#: Where the query differs from "sample {format} files for testing": "mp3 test file", and
-#: "jpg", which people type where the format's name (and its label) is JPEG.
-QUERY_HEADS = {"mp3": "Sample {name} test file{s}", "jpg": "Sample JPG file{s} for testing"}
+#: Where the query differs from "sample {format} files for testing": "mp3 test file", "jpg",
+#: which people type where the format's name (and its label) is JPEG, and "sqlite", whose
+#: queries carry "database" (measured query demand, 2026-11-08). A longer head leaves fewer
+#: characters for the first label: sqlite's must fit in 18.
+QUERY_HEADS = {
+    "mp3": "Sample {name} test file{s}",
+    "jpg": "Sample JPG file{s} for testing",
+    "sqlite": "Sample {name} database file{s} for testing",
+}
 
 
 def title_head(fmt: str) -> str:
@@ -853,7 +859,7 @@ def format_pages(
         title = f"{info.seo_title} · loremfile.dev"
         description = measured_description(label(fmt), [e["bytes"] for e in active])
         # The labelled shape, only where every recommended file has a label (docs/05 §1
-        # rule 9): ogg, tiff and arrow from 1.9.0, the demand formats from 2026-10-22.
+        # rule 9): ogg, tiff and arrow from 1.9.0, the demand formats from 2026-10-22 (tiff moved).
         labels = page_labels(info, served)
         if labels:
             title = labelled_title(label(fmt), labels, title_head(fmt))
@@ -1245,7 +1251,12 @@ def status_page() -> Page:
         "check covers, where the results are written and where a failure shows.",
         "status.html",
         crumbs=[("Home", "/")],
-        context={"issues": f"{config.SOURCE_URL}/issues?q=is%3Aissue+is%3Aopen+label%3Ahealth"},
+        context={
+            "issues": f"{config.SOURCE_URL}/issues?q=is%3Aissue+is%3Aopen+label%3Ahealth",
+            # The strings the checks send, read from config so the page cannot drift (docs/08 §5.7).
+            "verify_agent": config.VERIFY_USER_AGENT,
+            "probe_agent": config.PROBE_USER_AGENT,
+        },
     )
 
 
