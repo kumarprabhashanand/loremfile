@@ -220,6 +220,22 @@ def test_the_labelled_titles_and_descriptions_fit_and_say_test() -> None:
         ), "the count and the size range come from the manifest"
 
 
+def test_tiffs_title_leads_with_its_big_endian_file() -> None:
+    """The catalog's order is the title's order (docs/05 §1 rule 9). tiff lists its big-endian
+    fixture first so that "big-endian" is in the title, which the demand head's extra twelve
+    characters would otherwise cut (2026-11-08)."""
+    info = CATALOG.format_by_name["tiff"]
+    served = [MANIFEST[f.path] for f in info.fixtures if f.path in MANIFEST]
+    labels = page_labels(info, served)
+    title = labelled_title(label("tiff"), labels, title_head("tiff"))
+    assert labels[0] == "16-bit big-endian" and "big-endian" in title, title
+    assert info.fixtures[0].path == "tiff/16bit-gray-big-endian-640x480.tiff"
+    # Control: the order before the move cuts it.
+    before = [*labels[1:3], labels[0], *labels[3:]]
+    assert before[2] == "16-bit big-endian"
+    assert "big-endian" not in labelled_title(label("tiff"), before, title_head("tiff"))
+
+
 def test_a_labelled_page_with_one_file_takes_the_singular_tail_and_stays_in_the_band() -> None:
     """avi (2026-11-08) is the first labelled format with one file. "Direct URLs" and "per
     file" misread for one, and after a single label the plural tail leaves the description

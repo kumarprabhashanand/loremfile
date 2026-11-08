@@ -949,7 +949,9 @@ def test_a_fully_labelled_format_page_leads_with_its_labels(site: Path) -> None:
         site, "pdf"
     )
     # The four added on 2026-11-08, tiff from the 1.9.0 head to the demand head.
-    assert "<title>Sample TIFF files for testing: LZW, 3 pages</title>" in text(site, "tiff")
+    assert "<title>Sample TIFF files for testing: 16-bit big-endian, LZW</title>" in text(
+        site, "tiff"
+    )
     assert "<title>Sample SQLite database files for testing: foreign key</title>" in text(
         site, "sqlite"
     )
