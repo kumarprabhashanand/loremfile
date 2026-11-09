@@ -16,7 +16,7 @@
 # So the hold is about one file's frozen bytes and no other fpdf2 behaviour. It can move once
 # that file is superseded by a new path (superseded_by, as jpg/cmyk-640x480.jpg was).
 fpdf2>=2.8.9,<2.9
-pypdf>=6.21.4               # reads every PDF; writes only pdf/form-fields-1page.pdf's form
+pypdf>=7.0.0               # reads every PDF; writes only pdf/form-fields-1page.pdf's form
 python-docx>=1.2          # comments API
 openpyxl
 python-pptx
@@ -55,7 +55,7 @@ vobject
 cryptography
 
 # --- framework -------------------------------------------------------------
-pydantic>=2.14.2
+pydantic>=2.14.3
 click
 Jinja2
 boto3
