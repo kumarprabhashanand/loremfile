@@ -229,6 +229,28 @@ def test_the_form_has_six_fields_and_three_are_filled() -> None:
     assert reader.trailer["/Root"]["/AcroForm"]["/NeedAppearances"].value is False
 
 
+def test_pypdf_draws_no_file_identifier_for_the_form(monkeypatch: pytest.MonkeyPatch) -> None:
+    """pypdf 7.0.0 made the identifiers `generate_file_identifiers` writes random
+    (`secrets.token_bytes`, where 6.21.4 took an md5). The form's /ID is fpdf2's, cloned with
+    the page, and `encrypt()` is the only other caller, which nothing here calls (docs/06 §4,
+    2026-11-09). A spy watches the real build; the control encrypts, so the spy can fire."""
+    calls: list[int] = []
+    original = pypdf.PdfWriter.generate_file_identifiers
+
+    def spy(self: pypdf.PdfWriter) -> None:
+        calls.append(1)
+        original(self)
+
+    monkeypatch.setattr(pypdf.PdfWriter, "generate_file_identifiers", spy)
+    payload = build("pdf/form-fields-1page.pdf")
+    assert calls == [], "building the form asked pypdf for an identifier"
+    assert b"/ID [" in payload, "the identifier is there, and it is not pypdf's"
+    control = pypdf.PdfWriter()
+    control.add_blank_page(100, 100)
+    control.encrypt("pw")
+    assert calls == [1], "control: encrypt() is what asks"
+
+
 def test_a_pdf_without_a_form_reports_no_form_props() -> None:
     assert "form_fields" not in check("pdf/a4-1page.pdf")
 
