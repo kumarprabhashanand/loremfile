@@ -131,6 +131,7 @@ User-agent: ElevenlabsCrawler
 User-agent: ScryBot
 User-agent: ExaSearchBot
 User-agent: AIWebIndex
+User-agent: Claude-Agent
 User-agent: Google-Extended
 User-agent: Applebot-Extended
 Content-Signal: search=yes, ai-input=yes, ai-train=yes

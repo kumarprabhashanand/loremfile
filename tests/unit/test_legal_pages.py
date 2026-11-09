@@ -90,6 +90,9 @@ AI_TOKENS = {
     # each publish their token in this casing; both are on the 2026-09-22 snapshot (docs/04 §6).
     "ExaSearchBot",
     "AIWebIndex",
+    # Weighed 2026-11-09 (#141). Anthropic's help center publishes the token in this casing, as
+    # the addition to a real browser's user agent (docs/04 §6).
+    "Claude-Agent",
     "Google-Extended",
     "Applebot-Extended",
 }
@@ -312,6 +315,38 @@ def test_the_collision_check_finds_the_token_deferred_for_this_reason() -> None:
     assert found == {"nbot": ["msnbot-media/1.0 (+http://search.msn.com/msnbot.htm)"]}
 
 
+# --- operators and policy tokens (docs/04 §6) -------------------------------------------
+
+#: The precedent: an operator refused under one token is refused under all of the tokens it
+#: publishes. Written out so that adding a token for one operator and forgetting its sibling
+#: fails here, not in a reviewer's memory.
+OPERATOR_TOKENS = {
+    "Anthropic": {"ClaudeBot", "Claude-User", "Claude-SearchBot", "Claude-Agent"},
+    "Keenable": {"KeenableBot", "Keenable-User"},
+    "ElevenLabs": {"ElevenlabsBot", "ElevenlabsCrawler"},
+    "Exa": {"ExaSearchBot", "ExaUser"},
+}
+
+
+def test_an_operator_refused_under_one_token_is_refused_under_all() -> None:
+    waf = set(re.findall(r'http\.user_agent contains "([^"]+)"', ai_agent_rule()["expression"]))
+    for operator, tokens in OPERATOR_TOKENS.items():
+        assert tokens <= waf, (operator, sorted(tokens - waf))
+        assert tokens <= AI_TOKENS, operator
+    # Control: with one sibling missing, the same check reports exactly that one.
+    assert OPERATOR_TOKENS["Anthropic"] - (waf - {"Claude-Agent"}) == {"Claude-Agent"}
+
+
+def test_the_policy_token_the_watch_defers_is_not_a_waf_clause() -> None:
+    """`__usage_ai-training` is a robots.txt policy token and no request carries it, so a
+    clause for it would match nothing (docs/04 §6, 2026-11-09). It stays out of the rule; if
+    the owner states a training preference it joins robots.txt and ROBOTS_ONLY."""
+    waf = re.findall(r'http\.user_agent contains "([^"]+)"', ai_agent_rule()["expression"])
+    assert "Claude-Agent" in waf, "control: the clauses were read"
+    assert "__usage_ai-training" not in waf
+    assert "__usage_ai-training" not in AI_TOKENS
+
+
 # --- the trap: our own checks against the rule that guards the legal pages (docs/08 §5.7) ---
 
 OWN_AGENTS = {"verify": config.VERIFY_USER_AGENT, "probe": config.PROBE_USER_AGENT}
@@ -322,8 +357,8 @@ def test_no_waf_token_is_contained_in_the_agent_our_own_checks_send() -> None:
     agent turns every deploy's check into a 403. The tokens are read from the committed
     expression, so one added later is held against the agents too."""
     waf = re.findall(r'http\.user_agent contains "([^"]+)"', ai_agent_rule()["expression"])
-    # Empty-set controls, naming specifics: the 44 were found, and both agents exist.
-    assert {"Instinct", "Muse", "Codex", "ExaSearchBot"} <= set(waf) and len(waf) >= 44
+    # Empty-set controls, naming specifics: the 45 were found, and both agents exist.
+    assert {"Instinct", "Muse", "Codex", "ExaSearchBot"} <= set(waf) and len(waf) >= 45
     assert all(agent.startswith("loremfile-") for agent in OWN_AGENTS.values())
     assert held_by(waf, OWN_AGENTS.values()) == {}
 
