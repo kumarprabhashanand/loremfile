@@ -90,12 +90,18 @@ AI_TOKENS = {
     # each publish their token in this casing; both are on the 2026-09-22 snapshot (docs/04 §6).
     "ExaSearchBot",
     "AIWebIndex",
+    # Weighed 2026-11-09 (#141). Anthropic's help center publishes the token in this casing, as
+    # the addition to a real browser's user agent (docs/04 §6).
+    "Claude-Agent",
     "Google-Extended",
     "Applebot-Extended",
 }
 #: Their operators say these send no requests of their own, so a WAF clause for them could
 #: never fire; they exist only as robots.txt directives (docs/04 §6).
 ROBOTS_ONLY = {"Google-Extended", "Applebot-Extended"}
+#: Not an agent at all: a policy token a site writes to state a training preference,
+#: which no request carries and no rule can match (docs/04 §6).
+TRAINING_PREFERENCE = "__usage_ai-training"
 PLACEHOLDER = re.compile(r"%%IMPRINT_[A-Z_]+%%")
 
 
@@ -201,6 +207,32 @@ def test_the_ai_group_names_exactly_the_verified_tokens_and_blocks_only_the_lega
     assert agents == AI_TOKENS
     assert {value for key, value in rules if key == "disallow"} == LEGAL_PAGES
     assert not [value for key, value in rules if key == "allow"]
+
+
+def test_the_training_preference_group_states_yes_everywhere_but_the_two_pages() -> None:
+    """`__usage_ai-training` is a policy token, not an agent: no request carries it, so it says
+    in one cross-vendor group what the request-sending tokens say one operator at a time
+    (draft-kelley-aipref-training-preference-signal-00 §4.2, docs/04 §6). Allowed means in
+    favour, disallowed means against, so the two pages that name the operator are disallowed
+    and everything else is allowed."""
+    policy = [(a, r) for a, r in groups(robots_spec()) if TRAINING_PREFERENCE in a]
+    assert len(policy) == 1, "one group, so the preference is read from one place"
+    agents, rules = policy[0]
+    assert agents == {TRAINING_PREFERENCE}, "it shares no group with a crawler token"
+    assert ("allow", "/") in rules
+    assert {value for key, value in rules if key == "disallow"} == LEGAL_PAGES
+    assert TRAINING_PREFERENCE not in AI_TOKENS, "it is not an agent, so it is in no crawler group"
+
+
+def test_no_rule_anywhere_matches_the_policy_token_because_nothing_sends_it() -> None:
+    """A WAF clause for it would never fire: the draft says a policy token "need not appear in
+    the User-Agent header field of any outbound request". The control is a token that does."""
+    for name in ("http_request_firewall_custom", "http_ratelimit"):
+        for found in ruleset(name):
+            assert TRAINING_PREFERENCE not in str(found), (name, found.get("ref"))
+    for found in ruleset("http_response_headers_transform"):
+        assert TRAINING_PREFERENCE not in str(found), found.get("ref")
+    assert "Claude-Agent" in str(ai_agent_rule()), "control: a request-sending token is there"
 
 
 # --- the WAF rule that refuses what robots.txt only asks (ADR-030) -------------------
@@ -312,6 +344,38 @@ def test_the_collision_check_finds_the_token_deferred_for_this_reason() -> None:
     assert found == {"nbot": ["msnbot-media/1.0 (+http://search.msn.com/msnbot.htm)"]}
 
 
+# --- operators and policy tokens (docs/04 §6) -------------------------------------------
+
+#: The precedent: an operator refused under one token is refused under all of the tokens it
+#: publishes. Written out so that adding a token for one operator and forgetting its sibling
+#: fails here, not in a reviewer's memory.
+OPERATOR_TOKENS = {
+    "Anthropic": {"ClaudeBot", "Claude-User", "Claude-SearchBot", "Claude-Agent"},
+    "Keenable": {"KeenableBot", "Keenable-User"},
+    "ElevenLabs": {"ElevenlabsBot", "ElevenlabsCrawler"},
+    "Exa": {"ExaSearchBot", "ExaUser"},
+}
+
+
+def test_an_operator_refused_under_one_token_is_refused_under_all() -> None:
+    waf = set(re.findall(r'http\.user_agent contains "([^"]+)"', ai_agent_rule()["expression"]))
+    for operator, tokens in OPERATOR_TOKENS.items():
+        assert tokens <= waf, (operator, sorted(tokens - waf))
+        assert tokens <= AI_TOKENS, operator
+    # Control: with one sibling missing, the same check reports exactly that one.
+    assert OPERATOR_TOKENS["Anthropic"] - (waf - {"Claude-Agent"}) == {"Claude-Agent"}
+
+
+def test_the_policy_token_the_watch_defers_is_not_a_waf_clause() -> None:
+    """`__usage_ai-training` is a robots.txt policy token and no request carries it, so a
+    clause for it would match nothing (docs/04 §6, 2026-11-09). It stays out of the rule; if
+    the owner states a training preference it joins robots.txt and ROBOTS_ONLY."""
+    waf = re.findall(r'http\.user_agent contains "([^"]+)"', ai_agent_rule()["expression"])
+    assert "Claude-Agent" in waf, "control: the clauses were read"
+    assert "__usage_ai-training" not in waf
+    assert "__usage_ai-training" not in AI_TOKENS
+
+
 # --- the trap: our own checks against the rule that guards the legal pages (docs/08 §5.7) ---
 
 OWN_AGENTS = {"verify": config.VERIFY_USER_AGENT, "probe": config.PROBE_USER_AGENT}
@@ -322,8 +386,8 @@ def test_no_waf_token_is_contained_in_the_agent_our_own_checks_send() -> None:
     agent turns every deploy's check into a 403. The tokens are read from the committed
     expression, so one added later is held against the agents too."""
     waf = re.findall(r'http\.user_agent contains "([^"]+)"', ai_agent_rule()["expression"])
-    # Empty-set controls, naming specifics: the 44 were found, and both agents exist.
-    assert {"Instinct", "Muse", "Codex", "ExaSearchBot"} <= set(waf) and len(waf) >= 44
+    # Empty-set controls, naming specifics: the 45 were found, and both agents exist.
+    assert {"Instinct", "Muse", "Codex", "ExaSearchBot"} <= set(waf) and len(waf) >= 45
     assert all(agent.startswith("loremfile-") for agent in OWN_AGENTS.values())
     assert held_by(waf, OWN_AGENTS.values()) == {}
 

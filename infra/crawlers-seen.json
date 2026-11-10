@@ -230,6 +230,15 @@
         "Display name, not a product token: the name contains whitespace, and RFC 9309 section 2.2.1 confines the robots.txt product token to letters, underscores and hyphens, so no User-agent: line can carry it and a case-sensitive contains clause would fire only on a user agent holding the name with its space (docs/04 section 6, third guard)."
       ],
       "reopen": "When the operator publishes a product token without whitespace, or an exact user-agent string: weigh that token under the standing rule, or block the exact string with an exact match rather than contains (ADR-033)."
+    },
+    "__usage_ai-training": {
+      "weighed": "2026-11-09",
+      "issue": "#141",
+      "reasons": [
+        "A policy token, not an agent: the list gives it the operator \"Not applicable.\" and calls it a policy token defined in an Internet Draft (draft-kelley-aipref-training-preference-signal-00, read 2026-11-09). The draft says a policy token \"need not appear in the User-Agent header field of any outbound request\", so no request carries the name and a contains clause for it would never match (docs/04 section 6). The third guard does not reject it: RFC 9309 permits underscores.",
+        "Written in robots.txt on 2026-11-10, not blocked: the group is `Allow: /` with /legal/imprint and /legal/privacy disallowed, so the site states a preference in favour of AI training on everything else and against it on the two pages that carry the operator's name and address. It states cross-vendor what the 45 request-sending tokens of the AI group state one operator at a time. The reasoning and the risk taken (an individual draft at -00) are in docs/04 section 6."
+      ],
+      "reopen": "If a crawler is documented to send it as a User-Agent, weigh that crawler. If the draft renames the token or the AI Preferences working group adopts a different one, the robots.txt group follows the new name; the WAF rule never carries it, because no request carries the name."
     }
   }
 }
