@@ -156,6 +156,25 @@ did not run.
 - [ ] `CHANGELOG.md`: one short bullet if a user would notice the change (`docs/09` §7), or nothing
 - [ ] New format? `loremfile infra locks --write` run and the owner step noted in the description
 
+## What a pull request and a commit say
+
+This repository is public and the durable record is `docs/`, so a pull request points at
+the reasoning instead of repeating it.
+
+- **Title.** What changed, one line.
+- **Body.** Eighty words at most: what changed, why, and the `docs/` section that holds the
+  reasoning. Nothing else. No vendor quotations, no account of how the work was done, no
+  list of what was verified and in what order, no counts of tests run. CI is the proof.
+- **Commit.** A subject line, and a body only where the subject cannot carry the reason,
+  two lines at most.
+- Reasoning goes in `docs/`, state in the "Implementation status" issue, proof in CI. A
+  fact worth keeping is written where it will be read again, which is never a merged
+  pull request.
+
+Measured 2026-11-10, against guidance held since 2026-10-02: the seven pull requests from
+#135 to #145 averaged 360 words of body and the longest ran to 682, each one restating a
+`docs/` section that already held it, on public pages.
+
 ## State lives in the repository
 
 You have no memory between sessions. **Before ending any session**, update the
