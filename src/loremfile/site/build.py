@@ -138,6 +138,11 @@ Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Disallow: /legal/imprint
 Disallow: /legal/privacy
 
+User-agent: __usage_ai-training
+Allow: /
+Disallow: /legal/imprint
+Disallow: /legal/privacy
+
 Sitemap: https://loremfile.dev/sitemap.xml
 """
 HEADING = re.compile(r"#{1,6} ")

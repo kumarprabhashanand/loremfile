@@ -50,6 +50,16 @@ def test_every_robots_group_carries_the_content_signal() -> None:
         assert lines.index(SIGNAL) < min(rules), "the signal belongs before the group's rules"
 
 
+def test_the_training_preference_group_carries_no_content_signal() -> None:
+    """The opposite rule, for the opposite kind of group. `__usage_ai-training` is a policy
+    token: nothing crawls under it, so a Content-Signal there would reach no one. The two
+    crawl groups above are the control, and each carries one (docs/04 §6)."""
+    policy = [g for g in build.ROBOTS_TXT.split("\n\n") if "User-agent: __usage_ai-training" in g]
+    assert len(policy) == 1, "one group states the preference"
+    assert SIGNAL not in policy[0]
+    assert "Allow: /" in policy[0] and policy[0].count("Disallow: /legal/") == 2
+
+
 # --- the Link header -------------------------------------------------------------------
 
 

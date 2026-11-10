@@ -106,8 +106,8 @@ def test_control_without_the_deferral_each_of_the_five_would_be_reported(name: s
     assert agent.name == name
 
 
-#: Reported by the 2026-11-09 run (#141): one added under the standing rule, one deferred as a
-#: policy token that no request carries.
+#: Reported by the 2026-11-09 run (#141): one refused under the standing rule, one answered in
+#: robots.txt as the policy token it is, which no request carries.
 REPORTED_2026_11_09 = ("Claude-Agent", "__usage_ai-training")
 
 
@@ -117,12 +117,17 @@ def test_the_pair_141_reported_is_decided_and_no_longer_reported() -> None:
     blocked, seen = crawlers.blocked_tokens(ROOT), crawlers.seen_names(ROOT)
     assert crawlers.unreviewed(known(*REPORTED_2026_11_09), blocked, seen) == []
     assert "claude-agent" in blocked and "claude-agent" not in seen, "blocked, not deferred"
-    assert "__usage_ai-training" in seen and "__usage_ai-training" not in blocked
+    assert "__usage_ai-training" in seen, "its record says what was weighed and what reopens it"
+    assert "__usage_ai-training" in blocked, "named in robots.txt, which is where a policy token"
+    rules = json.loads(
+        (ROOT / "infra/rulesets/http_request_firewall_custom.json").read_text(encoding="utf-8")
+    )["rules"]
+    assert all("__usage_ai-training" not in str(r) for r in rules), "and never at the edge"
     names = [a.name for a in crawlers.unreviewed(known(*REPORTED_2026_11_09), set(), set())]
     assert names == ["__usage_ai-training", "Claude-Agent"], "the order #141 printed them in"
 
 
-def test_the_deferred_policy_token_carries_its_date_issue_reasons_and_what_reopens_it() -> None:
+def test_the_policy_token_record_carries_its_date_issue_reasons_and_what_reopens_it() -> None:
     deferred = json.loads((ROOT / crawlers.SEEN_FILE).read_text(encoding="utf-8"))["deferred"]
     entry = deferred["__usage_ai-training"]
     assert (entry["weighed"], entry["issue"]) == ("2026-11-09", "#141")

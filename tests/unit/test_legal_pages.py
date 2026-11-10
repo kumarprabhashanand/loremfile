@@ -99,6 +99,9 @@ AI_TOKENS = {
 #: Their operators say these send no requests of their own, so a WAF clause for them could
 #: never fire; they exist only as robots.txt directives (docs/04 §6).
 ROBOTS_ONLY = {"Google-Extended", "Applebot-Extended"}
+#: Not an agent at all: a policy token a site writes to state a training preference,
+#: which no request carries and no rule can match (docs/04 §6).
+TRAINING_PREFERENCE = "__usage_ai-training"
 PLACEHOLDER = re.compile(r"%%IMPRINT_[A-Z_]+%%")
 
 
@@ -204,6 +207,32 @@ def test_the_ai_group_names_exactly_the_verified_tokens_and_blocks_only_the_lega
     assert agents == AI_TOKENS
     assert {value for key, value in rules if key == "disallow"} == LEGAL_PAGES
     assert not [value for key, value in rules if key == "allow"]
+
+
+def test_the_training_preference_group_states_yes_everywhere_but_the_two_pages() -> None:
+    """`__usage_ai-training` is a policy token, not an agent: no request carries it, so it says
+    in one cross-vendor group what the request-sending tokens say one operator at a time
+    (draft-kelley-aipref-training-preference-signal-00 §4.2, docs/04 §6). Allowed means in
+    favour, disallowed means against, so the two pages that name the operator are disallowed
+    and everything else is allowed."""
+    policy = [(a, r) for a, r in groups(robots_spec()) if TRAINING_PREFERENCE in a]
+    assert len(policy) == 1, "one group, so the preference is read from one place"
+    agents, rules = policy[0]
+    assert agents == {TRAINING_PREFERENCE}, "it shares no group with a crawler token"
+    assert ("allow", "/") in rules
+    assert {value for key, value in rules if key == "disallow"} == LEGAL_PAGES
+    assert TRAINING_PREFERENCE not in AI_TOKENS, "it is not an agent, so it is in no crawler group"
+
+
+def test_no_rule_anywhere_matches_the_policy_token_because_nothing_sends_it() -> None:
+    """A WAF clause for it would never fire: the draft says a policy token "need not appear in
+    the User-Agent header field of any outbound request". The control is a token that does."""
+    for name in ("http_request_firewall_custom", "http_ratelimit"):
+        for found in ruleset(name):
+            assert TRAINING_PREFERENCE not in str(found), (name, found.get("ref"))
+    for found in ruleset("http_response_headers_transform"):
+        assert TRAINING_PREFERENCE not in str(found), found.get("ref")
+    assert "Claude-Agent" in str(ai_agent_rule()), "control: a request-sending token is there"
 
 
 # --- the WAF rule that refuses what robots.txt only asks (ADR-030) -------------------
