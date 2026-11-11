@@ -15,6 +15,7 @@ from __future__ import annotations
 import datetime as dt
 import io
 import textwrap
+from typing import Any
 
 from fpdf import FPDF
 from fpdf.enums import AccessPermission
@@ -108,6 +109,95 @@ def basic(
             pdf.cell(0, 12, f"{number} / {pages}", align="C")
             pdf.set_auto_page_break(auto=True, margin=28.35)
     return _render(pdf)
+
+
+#: A5 in points, portrait. fpdf2 2.8.5 corrected the format's dimensions and warns whenever
+#: the name "A5" is used, so the size is written out instead.
+A5_POINTS = (419.53, 595.28)
+
+#: The pages of `mixed_sizes`: a label for the heading, and what to ask fpdf2 for.
+MIXED_PAGES: tuple[tuple[str, dict[str, Any]], ...] = (
+    ("A4 portrait", {"format": "A4"}),
+    ("US Letter portrait", {"format": "Letter"}),
+    ("A5 landscape", {"format": A5_POINTS, "orientation": "L"}),
+)
+
+
+@generator()
+def mixed_sizes(ctx: GeneratorContext) -> bytes:
+    """Three pages, each its own size: A4 portrait, Letter portrait and A5 landscape."""
+    rng = ctx.rng
+    pdf = _document()
+    for number, (label, options) in enumerate(MIXED_PAGES, start=1):
+        pdf.add_page(**options)
+        pdf.set_font("helvetica", "B", 18)
+        pdf.cell(0, 24, f"loremfile.dev - page {number}: {label}", new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(6)
+        pdf.set_font("helvetica", "", 11)
+        pdf.multi_cell(0, 14, lorem.paragraph(rng), new_x="LMARGIN", new_y="NEXT")
+    return _render(pdf)
+
+
+#: The words a reader sees for the two links, so the fixture can name what each one does.
+INTERNAL_LINK_TEXT = "Jump to the note at the foot of this page"
+
+
+@generator()
+def with_links(ctx: GeneratorContext, *, url: str) -> bytes:
+    """One page with an internal link to a spot lower on the page and an external one to `url`."""
+    rng = ctx.rng
+    pdf = _document()
+    pdf.add_page()
+    pdf.set_font("helvetica", "B", 18)
+    pdf.cell(0, 24, "loremfile.dev - links", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(6)
+    pdf.set_font("helvetica", "", 11)
+    pdf.multi_cell(0, 14, lorem.paragraph(rng), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(8)
+    pdf.set_text_color(0, 0, 238)
+    pdf.set_font("helvetica", "U", 11)
+    note = pdf.add_link()
+    pdf.cell(0, 16, INTERNAL_LINK_TEXT, link=note, new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 16, url, link=url, new_x="LMARGIN", new_y="NEXT")
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font("helvetica", "", 11)
+    pdf.set_y(700)
+    pdf.set_link(note, y=pdf.get_y(), page=1)
+    pdf.cell(0, 16, "Note: the internal link above lands here.", new_x="LMARGIN", new_y="NEXT")
+    return _render(pdf)
+
+
+@generator()
+def with_outline(ctx: GeneratorContext, *, pages: int) -> bytes:
+    """One page per chapter, each with a bookmark that opens that page."""
+    rng = ctx.rng
+    pdf = _document()
+    for number in range(1, pages + 1):
+        pdf.add_page()
+        pdf.start_section(f"Chapter {number}")
+        pdf.set_font("helvetica", "B", 18)
+        pdf.cell(0, 24, f"Chapter {number}", new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(6)
+        pdf.set_font("helvetica", "", 11)
+        for _ in range(PARAGRAPHS_PER_PAGE):
+            pdf.multi_cell(0, 14, lorem.paragraph(rng), new_x="LMARGIN", new_y="NEXT")
+            pdf.ln(4)
+    return _render(pdf)
+
+
+@generator()
+def rotated(ctx: GeneratorContext, *, degrees: int, pages: int = 1) -> bytes:
+    """A4 portrait text pages carrying `/Rotate`: the stored page box is not the shown one.
+
+    fpdf2 2.8.9 has no page rotation, so pypdf sets it on a document fpdf2 wrote, as the
+    form does for its fields.
+    """
+    writer = PdfWriter(clone_from=PdfReader(io.BytesIO(basic(ctx, pages=pages))))
+    for page in writer.pages:
+        page.rotate(degrees)
+    out = io.BytesIO()
+    writer.write(out)
+    return out.getvalue()
 
 
 @generator()

@@ -1,4 +1,4 @@
-# Word documents (docs/05 §3.5). Launch-set rows only; the rest are P1b.
+# Word documents (docs/05 §3.5). Every phase-1 row; the phase-2 rows follow.
 format: docx
 family: documents
 mime: application/vnd.openxmlformats-officedocument.wordprocessingml.document
@@ -100,3 +100,74 @@ fixtures:
     size_class: approx
     nominal_bytes: 10000000
     label: "10 MB"
+  - name: 10pages.docx
+    phase: 1
+    generator: office.docx_pages
+    params: { pages: 10 }
+    description: "Ten sections of Lorem Ipsum, each after the first set to start on a new page: nine forced page breaks, so ten pages at the least in any renderer. A .docx stores no page count of its own."
+    tags: [document, multi-page, text]
+    expect: { paragraphs: 40, page_breaks: 9, min_pages: 10, tables: 0, images: 0 }
+    size_class: free
+    contains_text:
+      - "Quaerat ullamco deserunt magna"
+      - "Quis eu vitae quis"
+      - "Omnis sapiente enim voluptate"
+      - "Proident sequi fugit inventore"
+    label: "10 pages"
+  - name: with-headers-footers.docx
+    phase: 1
+    generator: office.docx_headers_footers
+    params: { pages: 3 }
+    description: "Three pages with a header on each and a footer built from PAGE and NUMPAGES fields. Header and footer live in parts of their own, which extractors that read only the body never see."
+    tags: [document, multi-page, text]
+    expect: { paragraphs: 12, headers: 1, footers: 1, header_text: "loremfile.dev sample header", footer_text: "Page 1 of 3", footer_fields: [NUMPAGES, PAGE], page_breaks: 2, min_pages: 3 }
+    size_class: free
+    contains_text:
+      - "Omnis aute quia maiores"
+      - "Dolor consequat repellat facere"
+      - "Alias ut magna commodo"
+      - "Delectus earum adipiscing est"
+    label: "headers and footers"
+  - name: with-headings-and-toc.docx
+    phase: 1
+    generator: office.docx_toc
+    params: { chapters: 3, sections: 2 }
+    description: "Three chapters of two sections each in Heading 1 and 2, behind a table-of-contents field whose entries are cached, so readers that do not update fields still see them. Word updates the field on open."
+    tags: [document, multi-page, text]
+    expect: { headings: 9, toc_fields: 1, toc_entries: 9, update_fields_on_open: true, page_breaks: 3, min_pages: 4 }
+    size_class: free
+    contains_text:
+      - "Qui ratione sapiente culpa"
+      - "Autem proident saepe possimus"
+      - "Delectus lorem aperiam laudantium"
+      - "Lorem rerum laborum ipsum"
+    label: "table of contents"
+  - name: with-comments.docx
+    phase: 1
+    generator: office.docx_comments
+    params: { comments: 3 }
+    description: "Three comments from two authors, each anchored to the first sentence of a paragraph. For extractors that drop comments, and for tools that must keep each one attached to the words it is about."
+    tags: [document, text]
+    expect: { comments: 3, comment_authors: ["Second reviewer", "loremfile.dev"], tables: 0, images: 0 }
+    size_class: free
+    contains_text:
+      - "Sunt occaecat eiusmod ab"
+      - "Esse rem deserunt voluptates"
+      - "Tenetur inventore sunt voluptatem"
+      - "Elit duis sint repellendus"
+    label: "comments"
+  - name: unicode-multilingual.docx
+    phase: 1
+    generator: office.docx_multilingual
+    params: { scripts: [greek, cyrillic, arabic, hebrew, devanagari, thai, hanzi, hiragana, hangul_jamo] }
+    description: "Pseudo-text in Latin, Greek, Cyrillic, Arabic, Hebrew, Devanagari, Thai, Chinese, Japanese and Korean scripts, then emoji and combining marks. The Arabic and Hebrew paragraphs run right to left."
+    tags: [document, text, unicode]
+    expect: { scripts: [arabic, cyrillic, devanagari, greek, han, hangul, hebrew, hiragana, latin, thai], rtl_paragraphs: 2 }
+    size_class: free
+    contains_text:
+      - "Aliqua necessitatibus facere aliqua"
+      - "ΓΤΖ εμΟΧ ςδΣ"
+      - "ръ жк Щуу"
+      - "إحشعىآأظ نى ةةفإكد"
+      - "佯二元兹僭乳击傍"
+    label: "multilingual text"

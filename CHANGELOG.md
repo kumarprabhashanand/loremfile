@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- Twenty-five more document files. PDF: 100 pages, mixed page sizes, links, bookmarks, a
+  rotated page, accented letters. DOCX: ten pages, headers and footers, a table of contents,
+  comments, multilingual text. XLSX: 100,000 rows, three sheets, a filter, merged cells, a
+  chart, images, Unicode. PPTX: images, notes, a table and a chart, 10 MB. RTF: a table and
+  formatting. EPUB: version 2, images.
 - Every format page and testing guide has a Markdown copy at its URL plus `/index.md`, for
   example `/pdf/index.md`, linked from the page and described in `llms.txt`. The pages'
   structured data now gives each file's size and SHA-256.

@@ -80,8 +80,8 @@ def measure(path: str, payload: bytes) -> dict:
 
 @pytest.mark.parametrize("path", EVERY_OFFICE_FIXTURE)
 def test_every_office_fixture_matches_its_catalog_entry(path: str) -> None:
-    if fixture(path).size_class == "approx":
-        pytest.skip("sized fixtures are covered by the build; generating one per test is slow")
+    if fixture(path).size_class == "approx" or fixture(path).params.get("rows", 0) >= 100_000:
+        pytest.skip("large fixtures are covered by the build; generating one per test is slow")
     check(path)
 
 

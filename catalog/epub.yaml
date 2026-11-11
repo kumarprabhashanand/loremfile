@@ -1,4 +1,4 @@
-# EPUB e-books (docs/05 §3.5). Launch-set rows only; the rest are P1b.
+# EPUB e-books (docs/05 §3.5). Every phase-1 row; the phase-2 rows follow.
 format: epub
 family: documents
 mime: application/epub+zip
@@ -22,3 +22,30 @@ fixtures:
       - "Dolore nesciunt beatae id"
       - "Assumenda ex enim deserunt"
       - "Ipsum itaque do dolor"
+  - name: epub2-3chapters.epub
+    phase: 1
+    generator: office.epub2
+    params: { chapters: 3, paragraphs: 4 }
+    description: "EPUB 2.0.1: three XHTML 1.1 chapters of Lorem Ipsum, an NCX table of contents that the spine names, and a stylesheet. There is no nav document: the older format that readers and converters still have to accept."
+    tags: [document, text, multi-page]
+    expect: { chapters: 3, documents: 3, epub_version: "2.0", has_nav: false, has_ncx: true }
+    size_class: free
+    contains_text:
+      - "Officiis inventore nisi voluptas"
+      - "Eius debitis qui aute"
+      - "Nesciunt porro totam excepteur"
+      - "Do porro eveniet maiores"
+  - name: with-images.epub
+    phase: 1
+    generator: office.epub3
+    params: { chapters: 3, paragraphs: 4, images: ["png/100x100.png", "png/640x480.png"] }
+    description: "EPUB 3.0 with two published PNG fixtures in the first two chapters, each in the manifest with alt text, read from the bytes that were actually published rather than regenerated."
+    tags: [document, text, image]
+    expect: { chapters: 3, documents: 4, epub_version: "3.0", has_nav: true, images: 2 }
+    size_class: free
+    contains_text:
+      - "Incididunt asperiores aliqua culpa"
+      - "Nemo aspernatur facere duis"
+      - "Aute odit dolorum vitae"
+      - "Asperiores sit amet occaecat"
+    depends_on: ["png/100x100.png", "png/640x480.png"]

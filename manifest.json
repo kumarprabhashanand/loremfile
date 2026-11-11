@@ -1,15 +1,15 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.11.0",
-  "generated_at": "2026-10-22T13:35:18Z",
+  "catalog_version": "1.12.0",
+  "generated_at": "2026-11-11T22:43:45Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
-  "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:53aed7c9c16e2471fb001682dc03d7622d05b1854981cdb4c2b7cbd6817f0f74",
-  "count": 282,
-  "total_bytes": 622079197,
+  "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:acc17d4e0b774e49f86c401ceb62da19420036ff075262e231eb9e64fcf378ae",
+  "count": 307,
+  "total_bytes": 647972024,
   "formats": [
     "7z",
     "aac",
@@ -1940,6 +1940,50 @@
       "supersededBy": null
     },
     {
+      "path": "docx/10pages.docx",
+      "url": "https://loremfile.dev/docx/10pages.docx",
+      "format": "docx",
+      "ext": "docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "bytes": 40928,
+      "sha256": "455a8dd4f8aa584b047dc704fbeec46b1f6d99afadf2c2f356fc1f8ad86b4869",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Ten sections of Lorem Ipsum, each after the first set to start on a new page: nine forced page breaks, so ten pages at the least in any renderer. A .docx stores no page count of its own.",
+      "tags": [
+        "document",
+        "multi-page",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "paragraphs": 40,
+        "tables": 0,
+        "table_rows": 0,
+        "images": 0,
+        "words": 1846,
+        "inline_images": 0,
+        "anchored_images": 0,
+        "images_with_alt_text": 0,
+        "page_breaks": 9,
+        "min_pages": 10,
+        "contains_text": [
+          "Quaerat ullamco deserunt magna",
+          "Quis eu vitae quis",
+          "Omnis sapiente enim voluptate",
+          "Proident sequi fugit inventore"
+        ]
+      },
+      "generator": "office.docx_pages",
+      "generator_params": {
+        "pages": 10
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "docx/1mb.docx",
       "url": "https://loremfile.dev/docx/1mb.docx",
       "format": "docx",
@@ -2053,6 +2097,219 @@
         "image": "jpg/640x480.jpg"
       },
       "added_in": "1.7.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "docx/unicode-multilingual.docx",
+      "url": "https://loremfile.dev/docx/unicode-multilingual.docx",
+      "format": "docx",
+      "ext": "docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "bytes": 37721,
+      "sha256": "00163e09c5fc9b133e05ac264fcec5025aedc74bed63c61104fd23880897c85b",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Pseudo-text in Latin, Greek, Cyrillic, Arabic, Hebrew, Devanagari, Thai, Chinese, Japanese and Korean scripts, then emoji and combining marks. The Arabic and Hebrew paragraphs run right to left.",
+      "tags": [
+        "document",
+        "text",
+        "unicode"
+      ],
+      "edge_case": false,
+      "props": {
+        "paragraphs": 13,
+        "tables": 0,
+        "table_rows": 0,
+        "images": 0,
+        "words": 98,
+        "inline_images": 0,
+        "anchored_images": 0,
+        "images_with_alt_text": 0,
+        "scripts": [
+          "arabic",
+          "cyrillic",
+          "devanagari",
+          "greek",
+          "han",
+          "hangul",
+          "hebrew",
+          "hiragana",
+          "latin",
+          "thai"
+        ],
+        "rtl_paragraphs": 2,
+        "contains_text": [
+          "Aliqua necessitatibus facere aliqua",
+          "ΓΤΖ εμΟΧ ςδΣ",
+          "ръ жк Щуу",
+          "إحشعىآأظ نى ةةفإكد",
+          "佯二元兹僭乳击傍"
+        ]
+      },
+      "generator": "office.docx_multilingual",
+      "generator_params": {
+        "scripts": [
+          "greek",
+          "cyrillic",
+          "arabic",
+          "hebrew",
+          "devanagari",
+          "thai",
+          "hanzi",
+          "hiragana",
+          "hangul_jamo"
+        ]
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "docx/with-comments.docx",
+      "url": "https://loremfile.dev/docx/with-comments.docx",
+      "format": "docx",
+      "ext": "docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "bytes": 38254,
+      "sha256": "8f42e2dde08d5953241cff736b17819d7a1b85704711d5d6cc600032986fe717",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three comments from two authors, each anchored to the first sentence of a paragraph. For extractors that drop comments, and for tools that must keep each one attached to the words it is about.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "paragraphs": 4,
+        "tables": 0,
+        "table_rows": 0,
+        "images": 0,
+        "words": 284,
+        "inline_images": 0,
+        "anchored_images": 0,
+        "images_with_alt_text": 0,
+        "comments": 3,
+        "comment_authors": [
+          "Second reviewer",
+          "loremfile.dev"
+        ],
+        "contains_text": [
+          "Sunt occaecat eiusmod ab",
+          "Esse rem deserunt voluptates",
+          "Tenetur inventore sunt voluptatem",
+          "Elit duis sint repellendus"
+        ]
+      },
+      "generator": "office.docx_comments",
+      "generator_params": {
+        "comments": 3
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "docx/with-headers-footers.docx",
+      "url": "https://loremfile.dev/docx/with-headers-footers.docx",
+      "format": "docx",
+      "ext": "docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "bytes": 39261,
+      "sha256": "a23c5a2a6600fd1f7954280e2e93ee14bd4ecc142f4975f6702b1afbac07c6a1",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three pages with a header on each and a footer built from PAGE and NUMPAGES fields. Header and footer live in parts of their own, which extractors that read only the body never see.",
+      "tags": [
+        "document",
+        "multi-page",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "paragraphs": 12,
+        "tables": 0,
+        "table_rows": 0,
+        "images": 0,
+        "words": 534,
+        "inline_images": 0,
+        "anchored_images": 0,
+        "images_with_alt_text": 0,
+        "page_breaks": 2,
+        "min_pages": 3,
+        "headers": 1,
+        "header_text": "loremfile.dev sample header",
+        "footers": 1,
+        "footer_text": "Page 1 of 3",
+        "footer_fields": [
+          "NUMPAGES",
+          "PAGE"
+        ],
+        "contains_text": [
+          "Omnis aute quia maiores",
+          "Dolor consequat repellat facere",
+          "Alias ut magna commodo",
+          "Delectus earum adipiscing est"
+        ]
+      },
+      "generator": "office.docx_headers_footers",
+      "generator_params": {
+        "pages": 3
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "docx/with-headings-and-toc.docx",
+      "url": "https://loremfile.dev/docx/with-headings-and-toc.docx",
+      "format": "docx",
+      "ext": "docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "bytes": 37782,
+      "sha256": "9057a934d99de67aaddd2d6a35697e75f7e8a645cfe995ce42639782d01ef477",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three chapters of two sections each in Heading 1 and 2, behind a table-of-contents field whose entries are cached, so readers that do not update fields still see them. Word updates the field on open.",
+      "tags": [
+        "document",
+        "multi-page",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "paragraphs": 28,
+        "tables": 0,
+        "table_rows": 0,
+        "images": 0,
+        "words": 284,
+        "inline_images": 0,
+        "anchored_images": 0,
+        "images_with_alt_text": 0,
+        "page_breaks": 3,
+        "min_pages": 4,
+        "headings": 9,
+        "toc_fields": 1,
+        "toc_entries": 9,
+        "update_fields_on_open": true,
+        "contains_text": [
+          "Qui ratione sapiente culpa",
+          "Autem proident saepe possimus",
+          "Delectus lorem aperiam laudantium",
+          "Lorem rerum laborum ipsum"
+        ]
+      },
+      "generator": "office.docx_toc",
+      "generator_params": {
+        "chapters": 3,
+        "sections": 2
+      },
+      "added_in": "1.12.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -2949,6 +3206,46 @@
       "supersededBy": null
     },
     {
+      "path": "epub/epub2-3chapters.epub",
+      "url": "https://loremfile.dev/epub/epub2-3chapters.epub",
+      "format": "epub",
+      "ext": "epub",
+      "mime": "application/epub+zip",
+      "bytes": 5168,
+      "sha256": "6c04280afc7905e497c0517b2e17e732d2c8987209d3e6c9b182bb871d44f2fa",
+      "size_class": "free",
+      "phase": 1,
+      "description": "EPUB 2.0.1: three XHTML 1.1 chapters of Lorem Ipsum, an NCX table of contents that the spine names, and a stylesheet. There is no nav document: the older format that readers and converters still have to accept.",
+      "tags": [
+        "document",
+        "text",
+        "multi-page"
+      ],
+      "edge_case": false,
+      "props": {
+        "chapters": 3,
+        "documents": 3,
+        "epub_version": "2.0",
+        "has_nav": false,
+        "has_ncx": true,
+        "contains_text": [
+          "Officiis inventore nisi voluptas",
+          "Eius debitis qui aute",
+          "Nesciunt porro totam excepteur",
+          "Do porro eveniet maiores"
+        ]
+      },
+      "generator": "office.epub2",
+      "generator_params": {
+        "chapters": 3,
+        "paragraphs": 4
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "epub/epub3-3chapters.epub",
       "url": "https://loremfile.dev/epub/epub3-3chapters.epub",
       "format": "epub",
@@ -2983,6 +3280,50 @@
         "paragraphs": 4
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "epub/with-images.epub",
+      "url": "https://loremfile.dev/epub/with-images.epub",
+      "format": "epub",
+      "ext": "epub",
+      "mime": "application/epub+zip",
+      "bytes": 8630,
+      "sha256": "21f17d35728281f0df6421f2b30a5175ada6a1ac5c36eb07dde0217e20e5d4ea",
+      "size_class": "free",
+      "phase": 1,
+      "description": "EPUB 3.0 with two published PNG fixtures in the first two chapters, each in the manifest with alt text, read from the bytes that were actually published rather than regenerated.",
+      "tags": [
+        "document",
+        "text",
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "chapters": 3,
+        "documents": 4,
+        "epub_version": "3.0",
+        "has_nav": true,
+        "images": 2,
+        "contains_text": [
+          "Incididunt asperiores aliqua culpa",
+          "Nemo aspernatur facere duis",
+          "Aute odit dolorum vitae",
+          "Asperiores sit amet occaecat"
+        ]
+      },
+      "generator": "office.epub3",
+      "generator_params": {
+        "chapters": 3,
+        "paragraphs": 4,
+        "images": [
+          "png/100x100.png",
+          "png/640x480.png"
+        ]
+      },
+      "added_in": "1.12.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -7135,6 +7476,48 @@
       "supersededBy": null
     },
     {
+      "path": "pdf/a4-100pages.pdf",
+      "url": "https://loremfile.dev/pdf/a4-100pages.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 105489,
+      "sha256": "f614489e431bf7b498747a0867e178adc3d75619ac2ba8cdaf737e2d76dc65e8",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A4 portrait, 100 pages of Lorem Ipsum in the Helvetica core font with page numbers. No embedded fonts. A long document for page counting, pagination and viewers that load pages lazily.",
+      "tags": [
+        "document",
+        "multi-page",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 100,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": false,
+        "contains_text": [
+          "Voluptas eiusmod inventore pariatur",
+          "Explicabo dicta sapiente aliqua",
+          "Possimus quisquam eius consectetur",
+          "Anim culpa eiusmod sapiente"
+        ]
+      },
+      "generator": "pdf.basic",
+      "generator_params": {
+        "pages": 100,
+        "page_numbers": true
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "pdf/a4-10pages.pdf",
       "url": "https://loremfile.dev/pdf/a4-10pages.pdf",
       "format": "pdf",
@@ -7342,6 +7725,93 @@
       "supersededBy": null
     },
     {
+      "path": "pdf/a4-latin1-accents-1page.pdf",
+      "url": "https://loremfile.dev/pdf/a4-latin1-accents-1page.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 1888,
+      "sha256": "59eb4680ffdd242bdd8470650655d84c212ad5aa287505c9ef0917f512d313a7",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One A4 page of Lorem Ipsum with accented letters (é à ü ñ ø ç) in the Helvetica core font, which encodes them as Latin-1. For extractors and converters that mishandle characters beyond ASCII.",
+      "tags": [
+        "document",
+        "text",
+        "encoding"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 1,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": false,
+        "latin1_characters": 12,
+        "contains_text": [
+          "Elit consectetur nostrud nemo",
+          "Voluptas illo porro fuga",
+          "Accusantium quis autem alias",
+          "Accents: é à ü ñ ø ç"
+        ]
+      },
+      "generator": "pdf.basic",
+      "generator_params": {
+        "pages": 1,
+        "accents": true
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/a4-rotated-90-1page.pdf",
+      "url": "https://loremfile.dev/pdf/a4-rotated-90-1page.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 1916,
+      "sha256": "e1048af309acdab9e309d5945d1e205d5b7b4b1ceefaea0c145869cc6a42ca12",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One A4 page marked /Rotate 90. The stored page box is portrait and the page is meant to be shown landscape, so a renderer or thumbnailer that ignores the flag draws it sideways.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 1,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.3",
+        "has_outline": false,
+        "has_images": false,
+        "page_rotations": [
+          90
+        ],
+        "contains_text": [
+          "Alias eiusmod proident ut",
+          "Incidunt veniam consectetur voluptas",
+          "Laudantium doloribus dolore alias",
+          "Adipiscing nisi nemo sapiente"
+        ]
+      },
+      "generator": "pdf.rotated",
+      "generator_params": {
+        "degrees": 90,
+        "pages": 1
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "pdf/a4-with-images-2pages.pdf",
       "url": "https://loremfile.dev/pdf/a4-with-images-2pages.pdf",
       "format": "pdf",
@@ -7373,6 +7843,100 @@
         "jpg": "jpg/640x480.jpg"
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/a4-with-links-1page.pdf",
+      "url": "https://loremfile.dev/pdf/a4-with-links-1page.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 2109,
+      "sha256": "1263e027316668f88e3af813603844097b3149b6a17c428910c9400839966916",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One A4 page with two link annotations: an internal link to a note lower on the page, and an external link to https://loremfile.dev. For extractors, link checkers and viewers that follow or strip links.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 1,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": false,
+        "internal_links": 1,
+        "external_links": 1,
+        "link_uris": [
+          "https://loremfile.dev"
+        ],
+        "contains_text": [
+          "Rerum dolore mollit totam",
+          "Maiores commodo eveniet sapiente",
+          "Veritatis doloremque ratione nemo",
+          "Jump to the note at the foot of this page"
+        ]
+      },
+      "generator": "pdf.with_links",
+      "generator_params": {
+        "url": "https://loremfile.dev"
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/a4-with-outline-5pages.pdf",
+      "url": "https://loremfile.dev/pdf/a4-with-outline-5pages.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 6777,
+      "sha256": "b01e2f2e5e72fdcb28ed68133fa06f774e1a348af7360e1ee2e08c78055697dd",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Five A4 pages with a bookmark for each, Chapter 1 to Chapter 5, every one opening its own page. For navigation panes and for tools that read or rebuild a document's outline.",
+      "tags": [
+        "document",
+        "multi-page",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 5,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": true,
+        "has_images": false,
+        "outline_entries": 5,
+        "outline_pages": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "contains_text": [
+          "Repudiandae tempora laboris necessitatibus",
+          "Pariatur molestiae dolore laudantium",
+          "Ea duis ab illo",
+          "Proident ratione sint maiores"
+        ]
+      },
+      "generator": "pdf.with_outline",
+      "generator_params": {
+        "pages": 5
+      },
+      "added_in": "1.12.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -7557,6 +8121,59 @@
       "generator": "pdf.minimal",
       "generator_params": {},
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pdf/mixed-sizes-3pages.pdf",
+      "url": "https://loremfile.dev/pdf/mixed-sizes-3pages.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 3444,
+      "sha256": "4a2087c9ca71e5c4dcb9f566369782692b07469967297103b81cce8ae6e31620",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three pages with three page boxes: A4 portrait, US Letter portrait and A5 landscape. For viewers, printers and converters that assume every page of a document is the same size.",
+      "tags": [
+        "document",
+        "multi-page",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 3,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": false,
+        "page_sizes": [
+          [
+            595.28,
+            841.89
+          ],
+          [
+            612.0,
+            792.0
+          ],
+          [
+            595.28,
+            419.53
+          ]
+        ],
+        "contains_text": [
+          "Duis laboris repellat fugit",
+          "Veritatis aperiam deserunt aute",
+          "Ex dolorem pariatur itaque",
+          "Reprehenderit doloremque elit dolorum"
+        ]
+      },
+      "generator": "pdf.mixed_sizes",
+      "generator_params": {},
+      "added_in": "1.12.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -7920,6 +8537,44 @@
       "supersededBy": null
     },
     {
+      "path": "pptx/10mb.pptx",
+      "url": "https://loremfile.dev/pptx/10mb.pptx",
+      "format": "pptx",
+      "ext": "pptx",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "bytes": 10200536,
+      "sha256": "d506068cddaea716ac00c50131a352c03c4fc09137ba19c81c0347d592ce8751",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 10MB: one slide per embedded incompressible seeded-noise PNG, each with a speaker note, so the size is honest rather than padded.",
+      "tags": [
+        "document",
+        "sized",
+        "image",
+        "large"
+      ],
+      "edge_case": false,
+      "props": {
+        "slides": 51,
+        "layouts": 1,
+        "images": 51,
+        "slide_width_emu": 12191695,
+        "slide_height_emu": 6858000,
+        "notes": 51,
+        "tables": 0,
+        "charts": 0,
+        "hidden_slides": 0
+      },
+      "generator": "office.pptx_sized",
+      "generator_params": {
+        "size": 10000000
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "pptx/10slides.pptx",
       "url": "https://loremfile.dev/pptx/10slides.pptx",
       "format": "pptx",
@@ -8156,6 +8811,141 @@
       "supersededBy": null
     },
     {
+      "path": "pptx/with-images.pptx",
+      "url": "https://loremfile.dev/pptx/with-images.pptx",
+      "format": "pptx",
+      "ext": "pptx",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "bytes": 34283,
+      "sha256": "98615f48e05c963928e9644f3894c5a5b42aedf3996ef105a7c323a72638d819",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A title-and-content slide, then two slides each holding a published PNG fixture as a picture, read from the bytes that were actually published rather than regenerated.",
+      "tags": [
+        "document",
+        "image",
+        "multi-page"
+      ],
+      "edge_case": false,
+      "props": {
+        "slides": 3,
+        "layouts": 2,
+        "images": 2,
+        "slide_width_emu": 12191695,
+        "slide_height_emu": 6858000,
+        "notes": 0,
+        "tables": 0,
+        "charts": 0,
+        "hidden_slides": 0,
+        "contains_text": [
+          "Doloribus asperiores repellendus architecto",
+          "Dolore sunt porro reprehenderit",
+          "Laborum doloribus anim in",
+          "Placeat fugit aliquip veniam"
+        ]
+      },
+      "generator": "office.pptx_basic",
+      "generator_params": {
+        "slides": 1,
+        "images": [
+          "png/100x100.png",
+          "png/640x480.png"
+        ]
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pptx/with-notes.pptx",
+      "url": "https://loremfile.dev/pptx/with-notes.pptx",
+      "format": "pptx",
+      "ext": "pptx",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "bytes": 37564,
+      "sha256": "56a33010dc76f03da04ccd0e1576d88817b01c53601f1c6109a04a6a2d1091e6",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three title-and-content slides of Lorem Ipsum, each with a speaker note. Notes live in parts of their own, which extractors that read only the slides never see.",
+      "tags": [
+        "document",
+        "multi-page",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "slides": 3,
+        "layouts": 1,
+        "images": 0,
+        "slide_width_emu": 12191695,
+        "slide_height_emu": 6858000,
+        "notes": 3,
+        "tables": 0,
+        "charts": 0,
+        "hidden_slides": 0,
+        "contains_text": [
+          "Omnis consectetur asperiores ipsa",
+          "Ipsa rem recusandae labore",
+          "Aspernatur asperiores fugiat accusantium",
+          "Ex esse necessitatibus accusantium"
+        ]
+      },
+      "generator": "office.pptx_basic",
+      "generator_params": {
+        "slides": 3,
+        "notes": true
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "pptx/with-table-and-chart.pptx",
+      "url": "https://loremfile.dev/pptx/with-table-and-chart.pptx",
+      "format": "pptx",
+      "ext": "pptx",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "bytes": 36943,
+      "sha256": "91aa3e8e890e556ab2bd5fb19fcc79b866c133d0393e4d4b22a2b1efa1f9fcab",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A title-and-content slide, a slide with a native table of five people and a slide with a native column chart: both of the shapes extractors tend to miss, in one deck.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "slides": 3,
+        "layouts": 2,
+        "images": 0,
+        "slide_width_emu": 12191695,
+        "slide_height_emu": 6858000,
+        "notes": 0,
+        "tables": 1,
+        "charts": 1,
+        "hidden_slides": 0,
+        "contains_text": [
+          "Dolorum ullamco anim adipisci",
+          "Doloribus explicabo eaque ullamco",
+          "Quisquam placeat necessitatibus do",
+          "Laboris quibusdam asperiores dolor"
+        ]
+      },
+      "generator": "office.pptx_basic",
+      "generator_params": {
+        "slides": 1,
+        "table_rows": 5,
+        "chart": true
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "pptx/with-table.pptx",
       "url": "https://loremfile.dev/pptx/with-table.pptx",
       "format": "pptx",
@@ -8222,6 +9012,47 @@
         "paragraphs": 3
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "rtf/with-table-and-formatting.rtf",
+      "url": "https://loremfile.dev/rtf/with-table-and-formatting.rtf",
+      "format": "rtf",
+      "ext": "rtf",
+      "mime": "application/rtf",
+      "bytes": 3118,
+      "sha256": "54805520a1e8da9b311dddb357c7c581989d07ce9d51c62b13e70126970c389f",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Bold, italic, underline, two colours, a larger size and a second font in one paragraph, then a bordered table of three columns and five rows. Every byte is ASCII, so no reader has to guess an encoding.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 15,
+        "max_line_bytes": 695,
+        "paragraphs": 3,
+        "has_font_table": true,
+        "table_rows": 5,
+        "table_columns": 3,
+        "has_color_table": true,
+        "bold_spans": 5,
+        "italic_spans": 1,
+        "underline_spans": 1,
+        "colored_spans": 2
+      },
+      "generator": "office.rtf_formatted",
+      "generator_params": {
+        "table_rows": 4
+      },
+      "added_in": "1.12.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -10268,6 +11099,41 @@
       "supersededBy": null
     },
     {
+      "path": "xlsx/1sheet-100k-rows.xlsx",
+      "url": "https://loremfile.dev/xlsx/1sheet-100k-rows.xlsx",
+      "format": "xlsx",
+      "ext": "xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 15189863,
+      "sha256": "093f084c70323c6e481100ebee6c7e2106775323ebe414eb391441c9556d6266",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One sheet: a bold, frozen header row plus a hundred thousand records of the shared people dataset. The first thousand are the same records as the 1,000-row fixture. For importers that have to stream a large sheet.",
+      "tags": [
+        "document",
+        "data",
+        "dataset-people",
+        "large"
+      ],
+      "edge_case": false,
+      "props": {
+        "sheets": 1,
+        "sheet_names": "People",
+        "rows": 100001,
+        "columns": 14,
+        "formulas": 0,
+        "images": 0
+      },
+      "generator": "office.xlsx_people",
+      "generator_params": {
+        "rows": 100000
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "xlsx/1sheet-10rows.xlsx",
       "url": "https://loremfile.dev/xlsx/1sheet-10rows.xlsx",
       "format": "xlsx",
@@ -10343,6 +11209,141 @@
       "supersededBy": null
     },
     {
+      "path": "xlsx/3sheets.xlsx",
+      "url": "https://loremfile.dev/xlsx/3sheets.xlsx",
+      "format": "xlsx",
+      "ext": "xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 12292,
+      "sha256": "caa5aa21e326f6c37168aacaed800c39e12bc5645c0e32c4a55c7ddb16d07994",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three sheets, People 1 to People 3, each with a bold, frozen header row and ten records of the shared people dataset: records 1 to 10, 11 to 20 and 21 to 30, so a reader that returns the wrong sheet shows it.",
+      "tags": [
+        "document",
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "sheets": 3,
+        "sheet_names": "People 1,People 2,People 3",
+        "rows": 11,
+        "columns": 14,
+        "formulas": 0,
+        "images": 0
+      },
+      "generator": "office.xlsx_people",
+      "generator_params": {
+        "rows": 10,
+        "sheets": 3
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "xlsx/unicode-strings.xlsx",
+      "url": "https://loremfile.dev/xlsx/unicode-strings.xlsx",
+      "format": "xlsx",
+      "ext": "xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 6199,
+      "sha256": "4cbb2c4c797503791e45ba9da57a8f5708c083cd760655857136010b85225d63",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One row per script: Latin, Greek, Cyrillic, Arabic, Hebrew, Devanagari, Thai, Chinese, Japanese and Korean pseudo-text, then emoji and combining marks. The Arabic and Hebrew cells read right to left.",
+      "tags": [
+        "document",
+        "data",
+        "unicode"
+      ],
+      "edge_case": false,
+      "props": {
+        "sheets": 1,
+        "sheet_names": "Unicode",
+        "rows": 13,
+        "columns": 2,
+        "formulas": 0,
+        "images": 0,
+        "scripts": [
+          "arabic",
+          "cyrillic",
+          "devanagari",
+          "greek",
+          "han",
+          "hangul",
+          "hebrew",
+          "hiragana",
+          "latin",
+          "thai"
+        ],
+        "rtl_cells": 2,
+        "contains_text": [
+          "Nemo quaerat aspernatur sequi",
+          "ΝδΞΟΕρφυ κε εεΞΝΨ",
+          "ОММУЯуГХ Тл ЫДЭУзИИ",
+          "أتوه ىثشكض ثظضمقةا",
+          "佗偿义仙不再丝俐"
+        ]
+      },
+      "generator": "office.xlsx_unicode",
+      "generator_params": {
+        "scripts": [
+          "greek",
+          "cyrillic",
+          "arabic",
+          "hebrew",
+          "devanagari",
+          "thai",
+          "hanzi",
+          "hiragana",
+          "hangul_jamo"
+        ]
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "xlsx/with-chart.xlsx",
+      "url": "https://loremfile.dev/xlsx/with-chart.xlsx",
+      "format": "xlsx",
+      "ext": "xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 6621,
+      "sha256": "87c7b8f03c0c0b8c50677148801972cc50b10d81fe0f028e0ab7a735c618d455",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Four quarters of signups in cells, and a native column chart that reads them. For converters that render charts and extractors that must find them, whose data is the sheet's own cells.",
+      "tags": [
+        "document",
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "sheets": 1,
+        "sheet_names": "Signups",
+        "rows": 5,
+        "columns": 2,
+        "formulas": 0,
+        "images": 0,
+        "charts": 1,
+        "chart_series": 1,
+        "chart_types": [
+          "bar"
+        ]
+      },
+      "generator": "office.xlsx_with_chart",
+      "generator_params": {},
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "xlsx/with-formulas.xlsx",
       "url": "https://loremfile.dev/xlsx/with-formulas.xlsx",
       "format": "xlsx",
@@ -10376,6 +11377,128 @@
         "rows": 10
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "xlsx/with-frozen-header-and-autofilter.xlsx",
+      "url": "https://loremfile.dev/xlsx/with-frozen-header-and-autofilter.xlsx",
+      "format": "xlsx",
+      "ext": "xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 20774,
+      "sha256": "f916763beb7c44a92703dbc45a553967ecb88bdbc39657ac4abc12bbc15f0e93",
+      "size_class": "free",
+      "phase": 1,
+      "description": "One sheet of a hundred people records with the header row frozen and an autofilter over every column, so the filter buttons are in the file and not left for the application to add.",
+      "tags": [
+        "document",
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "sheets": 1,
+        "sheet_names": "People",
+        "rows": 101,
+        "columns": 14,
+        "formulas": 0,
+        "images": 0,
+        "auto_filter": "A1:N101",
+        "freeze_panes": "A2"
+      },
+      "generator": "office.xlsx_people",
+      "generator_params": {
+        "rows": 100,
+        "autofilter": true
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "xlsx/with-images.xlsx",
+      "url": "https://loremfile.dev/xlsx/with-images.xlsx",
+      "format": "xlsx",
+      "ext": "xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 10001,
+      "sha256": "4361c1e2724771176ca58ef617466305a740bfa687f3173fa692592d121302ed",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Two published PNG fixtures placed on a sheet under a caption each, read from the bytes that were actually published rather than regenerated.",
+      "tags": [
+        "document",
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "sheets": 1,
+        "sheet_names": "Images",
+        "rows": 11,
+        "columns": 1,
+        "formulas": 0,
+        "images": 2,
+        "contains_text": [
+          "Embedded images",
+          "Fugiat explicabo veniam neque",
+          "Modi quaerat quaerat eius"
+        ]
+      },
+      "generator": "office.xlsx_with_images",
+      "generator_params": {
+        "images": [
+          "png/100x100.png",
+          "png/640x480.png"
+        ]
+      },
+      "added_in": "1.12.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "xlsx/with-merged-cells.xlsx",
+      "url": "https://loremfile.dev/xlsx/with-merged-cells.xlsx",
+      "format": "xlsx",
+      "ext": "xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 5266,
+      "sha256": "ea6875b2767aa64664301f61dc23a31c1303765ab19dabd743a03ce7fa71b8a8",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A title merged across four columns, two region labels each merged down three rows and a merged 2 by 2 block. A merged range keeps its value in the top-left cell only, which readers that expand ranges get wrong.",
+      "tags": [
+        "document",
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "sheets": 1,
+        "sheet_names": "Sales",
+        "rows": 8,
+        "columns": 7,
+        "formulas": 0,
+        "images": 0,
+        "merged_ranges": 4,
+        "merged": [
+          "A1:D1",
+          "A3:A5",
+          "A6:A8",
+          "F2:G3"
+        ],
+        "contains_text": [
+          "Regional sales report",
+          "North region",
+          "South region",
+          "Merged 2 by 2 block"
+        ]
+      },
+      "generator": "office.xlsx_merged_cells",
+      "generator_params": {},
+      "added_in": "1.12.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null

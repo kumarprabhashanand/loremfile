@@ -258,6 +258,32 @@ AFTER_LAUNCH = (
     "pptx/aspect-4-3-5slides.pptx",
     # 1.11.0: the fourth mkv file, alone because it is expected_drift (docs/11 §7.9b).
     "mkv/vp9-opus-720p-5s.mkv",
+    # 1.12.0: the phase-1 document rows that were not in the launch set (docs/05 §3.1, §3.5).
+    "pdf/a4-100pages.pdf",
+    "pdf/mixed-sizes-3pages.pdf",
+    "pdf/a4-with-links-1page.pdf",
+    "pdf/a4-with-outline-5pages.pdf",
+    "pdf/a4-rotated-90-1page.pdf",
+    "pdf/a4-latin1-accents-1page.pdf",
+    "docx/10pages.docx",
+    "docx/with-headers-footers.docx",
+    "docx/with-headings-and-toc.docx",
+    "docx/with-comments.docx",
+    "docx/unicode-multilingual.docx",
+    "xlsx/1sheet-100k-rows.xlsx",
+    "xlsx/3sheets.xlsx",
+    "xlsx/unicode-strings.xlsx",
+    "xlsx/with-chart.xlsx",
+    "xlsx/with-frozen-header-and-autofilter.xlsx",
+    "xlsx/with-images.xlsx",
+    "xlsx/with-merged-cells.xlsx",
+    "pptx/10mb.pptx",
+    "pptx/with-images.pptx",
+    "pptx/with-notes.pptx",
+    "pptx/with-table-and-chart.pptx",
+    "rtf/with-table-and-formatting.rtf",
+    "epub/epub2-3chapters.epub",
+    "epub/with-images.epub",
 )
 
 

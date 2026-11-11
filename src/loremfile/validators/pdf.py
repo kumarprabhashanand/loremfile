@@ -83,6 +83,59 @@ def _form_props(reader: pypdf.PdfReader) -> dict[str, Any]:
     return {"form_fields": len(fields), "filled_fields": filled}
 
 
+def _outline_props(reader: pypdf.PdfReader) -> dict[str, Any]:
+    """How many bookmarks there are and which page each opens (1-based), if there are any.
+
+    A bookmark that opens no page is a defect a viewer shows as a dead entry, so it is
+    refused rather than counted.
+    """
+    pages: list[int] = []
+
+    def walk(items: list[Any]) -> None:
+        for item in items:
+            if isinstance(item, list):
+                walk(item)
+                continue
+            number = reader.get_destination_page_number(item)
+            if number is None:
+                raise ValidationError(f"bookmark {item.title!r} opens no page")
+            pages.append(number + 1)
+
+    walk(list(reader.outline))
+    return {"outline_entries": len(pages), "outline_pages": pages} if pages else {}
+
+
+def _link_props(reader: pypdf.PdfReader) -> dict[str, Any]:
+    """Internal and external link annotations, for a PDF that has any.
+
+    An internal link has to land on a page of this file. A reader follows it blindly, so a
+    destination pointing at nothing is only ever found by clicking.
+    """
+    page_of = {page.indirect_reference.idnum: index for index, page in enumerate(reader.pages)}  # type: ignore[union-attr]
+    internal = 0
+    uris: list[str] = []
+    for page in reader.pages:
+        for annotation in page.get("/Annots") or []:
+            node = annotation.get_object()
+            if node.get("/Subtype") != "/Link":
+                continue
+            action = node.get("/A")
+            action = action.get_object() if action is not None else None
+            if action is not None and action.get("/S") == "/URI":
+                uris.append(str(action["/URI"]))
+                continue
+            destination = node.get("/Dest") or (action.get("/D") if action is not None else None)
+            if destination is None:
+                raise ValidationError("a link annotation has neither a destination nor a URI")
+            target = destination.get_object() if hasattr(destination, "get_object") else None
+            if isinstance(target, list) and getattr(target[0], "idnum", None) not in page_of:
+                raise ValidationError("an internal link lands on no page of this file")
+            internal += 1
+    if not internal and not uris:
+        return {}
+    return {"internal_links": internal, "external_links": len(uris), "link_uris": uris}
+
+
 @register("pdf")
 def validate_pdf(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
     password = fixture.params.get(USER_PASSWORD_PARAM)
@@ -105,6 +158,25 @@ def validate_pdf(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
         has_images = any("/XObject" in (page.get("/Resources") or {}) for page in reader.pages)
         outline = bool(reader.outline)
         form = _form_props(reader)
+        structure = {**_outline_props(reader), **_link_props(reader)}
+        sizes = [
+            [round(float(page.mediabox.width), 2), round(float(page.mediabox.height), 2)]
+            for page in reader.pages
+        ]
+        if any(size != sizes[0] for size in sizes):
+            structure["page_sizes"] = sizes
+        rotations = [page.rotation for page in reader.pages]
+        if any(rotations):
+            structure["page_rotations"] = rotations
+        if fixture.params.get("accents"):
+            # Core fonts are Latin-1: this counts the characters beyond ASCII a reader gets
+            # back, so a file whose accents were lost on the way to the page is refused.
+            structure["latin1_characters"] = sum(
+                1
+                for page in reader.pages
+                for character in page.extract_text() or ""
+                if "\u00a0" <= character <= "\u00ff"
+            )
         scan = {}
         if fixture.generator == "pdf.image_only":
             image_counts = [len(page.images) for page in reader.pages]
@@ -134,5 +206,6 @@ def validate_pdf(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
         "has_outline": outline,
         "has_images": has_images,
         **form,
+        **structure,
         **scan,
     }

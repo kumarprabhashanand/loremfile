@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.11.0",
+  "catalog_version": "1.12.0",
   "formats": [
     {
       "format": "7z",
@@ -107,8 +107,8 @@
     },
     {
       "format": "docx",
-      "count": 7,
-      "total_bytes": 11332023,
+      "count": 12,
+      "total_bytes": 11525969,
       "url": "https://loremfile.dev/docx",
       "index": "https://loremfile.dev/docx/index.json",
       "mime_default": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -131,8 +131,8 @@
     },
     {
       "format": "epub",
-      "count": 1,
-      "total_bytes": 4871,
+      "count": 3,
+      "total_bytes": 18669,
       "url": "https://loremfile.dev/epub",
       "index": "https://loremfile.dev/epub/index.json",
       "mime_default": "application/epub+zip"
@@ -395,8 +395,8 @@
     },
     {
       "format": "pdf",
-      "count": 14,
-      "total_bytes": 11067045,
+      "count": 20,
+      "total_bytes": 11188668,
       "url": "https://loremfile.dev/pdf",
       "index": "https://loremfile.dev/pdf/index.json",
       "mime_default": "application/pdf"
@@ -419,16 +419,16 @@
     },
     {
       "format": "pptx",
-      "count": 7,
-      "total_bytes": 1223476,
+      "count": 11,
+      "total_bytes": 11532802,
       "url": "https://loremfile.dev/pptx",
       "index": "https://loremfile.dev/pptx/index.json",
       "mime_default": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
     },
     {
       "format": "rtf",
-      "count": 1,
-      "total_bytes": 1694,
+      "count": 2,
+      "total_bytes": 4812,
       "url": "https://loremfile.dev/rtf",
       "index": "https://loremfile.dev/rtf/index.json",
       "mime_default": "application/rtf"
@@ -595,8 +595,8 @@
     },
     {
       "format": "xlsx",
-      "count": 7,
-      "total_bytes": 11259520,
+      "count": 14,
+      "total_bytes": 26510536,
       "url": "https://loremfile.dev/xlsx",
       "index": "https://loremfile.dev/xlsx/index.json",
       "mime_default": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

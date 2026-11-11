@@ -1,4 +1,4 @@
-# Excel workbooks (docs/05 §3.5). Launch-set rows only; the rest are P1b.
+# Excel workbooks (docs/05 §3.5). Every phase-1 row; the phase-2 rows follow.
 format: xlsx
 family: documents
 mime: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
@@ -86,3 +86,75 @@ fixtures:
     expect: { sheets: 2 }
     size_class: approx
     nominal_bytes: 10000000
+  - name: 1sheet-100k-rows.xlsx
+    phase: 1
+    generator: office.xlsx_people
+    params: { rows: 100000 }
+    description: "One sheet: a bold, frozen header row plus a hundred thousand records of the shared people dataset. The first thousand are the same records as the 1,000-row fixture. For importers that have to stream a large sheet."
+    tags: [document, data, dataset-people, large]
+    expect: { sheets: 1, rows: 100001, columns: 14, formulas: 0 }
+    size_class: free
+  - name: 3sheets.xlsx
+    phase: 1
+    generator: office.xlsx_people
+    params: { rows: 10, sheets: 3 }
+    description: "Three sheets, People 1 to People 3, each with a bold, frozen header row and ten records of the shared people dataset: records 1 to 10, 11 to 20 and 21 to 30, so a reader that returns the wrong sheet shows it."
+    tags: [document, data, dataset-people]
+    expect: { sheets: 3, sheet_names: "People 1,People 2,People 3", rows: 11, columns: 14, formulas: 0 }
+    size_class: free
+  - name: with-frozen-header-and-autofilter.xlsx
+    phase: 1
+    generator: office.xlsx_people
+    params: { rows: 100, autofilter: true }
+    description: "One sheet of a hundred people records with the header row frozen and an autofilter over every column, so the filter buttons are in the file and not left for the application to add."
+    tags: [document, data, dataset-people]
+    expect: { sheets: 1, rows: 101, columns: 14, auto_filter: "A1:N101", freeze_panes: "A2" }
+    size_class: free
+  - name: with-merged-cells.xlsx
+    phase: 1
+    generator: office.xlsx_merged_cells
+    params: {}
+    description: "A title merged across four columns, two region labels each merged down three rows and a merged 2 by 2 block. A merged range keeps its value in the top-left cell only, which readers that expand ranges get wrong."
+    tags: [document, data]
+    expect: { sheets: 1, merged_ranges: 4, merged: ["A1:D1", "A3:A5", "A6:A8", "F2:G3"], formulas: 0 }
+    size_class: free
+    contains_text:
+      - "Regional sales report"
+      - "North region"
+      - "South region"
+      - "Merged 2 by 2 block"
+  - name: with-chart.xlsx
+    phase: 1
+    generator: office.xlsx_with_chart
+    params: {}
+    description: "Four quarters of signups in cells, and a native column chart that reads them. For converters that render charts and extractors that must find them, whose data is the sheet's own cells."
+    tags: [document, data]
+    expect: { sheets: 1, rows: 5, charts: 1, chart_series: 1, chart_types: [bar] }
+    size_class: free
+  - name: with-images.xlsx
+    phase: 1
+    generator: office.xlsx_with_images
+    params: { images: ["png/100x100.png", "png/640x480.png"] }
+    description: "Two published PNG fixtures placed on a sheet under a caption each, read from the bytes that were actually published rather than regenerated."
+    tags: [document, image]
+    expect: { sheets: 1, images: 2, formulas: 0 }
+    size_class: free
+    contains_text:
+      - "Embedded images"
+      - "Fugiat explicabo veniam neque"
+      - "Modi quaerat quaerat eius"
+    depends_on: ["png/100x100.png", "png/640x480.png"]
+  - name: unicode-strings.xlsx
+    phase: 1
+    generator: office.xlsx_unicode
+    params: { scripts: [greek, cyrillic, arabic, hebrew, devanagari, thai, hanzi, hiragana, hangul_jamo] }
+    description: "One row per script: Latin, Greek, Cyrillic, Arabic, Hebrew, Devanagari, Thai, Chinese, Japanese and Korean pseudo-text, then emoji and combining marks. The Arabic and Hebrew cells read right to left."
+    tags: [document, data, unicode]
+    expect: { sheets: 1, scripts: [arabic, cyrillic, devanagari, greek, han, hangul, hebrew, hiragana, latin, thai], rtl_cells: 2 }
+    size_class: free
+    contains_text:
+      - "Nemo quaerat aspernatur sequi"
+      - "ΝδΞΟΕρφυ κε εεΞΝΨ"
+      - "ОММУЯуГХ Тл ЫДЭУзИИ"
+      - "أتوه ىثشكض ثظضمقةا"
+      - "佗偿义仙不再丝俐"

@@ -32,16 +32,21 @@ from __future__ import annotations
 
 import datetime as dt
 import io
+import random
 import re
 import zipfile
 from typing import Any
 
 import docx
+from docx.enum.style import WD_STYLE_TYPE
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT, WD_TAB_LEADER
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches
+from docx.text.paragraph import Paragraph
 from lxml import etree
 from openpyxl import Workbook
+from openpyxl.chart import BarChart, Reference
 from openpyxl.drawing.image import Image as SheetImage
 from openpyxl.styles import Alignment, Font
 from openpyxl.worksheet.worksheet import Worksheet
@@ -92,6 +97,12 @@ ANCHOR_XML = (
 
 #: Columns narrow enough to read in a portrait page.
 TABLE_COLUMNS = ("id", "first_name", "last_name", "city", "country")
+
+#: Paragraphs per page of `docx_pages`: three of at most 378 words leave room on the page.
+PAGED_PARAGRAPHS = 3
+HEADER_TEXT = "loremfile.dev sample header"
+#: The field code Word writes for a table of contents of headings 1 and 2, with hyperlinks.
+TOC_INSTRUCTION = ' TOC \\o "1-2" \\h \\z \\u '
 
 
 def _epoch(ctx: GeneratorContext) -> dt.datetime:
@@ -236,6 +247,172 @@ def docx_anchored_image(ctx: GeneratorContext, *, image: str) -> bytes:
     return _save_docx(document)
 
 
+def _paged_body(document: docx.document.Document, rng: random.Random, pages: int) -> None:
+    """`pages` sections, each a heading and three paragraphs, each after the first starting
+    on a new page by `w:pageBreakBefore`. .docx stores no page count of its own, so the
+    forced breaks are what make "N pages" true in every renderer. A section is at most 378
+    words (three paragraphs of seven 18-word sentences), under a page, so none runs over."""
+    for number in range(1, pages + 1):
+        heading = document.add_heading(f"Page {number}", level=1)
+        if number > 1:
+            heading.paragraph_format.page_break_before = True
+        for _ in range(PAGED_PARAGRAPHS):
+            document.add_paragraph(lorem.paragraph(rng))
+
+
+@generator()
+def docx_pages(ctx: GeneratorContext, *, pages: int) -> bytes:
+    """`pages` pages of Lorem Ipsum, each started by a forced page break."""
+    document = _new_document(ctx)
+    _paged_body(document, ctx.rng, pages)
+    return _save_docx(document)
+
+
+def _add_field(paragraph: Paragraph, instruction: str, cached: str) -> None:
+    """A simple field (`PAGE`, `NUMPAGES`) with the value a renderer would show."""
+    field = OxmlElement("w:fldSimple")
+    field.set(qn("w:instr"), f" {instruction} ")
+    run = OxmlElement("w:r")
+    text = OxmlElement("w:t")
+    text.text = cached
+    run.append(text)
+    field.append(run)
+    paragraph._p.append(field)
+
+
+@generator()
+def docx_headers_footers(ctx: GeneratorContext, *, pages: int) -> bytes:
+    """A header on every page and a footer with PAGE and NUMPAGES fields."""
+    document = _new_document(ctx)
+    section = document.sections[0]
+    section.header.is_linked_to_previous = False
+    section.header.paragraphs[0].text = HEADER_TEXT
+    section.footer.is_linked_to_previous = False
+    footer = section.footer.paragraphs[0]
+    footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    footer.add_run("Page ")
+    _add_field(footer, "PAGE", "1")
+    footer.add_run(" of ")
+    _add_field(footer, "NUMPAGES", str(pages))
+    _paged_body(document, ctx.rng, pages)
+    return _save_docx(document)
+
+
+#: The elements CT_Settings puts after `updateFields`; it goes before the first one present.
+UPDATE_FIELDS_SUCCESSORS = ("w:hdrShapeDefaults", "w:footnotePr", "w:endnotePr", "w:compat")
+
+
+def _toc_styles(document: docx.document.Document) -> None:
+    """The two paragraph styles Word gives a table of contents, which the default template
+    lacks: entries in `toc 1` and `toc 2` with a dotted right-aligned tab for the page."""
+    for level in (1, 2):
+        style = document.styles.add_style(f"toc {level}", WD_STYLE_TYPE.PARAGRAPH)
+        style.base_style = document.styles["Normal"]
+        style.paragraph_format.left_indent = Inches(0.25 * (level - 1))
+        style.paragraph_format.tab_stops.add_tab_stop(
+            Inches(6.0), WD_TAB_ALIGNMENT.RIGHT, WD_TAB_LEADER.DOTS
+        )
+
+
+def _field_char(kind: str) -> object:
+    run = OxmlElement("w:r")
+    mark = OxmlElement("w:fldChar")
+    mark.set(qn("w:fldCharType"), kind)
+    run.append(mark)
+    return run
+
+
+@generator()
+def docx_toc(ctx: GeneratorContext, *, chapters: int, sections: int, toc: bool = True) -> bytes:
+    """Headings behind a table-of-contents field that carries its entries.
+
+    Every chapter starts a page and the contents take the first, so chapter `n` is on page
+    `n + 1` and the cached entries say so. A reader that does not update fields still sees
+    the entries; Word updates them on open (`updateFields`).
+    """
+    document = _new_document(ctx)
+    rng = ctx.rng
+    _toc_styles(document)
+    outline: list[tuple[int, str, int]] = []
+    body: list[tuple[int, str, str]] = []
+    for chapter in range(1, chapters + 1):
+        title = f"Chapter {chapter}: {' '.join(lorem.words(rng, 2)).capitalize()}"
+        outline.append((1, title, chapter + 1))
+        body.append((1, title, f"{lorem.sentence(rng)} {lorem.sentence(rng)}"))
+        for section in range(1, sections + 1):
+            heading = f"{chapter}.{section} {' '.join(lorem.words(rng, 2)).capitalize()}"
+            outline.append((2, heading, chapter + 1))
+            body.append((2, heading, f"{lorem.sentence(rng)} {lorem.sentence(rng)}"))
+
+    if toc:
+        document.add_paragraph("Contents", style="TOC Heading")
+        for index, (level, text, page) in enumerate(outline):
+            entry = document.add_paragraph(style=f"toc {level}")
+            if index == 0:
+                entry._p.append(_field_char("begin"))
+                instruction = OxmlElement("w:r")
+                code = OxmlElement("w:instrText")
+                code.set(qn("xml:space"), "preserve")
+                code.text = TOC_INSTRUCTION
+                instruction.append(code)
+                entry._p.append(instruction)
+                entry._p.append(_field_char("separate"))
+            entry.add_run(f"{text}\t{page}")
+            if index == len(outline) - 1:
+                entry._p.append(_field_char("end"))
+        update = OxmlElement("w:updateFields")
+        update.set(qn("w:val"), "true")
+        document.settings.element.insert_element_before(update, *UPDATE_FIELDS_SUCCESSORS)
+
+    for level, text, paragraph in body:
+        heading = document.add_heading(text, level=level)
+        if level == 1:
+            heading.paragraph_format.page_break_before = True
+        document.add_paragraph(paragraph)
+    return _save_docx(document)
+
+
+#: The reviewers of `docx_comments`: (author, initials).
+REVIEWERS = ((AUTHOR, "LF"), ("Second reviewer", "SR"))
+
+
+@generator()
+def docx_comments(ctx: GeneratorContext, *, comments: int) -> bytes:
+    """Comments from two authors, each anchored to the first sentence of its paragraph."""
+    document = _new_document(ctx)
+    document.add_heading("Comments", level=1)
+    rng = ctx.rng
+    for index in range(comments):
+        paragraph = document.add_paragraph()
+        anchor = paragraph.add_run(lorem.sentence(rng))
+        paragraph.add_run(f" {lorem.paragraph(rng)}")
+        author, initials = REVIEWERS[index % len(REVIEWERS)]
+        comment = document.add_comment(
+            anchor, lorem.sentence(rng), author=author, initials=initials
+        )
+        comment._element.set(qn("w:date"), "2020-01-01T00:00:00Z")
+    return _save_docx(document)
+
+
+@generator()
+def docx_multilingual(ctx: GeneratorContext, *, scripts: list[str]) -> bytes:
+    """One paragraph per script, then emoji and combining marks, Arabic and Hebrew right to left."""
+    document = _new_document(ctx)
+    document.add_heading("Multilingual text", level=1)
+    rng = ctx.rng
+    document.add_paragraph(f"Latin: {lorem.sentence(rng)}")
+    for script in scripts:
+        paragraph = document.add_paragraph()
+        paragraph.add_run(f"{script.capitalize()}: ")
+        text = paragraph.add_run(lorem.pseudo_text(rng, script, 8))
+        if script in lorem.RTL_SCRIPTS:
+            paragraph._p.get_or_add_pPr().append(OxmlElement("w:bidi"))
+            text.font.rtl = True
+    document.add_paragraph(f"Emoji: {lorem.emoji_run(rng, 12)}")
+    document.add_paragraph("Combining marks: a\u0301 e\u0300 o\u0302 n\u0303 u\u0308 c\u0327")
+    return _save_docx(document)
+
+
 @generator(parallel_safe=False)
 def docx_sized(ctx: GeneratorContext, *, size: int) -> bytes:
     """One lorem paragraph per embedded noise plate, fitted to ``size`` (docs/05 §6)."""
@@ -290,7 +467,9 @@ def _cell_value(value: object) -> object:
     return value
 
 
-def _write_people(sheet: Worksheet, people: list[dict[str, Any]]) -> None:
+def _write_people(
+    sheet: Worksheet, people: list[dict[str, Any]], *, autofilter: bool = False
+) -> None:
     columns = list(people[0])
     sheet.append(columns)
     for cell in sheet[1]:
@@ -300,20 +479,139 @@ def _write_people(sheet: Worksheet, people: list[dict[str, Any]]) -> None:
     for column, width in (("D", 30), ("F", 24), ("J", 20)):
         sheet.column_dimensions[column].width = width
     sheet.freeze_panes = "A2"
+    if autofilter:
+        sheet.auto_filter.ref = sheet.dimensions
 
 
 @generator(parallel_safe=False)
-def xlsx_people(ctx: GeneratorContext, *, rows: int, sheets: int = 1) -> bytes:
-    """The shared people dataset, one row per record."""
+def xlsx_people(
+    ctx: GeneratorContext, *, rows: int, sheets: int = 1, autofilter: bool = False
+) -> bytes:
+    """The shared people dataset, one row per record.
+
+    With more than one sheet each holds the next `rows` records, so a reader that returns
+    the wrong sheet shows it; three identical sheets would hide the mistake.
+    """
     workbook = _new_workbook(ctx)
     first = workbook.active
     if first is None:  # pragma: no cover - openpyxl always creates one
         raise RuntimeError("the new workbook has no active sheet")
     first.title = "People" if sheets == 1 else "People 1"
-    _write_people(first, ctx.dataset("people", rows))
+    people = ctx.dataset("people", rows * sheets)
+    _write_people(first, people[:rows], autofilter=autofilter)
     for index in range(2, sheets + 1):
         extra = workbook.create_sheet(f"People {index}")
-        _write_people(extra, ctx.dataset("people", rows))
+        _write_people(extra, people[(index - 1) * rows : index * rows], autofilter=autofilter)
+    return _save_workbook(workbook)
+
+
+@generator()
+def xlsx_merged_cells(ctx: GeneratorContext) -> bytes:
+    """A title across four columns, two regions each spanning three rows, and a 2 x 2 block."""
+    workbook = _new_workbook(ctx)
+    sheet = workbook.active
+    if sheet is None:  # pragma: no cover
+        raise RuntimeError("the new workbook has no active sheet")
+    sheet.title = "Sales"
+    sheet["A1"] = "Regional sales report"
+    sheet["A1"].font = Font(bold=True, size=14)
+    sheet["A1"].alignment = Alignment(horizontal="center")
+    sheet.merge_cells("A1:D1")
+    for column, name in enumerate(("Region", "Quarter", "Units", "Revenue"), start=1):
+        sheet.cell(row=2, column=column, value=name).font = Font(bold=True)
+    row = 3
+    for region_index, region in enumerate(("North region", "South region")):
+        sheet.cell(row=row, column=1, value=region).alignment = Alignment(vertical="center")
+        sheet.merge_cells(start_row=row, start_column=1, end_row=row + 2, end_column=1)
+        for quarter_index, quarter in enumerate(("Q1", "Q2", "Q3")):
+            units = 100 + (region_index * 3 + quarter_index) * 37 % 90
+            sheet.cell(row=row, column=2, value=quarter)
+            sheet.cell(row=row, column=3, value=units)
+            sheet.cell(row=row, column=4, value=units * 12.5)
+            row += 1
+    sheet["F2"] = "Merged 2 by 2 block"
+    sheet["F2"].alignment = Alignment(horizontal="center", vertical="center")
+    sheet.merge_cells("F2:G3")
+    sheet.column_dimensions["A"].width = 16
+    sheet.column_dimensions["F"].width = 22
+    return _save_workbook(workbook)
+
+
+@generator()
+def xlsx_with_chart(ctx: GeneratorContext) -> bytes:
+    """Four quarters of signups and a native column chart that reads them."""
+    workbook = _new_workbook(ctx)
+    sheet = workbook.active
+    if sheet is None:  # pragma: no cover
+        raise RuntimeError("the new workbook has no active sheet")
+    sheet.title = "Signups"
+    sheet.append(["quarter", "signups"])
+    for cell in sheet[1]:
+        cell.font = Font(bold=True)
+    for quarter, signups in zip(CHART_CATEGORIES, CHART_VALUES, strict=True):
+        sheet.append([quarter, signups])
+    last = len(CHART_CATEGORIES) + 1
+    chart = BarChart()
+    chart.type = "col"
+    chart.title = "Quarterly signups"
+    chart.x_axis.title = "Quarter"
+    chart.y_axis.title = "Signups"
+    chart.add_data(Reference(sheet, min_col=2, min_row=1, max_row=last), titles_from_data=True)
+    chart.set_categories(Reference(sheet, min_col=1, min_row=2, max_row=last))
+    # openpyxl 3.1 writes the axes as deleted unless told otherwise: the chart would open
+    # in Excel as bars with no labels.
+    chart.x_axis.delete = False
+    chart.y_axis.delete = False
+    chart.legend = None
+    sheet.add_chart(chart, "D2")
+    return _save_workbook(workbook)
+
+
+@generator()
+def xlsx_with_images(ctx: GeneratorContext, *, images: list[str]) -> bytes:
+    """Published image fixtures, read through ``ctx.dependency``, each under a caption."""
+    workbook = _new_workbook(ctx)
+    sheet = workbook.active
+    if sheet is None:  # pragma: no cover
+        raise RuntimeError("the new workbook has no active sheet")
+    sheet.title = "Images"
+    sheet["A1"] = "Embedded images"
+    sheet["A1"].font = Font(bold=True)
+    rng = ctx.rng
+    row = 3
+    for path in images:
+        sheet.cell(row=row, column=1, value=lorem.sentence(rng))
+        picture = SheetImage(io.BytesIO(ctx.dependency(path)))
+        sheet.add_image(picture, f"A{row + 1}")
+        # A default row is 20 pixels tall; leave two rows between pictures.
+        row += -(-picture.height // 20) + 3
+    sheet.column_dimensions["A"].width = 40
+    return _save_workbook(workbook)
+
+
+@generator()
+def xlsx_unicode(ctx: GeneratorContext, *, scripts: list[str]) -> bytes:
+    """One row per script, then emoji and combining marks; Arabic and Hebrew read right to left."""
+    workbook = _new_workbook(ctx)
+    sheet = workbook.active
+    if sheet is None:  # pragma: no cover
+        raise RuntimeError("the new workbook has no active sheet")
+    sheet.title = "Unicode"
+    rng = ctx.rng
+    sheet.append(["script", "text"])
+    for cell in sheet[1]:
+        cell.font = Font(bold=True)
+    sheet.append(["latin", lorem.sentence(rng)])
+    for script in scripts:
+        sheet.append([script, lorem.pseudo_text(rng, script, 8)])
+        if script in lorem.RTL_SCRIPTS:
+            sheet.cell(row=sheet.max_row, column=2).alignment = Alignment(
+                horizontal="right", readingOrder=2
+            )
+    sheet.append(["emoji", lorem.emoji_run(rng, 12)])
+    sheet.append(["combining marks", "a\u0301 e\u0300 o\u0302 n\u0303 u\u0308 c\u0327"])
+    sheet.column_dimensions["A"].width = 18
+    sheet.column_dimensions["B"].width = 60
     return _save_workbook(workbook)
 
 
@@ -586,21 +884,33 @@ def pptx_basic(
     table_rows: int = 0,
     chart: bool = False,
     hidden: tuple[int, ...] = (),
+    notes: bool = False,
+    images: tuple[str, ...] = (),
 ) -> bytes:
     """Title-and-content slides of Lorem Ipsum, 16:9 unless `aspect` says 4:3.
 
     `table_rows` adds a slide with a native table of that many people (plus a header row),
-    `chart` a slide with a native column chart, and `hidden` marks those slides (1-based)
-    hidden, the `show="0"` a converter that renders every slide gets wrong.
+    `chart` a slide with a native column chart, `images` a slide for each published image
+    fixture named, `notes` a speaker note on each title-and-content slide, and `hidden`
+    marks those slides (1-based) hidden, the `show="0"` a converter that renders every slide
+    gets wrong.
     """
     presentation = _new_presentation(ctx, aspect)
     rng = ctx.rng
     for index in range(slides):
         _title_and_body(presentation, f"Slide {index + 1}", lorem.paragraph(rng))
+        if notes:
+            presentation.slides[index].notes_slide.notes_text_frame.text = lorem.sentence(rng)
     if table_rows:
         _table_slide(presentation, ctx.dataset("people", table_rows))
     if chart:
         _chart_slide(ctx, presentation)
+    for number, path in enumerate(images, start=1):
+        slide = presentation.slides.add_slide(presentation.slide_layouts[5])
+        slide.shapes.title.text = f"Image {number}"
+        slide.shapes.add_picture(
+            io.BytesIO(ctx.dependency(path)), PptxInches(1), PptxInches(1.8), width=PptxInches(4)
+        )
     for number in hidden:
         # python-pptx has no API for it: a hidden slide is `show="0"` on its <p:sld>.
         presentation.slides[number - 1]._element.set("show", "0")
@@ -715,6 +1025,60 @@ def rtf_simple(ctx: GeneratorContext, *, paragraphs: int = 3) -> bytes:
     return (RTF_HEADER + "\n" + "\n".join(body) + "\n}").encode("ascii")
 
 
+#: A second font and a colour table, for `rtf_formatted`. Colour 0 is "auto", as RTF says.
+RTF_FORMATTED_HEADER = (
+    r"{\rtf1\ansi\ansicpg1252\deff0"
+    r"{\fonttbl{\f0\froman Times New Roman;}{\f1\fmodern Courier New;}}"
+    r"{\colortbl;\red0\green0\blue0;\red192\green0\blue0;\red0\green0\blue192;}"
+)
+#: A single-line border on all four sides of a table cell.
+RTF_CELL_EDGES = (
+    r"\clbrdrt\brdrs\brdrw10\clbrdrl\brdrs\brdrw10\clbrdrb\brdrs\brdrw10\clbrdrr\brdrs\brdrw10"
+)
+RTF_TABLE_COLUMNS = ("first_name", "last_name", "city")
+RTF_CELL_WIDTH = 3000
+
+
+def _rtf_row(cells: list[str], *, bold: bool = False) -> str:
+    """One table row: the cell edges, then each cell's paragraph closed by `\\cell`."""
+    edges = "".join(
+        RTF_CELL_EDGES + rf"\cellx{RTF_CELL_WIDTH * (index + 1)}" for index in range(len(cells))
+    )
+    on, off = (r"\b ", r"\b0 ") if bold else ("", "")
+    body = "".join(rf"\pard\intbl\f0\fs24 {on}{_rtf_escape(text)}{off}\cell " for text in cells)
+    return rf"\trowd\trgaph108\trleft0{edges}" + "\n" + body + r"\row"
+
+
+@generator()
+def rtf_formatted(ctx: GeneratorContext, *, table_rows: int = 4) -> bytes:
+    """Bold, italic, underline, colour, size and a second font, then a bordered table."""
+    rng = ctx.rng
+
+    def sentence() -> str:
+        return _rtf_escape(lorem.sentence(rng))
+
+    runs = [
+        sentence(),
+        r"{\b " + sentence() + "}",
+        r"{\i " + sentence() + "}",
+        r"{\ul " + sentence() + "}",
+        r"{\cf2 " + sentence() + "}",
+        r"{\cf3\fs32 " + sentence() + "}",
+        r"{\f1 " + sentence() + "}",
+    ]
+    body = [
+        r"\pard\qc\sa200\f0\fs36\b Formatted sample\b0\fs24\par",
+        r"\pard\sa200\f0\fs24 " + " ".join(runs) + r"\par",
+    ]
+    if table_rows:
+        body.append(_rtf_row(list(RTF_TABLE_COLUMNS), bold=True))
+        for person in ctx.dataset("people", table_rows):
+            body.append(_rtf_row([str(person[column]) for column in RTF_TABLE_COLUMNS]))
+        # A table has to be followed by a paragraph, or Word has nowhere to put the cursor.
+        body.append(r"\pard\sa200 The table above holds records of the shared people dataset.\par")
+    return (RTF_FORMATTED_HEADER + "\n" + "\n".join(body) + "\n}").encode("ascii")
+
+
 # --- epub ------------------------------------------------------------------
 
 #: EPUB 3 needs these three files plus the content documents (OCF 3.0, EPUB 3.3).
@@ -726,13 +1090,18 @@ EPUB_CONTAINER = """<?xml version="1.0" encoding="UTF-8"?>
 </container>
 """
 
+#: Media types of the image fixtures an EPUB may embed, by extension.
+IMAGE_TYPES = {"png": "image/png", "jpg": "image/jpeg"}
+
 EPUB_CSS = """body { font-family: serif; line-height: 1.5; margin: 1em; }
 h1 { font-size: 1.4em; }
 """
 
 
-def _epub_chapter(number: int, title: str, paragraphs: list[str]) -> str:
+def _epub_chapter(number: int, title: str, paragraphs: list[str], figure: str = "") -> str:
     body = "\n".join(f"    <p>{paragraph}</p>" for paragraph in paragraphs)
+    if figure:
+        body += "\n" + figure
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"
       xml:lang="en" lang="en">
@@ -752,8 +1121,17 @@ def _epub_chapter(number: int, title: str, paragraphs: list[str]) -> str:
 
 
 @generator()
-def epub3(ctx: GeneratorContext, *, chapters: int = 3, paragraphs: int = 4) -> bytes:
+def epub3(
+    ctx: GeneratorContext,
+    *,
+    chapters: int = 3,
+    paragraphs: int = 4,
+    images: tuple[str, ...] = (),
+) -> bytes:
     """A valid EPUB 3 with a package document, a nav document and N chapters.
+
+    Each published image fixture named in `images` goes in its own chapter, in order, with
+    alt text and an item in the manifest.
 
     The identifier and the modification date are fixed rather than generated: an EPUB
     carries a `dcterms:modified` that would otherwise be the wall clock, and a UUID that
@@ -769,15 +1147,32 @@ def epub3(ctx: GeneratorContext, *, chapters: int = 3, paragraphs: int = 4) -> b
         "META-INF/container.xml": EPUB_CONTAINER.encode("utf-8"),
         "EPUB/style.css": EPUB_CSS.encode("utf-8"),
     }
+    image_items: list[str] = []
     for number, title in enumerate(titles, start=1):
         text = [lorem.paragraph(rng) for _ in range(paragraphs)]
-        files[f"EPUB/chapter-{number}.xhtml"] = _epub_chapter(number, title, text).encode("utf-8")
+        figure = ""
+        if number <= len(images):
+            path = images[number - 1]
+            name = path.rsplit("/", 1)[1]
+            files[f"EPUB/images/{name}"] = ctx.dependency(path)
+            figure = (
+                f'    <figure><img src="images/{name}" alt="Published fixture {path}"/></figure>'
+            )
+            image_items.append(
+                f'    <item id="image-{number}" href="images/{name}" '
+                f'media-type="{IMAGE_TYPES[name.rsplit(".", 1)[1]]}"/>'
+            )
+        files[f"EPUB/chapter-{number}.xhtml"] = _epub_chapter(number, title, text, figure).encode(
+            "utf-8"
+        )
 
     items = "\n".join(
         f'    <item id="chapter-{number}" href="chapter-{number}.xhtml" '
         f'media-type="application/xhtml+xml"/>'
         for number in range(1, chapters + 1)
     )
+    if image_items:
+        items += "\n" + "\n".join(image_items)
     spine = "\n".join(
         f'    <itemref idref="chapter-{number}"/>' for number in range(1, chapters + 1)
     )
@@ -827,4 +1222,114 @@ def epub3(ctx: GeneratorContext, *, chapters: int = 3, paragraphs: int = 4) -> b
         for name, payload in files.items():
             archive.writestr(name, payload)
     # epub=True puts `mimetype` first and stores it uncompressed, which OCF requires.
+    return zipnorm.normalize(out.getvalue(), epub=True)
+
+
+#: EPUB 2 content is XHTML 1.1: it has the doctype, and neither `epub:type` nor `<meta charset>`.
+EPUB2_DOCTYPE = (
+    '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" '
+    '"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">'
+)
+EPUB2_CONTAINER = EPUB_CONTAINER.replace("EPUB/package.opf", "OEBPS/content.opf")
+
+
+def _epub2_chapter(number: int, title: str, paragraphs: list[str]) -> str:
+    body = "\n".join(f"    <p>{paragraph}</p>" for paragraph in paragraphs)
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+{EPUB2_DOCTYPE}
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+  <head>
+    <title>{title}</title>
+    <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8"/>
+    <link rel="stylesheet" type="text/css" href="style.css"/>
+  </head>
+  <body>
+    <div id="chapter-{number}">
+    <h1>{title}</h1>
+{body}
+    </div>
+  </body>
+</html>
+"""
+
+
+@generator()
+def epub2(ctx: GeneratorContext, *, chapters: int = 3, paragraphs: int = 4) -> bytes:
+    """A valid EPUB 2.0.1: an OPF with a spine pointing at an NCX, and no nav document.
+
+    The identifier is derived from the fixture's seed and the date is a literal, as in
+    `epub3`: both are part of the published bytes for good. The NCX repeats the identifier,
+    which is the one thing a reader checks it against.
+    """
+    rng = ctx.rng
+    digest = ctx.stream(16).hex()
+    identifier = (
+        f"urn:uuid:{digest[:8]}-{digest[8:12]}-4{digest[13:16]}-a{digest[17:20]}-{digest[20:]}"
+    )
+    titles = [f"Chapter {number}" for number in range(1, chapters + 1)]
+    files: dict[str, bytes] = {
+        "mimetype": b"application/epub+zip",
+        "META-INF/container.xml": EPUB2_CONTAINER.encode("utf-8"),
+        "OEBPS/style.css": EPUB_CSS.encode("utf-8"),
+    }
+    for number, title in enumerate(titles, start=1):
+        text = [lorem.paragraph(rng) for _ in range(paragraphs)]
+        files[f"OEBPS/chapter-{number}.xhtml"] = _epub2_chapter(number, title, text).encode("utf-8")
+
+    items = "\n".join(
+        f'    <item id="chapter-{number}" href="chapter-{number}.xhtml" '
+        f'media-type="application/xhtml+xml"/>'
+        for number in range(1, chapters + 1)
+    )
+    spine = "\n".join(
+        f'    <itemref idref="chapter-{number}"/>' for number in range(1, chapters + 1)
+    )
+    files["OEBPS/content.opf"] = f"""<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="BookId">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+    <dc:identifier id="BookId" opf:scheme="UUID">{identifier}</dc:identifier>
+    <dc:title>Loremfile Sample Book</dc:title>
+    <dc:language>en</dc:language>
+    <dc:creator opf:role="aut">{AUTHOR}</dc:creator>
+    <dc:rights>CC0 1.0 Universal</dc:rights>
+    <dc:date opf:event="modification">2020-01-01</dc:date>
+  </metadata>
+  <manifest>
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+    <item id="css" href="style.css" media-type="text/css"/>
+{items}
+  </manifest>
+  <spine toc="ncx">
+{spine}
+  </spine>
+</package>
+""".encode()
+
+    points = "\n".join(
+        f'    <navPoint id="navpoint-{number}" playOrder="{number}">\n'
+        f"      <navLabel><text>{title}</text></navLabel>\n"
+        f'      <content src="chapter-{number}.xhtml"/>\n'
+        f"    </navPoint>"
+        for number, title in enumerate(titles, start=1)
+    )
+    files["OEBPS/toc.ncx"] = f"""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE ncx PUBLIC "-//NISO//DTD ncx 2005-1//EN" "http://www.daisy.org/z3986/2005/ncx-2005-1.dtd">
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+  <head>
+    <meta name="dtb:uid" content="{identifier}"/>
+    <meta name="dtb:depth" content="1"/>
+    <meta name="dtb:totalPageCount" content="0"/>
+    <meta name="dtb:maxPageNumber" content="0"/>
+  </head>
+  <docTitle><text>Loremfile Sample Book</text></docTitle>
+  <navMap>
+{points}
+  </navMap>
+</ncx>
+""".encode()
+
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as archive:
+        for name, payload in files.items():
+            archive.writestr(name, payload)
     return zipnorm.normalize(out.getvalue(), epub=True)

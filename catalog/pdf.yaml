@@ -1,4 +1,4 @@
-# PDF fixtures (docs/05 §3.1). Launch-set rows only; the rest are P1b.
+# PDF fixtures (docs/05 §3.1). Every phase-1 row; the phase-2 rows follow.
 format: pdf
 family: documents
 mime: application/pdf
@@ -178,3 +178,87 @@ fixtures:
     size_class: approx
     nominal_bytes: 10000000
     label: "10 MB"
+  - name: a4-100pages.pdf
+    phase: 1
+    generator: pdf.basic
+    params: { pages: 100, page_numbers: true }
+    description: "A4 portrait, 100 pages of Lorem Ipsum in the Helvetica core font with page numbers. No embedded fonts. A long document for page counting, pagination and viewers that load pages lazily."
+    tags: [document, multi-page, text]
+    expect: { pages: 100, page_width_pt: 595.28, page_height_pt: 841.89, encrypted: false }
+    size_class: free
+    contains_text:
+      - "Voluptas eiusmod inventore pariatur"
+      - "Explicabo dicta sapiente aliqua"
+      - "Possimus quisquam eius consectetur"
+      - "Anim culpa eiusmod sapiente"
+    label: "100 pages"
+  - name: mixed-sizes-3pages.pdf
+    phase: 1
+    generator: pdf.mixed_sizes
+    params: {}
+    description: "Three pages with three page boxes: A4 portrait, US Letter portrait and A5 landscape. For viewers, printers and converters that assume every page of a document is the same size."
+    tags: [document, multi-page, text]
+    expect: { pages: 3, page_sizes: [[595.28, 841.89], [612, 792], [595.28, 419.53]] }
+    size_class: free
+    contains_text:
+      - "Duis laboris repellat fugit"
+      - "Veritatis aperiam deserunt aute"
+      - "Ex dolorem pariatur itaque"
+      - "Reprehenderit doloremque elit dolorum"
+    label: "mixed page sizes"
+  - name: a4-with-links-1page.pdf
+    phase: 1
+    generator: pdf.with_links
+    params: { url: "https://loremfile.dev" }
+    description: "One A4 page with two link annotations: an internal link to a note lower on the page, and an external link to https://loremfile.dev. For extractors, link checkers and viewers that follow or strip links."
+    tags: [document, text]
+    expect: { pages: 1, internal_links: 1, external_links: 1, link_uris: ["https://loremfile.dev"] }
+    size_class: free
+    contains_text:
+      - "Rerum dolore mollit totam"
+      - "Maiores commodo eveniet sapiente"
+      - "Veritatis doloremque ratione nemo"
+      - "Jump to the note at the foot of this page"
+    label: "links"
+  - name: a4-with-outline-5pages.pdf
+    phase: 1
+    generator: pdf.with_outline
+    params: { pages: 5 }
+    description: "Five A4 pages with a bookmark for each, Chapter 1 to Chapter 5, every one opening its own page. For navigation panes and for tools that read or rebuild a document's outline."
+    tags: [document, multi-page, text]
+    expect: { pages: 5, has_outline: true, outline_entries: 5, outline_pages: [1, 2, 3, 4, 5] }
+    size_class: free
+    contains_text:
+      - "Repudiandae tempora laboris necessitatibus"
+      - "Pariatur molestiae dolore laudantium"
+      - "Ea duis ab illo"
+      - "Proident ratione sint maiores"
+    label: "bookmarks"
+  - name: a4-rotated-90-1page.pdf
+    phase: 1
+    generator: pdf.rotated
+    params: { degrees: 90, pages: 1 }
+    description: "One A4 page marked /Rotate 90. The stored page box is portrait and the page is meant to be shown landscape, so a renderer or thumbnailer that ignores the flag draws it sideways."
+    tags: [document, text]
+    expect: { pages: 1, page_width_pt: 595.28, page_height_pt: 841.89, page_rotations: [90] }
+    size_class: free
+    contains_text:
+      - "Alias eiusmod proident ut"
+      - "Incidunt veniam consectetur voluptas"
+      - "Laudantium doloribus dolore alias"
+      - "Adipiscing nisi nemo sapiente"
+    label: "rotated 90"
+  - name: a4-latin1-accents-1page.pdf
+    phase: 1
+    generator: pdf.basic
+    params: { pages: 1, accents: true }
+    description: "One A4 page of Lorem Ipsum with accented letters (é à ü ñ ø ç) in the Helvetica core font, which encodes them as Latin-1. For extractors and converters that mishandle characters beyond ASCII."
+    tags: [document, text, encoding]
+    expect: { pages: 1, latin1_characters: 12 }
+    size_class: free
+    contains_text:
+      - "Elit consectetur nostrud nemo"
+      - "Voluptas illo porro fuga"
+      - "Accusantium quis autem alias"
+      - "Accents: é à ü ñ ø ç"
+    label: "accented letters"
