@@ -453,7 +453,7 @@ A further guard covers the whole set: a unit test asserts `audit.CHECKS` covers 
   - `<tag>^` does not exist on a root commit.
 
   Versions compare as numbers, so `v1.10.0` follows `v1.9.0`.
-- **"Every 10th minor release"** is read as a minor version that is a multiple of ten with patch 0 (`v1.10.0`, `v1.20.0`). `--since` and `--snapshot` override the choice.
+- **"Every 10th minor release"** is read as **crossing** a multiple of ten, not as naming one: a snapshot when the tag's minor and the previous tag's minor fall in different tens of the same major (`v1.9.4` to `v1.10.0`, and `v1.9.0` to `v1.12.0`). Naming it assumed every minor gets tagged, which 1.9.1, 1.10.0 and 1.11.0 did not: they reached the site untagged, so `v1.10.0`'s snapshot never happened and the restore chain would have grown past ten deltas. A new major stays a delta. `--since` and `--snapshot` override the choice.
 - **The notes** are CHANGELOG.md's `## [X.Y.Z]` section. A tag run fails **before downloading anything** if that section is missing or empty (§7); a rehearsal records the absence instead.
 - **Assets:**
   - `fixtures-<since>-<tag>.partN.tar`, or `fixtures-snapshot-<tag>.partN.tar`;
@@ -463,7 +463,7 @@ A further guard covers the whole set: a unit test asserts `audit.CHECKS` covers 
   - `notes.md`.
 
   A patch release usually adds no fixtures, so its archive is empty and no part is attached. The output directory must start empty, because every file in it is attached.
-- **What the archives are for: mirroring the catalog and restoring it** (`11` §7.6). They are not the normal way to get files; that is the URL itself, the action or the client. As of `v1.4.0` they are the `v1.1.0` snapshot plus one delta from each later release, extracted together into one directory and checked as `11` §7.6 does.
+- **What the archives are for: mirroring the catalog and restoring it** (`11` §7.6). They are not the normal way to get files; that is the URL itself, the action or the client. As of `v1.12.0` one archive is enough: that snapshot holds every active fixture (307 files, 647,972,024 bytes), extracted into one directory and checked as `11` §7.6 does. Between `v1.4.0` and `v1.11.0` it was the `v1.1.0` snapshot plus one delta from each tagged release, and 1.9.1, 1.10.0 and 1.11.0 were never tagged, so nothing covered their files until this snapshot.
 - **Rehearse before the first tag.** Dispatch `release.yml` on `main` before tagging `v1.1.0` (M5.5). It fetches and verifies every published fixture, assembles the snapshot, and publishes nothing.
 
 **The first rehearsal failed, and what it found (2026-09-15).** Run `34982012684` (old commit `d1c4f751c8`) stopped before any download: `git tag --merged HEAD failed: fatal: detected dubious ownership in repository at '/__w/loremfile/loremfile'`.

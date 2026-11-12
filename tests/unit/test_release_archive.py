@@ -94,6 +94,11 @@ def test_the_tag_must_name_the_manifest_version() -> None:
         ("v1.20.0", "v1.19.0", None),
         ("v1.10.1", "v1.10.0", "v1.10.0"),  # not a patch of the 10th minor
         ("v2.0.0", "v1.12.0", "v1.12.0"),  # minor 0 is not a 10th minor
+        # 1.9.1, 1.10.0 and 1.11.0 reached the site untagged, so 1.10.0's snapshot never
+        # happened; the boundary is crossed here instead, once.
+        ("v1.12.0", "v1.9.0", None),
+        ("v1.13.0", "v1.12.0", "v1.12.0"),
+        ("v1.9.1", "v1.9.0", "v1.9.0"),
     ],
 )
 def test_a_snapshot_for_the_first_release_and_every_tenth_minor(
