@@ -1,4 +1,4 @@
-# png fixtures (docs/05 §3.2). Launch-set rows only; the rest are P1b.
+# png fixtures (docs/05 §3.2). Every phase-1 row; the phase-2 rows follow.
 format: png
 family: images
 mime: image/png
@@ -81,3 +81,49 @@ fixtures:
     size_class: approx
     nominal_bytes: 1000000
     label: "1 MB"
+  - name: 3840x2160.png
+    phase: 1
+    generator: image.testcard
+    params: { width: 3840, height: 2160, fmt: PNG }
+    description: "A 4K UHD RGB test card with a border, centre cross and a label giving the dimensions and mode, for decoders, resizers and thumbnailers that meet a large frame."
+    tags: [image, large]
+    expect: { width: 3840, height: 2160, mode: RGB }
+    size_class: free
+    label: "3840x2160"
+  - name: indexed-8bit-256x256.png
+    phase: 1
+    generator: image.testcard
+    params: { width: 256, height: 256, fmt: PNG, mode: P }
+    description: "An indexed-colour PNG: each 8-bit sample is an index into a palette of at most 64 colours, not a colour. For code that assumes every PNG is RGB or greyscale."
+    tags: [image]
+    expect: { width: 256, height: 256, mode: P, palette_entries: 64 }
+    size_class: free
+    label: "indexed colour"
+  - name: 16bit-256x256.png
+    phase: 1
+    generator: image.testcard
+    params: { width: 256, height: 256, fmt: PNG, mode: "I;16" }
+    description: "A 16-bit greyscale PNG: a diagonal ramp across the whole 16-bit range, so a decoder that keeps only 8 bits of each sample shows bands where this file is smooth."
+    tags: [image]
+    expect: { width: 256, height: 256, mode: "I;16" }
+    size_class: free
+    label: "high bit depth"
+  - name: interlaced-512x512.png
+    phase: 1
+    generator: image.png_interlaced
+    params: { width: 512, height: 512 }
+    description: "An Adam7 interlaced PNG: the same test card as the plain files, stored in seven passes so a browser can show a coarse picture before the rest arrives."
+    tags: [image]
+    expect: { width: 512, height: 512, mode: RGB, interlaced: true }
+    size_class: free
+    label: "interlaced"
+  - name: 10mb.png
+    phase: 1
+    generator: image.noise_sized
+    params: { size: 10000000, fmt: PNG }
+    description: "About 10MB of seeded noise, which PNG compression cannot shrink, fitted to within 5% of the nominal size. For upload limits that need a real image of a known size."
+    tags: [image, sized, large]
+    expect: { mode: RGB }
+    size_class: approx
+    nominal_bytes: 10000000
+    label: "10 MB"

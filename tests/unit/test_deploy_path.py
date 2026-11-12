@@ -284,6 +284,25 @@ AFTER_LAUNCH = (
     "rtf/with-table-and-formatting.rtf",
     "epub/epub2-3chapters.epub",
     "epub/with-images.epub",
+    # 1.13.0: the phase-1 image rows that were not in the launch set (docs/05 §3.2).
+    "png/3840x2160.png",
+    "png/indexed-8bit-256x256.png",
+    "png/16bit-256x256.png",
+    "png/interlaced-512x512.png",
+    "png/10mb.png",
+    "jpg/grayscale-640x480.jpg",
+    "jpg/quality-10-640x480.jpg",
+    "jpg/exif-orientation-1-640x480.jpg",
+    "jpg/exif-orientation-3-640x480.jpg",
+    "jpg/exif-gps-640x480.jpg",
+    "gif/static-256x256.gif",
+    "gif/transparent-256x256.gif",
+    "webp/lossless-640x480.webp",
+    "webp/animated-10frames-256x256.webp",
+    "avif/alpha-256x256.avif",
+    "svg/text-and-gradient.svg",
+    "svg/viewbox-responsive.svg",
+    "svg/icons-24x24.svg",
 )
 
 

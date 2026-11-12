@@ -1,4 +1,4 @@
-# svg fixtures (docs/05 §3.2). Launch-set rows only; the rest are P1b.
+# svg fixtures (docs/05 §3.2). Every phase-1 row; the phase-2 rows follow.
 format: svg
 family: images
 mime: image/svg+xml
@@ -23,4 +23,28 @@ fixtures:
     description: "An SVG whose only raster content is a PNG data URI, so nothing is fetched from the network when it renders."
     tags: [image, web]
     expect: { root_element: svg, width: "200" }
+    size_class: free
+  - name: text-and-gradient.svg
+    phase: 1
+    generator: svg.text_and_gradient
+    params: {}
+    description: "A linear and a radial gradient behind three lines of text in sans-serif, serif and monospace families. For rasterisers that mishandle gradients, font fallback or text anchoring."
+    tags: [image, web]
+    expect: { root_element: svg, width: "320", height: "200", gradients: 2 }
+    size_class: free
+  - name: viewbox-responsive.svg
+    phase: 1
+    generator: svg.viewbox_only
+    params: {}
+    description: "A viewBox and no width or height, so the file has no intrinsic size and fills whatever box it is placed in. Tools disagree about how large to render it."
+    tags: [image, web]
+    expect: { root_element: svg, width: ~, height: ~, viewbox: "0 0 400 300" }
+    size_class: free
+  - name: icons-24x24.svg
+    phase: 1
+    generator: svg.icon_sheet
+    params: {}
+    description: "An icon sprite: six 24 by 24 icons, each defined once as a symbol and shown with use. For icon pipelines and sanitisers that have to follow a use to its symbol."
+    tags: [image, web]
+    expect: { root_element: svg, width: "144", height: "24", symbols: 6, uses: 6, symbol_viewboxes: ["0 0 24 24"] }
     size_class: free

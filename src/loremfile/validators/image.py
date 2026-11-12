@@ -9,6 +9,7 @@ the sort of half-broken image worth catching.
 from __future__ import annotations
 
 import io
+import re
 import subprocess
 import tempfile
 from collections.abc import Iterator
@@ -33,8 +34,111 @@ ImageFile.LOAD_TRUNCATED_IMAGES = False
 
 RASTER_FORMATS = ("png", "jpg", "gif", "webp", "avif", "bmp", "tiff", "ico")
 
+XLINK_NS = "http://www.w3.org/1999/xlink"
 #: EXIF tag 0x0112.
 ORIENTATION_TAG = 0x0112
+#: EXIF's GPS and Exif sub-IFD pointers, and the tags read from them.
+GPS_IFD, EXIF_IFD = 0x8825, 0x8769
+DATE_TIME_ORIGINAL = 0x9003
+LATITUDE_REF, LATITUDE, LONGITUDE_REF, LONGITUDE = 1, 2, 3, 4
+SOUTH_WEST = ("S", "W")
+DEGREE_PARTS = 3
+#: The eight-byte PNG signature, and a chunk's length, type and CRC around its data.
+PNG_SIGNATURE = 8
+#: IHDR is the first chunk: signature 8, length 4, type 4, width 4, height 4, then bit depth,
+#: colour type, compression and filter, and last the interlace method at byte 28. 1 is Adam7.
+PNG_INTERLACE_METHOD = 28
+ADAM7 = 1
+PNG_CHUNK_OVERHEAD = 12
+#: WebP: the RIFF header, then chunks of a type, a little-endian size and the data, padded even.
+WEBP_HEADER = 12
+WEBP_CHUNK_HEADER = 8
+ANMF_FRAME_HEADER = 16
+LOSSLESS_QUALITY = 100
+
+
+def _gps_props(exif: Image.Exif) -> dict[str, Any]:
+    """The GPS position as signed decimal degrees, and the capture time, where the file has them."""
+    props: dict[str, Any] = {}
+    gps = exif.get_ifd(GPS_IFD)
+    if gps:
+        try:
+            for name, ref, value in (
+                ("gps_latitude", LATITUDE_REF, LATITUDE),
+                ("gps_longitude", LONGITUDE_REF, LONGITUDE),
+            ):
+                parts = [float(part) for part in gps[value]]
+                if len(parts) != DEGREE_PARTS:
+                    raise ValidationError(f"a GPS coordinate has {len(parts)} parts, not 3")
+                degrees = parts[0] + parts[1] / 60 + parts[2] / 3600
+                props[name] = round(-degrees if gps[ref] in SOUTH_WEST else degrees, 6)
+        except KeyError as exc:
+            raise ValidationError(f"the GPS block lacks tag {exc}") from exc
+    taken = exif.get_ifd(EXIF_IFD).get(DATE_TIME_ORIGINAL)
+    if taken:
+        props["exif_datetime_original"] = str(taken)
+    return props
+
+
+def _png_palette_entries(data: bytes) -> int | None:
+    """Entries in the PLTE chunk, read from the chunks themselves (None if there is none)."""
+    offset = PNG_SIGNATURE
+    while offset + PNG_CHUNK_OVERHEAD <= len(data):
+        length = int.from_bytes(data[offset : offset + 4], "big")
+        kind = data[offset + 4 : offset + 8]
+        if kind == b"PLTE":
+            return length // 3
+        if kind == b"IDAT":
+            return None
+        offset += PNG_CHUNK_OVERHEAD + length
+    return None
+
+
+def _webp_codecs(data: bytes) -> set[str]:
+    """`lossy` and/or `lossless`, from the chunks that hold the picture (VP8 and VP8L).
+
+    Pillow reports neither, and a lossless file and a lossy one at the same size share a
+    mode, a size and a header. An animated file keeps its frames inside ANMF chunks.
+    """
+    if data[:4] != b"RIFF" or data[8:12] != b"WEBP":
+        raise ValidationError("is not a RIFF container of type WEBP")
+    found: set[str] = set()
+
+    def walk(start: int, end: int) -> None:
+        offset = start
+        while offset + WEBP_CHUNK_HEADER <= end:
+            kind = data[offset : offset + 4]
+            size = int.from_bytes(data[offset + 4 : offset + 8], "little")
+            body = offset + WEBP_CHUNK_HEADER
+            if kind == b"VP8L":
+                found.add("lossless")
+            elif kind == b"VP8 ":
+                found.add("lossy")
+            elif kind == b"ANMF":
+                walk(body + ANMF_FRAME_HEADER, body + size)
+            offset = body + size + (size & 1)
+
+    walk(WEBP_HEADER, len(data))
+    return found
+
+
+def _jpeg_quality(data: bytes) -> int | None:
+    """The quality whose standard tables are exactly this file's luminance table, or None.
+
+    Pillow scales the standard tables by the quality it is given, so a file it wrote can be
+    matched back to it by asking Pillow for the table at each quality and comparing.
+    """
+    with Image.open(io.BytesIO(data)) as image:
+        measured = getattr(image, "quantization", {}).get(0)
+    if measured is None:
+        return None
+    for quality in range(1, 101):
+        probe = io.BytesIO()
+        Image.new("L", (8, 8)).save(probe, format="JPEG", quality=quality)
+        with Image.open(io.BytesIO(probe.getvalue())) as reference:
+            if list(reference.quantization[0]) == list(measured):  # type: ignore[attr-defined]
+                return quality
+    return None
 
 
 def _raster_props(data: bytes) -> dict[str, Any]:
@@ -56,6 +160,14 @@ def _raster_props(data: bytes) -> dict[str, Any]:
             exif = image.getexif()
             orientation = exif.get(ORIENTATION_TAG) if exif else None
             sizes = sorted({s[0] for s in image.info["sizes"]}) if "sizes" in image.info else None
+            transparent = image.info.get("transparency")
+            # GIF (and an indexed PNG) mark one palette index transparent: count its pixels.
+            transparent_pixels = (
+                image.histogram()[transparent]
+                if mode == "P" and isinstance(transparent, int)
+                else None
+            )
+            exif_props = _gps_props(exif) if exif else {}
     except Exception as exc:
         raise ValidationError(f"Pillow could not decode it: {exc}") from exc
 
@@ -72,6 +184,15 @@ def _raster_props(data: bytes) -> dict[str, Any]:
         props["exif_orientation"] = int(orientation)
     if sizes is not None:
         props["sizes"] = sizes
+    # The keys below appear only on a file that has what they measure, so no entry published
+    # before them gains one.
+    if fmt == "png" and data[PNG_INTERLACE_METHOD] == ADAM7:
+        props["interlaced"] = True
+    if fmt == "png" and mode == "P":
+        props["palette_entries"] = _png_palette_entries(data)
+    if transparent_pixels is not None:
+        props["transparent_pixels"] = transparent_pixels
+    props.update(exif_props)
     return props
 
 
@@ -104,12 +225,37 @@ def _tiff_props(data: bytes) -> dict[str, Any]:
     }
 
 
+def _check_declared_encoding(fmt: str, data: bytes, fixture: Fixture) -> None:
+    """A test card's declared JPEG quality, or WebP lossless switch, must be what the bytes hold.
+
+    Checked rather than reported: published rows say `quality: 100` for a lossless file and
+    80 for a lossy one, and a new prop would add a key to each of them.
+    """
+    if fixture.generator != "image.testcard":
+        return
+    quality = fixture.params.get("quality")
+    if fmt == "jpg" and quality is not None:
+        measured = _jpeg_quality(data)
+        if measured != quality:
+            raise ValidationError(
+                f"declares JPEG quality {quality}, but its quantization tables say {measured}"
+            )
+    if fmt == "webp" and quality is not None:
+        wanted = "lossless" if quality >= LOSSLESS_QUALITY else "lossy"
+        if _webp_codecs(data) != {wanted}:
+            raise ValidationError(
+                f"declares quality {quality}, which is {wanted}, "
+                f"but its picture chunks are {sorted(_webp_codecs(data))}"
+            )
+
+
 def _register_raster(fmt: str) -> None:
     @register(fmt)
     def _validate(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
         props = _raster_props(data)
         if fmt == "tiff":
             props.update(_tiff_props(data))
+        _check_declared_encoding(fmt, data, fixture)
         if fixture.generator == "image.exif_rotated":
             with Image.open(io.BytesIO(data)) as image:
                 displayed = ImageOps.exif_transpose(image)
@@ -312,4 +458,38 @@ def validate_svg(data: bytes, _fixture: Fixture, mime: str) -> dict[str, Any]:
             "elements": sum(1 for _ in root.iter()),
         }
     )
+    props.update(_svg_structure(root))
+    return props
+
+
+URL_REFERENCE = re.compile(r"url\(\s*#([^)\s]+)\s*\)")
+
+
+def _svg_structure(root: etree._Element) -> dict[str, Any]:
+    """Gradients, symbols and `use`, each reported only where the file has any.
+
+    A `use` or a `url(#id)` that names an id the file does not hold renders nothing, or black,
+    without an error, so each must resolve.
+    """
+    elements = [element for element in root.iter() if isinstance(element.tag, str)]
+    ids = {element.get("id") for element in elements if element.get("id")}
+    local = [etree.QName(element).localname for element in elements]
+    for element in elements:
+        for name, value in element.attrib.items():
+            for target in URL_REFERENCE.findall(value):
+                if target not in ids:
+                    raise ValidationError(f"{name!r} reads url(#{target}), which no element holds")
+        if etree.QName(element).localname == "use":
+            href = element.get("href") or element.get(f"{{{XLINK_NS}}}href") or ""
+            if href.startswith("#") and href[1:] not in ids:
+                raise ValidationError(f"<use> points at {href}, which no element holds")
+    props: dict[str, Any] = {}
+    gradients = local.count("linearGradient") + local.count("radialGradient")
+    if gradients:
+        props["gradients"] = gradients
+    symbols = [element for element in elements if etree.QName(element).localname == "symbol"]
+    if symbols:
+        props["symbols"] = len(symbols)
+        props["symbol_viewboxes"] = sorted({element.get("viewBox") or "" for element in symbols})
+        props["uses"] = local.count("use")
     return props

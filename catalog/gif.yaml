@@ -1,9 +1,9 @@
-# gif fixtures (docs/05 §3.2). Launch-set rows only; the rest are P1b.
+# gif fixtures (docs/05 §3.2). Every phase-1 row; the phase-2 rows follow.
 format: gif
 family: images
 mime: image/gif
 description: >-
-  A minimal GIF and an animated one.
+  A minimal GIF, a still frame, one with transparency and an animated one.
 seo_title: "Sample GIF images for testing, free and CC0"
 related: [png, webp]
 fixtures:
@@ -22,4 +22,20 @@ fixtures:
     description: "An animated GIF of 10 frames at 100 ms, looping forever."
     tags: [image, animated]
     expect: { width: 256, height: 256, frames: 10, animated: true }
+    size_class: free
+  - name: static-256x256.gif
+    phase: 1
+    generator: image.testcard
+    params: { width: 256, height: 256, fmt: GIF }
+    description: "A 256x256 colour-bar test card as a single-frame GIF: the still counterpart of the animated file."
+    tags: [image]
+    expect: { width: 256, height: 256, frames: 1, animated: false }
+    size_class: free
+  - name: transparent-256x256.gif
+    phase: 1
+    generator: image.gif_transparent
+    params: { width: 256, height: 256 }
+    description: "A 256x256 GIF whose right half is transparent. GIF marks one palette index transparent, so transparency is on or off, with none of the partial alpha the PNG ramp has."
+    tags: [image, transparent]
+    expect: { width: 256, height: 256, mode: P, transparent_pixels: 32768, frames: 1 }
     size_class: free

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- Eighteen more image files. PNG: 4K, indexed colour, 16-bit, interlaced, 10 MB. JPEG:
+  greyscale, quality 10, EXIF orientations 1 and 3, an EXIF GPS position. GIF: still and
+  transparent. WebP: lossless and animated. AVIF: with alpha. SVG: text and gradients,
+  viewBox only, an icon sprite.
+
 ## [1.12.0] - 2026-11-12
 
 - Twenty-five more document files. PDF: 100 pages, mixed page sizes, links, bookmarks, a
