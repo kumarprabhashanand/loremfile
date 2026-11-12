@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-11-12
+
 - Twenty-five more document files. PDF: 100 pages, mixed page sizes, links, bookmarks, a
   rotated page, accented letters. DOCX: ten pages, headers and footers, a table of contents,
   comments, multilingual text. XLSX: 100,000 rows, three sheets, a filter, merged cells, a
@@ -21,6 +23,9 @@
   `edge` reads `21 edge-case test files`.
 - The privacy notice names the authority responsible for loremfile.dev beside the reader's
   own, and states that the pages load no third-party resource.
+- Release archives: this one is a full snapshot, all 307 files and 0.65 GB, so a mirror needs
+  it alone. The 1.9.1, 1.10.0 and 1.11.0 files reached the site but were never tagged, and
+  1.10.0's snapshot is taken here instead.
 
 ## [1.11.0] - 2026-10-22
 

@@ -213,12 +213,21 @@ def previous_tag(ref: str, tag: str, *, cwd: Path | None = None) -> str | None:
 
 
 def plan_release(tag: str, previous: str | None) -> Plan:
-    """A snapshot for the first release and for every 10th minor; otherwise a delta."""
-    _major, minor, patch = version_of(tag)
-    tenth_minor = patch == 0 and minor > 0 and minor % SNAPSHOT_EVERY_MINOR == 0
-    if previous is None or tenth_minor:
+    """A snapshot for the first release and whenever a tenth-minor boundary is crossed.
+
+    Counting the boundary rather than naming the tenth minor keeps the rule working when a
+    minor reaches the site but is never tagged: 1.9.1, 1.10.0 and 1.11.0 were, so 1.10.0's
+    snapshot never happened and v1.12.0 takes it instead (docs/09 §3.5). A new major stays
+    a delta, as it was before.
+    """
+    major, minor, _patch = version_of(tag)
+    if previous is None:
         return Plan(tag=tag, since=None)
-    return Plan(tag=tag, since=previous)
+    previous_major, previous_minor, _ = version_of(previous)
+    crossed = major == previous_major and (
+        minor // SNAPSHOT_EVERY_MINOR != previous_minor // SNAPSHOT_EVERY_MINOR
+    )
+    return Plan(tag=tag, since=None if crossed else previous)
 
 
 def manifest_at(tag: str, *, cwd: Path | None = None) -> Manifest:
