@@ -40,8 +40,8 @@
     "sha256": "2d97fd02ca13e1ad6d60cef2f26bfe7185c44563d0f02f642c94eae9b0027e40"
   },
   "changelog": {
-    "date": "2026-11-08",
-    "sha256": "920843eba2cfa36e096b8e5f0a796fc6c4c06c90408cfbf156dc4f7f51049d50"
+    "date": "2026-11-11",
+    "sha256": "4d1d613527e6b65f4aa3c0e4ee5880f6e2136197f30e425e26903e32920519db"
   },
   "css": {
     "date": "2026-11-03",
@@ -80,8 +80,8 @@
     "sha256": "663d49c4d1e104fa0d0935e40c7dd62e62f35d780c9e2a07616b9357ddbce857"
   },
   "docs/manifest": {
-    "date": "2026-11-10",
-    "sha256": "166b367122da1066ee30c273120eb892bf21354ff8ba6ac53092c7d1f5ae84e8"
+    "date": "2026-11-11",
+    "sha256": "fd16fdf7caf262a4a358cc7ba5a901e3e5ab44505ed1b389ad1763f89cce433d"
   },
   "docs/mcp": {
     "date": "2026-11-03",
@@ -96,8 +96,8 @@
     "sha256": "78855499a0c7eaccb763ad7b0c1891268a7da279db2a9342e56c76aa0e3d08f6"
   },
   "docx": {
-    "date": "2026-10-22",
-    "sha256": "25d81ec661a877855ba9b0ce5bc1b17023459bb4cef5c54bbfb0a400ad5d02e4"
+    "date": "2026-11-11",
+    "sha256": "0535da924b3a8d3910389520f76b73004d68a50f801ef77dc4bd2719dce1a74f"
   },
   "edge": {
     "date": "2026-11-03",
@@ -108,16 +108,16 @@
     "sha256": "6e1c96b2e5923d2e79c78d994ad7e4aad0fd0c96857ee7499f869ac7ebcf93fd"
   },
   "epub": {
-    "date": "2026-11-03",
-    "sha256": "dd48a3b8a42e6f25074ec8b69ef16820b818cdbeba8c100be0e418a959b1f8c4"
+    "date": "2026-11-11",
+    "sha256": "565a40859f3269b0b4d4c2e023cbc9d87079f89d2a8da317920bbda62f439411"
   },
   "flac": {
     "date": "2026-11-03",
     "sha256": "4793c445d9c61e8771356cbaf738575e285022800ee19f1266da3b375737d412"
   },
   "formats": {
-    "date": "2026-11-03",
-    "sha256": "70fc729ad14b682c540345e73c329e6ca193eb276561dbad7e97f3165dc698d1"
+    "date": "2026-11-11",
+    "sha256": "9fbfee7a5b0d8887d62f1eed50d991138aaca15ef5d1092c9b2955de86b39d06"
   },
   "geojson": {
     "date": "2026-11-03",
@@ -160,8 +160,8 @@
     "sha256": "de6e46a509d21bb3506c2310fda4120ece9b0a648249fc6603103f3051dd0c78"
   },
   "index.html": {
-    "date": "2026-11-03",
-    "sha256": "f17f872ea1cf45a44f41f8c8e9a88ba980554b7f5508e44b6a21d439f2e22826"
+    "date": "2026-11-11",
+    "sha256": "84d8147b9285e7906636c77b6bd1ab5d9574e7ec5559f3441071eccc58a9a8e9"
   },
   "ini": {
     "date": "2026-11-03",
@@ -248,8 +248,8 @@
     "sha256": "c4760dc6148bffeabdead504aa3f7c3a59454bd4a15e062d148136d8800251fb"
   },
   "pdf": {
-    "date": "2026-11-03",
-    "sha256": "39d44b95d78c0a216a54f992b744e42c87cb9afa2fc7a49dd3de5e97efb24d6c"
+    "date": "2026-11-11",
+    "sha256": "00fde808ffd6ae7f4ab2a3eaa8e020cb2568b0a881d49bd3a41a97f13e89284c"
   },
   "pem": {
     "date": "2026-11-03",
@@ -260,12 +260,12 @@
     "sha256": "e5309f476f5cf658369e9bde786919b74c727347b2b9c4d017608ba426e4811a"
   },
   "pptx": {
-    "date": "2026-10-22",
-    "sha256": "8943d6513f7a62096c8de078e35ec937ab904b7837916b778cac1e2f35451567"
+    "date": "2026-11-11",
+    "sha256": "156c21de1e787e8da138b632f6c2204303845c30148f723a2598fe376ff69fbf"
   },
   "rtf": {
-    "date": "2026-11-03",
-    "sha256": "36bb2c05216c330c2d1b6a3e543af7afeeda9adfe415581bb06bc12bb09b6fbe"
+    "date": "2026-11-11",
+    "sha256": "d74a1ca2c8a118354a9609f6347b0551c13213dc8cd440d8f0700cb0c4aaea88"
   },
   "sql": {
     "date": "2026-11-03",
@@ -368,8 +368,8 @@
     "sha256": "ceabfbe23f6b198bc45bd44cbe63c71b61c161bf40a772b5096811617f288a37"
   },
   "xlsx": {
-    "date": "2026-11-03",
-    "sha256": "c2bbcaec1c29a35e010e65dd24f135e5ddba26e2cac085f5084adb56b823c697"
+    "date": "2026-11-11",
+    "sha256": "cf719b8cc6153e037617566cb304b5494dbde9cf4c51fa2aba5ef28f9e01e7d2"
   },
   "xml": {
     "date": "2026-11-03",
