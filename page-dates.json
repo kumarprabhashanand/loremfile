@@ -20,8 +20,8 @@
     "sha256": "4516931638e6d20110815784025ee3b46df983cf78d7de7460ef5117a72dbdd2"
   },
   "avif": {
-    "date": "2026-11-03",
-    "sha256": "a757ff65663c293e8129fa43c9b7b469d23bf540014f43f6ba65e0aa1c7c109b"
+    "date": "2026-11-12",
+    "sha256": "95f955157fe3a63294500f0dd74c2fb797a9dfb8c1be894092762ac05a6872d6"
   },
   "avro": {
     "date": "2026-11-03",
@@ -41,7 +41,7 @@
   },
   "changelog": {
     "date": "2026-11-12",
-    "sha256": "7b61ef8fb10b247ff4d3b8a2cb3bb16ef8b665dd4d6954ff7af061b33f891093"
+    "sha256": "011a1b75b2a7b064026dbae77e4a07314fedb29b7f7c85d9026c91db377efa8c"
   },
   "css": {
     "date": "2026-11-03",
@@ -80,8 +80,8 @@
     "sha256": "663d49c4d1e104fa0d0935e40c7dd62e62f35d780c9e2a07616b9357ddbce857"
   },
   "docs/manifest": {
-    "date": "2026-11-11",
-    "sha256": "fd16fdf7caf262a4a358cc7ba5a901e3e5ab44505ed1b389ad1763f89cce433d"
+    "date": "2026-11-12",
+    "sha256": "eff5bdbb7377eee229466cf06f58c762dda2e3025c2aecf0dc344fa790dab068"
   },
   "docs/mcp": {
     "date": "2026-11-03",
@@ -116,16 +116,16 @@
     "sha256": "4793c445d9c61e8771356cbaf738575e285022800ee19f1266da3b375737d412"
   },
   "formats": {
-    "date": "2026-11-11",
-    "sha256": "9fbfee7a5b0d8887d62f1eed50d991138aaca15ef5d1092c9b2955de86b39d06"
+    "date": "2026-11-12",
+    "sha256": "a0b7bbd6f4413528995411a3828c7ebb07c57d84d92977e31fa92e443bcbb59b"
   },
   "geojson": {
     "date": "2026-11-03",
     "sha256": "0cdc2d4b98fe997a100060957b680b6d8c3b0ec0b295d12064c76db36e7a21ff"
   },
   "gif": {
-    "date": "2026-11-03",
-    "sha256": "776affd2ce1c6641b154c5fd8ff6f46764ac169d747908a62133fbfa1a07d5a5"
+    "date": "2026-11-12",
+    "sha256": "8cea8618004449a3e06b461e243b161efa4cce9042d6be2b1f3532819c85790b"
   },
   "gpx": {
     "date": "2026-11-03",
@@ -160,8 +160,8 @@
     "sha256": "de6e46a509d21bb3506c2310fda4120ece9b0a648249fc6603103f3051dd0c78"
   },
   "index.html": {
-    "date": "2026-11-11",
-    "sha256": "84d8147b9285e7906636c77b6bd1ab5d9574e7ec5559f3441071eccc58a9a8e9"
+    "date": "2026-11-12",
+    "sha256": "72e2914ccf634b71b3a6fb86fc2816a402307ddf84c7d7bd069fb553e2cdb310"
   },
   "ini": {
     "date": "2026-11-03",
@@ -172,8 +172,8 @@
     "sha256": "abfc503fdeb1331f78e8ae85c22a6ba80d98a90610845d46dbe42d82d562b0f4"
   },
   "jpg": {
-    "date": "2026-11-03",
-    "sha256": "b2e134cae2d40975e44cbb17158fbead59fd07748f59f9f38db18785468376fa"
+    "date": "2026-11-12",
+    "sha256": "891774dca93df8d74b3de1147a83982885a30b413680841e7a5e91df72a03e91"
   },
   "js": {
     "date": "2026-11-03",
@@ -256,8 +256,8 @@
     "sha256": "064594f38b39e54a1ec29a5b052e8b279962e87752b0e763e3c89afe8c188769"
   },
   "png": {
-    "date": "2026-11-03",
-    "sha256": "e5309f476f5cf658369e9bde786919b74c727347b2b9c4d017608ba426e4811a"
+    "date": "2026-11-12",
+    "sha256": "eebeb7f7dc7d6a11e68a6f851a033687761ce0a756641da839bafa8a736b5b8b"
   },
   "pptx": {
     "date": "2026-11-11",
@@ -284,8 +284,8 @@
     "sha256": "60fc4e7e501018562168df25cf78d3300bde98ac8ea5e352c11402e76a5f647e"
   },
   "svg": {
-    "date": "2026-11-03",
-    "sha256": "7924af28f55bd2179df751886611a455167b58b6a600658a37d7a7eaf6d73073"
+    "date": "2026-11-12",
+    "sha256": "10323a75027952840536cb029d4e773b24e0d65509037f089114134cf10c9b94"
   },
   "tar": {
     "date": "2026-11-03",
@@ -356,8 +356,8 @@
     "sha256": "6d17f23b0781c9f64a75add34057685db03d347fb3438ffcebed5a0d0438b26d"
   },
   "webp": {
-    "date": "2026-11-03",
-    "sha256": "cd1645a5f4d1f1779463a377b203ce94004a50e6cba64999b75996090d52980a"
+    "date": "2026-11-12",
+    "sha256": "c079d1a2a23f1bfcd8a7609fffafa6d76ef66c90714b8654d6d95ed5ae0c1788"
   },
   "woff": {
     "date": "2026-11-03",
