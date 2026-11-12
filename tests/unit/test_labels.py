@@ -308,7 +308,7 @@ def test_a_superseded_file_never_contributes_a_label() -> None:
     )
     served = [MANIFEST[f.path] for f in info.fixtures]
     assert "old CMYK" not in page_labels(labelled, served)
-    assert len(page_labels(labelled, served)) == len(recommended("jpg")) == 10
+    assert len(page_labels(labelled, served)) == len(recommended("jpg")) == 15
     unsuperseded = [
         {k: v for k, v in e.items() if k not in ("supersededBy", "deprecated")} for e in served
     ]

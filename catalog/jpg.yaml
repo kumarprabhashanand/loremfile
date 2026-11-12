@@ -1,4 +1,4 @@
-# jpg fixtures (docs/05 §3.2). Launch-set rows only; the rest are P1b.
+# jpg fixtures (docs/05 §3.2). Every phase-1 row; the phase-2 rows follow.
 format: jpg
 family: images
 mime: image/jpeg
@@ -109,3 +109,48 @@ fixtures:
     expect: { mode: CMYK }
     size_class: free
     superseded_by: jpg/cmyk-640x640.jpg
+  - name: grayscale-640x480.jpg
+    phase: 1
+    generator: image.testcard
+    params: { width: 640, height: 480, fmt: JPEG, mode: L, quality: 85 }
+    description: "A single-component greyscale JPEG test card: one channel where an RGB file carries three. For code that assumes every JPEG is colour."
+    tags: [image]
+    expect: { width: 640, height: 480, mode: L }
+    size_class: free
+    label: "greyscale"
+  - name: quality-10-640x480.jpg
+    phase: 1
+    generator: image.testcard
+    params: { width: 640, height: 480, fmt: JPEG, quality: 10 }
+    description: "The 640x480 colour-bar test card at JPEG quality 10: blocking and ringing around every edge, in a file about half the size of the quality-85 card. For checking what a pipeline does to a badly compressed upload."
+    tags: [image]
+    expect: { width: 640, height: 480, mode: RGB }
+    size_class: free
+    label: "heavy compression"
+  - name: exif-orientation-1-640x480.jpg
+    phase: 1
+    generator: image.exif_orientation
+    params: { width: 640, height: 480, orientation: 1 }
+    description: "EXIF orientation 1: the pixels are stored upright and the tag says so, which a viewer has to leave alone. The control for the files whose tag asks for a rotation."
+    tags: [image]
+    expect: { width: 640, height: 480, exif_orientation: 1 }
+    size_class: free
+    label: "EXIF orientation 1"
+  - name: exif-orientation-3-640x480.jpg
+    phase: 1
+    generator: image.exif_orientation
+    params: { width: 640, height: 480, orientation: 3 }
+    description: "EXIF orientation 3: the pixels are stored rotated half a turn, and a viewer that honours the tag turns the 640x480 card upright where one that ignores it leaves it upside down."
+    tags: [image]
+    expect: { width: 640, height: 480, exif_orientation: 3 }
+    size_class: free
+    label: "EXIF orientation 3"
+  - name: exif-gps-640x480.jpg
+    phase: 1
+    generator: image.exif_gps
+    params: { width: 640, height: 480 }
+    description: "A 640x480 test card with an EXIF GPS position of 0 N 0 E, Null Island, where nobody lives, so no real location, and a capture time of 2020-01-01. For pipelines that read or strip location metadata."
+    tags: [image]
+    expect: { width: 640, height: 480, gps_latitude: 0.0, gps_longitude: 0.0, exif_datetime_original: "2020:01:01 00:00:00" }
+    size_class: free
+    label: "EXIF GPS location"

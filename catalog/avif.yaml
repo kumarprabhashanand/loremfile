@@ -1,10 +1,10 @@
-# avif fixtures (docs/05 §3.2). Launch-set rows only; the rest are P1b.
+# avif fixtures (docs/05 §3.2). Every phase-1 row; the phase-2 rows follow.
 format: avif
 family: images
 mime: image/avif
 description: >-
-  An AVIF encoded by avifenc from the PNG test card, single-threaded so the output
-  reproduces byte for byte.
+  AVIF files encoded by avifenc from the PNG test card, one with an alpha channel,
+  single-threaded so the output reproduces byte for byte.
 seo_title: "Sample AVIF image for testing modern decoders, free and CC0"
 related: [webp, png, jpg]
 fixtures:
@@ -15,4 +15,12 @@ fixtures:
     description: "A colour-bar test card with a border, centre cross and a label giving the dimensions and mode, encoded to AVIF with avifenc at speed 6, single-threaded."
     tags: [image]
     expect: { width: 640, height: 480 }
+    size_class: free
+  - name: alpha-256x256.avif
+    phase: 1
+    generator: image.avif_from_png
+    params: { width: 256, height: 256, quality: 60, alpha: true }
+    description: "A 256x256 AVIF with an alpha channel: the colour-bar card with an alpha ramp, encoded by avifenc at speed 6, single-threaded, the alpha kept as an auxiliary image. For decoders that drop or mishandle transparency."
+    tags: [image, transparent]
+    expect: { width: 256, height: 256, mode: RGBA }
     size_class: free

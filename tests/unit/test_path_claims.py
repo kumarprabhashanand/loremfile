@@ -96,6 +96,12 @@ PINNED: dict[str, tuple[str, Any]] = {
         "names the displayed size; the props record the stored, rotated pixels",
         lambda p: (p["display_width"], p["display_height"]) == (640, 480),
     ),
+    "svg/icons-24x24.svg": (
+        "names each icon's size; the sheet's own width and height are the six icons side by side",
+        lambda p: (
+            (p["width"], p["height"]) == ("144", "24") and p["symbol_viewboxes"] == ["0 0 24 24"]
+        ),
+    ),
     "xlsx/1sheet-100k-rows.xlsx": (
         "names the 100,000 records; the sheet's `rows` counts its header row too",
         lambda p: p["rows"] == 100_001 and p["columns"] == 14,

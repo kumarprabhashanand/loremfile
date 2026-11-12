@@ -1,9 +1,9 @@
-# webp fixtures (docs/05 §3.2). Launch-set rows only; the rest are P1b.
+# webp fixtures (docs/05 §3.2). Every phase-1 row; the phase-2 rows follow.
 format: webp
 family: images
 mime: image/webp
 description: >-
-  A lossy WebP and one with an alpha channel.
+  WebP test cards: lossy, lossless, with an alpha channel, and animated.
 seo_title: "Sample WebP images for testing, free and CC0"
 related: [png, jpg, avif]
 fixtures:
@@ -22,4 +22,20 @@ fixtures:
     description: "A lossless WebP with an alpha ramp."
     tags: [image, transparent]
     expect: { width: 256, height: 256 }
+    size_class: free
+  - name: lossless-640x480.webp
+    phase: 1
+    generator: image.testcard
+    params: { width: 640, height: 480, fmt: WEBP, quality: 100 }
+    description: "The 640x480 colour-bar test card as lossless WebP, beside lossy-640x480.webp: the same picture in the other bitstream, which a different decoder reads."
+    tags: [image]
+    expect: { width: 640, height: 480, mode: RGB }
+    size_class: free
+  - name: animated-10frames-256x256.webp
+    phase: 1
+    generator: image.animated
+    params: { width: 256, height: 256, frames: 10, fmt: WEBP, duration_ms: 100 }
+    description: "An animated lossless WebP of 10 frames at 100 ms, looping forever. A decoder that does not know animation shows the first frame only."
+    tags: [image, animated]
+    expect: { width: 256, height: 256, frames: 10, animated: true }
     size_class: free

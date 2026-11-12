@@ -12,8 +12,10 @@ that: text is drawn with the pinned default font, and every save passes explicit
 from __future__ import annotations
 
 import io
+import struct
 import subprocess
 import tempfile
+import zlib
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -100,7 +102,15 @@ def _convert(image: Image.Image, mode: str, width: int, height: int) -> Image.Im
     if mode == "CMYK":
         return image.convert("CMYK")
     if mode == "I;16":
-        return Image.linear_gradient("L").resize((width, height)).convert("I;16")
+        # A diagonal ramp over the whole 16-bit range. The ramp this branch wrote before was
+        # an 8-bit gradient in a 16-bit container, every sample below 256, so a decoder that
+        # kept only the low 8 bits showed the same picture. Along one axis a 256-wide image
+        # would step by exactly 257, low byte equal to high; on a diagonal it does not. No
+        # published fixture takes this branch.
+        span = max(width + height - 2, 1)
+        ramp = Image.new("I", (width, height))
+        ramp.putdata([(x + y) * 65535 // span for y in range(height) for x in range(width)])
+        return ramp.convert("I;16")
     if mode == "I;16B":
         # The card itself at 16 bits, big-endian: the only mode Pillow writes in Motorola
         # byte order ("MM"), so a TIFF reader assuming Intel order or 8-bit samples fails.
@@ -143,6 +153,10 @@ def testcard(
     compression: str | None = None,
 ) -> bytes:
     """One test card saved in the requested format."""
+    if interlaced:
+        # Pillow's PNG writer hard-codes the interlace flag to 0 and ignores the option, so
+        # `interlaced=True` used to produce a plain file under an interlaced name.
+        raise ValueError("Pillow cannot write an interlaced PNG; use image.png_interlaced")
     image = test_card(width, height, mode)
     if fmt == "PNG":
         return _save(image, "PNG", optimize=optimize, interlace=1 if interlaced else 0)
@@ -157,6 +171,56 @@ def testcard(
     if fmt == "TIFF":
         return _save(image, "TIFF", compression=compression or "raw")
     raise ValueError(f"unsupported format {fmt!r}")
+
+
+#: The Adam7 passes, as (first column, first row, column step, row step).
+ADAM7_PASSES = (
+    (0, 0, 8, 8),
+    (4, 0, 8, 8),
+    (0, 4, 4, 8),
+    (2, 0, 4, 4),
+    (0, 2, 2, 4),
+    (1, 0, 2, 2),
+    (0, 1, 1, 2),
+)
+PNG_SIGNATURE_BYTES = b"\x89PNG\r\n\x1a\n"
+
+
+def _png_chunk(kind: bytes, payload: bytes) -> bytes:
+    return (
+        struct.pack(">I", len(payload))
+        + kind
+        + payload
+        + struct.pack(">I", zlib.crc32(kind + payload))
+    )
+
+
+@generator()
+def png_interlaced(_ctx: GeneratorContext, *, width: int, height: int) -> bytes:
+    """The RGB test card as an Adam7 interlaced PNG, with the seven passes written here.
+
+    Pillow reads interlaced PNGs but its writer always sets the flag to 0. Each pass holds
+    every `step`-th pixel of every `step`-th row from its own offset, each row led by a filter
+    byte (0, none); a pass with no pixels is left out, which small images need.
+    """
+    rgb = test_card(width, height, "RGB").tobytes()
+    raw = bytearray()
+    for first_column, first_row, column_step, row_step in ADAM7_PASSES:
+        columns = range(first_column, width, column_step)
+        if not columns:
+            continue
+        for y in range(first_row, height, row_step):
+            raw.append(0)
+            for x in columns:
+                offset = (y * width + x) * 3
+                raw += rgb[offset : offset + 3]
+    header = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 1)
+    return (
+        PNG_SIGNATURE_BYTES
+        + _png_chunk(b"IHDR", header)
+        + _png_chunk(b"IDAT", zlib.compress(bytes(raw), 6))
+        + _png_chunk(b"IEND", b"")
+    )
 
 
 @generator()
@@ -281,6 +345,39 @@ def exif_rotated(_ctx: GeneratorContext, *, width: int, height: int) -> bytes:
     return _save(stored, "JPEG", quality=90, exif=exif.tobytes(), subsampling="4:2:0")
 
 
+#: EXIF's GPS and Exif sub-IFD pointers, and the tags written into them.
+GPS_IFD, EXIF_IFD = 0x8825, 0x8769
+
+
+@generator()
+def exif_gps(_ctx: GeneratorContext, *, width: int, height: int) -> bytes:
+    """A test card with a GPS position and a capture time: 0 N 0 E (Null Island) at 2020-01-01.
+
+    The position is a place nobody lives, so the file carries no real location; it is what a
+    pipeline that strips or reads EXIF location has to find.
+    """
+    image = test_card(width, height, "RGB", label="EXIF GPS 0N 0E")
+    exif = Image.Exif()
+    exif[0x010E] = "loremfile.dev EXIF GPS fixture"  # ImageDescription
+    exif[0x0132] = "2020:01:01 00:00:00"  # DateTime
+    exif.get_ifd(EXIF_IFD)[0x9003] = "2020:01:01 00:00:00"  # DateTimeOriginal
+    gps = exif.get_ifd(GPS_IFD)
+    gps[0x0001], gps[0x0002] = "N", (0.0, 0.0, 0.0)  # GPSLatitudeRef, GPSLatitude
+    gps[0x0003], gps[0x0004] = "E", (0.0, 0.0, 0.0)  # GPSLongitudeRef, GPSLongitude
+    return _save(image, "JPEG", quality=85, exif=exif.tobytes(), subsampling="4:2:0")
+
+
+@generator()
+def gif_transparent(_ctx: GeneratorContext, *, width: int, height: int) -> bytes:
+    """A test card whose right half is transparent. GIF transparency is on or off: one palette
+    index is declared transparent, so the PNG fixture's alpha ramp becomes a hard edge."""
+    card = test_card(width, height, "RGB")
+    # One colour fewer, so index 255 is free to be the transparent one.
+    indexed = card.convert("P", palette=Image.Palette.ADAPTIVE, colors=255)
+    indexed.paste(255, (width // 2, 0, width, height))
+    return _save(indexed, "GIF", transparency=255)
+
+
 @generator()
 def ico_multi(_ctx: GeneratorContext, *, sizes: list[int]) -> bytes:
     """A multi-resolution ICO, the shape a real favicon has."""
@@ -292,13 +389,15 @@ def ico_multi(_ctx: GeneratorContext, *, sizes: list[int]) -> bytes:
 
 
 @generator(parallel_safe=False)
-def avif_from_png(ctx: GeneratorContext, *, width: int, height: int, quality: int = 60) -> bytes:
-    """AVIF, encoded by `avifenc` from a PNG test card.
+def avif_from_png(
+    ctx: GeneratorContext, *, width: int, height: int, quality: int = 60, alpha: bool = False
+) -> bytes:
+    """AVIF, encoded by `avifenc` from a PNG test card, an RGBA one with an alpha ramp if `alpha`.
 
     `--jobs 1 --speed 6` per docs/06 §4: multi-threaded AV1 encoding makes
     timing-dependent choices and would not reproduce byte for byte.
     """
-    png = testcard(ctx, width=width, height=height, fmt="PNG")
+    png = testcard(ctx, width=width, height=height, fmt="PNG", mode="RGBA" if alpha else "RGB")
     ctx.workdir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=ctx.workdir) as temporary:
         source = Path(temporary) / "card.png"

@@ -1,15 +1,15 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.12.0",
-  "generated_at": "2026-11-11T22:43:45Z",
+  "catalog_version": "1.13.0",
+  "generated_at": "2026-11-12T07:22:34Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:acc17d4e0b774e49f86c401ceb62da19420036ff075262e231eb9e64fcf378ae",
-  "count": 307,
-  "total_bytes": 647972024,
+  "count": 325,
+  "total_bytes": 658119970,
   "formats": [
     "7z",
     "aac",
@@ -672,6 +672,43 @@
         "quality": 60
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "avif/alpha-256x256.avif",
+      "url": "https://loremfile.dev/avif/alpha-256x256.avif",
+      "format": "avif",
+      "ext": "avif",
+      "mime": "image/avif",
+      "bytes": 1719,
+      "sha256": "afd8a642a3c1022540aae0d5d37e866a6ce67d1fc300fc72f284ccef015f6e10",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A 256x256 AVIF with an alpha channel: the colour-bar card with an alpha ramp, encoded by avifenc at speed 6, single-threaded, the alpha kept as an auxiliary image. For decoders that drop or mishandle transparency.",
+      "tags": [
+        "image",
+        "transparent"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 256,
+        "height": 256,
+        "mode": "RGBA",
+        "frames": 1,
+        "animated": false,
+        "format": "avif",
+        "progressive": false
+      },
+      "generator": "image.avif_from_png",
+      "generator_params": {
+        "width": 256,
+        "height": 256,
+        "quality": 60,
+        "alpha": true
+      },
+      "added_in": "1.13.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -3479,6 +3516,77 @@
       "supersededBy": null
     },
     {
+      "path": "gif/static-256x256.gif",
+      "url": "https://loremfile.dev/gif/static-256x256.gif",
+      "format": "gif",
+      "ext": "gif",
+      "mime": "image/gif",
+      "bytes": 4904,
+      "sha256": "0b32bb43966a24fe5a5ca44e2cbdd05c27bed2a2ef697e8d10bea13e372cbe91",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A 256x256 colour-bar test card as a single-frame GIF: the still counterpart of the animated file.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 256,
+        "height": 256,
+        "mode": "P",
+        "frames": 1,
+        "animated": false,
+        "format": "gif",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 256,
+        "height": 256,
+        "fmt": "GIF"
+      },
+      "added_in": "1.13.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "gif/transparent-256x256.gif",
+      "url": "https://loremfile.dev/gif/transparent-256x256.gif",
+      "format": "gif",
+      "ext": "gif",
+      "mime": "image/gif",
+      "bytes": 3743,
+      "sha256": "6c96cb6b3236406d895966db3ae3e0e07d85586e74236680788c6ffa2e3c0a58",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A 256x256 GIF whose right half is transparent. GIF marks one palette index transparent, so transparency is on or off, with none of the partial alpha the PNG ramp has.",
+      "tags": [
+        "image",
+        "transparent"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 256,
+        "height": 256,
+        "mode": "P",
+        "frames": 1,
+        "animated": false,
+        "format": "gif",
+        "progressive": false,
+        "transparent_pixels": 32768
+      },
+      "generator": "image.gif_transparent",
+      "generator_params": {
+        "width": 256,
+        "height": 256
+      },
+      "added_in": "1.13.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "gpx/track-100-points.gpx",
       "url": "https://loremfile.dev/gpx/track-100-points.gpx",
       "format": "gpx",
@@ -4829,6 +4937,115 @@
       "supersededBy": null
     },
     {
+      "path": "jpg/exif-gps-640x480.jpg",
+      "url": "https://loremfile.dev/jpg/exif-gps-640x480.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 15547,
+      "sha256": "159f0a969cd1f78559ac7ec6b58d952a8ac1178ed837cd172a08c4802b82c46d",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A 640x480 test card with an EXIF GPS position of 0 N 0 E, Null Island, where nobody lives, so no real location, and a capture time of 2020-01-01. For pipelines that read or strip location metadata.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false,
+        "gps_latitude": 0.0,
+        "gps_longitude": 0.0,
+        "exif_datetime_original": "2020:01:01 00:00:00"
+      },
+      "generator": "image.exif_gps",
+      "generator_params": {
+        "width": 640,
+        "height": 480
+      },
+      "added_in": "1.13.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "jpg/exif-orientation-1-640x480.jpg",
+      "url": "https://loremfile.dev/jpg/exif-orientation-1-640x480.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 16749,
+      "sha256": "912528aaac637a126cb558e1d7261eaf1cda2d200fe4192febd9a8d00ef19113",
+      "size_class": "free",
+      "phase": 1,
+      "description": "EXIF orientation 1: the pixels are stored upright and the tag says so, which a viewer has to leave alone. The control for the files whose tag asks for a rotation.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false,
+        "exif_orientation": 1
+      },
+      "generator": "image.exif_orientation",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "orientation": 1
+      },
+      "added_in": "1.13.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "jpg/exif-orientation-3-640x480.jpg",
+      "url": "https://loremfile.dev/jpg/exif-orientation-3-640x480.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 16883,
+      "sha256": "698469165281b0d455b3e54492f12c026c17b6123e13737a9b1bb79028692d09",
+      "size_class": "free",
+      "phase": 1,
+      "description": "EXIF orientation 3: the pixels are stored rotated half a turn, and a viewer that honours the tag turns the 640x480 card upright where one that ignores it leaves it upside down.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false,
+        "exif_orientation": 3
+      },
+      "generator": "image.exif_orientation",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "orientation": 3
+      },
+      "added_in": "1.13.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "jpg/exif-orientation-6-640x480.jpg",
       "url": "https://loremfile.dev/jpg/exif-orientation-6-640x480.jpg",
       "format": "jpg",
@@ -4902,6 +5119,43 @@
       "supersededBy": null
     },
     {
+      "path": "jpg/grayscale-640x480.jpg",
+      "url": "https://loremfile.dev/jpg/grayscale-640x480.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 10749,
+      "sha256": "d1b4104817c2db3692031ea06e2737de3301c1e651911776f8342e6b52ce1e2e",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A single-component greyscale JPEG test card: one channel where an RGB file carries three. For code that assumes every JPEG is colour.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "L",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "fmt": "JPEG",
+        "mode": "L",
+        "quality": 85
+      },
+      "added_in": "1.13.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "jpg/progressive-1920x1080.jpg",
       "url": "https://loremfile.dev/jpg/progressive-1920x1080.jpg",
       "format": "jpg",
@@ -4934,6 +5188,42 @@
         "progressive": true
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "jpg/quality-10-640x480.jpg",
+      "url": "https://loremfile.dev/jpg/quality-10-640x480.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 7664,
+      "sha256": "f878a87beb422130989f6db93482f5e72fd8e2174fedb6d6c7bbe189be1ce303",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The 640x480 colour-bar test card at JPEG quality 10: blocking and ringing around every edge, in a file about half the size of the quality-85 card. For checking what a pipeline does to a badly compressed upload.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "fmt": "JPEG",
+        "quality": 10
+      },
+      "added_in": "1.13.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -8286,6 +8576,78 @@
       "supersededBy": null
     },
     {
+      "path": "png/10mb.png",
+      "url": "https://loremfile.dev/png/10mb.png",
+      "format": "png",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 10015195,
+      "sha256": "ab92f1d41363a0a376c40f7f10f4e1c07fb9c7652daca1cc95bec98b7a76eec8",
+      "size_class": "approx",
+      "phase": 1,
+      "description": "About 10MB of seeded noise, which PNG compression cannot shrink, fitted to within 5% of the nominal size. For upload limits that need a real image of a known size.",
+      "tags": [
+        "image",
+        "sized",
+        "large"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 1024,
+        "height": 3255,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "png",
+        "progressive": false
+      },
+      "generator": "image.noise_sized",
+      "generator_params": {
+        "size": 10000000,
+        "fmt": "PNG"
+      },
+      "added_in": "1.13.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "png/16bit-256x256.png",
+      "url": "https://loremfile.dev/png/16bit-256x256.png",
+      "format": "png",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 2357,
+      "sha256": "3a0fcfd26189392b33c3dbb3ea753e189d4b2471ce33eba3e472ec31ae608e46",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A 16-bit greyscale PNG: a diagonal ramp across the whole 16-bit range, so a decoder that keeps only 8 bits of each sample shows bands where this file is smooth.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 256,
+        "height": 256,
+        "mode": "I;16",
+        "frames": 1,
+        "animated": false,
+        "format": "png",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 256,
+        "height": 256,
+        "fmt": "PNG",
+        "mode": "I;16"
+      },
+      "added_in": "1.13.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "png/1920x1080.png",
       "url": "https://loremfile.dev/png/1920x1080.png",
       "format": "png",
@@ -8386,6 +8748,42 @@
         "fmt": "PNG"
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "png/3840x2160.png",
+      "url": "https://loremfile.dev/png/3840x2160.png",
+      "format": "png",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 32365,
+      "sha256": "a05e0f3750fbd995943cc3bf7111fca7e7d4337494b7b3a57f4f6fb92ba07b63",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A 4K UHD RGB test card with a border, centre cross and a label giving the dimensions and mode, for decoders, resizers and thumbnailers that meet a large frame.",
+      "tags": [
+        "image",
+        "large"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 3840,
+        "height": 2160,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "png",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 3840,
+        "height": 2160,
+        "fmt": "PNG"
+      },
+      "added_in": "1.13.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -8495,6 +8893,78 @@
         "mode": "L"
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "png/indexed-8bit-256x256.png",
+      "url": "https://loremfile.dev/png/indexed-8bit-256x256.png",
+      "format": "png",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 999,
+      "sha256": "64eee1ae41cb2677a758beba6ac2ede1b089235dfc48eac7205e4392061a474c",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An indexed-colour PNG: each 8-bit sample is an index into a palette of at most 64 colours, not a colour. For code that assumes every PNG is RGB or greyscale.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 256,
+        "height": 256,
+        "mode": "P",
+        "frames": 1,
+        "animated": false,
+        "format": "png",
+        "progressive": false,
+        "palette_entries": 64
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 256,
+        "height": 256,
+        "fmt": "PNG",
+        "mode": "P"
+      },
+      "added_in": "1.13.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "png/interlaced-512x512.png",
+      "url": "https://loremfile.dev/png/interlaced-512x512.png",
+      "format": "png",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 9124,
+      "sha256": "53375a62e87dbd0305bb9ab18db9b4411e70be8b01875221000e7b60aa9ec8bd",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An Adam7 interlaced PNG: the same test card as the plain files, stored in seven passes so a browser can show a coarse picture before the rest arrives.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 512,
+        "height": 512,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "png",
+        "progressive": false,
+        "interlaced": true
+      },
+      "generator": "image.png_interlaced",
+      "generator_params": {
+        "width": 512,
+        "height": 512
+      },
+      "added_in": "1.13.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -9201,6 +9671,47 @@
       "supersededBy": null
     },
     {
+      "path": "svg/icons-24x24.svg",
+      "url": "https://loremfile.dev/svg/icons-24x24.svg",
+      "format": "svg",
+      "ext": "svg",
+      "mime": "image/svg+xml",
+      "bytes": 1375,
+      "sha256": "48951e4141b0b84238bbd342f37ec329730d10ddaeb4830114775efcb2c22657",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An icon sprite: six 24 by 24 icons, each defined once as a symbol and shown with use. For icon pipelines and sanitisers that have to follow a use to its symbol.",
+      "tags": [
+        "image",
+        "web"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 21,
+        "max_line_bytes": 107,
+        "root_element": "svg",
+        "width": "144",
+        "height": "24",
+        "viewbox": "0 0 144 24",
+        "has_dtd": false,
+        "elements": 22,
+        "symbols": 6,
+        "symbol_viewboxes": [
+          "0 0 24 24"
+        ],
+        "uses": 6
+      },
+      "generator": "svg.icon_sheet",
+      "generator_params": {},
+      "added_in": "1.13.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "svg/simple-shapes.svg",
       "url": "https://loremfile.dev/svg/simple-shapes.svg",
       "format": "svg",
@@ -9235,6 +9746,79 @@
         "height": 200
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "svg/text-and-gradient.svg",
+      "url": "https://loremfile.dev/svg/text-and-gradient.svg",
+      "format": "svg",
+      "ext": "svg",
+      "mime": "image/svg+xml",
+      "bytes": 1145,
+      "sha256": "8c500b1db0db7d02a0fea8d1fd077017b161b12d235f1cca533332abc5082ca3",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A linear and a radial gradient behind three lines of text in sans-serif, serif and monospace families. For rasterisers that mishandle gradients, font fallback or text anchoring.",
+      "tags": [
+        "image",
+        "web"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 24,
+        "max_line_bytes": 88,
+        "root_element": "svg",
+        "width": "320",
+        "height": "200",
+        "viewbox": "0 0 320 200",
+        "has_dtd": false,
+        "elements": 15,
+        "gradients": 2
+      },
+      "generator": "svg.text_and_gradient",
+      "generator_params": {},
+      "added_in": "1.13.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "svg/viewbox-responsive.svg",
+      "url": "https://loremfile.dev/svg/viewbox-responsive.svg",
+      "format": "svg",
+      "ext": "svg",
+      "mime": "image/svg+xml",
+      "bytes": 604,
+      "sha256": "0f7654a2b8cb71143681fcc3b8bf3f6b17b0dd4f4be937c6e8a92288c28b59bd",
+      "size_class": "free",
+      "phase": 1,
+      "description": "A viewBox and no width or height, so the file has no intrinsic size and fills whatever box it is placed in. Tools disagree about how large to render it.",
+      "tags": [
+        "image",
+        "web"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 10,
+        "max_line_bytes": 94,
+        "root_element": "svg",
+        "width": null,
+        "height": null,
+        "viewbox": "0 0 400 300",
+        "has_dtd": false,
+        "elements": 7
+      },
+      "generator": "svg.viewbox_only",
+      "generator_params": {},
+      "added_in": "1.13.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -10883,6 +11467,80 @@
         "quality": 100
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "webp/animated-10frames-256x256.webp",
+      "url": "https://loremfile.dev/webp/animated-10frames-256x256.webp",
+      "format": "webp",
+      "ext": "webp",
+      "mime": "image/webp",
+      "bytes": 5886,
+      "sha256": "bd6a1f946f481b2572c8aba03a0db2dabfc8a98ab2b29d0c698244bf1287555e",
+      "size_class": "free",
+      "phase": 1,
+      "description": "An animated lossless WebP of 10 frames at 100 ms, looping forever. A decoder that does not know animation shows the first frame only.",
+      "tags": [
+        "image",
+        "animated"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 256,
+        "height": 256,
+        "mode": "RGBA",
+        "frames": 10,
+        "animated": true,
+        "format": "webp",
+        "progressive": false
+      },
+      "generator": "image.animated",
+      "generator_params": {
+        "width": 256,
+        "height": 256,
+        "frames": 10,
+        "fmt": "WEBP",
+        "duration_ms": 100
+      },
+      "added_in": "1.13.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "webp/lossless-640x480.webp",
+      "url": "https://loremfile.dev/webp/lossless-640x480.webp",
+      "format": "webp",
+      "ext": "webp",
+      "mime": "image/webp",
+      "bytes": 938,
+      "sha256": "481ffbbcedf9ae8273be1b6f37fa1a2daebbfa7976143eea08af66e75cbe2bbc",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The 640x480 colour-bar test card as lossless WebP, beside lossy-640x480.webp: the same picture in the other bitstream, which a different decoder reads.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "webp",
+        "progressive": false
+      },
+      "generator": "image.testcard",
+      "generator_params": {
+        "width": 640,
+        "height": 480,
+        "fmt": "WEBP",
+        "quality": 100
+      },
+      "added_in": "1.13.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
