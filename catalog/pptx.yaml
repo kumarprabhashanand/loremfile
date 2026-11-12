@@ -1,4 +1,4 @@
-# PowerPoint presentations (docs/05 §3.5). Launch-set rows only; the rest are P1b.
+# PowerPoint presentations (docs/05 §3.5). Every phase-1 row; the phase-2 rows follow.
 format: pptx
 family: documents
 mime: application/vnd.openxmlformats-officedocument.presentationml.presentation
@@ -83,3 +83,56 @@ fixtures:
       - "Itaque quasi alias fugit"
       - "Sequi nemo irure assumenda"
     label: "1 slide"
+  - name: 10mb.pptx
+    phase: 1
+    generator: office.pptx_sized
+    params: { size: 10000000 }
+    description: "About 10MB: one slide per embedded incompressible seeded-noise PNG, each with a speaker note, so the size is honest rather than padded."
+    tags: [document, sized, image, large]
+    expect: { slide_width_emu: 12191695 }
+    size_class: approx
+    nominal_bytes: 10000000
+    label: "10 MB"
+  - name: with-images.pptx
+    phase: 1
+    generator: office.pptx_basic
+    params: { slides: 1, images: ["png/100x100.png", "png/640x480.png"] }
+    description: "A title-and-content slide, then two slides each holding a published PNG fixture as a picture, read from the bytes that were actually published rather than regenerated."
+    tags: [document, image, multi-page]
+    expect: { slides: 3, images: 2, tables: 0, charts: 0 }
+    size_class: free
+    contains_text:
+      - "Doloribus asperiores repellendus architecto"
+      - "Dolore sunt porro reprehenderit"
+      - "Laborum doloribus anim in"
+      - "Placeat fugit aliquip veniam"
+    depends_on: ["png/100x100.png", "png/640x480.png"]
+    label: "2 images"
+  - name: with-notes.pptx
+    phase: 1
+    generator: office.pptx_basic
+    params: { slides: 3, notes: true }
+    description: "Three title-and-content slides of Lorem Ipsum, each with a speaker note. Notes live in parts of their own, which extractors that read only the slides never see."
+    tags: [document, multi-page, text]
+    expect: { slides: 3, notes: 3 }
+    size_class: free
+    contains_text:
+      - "Omnis consectetur asperiores ipsa"
+      - "Ipsa rem recusandae labore"
+      - "Aspernatur asperiores fugiat accusantium"
+      - "Ex esse necessitatibus accusantium"
+    label: "notes on 3 slides"
+  - name: with-table-and-chart.pptx
+    phase: 1
+    generator: office.pptx_basic
+    params: { slides: 1, table_rows: 5, chart: true }
+    description: "A title-and-content slide, a slide with a native table of five people and a slide with a native column chart: both of the shapes extractors tend to miss, in one deck."
+    tags: [document, text]
+    expect: { slides: 3, tables: 1, charts: 1 }
+    size_class: free
+    contains_text:
+      - "Dolorum ullamco anim adipisci"
+      - "Doloribus explicabo eaque ullamco"
+      - "Quisquam placeat necessitatibus do"
+      - "Laboris quibusdam asperiores dolor"
+    label: "table and chart"

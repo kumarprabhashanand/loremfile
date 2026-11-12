@@ -1,4 +1,4 @@
-# Rich Text Format (docs/05 §3.5). Launch-set rows only; the rest are P1b.
+# Rich Text Format (docs/05 §3.5). Every phase-1 row; the phase-2 rows follow.
 format: rtf
 family: documents
 mime: application/rtf
@@ -16,4 +16,12 @@ fixtures:
     description: "Three paragraphs of Lorem Ipsum in Times New Roman. Every byte is ASCII, so no reader has to guess an encoding."
     tags: [document, text]
     expect: { paragraphs: 3, has_font_table: true, encoding: "utf-8", bom: false }
+    size_class: free
+  - name: with-table-and-formatting.rtf
+    phase: 1
+    generator: office.rtf_formatted
+    params: { table_rows: 4 }
+    description: "Bold, italic, underline, two colours, a larger size and a second font in one paragraph, then a bordered table of three columns and five rows. Every byte is ASCII, so no reader has to guess an encoding."
+    tags: [document, text]
+    expect: { paragraphs: 3, has_font_table: true, has_color_table: true, table_rows: 5, table_columns: 3, encoding: "utf-8", bom: false }
     size_class: free
