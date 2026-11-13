@@ -1,0 +1,31 @@
+# Sample-file URLs that fail for a plain client, each as `loremfile replacements check` reads it.
+# Read monthly (docs/11 §3): a row whose URL works again is deleted, and one that fails
+# differently is corrected, never left to read as it did. `kind` is one of status, tls,
+# not-the-file or no-cors (src/loremfile/replacements.py); `nearest` is a published path.
+checked: 2026-11-13
+entries:
+  - url: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+    kind: status
+    status: 403
+    seen: "403, with a small XML error body in place of the video."
+    nearest: mp4/sample.mp4
+  - url: https://africau.edu/images/default/sample.pdf
+    kind: status
+    status: 404
+    seen: "404, an HTML error page in place of the PDF."
+    nearest: pdf/sample.pdf
+  - url: https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4
+    kind: tls
+    seen: "The certificate does not name sample-videos.com, so a client that checks it refuses the connection."
+    nearest: mp4/sample.mp4
+  - url: https://file-examples.com/wp-content/storage/2017/10/file-sample_150kB.pdf
+    kind: not-the-file
+    status: 200
+    type: application/pdf
+    seen: "200, but the body is a short HTML page titled Download redirect, not a PDF."
+    nearest: pdf/sample.pdf
+  - url: https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3
+    kind: no-cors
+    status: 200
+    seen: "The MP3 arrives, but with no Access-Control-Allow-Origin header, so fetch() from a page on another origin is refused."
+    nearest: mp3/sample.mp3

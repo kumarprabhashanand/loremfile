@@ -27,6 +27,7 @@ from jinja2 import TemplateError
 
 from loremfile import __version__, config, validators
 from loremfile import build as build_module
+from loremfile import replacements as replacements_module
 from loremfile.catalog import Catalog, CatalogError
 from loremfile.infra import apply as apply_infra
 from loremfile.infra import audit as audit_infra
@@ -180,6 +181,47 @@ def catalog_validate(as_json: bool) -> None:
             "catalog validate",
             ok=not errors,
             summary=summary,
+            items=items,
+            errors=errors,
+            as_json=as_json,
+        )
+    )
+
+
+# --- replacements ----------------------------------------------------------
+
+
+@main.group()
+def replacements() -> None:
+    """The sample-file URLs that fail for a plain client (the /replacements page)."""
+
+
+@replacements.command("check")
+@click.option("--json", "as_json", is_flag=True, help="Print one JSON object.")
+def replacements_check(as_json: bool) -> None:
+    """Re-read every URL on /replacements and say which rows no longer hold.
+
+    For the monthly pass (docs/11 §3). It reads from the machine it runs on, with our own agent
+    and a foreign Origin, and exits 1 when a row works again, fails differently, or cannot be
+    read, so that a row is deleted or corrected and never left to read as it did.
+    """
+    path = config.repo_root() / "site" / "content" / "replacements.yaml"
+    checked, rows = replacements_module.load(path)
+    results = replacements_module.check(rows)
+    items: list[Item] = [
+        {"path": row["url"], "status": "ok" if held else "changed", "detail": reading.detail}
+        for row, reading, held in results
+    ]
+    errors = [
+        f"{row['url']}: listed as {row['kind']}, now {reading.kind} ({reading.detail})"
+        for row, reading, held in results
+        if not held
+    ]
+    sys.exit(
+        _emit(
+            "replacements check",
+            ok=not errors,
+            summary={"rows": len(rows), "changed": len(errors), "listed_on": checked},
             items=items,
             errors=errors,
             as_json=as_json,

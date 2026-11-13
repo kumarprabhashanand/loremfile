@@ -39,6 +39,7 @@ SITE_FILES = (
     "formats",
     "changelog",
     "status",
+    "replacements",
     "docs",
     "docs/",
     "legal",
