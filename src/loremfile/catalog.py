@@ -222,7 +222,7 @@ class Fixture(BaseModel):
     #: A few words naming what sets this file apart on its page, for the page title and
     #: description (docs/05 §1 rule 9). Authored, not measured: it may hold a number only
     #: if a validator measures that number, which tests/unit/test_labels.py checks against
-    #: the manifest. A format page switches to the labelled title once every file has one.
+    #: the manifest. A format page switches to the labelled description once every file has one.
     label: str | None = Field(default=None, min_length=2, max_length=MAX_LABEL_CHARS)
 
     # The owning format, injected by the loader so a Fixture can compute its own path.

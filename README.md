@@ -15,8 +15,8 @@ No ads, no accounts, no rate-limit surprises, no attribution required. Open CORS
 support, one-year immutable caching, and a machine-readable
 [`manifest.json`](https://loremfile.dev/manifest.json) with SHA-256 hashes for every file.
 
-228 files across 78 formats plus the `edge/` set are live, at catalog version 1.2.0. The
-specification lives in [`docs/`](docs/).
+The specification lives in [`docs/`](docs/). What is live, with each file's size and hash,
+is the [manifest](https://loremfile.dev/manifest.json).
 
 ## Canonical host
 
@@ -56,8 +56,8 @@ Pull fixtures into a workflow and check each one against its `sha256` in the man
 ```
 
 It writes to `loremfile-fixtures/` and outputs `dir` and `count`. A file whose bytes do not
-match the manifest fails the step and names the file. `catalog-version: "1.2.0"` refuses to
-run if loremfile.dev has moved on.
+match the manifest fails the step and names the file. `catalog-version` refuses to run if
+loremfile.dev has moved on from the version you name.
 
 The action is shell only and talks to nothing but loremfile.dev. It downloads one file at a
 time with a pause between them and backs off on a 429, because the published rate limit

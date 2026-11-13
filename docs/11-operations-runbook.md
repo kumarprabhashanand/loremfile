@@ -35,6 +35,7 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 - (O, 10 minutes; the agent cannot see account settings or billing) Run the hardening checklist from `10-security.md` §5 (read-only spot check: 2FA on, tokens as inventoried, Registrar lock, auto-renew; the readable "must be off" settings via `infra audit`, the manual ones listed in `08` §8 and the dashboard-only ones in `08` §8b by eye).
 - (O) Check the card on file is not expiring within 60 days.
 - (A) Verify the latest GitHub Release archive is downloadable and `sha256sum -c` (macOS: `shasum -a 256 -c`) passes for 3 random entries.
+- (A) **One maintenance pull request** (2026-11-13): Dependabot runs monthly for all three ecosystems (`.github/dependabot.yml`), and its dependency bumps, together with any new AI-crawler tokens for the legal pages, go in one pull request. No standalone pull request for either. A Dependabot *security* alert is not on this schedule (§2's table).
 
 ## 4. Quarterly (+60 minutes)
 

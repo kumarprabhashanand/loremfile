@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Every format page opens with a "Start here" block: one file's URL, a Copy button, a Download
+  link and, where a browser draws or plays the format, a preview. Each file in the table has a
+  Download link too.
+
 ## [1.14.0] - 2026-11-13
 
 - Nine more video files. MP4: 30 seconds of 720p, a minute of 1080p, 4K, square, 60 fps, and

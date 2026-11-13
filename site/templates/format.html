@@ -1,5 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
+{% if start %}
+<section class="start" aria-labelledby="start-heading">
+  <h2 id="start-heading">Start here</h2>
+  <p class="start-url"><code>{{ start.url }}</code>
+    <button type="button" class="copy" data-copy="{{ start.url }}" hidden>Copy URL</button>
+    <a class="download" href="/{{ start.path }}" download>Download</a></p>
+  <p class="start-meta">{{ start.size }}, <code>{{ start.mime }}</code>. {{ start.description }}</p>
+{% if start.kind == "image" %}
+  <img class="preview" src="/{{ start.path }}" alt="{{ start.description }}" loading="lazy"{% if start.width %} width="{{ start.width }}" height="{{ start.height }}"{% endif %}>
+{% elif start.kind == "audio" %}
+  <audio class="preview" controls preload="none" src="/{{ start.path }}"></audio>
+{% elif start.kind == "video" %}
+  <video class="preview" controls preload="none" src="/{{ start.path }}"{% if start.width %} width="{{ start.width }}" height="{{ start.height }}"{% endif %}></video>
+{% endif %}
+</section>
+
+{% endif %}
 <div class="prose intro">{{ intro }}</div>
 <p class="meta">{{ rows|length }} file{{ "" if rows|length == 1 else "s" }}. The same list as JSON: <a href="{{ index_url }}"><code>{{ index_url }}</code></a></p>
 
@@ -13,7 +30,8 @@
 {% for row in rows %}
     <tr>
       <th scope="row"><a href="/{{ row.path }}"><code>{{ row.name }}</code></a>
-        <button type="button" class="copy" data-copy="{{ row.url }}" hidden>Copy URL</button></th>
+        <button type="button" class="copy" data-copy="{{ row.url }}" hidden>Copy URL</button>
+        <a class="download" href="/{{ row.path }}" download>Download</a></th>
       <td>{{ row.size }}</td>
       <td>{{ row.props }}</td>
       <td>{{ row.description }}
