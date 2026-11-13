@@ -146,9 +146,9 @@ def favicon_ico() -> bytes:
 
 
 #: What the card says beside the mark: the tagline and one URL a visitor can paste. The URL is
-#: the home page's example, which a test holds to the manifest.
+#: the home page's example, which a test holds to the manifest (docs/05 §8).
 OG_TAGLINE = "sample files you can hotlink"
-OG_URL = "loremfile.dev/pdf/a4-3pages.pdf"
+OG_URL = "loremfile.dev/pdf/sample.pdf"
 
 
 def og_card() -> bytes:

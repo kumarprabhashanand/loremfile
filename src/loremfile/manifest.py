@@ -112,9 +112,11 @@ class Manifest:
 
     @property
     def current(self) -> list[dict[str, Any]]:
-        """Active and not superseded: what the site lists. A superseded path is still served
-        and still active; it is just no longer the one to recommend (docs/03 §7.3)."""
-        return [e for e in self.active if not e.get("supersededBy")]
+        """Active, not superseded and not an alias: what the site lists and counts. A superseded
+        path is still served and still active; it is just no longer the one to recommend
+        (docs/03 §7.3). An alias is the same file under a guessable name (docs/05 §8), so it is
+        never a second file to count."""
+        return [e for e in self.active if not e.get("supersededBy") and not e.get("aliasOf")]
 
     def to_document(self) -> dict[str, Any]:
         """The full top-level object, sorted by path (docs/04 §1.1)."""
@@ -255,6 +257,7 @@ def build_entry(
         "deprecated": fixture.superseded_by is not None,
         "supersededBy": fixture.superseded_by,
         **({"notes": fixture.notes} if fixture.notes else {}),
+        **({"aliasOf": fixture.alias_of} if fixture.alias_of else {}),
     }
 
 
@@ -281,9 +284,11 @@ def render_sha256sums(manifest: Manifest) -> str:
 
 
 def render_formats_json(manifest: Manifest, mime_defaults: dict[str, str]) -> str:
-    """Per-format counts and byte totals (docs/04 §3). Active fixtures only."""
+    """Per-format counts and byte totals (docs/04 §3). Active fixtures only, aliases not counted."""
     formats: dict[str, dict[str, Any]] = {}
     for entry in sorted(manifest.active, key=lambda e: e["path"]):
+        if entry.get("aliasOf"):
+            continue
         fmt = entry["format"]
         row = formats.setdefault(
             fmt,

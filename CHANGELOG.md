@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-11-13
+
+- A URL you can guess: `/{format}/sample.{format}`, for example `/pdf/sample.pdf`, serves the
+  same bytes as the file each format page starts with. Every format has one except `hls`,
+  `edge`, `ogv`, `ts` and `opus`. These are new paths with new manifest entries that name the
+  original in `aliasOf`; the site's counts leave them out.
 - Every format page opens with a "Start here" block: one file's URL, a Copy button, a Download
   link and, where a browser draws or plays the format, a preview. Each file in the table has a
   Download link too.

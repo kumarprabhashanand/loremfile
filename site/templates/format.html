@@ -6,7 +6,7 @@
   <p class="start-url"><code>{{ start.url }}</code>
     <button type="button" class="copy" data-copy="{{ start.url }}" hidden>Copy URL</button>
     <a class="download" href="/{{ start.path }}" download>Download</a></p>
-  <p class="start-meta">{{ start.size }}, <code>{{ start.mime }}</code>. {{ start.description }}</p>
+  <p class="start-meta">{{ start.size }}, <code>{{ start.mime }}</code>. {{ start.description }}{% if start.original %} The same bytes as <a href="/{{ start.original }}"><code>{{ start.original }}</code></a>.{% endif %}</p>
 {% if start.kind == "image" %}
   <img class="preview" src="/{{ start.path }}" alt="{{ start.description }}" loading="lazy"{% if start.width %} width="{{ start.width }}" height="{{ start.height }}"{% endif %}>
 {% elif start.kind == "audio" %}

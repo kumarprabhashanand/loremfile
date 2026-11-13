@@ -40,6 +40,8 @@ POPULAR = (
     "xlsx/1sheet-1000rows.xlsx",
     "bin/10mib-plus-1.bin",
 )
+#: The home page's example URL: the PDF format's alias, the one name worth remembering.
+EXAMPLE = "pdf/sample.pdf"
 #: docs/05 §5, in order.
 FAMILIES = (
     ("documents", "Documents"),
@@ -79,7 +81,7 @@ LABELS = {
 }
 #: Top-level keys the site owns; a format of the same name would overwrite one.
 RESERVED = frozenset(
-    {"formats", "docs", "legal", "changelog", "status", "assets", "schema", "testing"}
+    {"formats", "docs", "legal", "changelog", "status", "assets", "schema", "testing", "sample"}
 )
 SECURITY_TXT_DAYS = 365
 #: docs/04 §6, exactly; tests/unit/test_site_build.py compares the two.
@@ -843,17 +845,24 @@ def dataset(
 DateOf = Callable[[str], dt.date | None]
 
 
-def start_here(fmt: str, entry: dict[str, Any]) -> dict[str, Any]:
+def start_here(
+    fmt: str, entry: dict[str, Any], alias: dict[str, Any] | None = None
+) -> dict[str, Any]:
     """What a format page's "Start here" block shows of its default file (docs/05 §8): the
-    URL to copy, the size and type, and a preview only where a browser draws or plays it."""
+    URL to copy, the size and type, and a preview only where a browser draws or plays it.
+
+    The URL is the format's `sample.{ext}` alias where it has one, which serves the same bytes
+    and is the one to remember; `original` names the file it is an alias of."""
     props = entry.get("props") or {}
     kind = defaults.PREVIEW.get(fmt)
     dimensions = (props.get("width"), props.get("height"))
     sized_box = kind in {"image", "video"} and all(str(v).isdigit() for v in dimensions)
+    shown = alias or entry
     return {
-        "path": entry["path"],
-        "name": entry["path"].split("/", 1)[1],
-        "url": f"{config.BASE_URL}{entry['path']}",
+        "path": shown["path"],
+        "name": shown["path"].split("/", 1)[1],
+        "url": f"{config.BASE_URL}{shown['path']}",
+        "original": entry["path"] if alias else None,
         "size": sized(entry["bytes"]),
         "mime": entry["mime"],
         "description": entry["description"],
@@ -869,12 +878,14 @@ def format_pages(
     formats = sorted({entry["format"] for entry in manifest.entries})
     pages: list[Page] = []
     drifting = {f.path for c in catalogs.values() for f in c.fixtures if f.expected_drift}
+    aliases = {e["format"]: e for e in manifest.active if e.get("aliasOf")}
     for fmt in formats:
         if fmt in RESERVED or fmt not in catalogs:
             raise SiteError(f"format {fmt!r} is reserved by the site or absent from the catalog")
         info = catalogs[fmt]
         entries = sorted(
-            (e for e in manifest.entries if e["format"] == fmt), key=lambda e: e["path"]
+            (e for e in manifest.entries if e["format"] == fmt and not e.get("aliasOf")),
+            key=lambda e: e["path"],
         )
         served = [e for e in entries if e.get("status", "active") == "active"]
         # A superseded path is still served, but the page recommends its replacement and
@@ -911,6 +922,11 @@ def format_pages(
             fmt, info.family.value, manifest.entries, drifting, POPULAR
         )
         by_path = {e["path"]: e for e in active}
+        alias = aliases.get(fmt)
+        if alias is not None and alias["aliasOf"] not in by_path:
+            raise SiteError(
+                f"{alias['path']} is an alias of {alias['aliasOf']}, which is not served"
+            )
         page = Page(
             key=fmt,
             h1=info.seo_title,
@@ -931,7 +947,13 @@ def format_pages(
                     )
                 ),
                 "rows": rows,
-                "start": start_here(fmt, by_path[choice[0]]) if choice else None,
+                "start": (
+                    start_here(fmt, by_path[alias["aliasOf"]], alias)
+                    if alias
+                    else start_here(fmt, by_path[choice[0]])
+                    if choice
+                    else None
+                ),
                 "removed": [e for e in entries if e.get("status") == "removed"],
                 "superseded": superseded,
                 "related": [
@@ -1011,6 +1033,8 @@ def home_page(
     missing = [path for path in POPULAR if path not in by_path]
     if missing:
         raise SiteError(f"popular paths not in the manifest: {', '.join(missing)} (docs/05 §8)")
+    if EXAMPLE not in manifest.by_path:
+        raise SiteError(f"the home page's example {EXAMPLE} is not in the manifest (docs/05 §8)")
     above, between, below = home_parts(content(root, "home.md"))
     return Page(
         key="index.html",
@@ -1025,7 +1049,7 @@ def home_page(
             "pitch": trusted(markdown.render(above)),
             "pitch_after": trusted(markdown.render(between)),
             "pitch_below": trusted(markdown.render(below)),
-            "example": {"path": POPULAR[0], "url": f"{config.BASE_URL}{POPULAR[0]}"},
+            "example": {"path": EXAMPLE, "url": f"{config.BASE_URL}{EXAMPLE}"},
             "families": families(manifest, catalogs),
             "popular": [
                 {
@@ -1337,7 +1361,7 @@ def format_index(manifest: Manifest, fmt: str) -> bytes:
     active = [
         e
         for e in document["fixtures"]
-        if e["format"] == fmt and e.get("status", "active") == "active"
+        if e["format"] == fmt and e.get("status", "active") == "active" and not e.get("aliasOf")
     ]
     document.pop("formats")
     document.update(count=len(active), total_bytes=sum(e["bytes"] for e in active), fixtures=active)
@@ -1378,6 +1402,8 @@ def llms(
         # `/{format}/{name}` literally and gets a 404 (2026-10-23).
         f"- Every fixture: {{format}}/{{name}} under the site root, for example "
         f"{base}pdf/a4-1page.pdf (the manifest lists every path)",
+        f"- A URL you can guess: {{format}}/sample.{{format}} is the file each format page starts "
+        f"with, byte for byte, for example {base}pdf/sample.pdf (not hls, edge, ogv, ts or opus)",
         f"- Machine-readable list of everything: {base}manifest.json (JSON, includes sha256, "
         "bytes, mime, measured properties)",
         f"- Per-format lists: {{format}}/index.json, for example {base}pdf/index.json",

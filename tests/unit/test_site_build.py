@@ -111,7 +111,9 @@ def test_the_page_that_reads_edge_case_counts_its_files_and_a_one_file_page_is_s
 
 
 def fixtures_manifest() -> list[dict[str, Any]]:
-    return list(json.loads((ROOT / "manifest.json").read_text())["fixtures"])
+    """The listed files: an alias is the same file under a guessable name, so it is not one."""
+    entries = json.loads((ROOT / "manifest.json").read_text())["fixtures"]
+    return [e for e in entries if not e.get("aliasOf")]
 
 
 def test_every_built_key_is_what_its_public_path_reaches(keys: dict[str, Path]) -> None:
@@ -297,7 +299,9 @@ def test_a_format_index_has_the_manifest_shape_for_one_format(site: Path) -> Non
     index = json.loads(text(site, "_formats/pdf.json"))
     manifest = json.loads((ROOT / "manifest.json").read_text())
     active = [
-        e for e in manifest["fixtures"] if e["format"] == "pdf" and e.get("status") == "active"
+        e
+        for e in manifest["fixtures"]
+        if e["format"] == "pdf" and e.get("status") == "active" and not e.get("aliasOf")
     ]
     assert set(index) == set(manifest) - {"formats"}
     assert index["fixtures"] == active
@@ -719,7 +723,9 @@ def test_every_format_page_has_a_twin_listing_exactly_its_files(site: Path) -> N
     current = {
         e["path"]
         for e in json.loads((ROOT / "manifest.json").read_text())["fixtures"]
-        if e.get("status", "active") == "active" and not e.get("supersededBy")
+        if e.get("status", "active") == "active"
+        and not e.get("supersededBy")
+        and not e.get("aliasOf")
     }
     formats = sorted({path.split("/", 1)[0] for path in fixtures()})
     assert {"jpg", "wav", "7z"} <= set(formats)

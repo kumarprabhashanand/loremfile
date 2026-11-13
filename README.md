@@ -5,7 +5,7 @@ PDFs, images, audio, video, office documents, data files, archives, fonts, text 
 raw byte blobs and deliberately malformed edge cases.
 
 ```
-https://loremfile.dev/pdf/a4-3pages.pdf
+https://loremfile.dev/pdf/sample.pdf
 https://loremfile.dev/bin/10mb.bin
 https://loremfile.dev/mp4/720p-5s.mp4
 https://loremfile.dev/edge/jpg-truncated-50pct.jpg

@@ -216,6 +216,8 @@ def test_formats_json_matches_the_manifest() -> None:
     counts = {row["format"]: row["count"] for row in document["formats"]}
     actual: dict[str, int] = {}
     for entry in manifest.active:
+        if entry.get("aliasOf"):
+            continue  # an alias is the same file under a guessable name, not one to count
         actual[entry["format"]] = actual.get(entry["format"], 0) + 1
     assert counts == actual
 

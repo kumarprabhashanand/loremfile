@@ -51,6 +51,7 @@ def eligible(
         if e.get("status", "active") == "active"
         and not e.get("supersededBy")
         and not e.get("edge_case")
+        and not e.get("aliasOf")
         and e["path"] not in drifting
     ]
 
