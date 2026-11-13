@@ -21,6 +21,10 @@ fixtures:
     expect: { width: 1280, height: 720, vcodec: vp9, acodec: opus }
     size_class: free
   - name: 1080p-10s-vp9.webm
+    expected_drift: >-
+      Not byte-reproducible off the CI reference fleet: libvpx and libopus choose SIMD kernels
+      from the CPU features they find, and no ffmpeg flag reaches that choice (docs/06
+      section 4, RISK-21).
     phase: 1
     generator: media_video.webm
     params: { width: 1920, height: 1080, duration: 10 }
@@ -37,6 +41,10 @@ fixtures:
     expect: { width: 1280, height: 720, vcodec: vp8, acodec: vorbis }
     size_class: free
   - name: alpha-vp9-512x512-5s.webm
+    expected_drift: >-
+      Not byte-reproducible off the CI reference fleet: libvpx and libopus choose SIMD kernels
+      from the CPU features they find, and no ffmpeg flag reaches that choice (docs/06
+      section 4, RISK-21).
     phase: 1
     generator: media_video.webm
     params: { width: 512, height: 512, duration: 5, alpha: true }

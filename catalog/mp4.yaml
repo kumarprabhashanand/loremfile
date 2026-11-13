@@ -117,7 +117,7 @@ fixtures:
   - name: 720p-30s.mp4
     phase: 1
     generator: media_video.mp4
-    params: { width: 1280, height: 720, duration: 30 }
+    params: { width: 1280, height: 720, duration: 30, x264_asm: "MMX2,SSE2,SSSE3,SSE4.2,AVX" }
     description: "1280x720 at 30 fps, thirty seconds, H.264 plus AAC. Long enough for seeking, buffering and progress-bar tests that a five-second clip cannot exercise."
     tags: [video, codec-h264, codec-aac]
     expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, fps: 30.0 }
@@ -126,7 +126,7 @@ fixtures:
   - name: 1080p-60s.mp4
     phase: 1
     generator: media_video.mp4
-    params: { width: 1920, height: 1080, duration: 60 }
+    params: { width: 1920, height: 1080, duration: 60, x264_asm: "MMX2,SSE2,SSSE3,SSE4.2,AVX" }
     description: "1920x1080 at 30 fps, sixty seconds, H.264 plus AAC: a full minute of Full HD for upload limits, transcode timing and streaming tests."
     tags: [video, codec-h264, codec-aac, large]
     expect: { width: 1920, height: 1080, vcodec: h264, acodec: aac, fps: 30.0 }
@@ -144,7 +144,7 @@ fixtures:
   - name: square-720x720-5s.mp4
     phase: 1
     generator: media_video.mp4
-    params: { width: 720, height: 720, duration: 5 }
+    params: { width: 720, height: 720, duration: 5, x264_asm: "MMX2,SSE2,SSSE3,SSE4.2,AVX" }
     description: "720x720 at 30 fps, five seconds, H.264 plus AAC. A square frame, the shape social feeds use, for players and croppers that assume landscape."
     tags: [video, codec-h264, codec-aac]
     expect: { width: 720, height: 720, vcodec: h264, acodec: aac, fps: 30.0 }
@@ -153,7 +153,7 @@ fixtures:
   - name: 60fps-720p-5s.mp4
     phase: 1
     generator: media_video.mp4
-    params: { width: 1280, height: 720, duration: 5, fps: 60 }
+    params: { width: 1280, height: 720, duration: 5, fps: 60, x264_asm: "MMX2,SSE2,SSSE3,SSE4.2,AVX" }
     description: "1280x720 at 60 fps, five seconds, H.264 plus AAC: twice the frame rate of the default sample, for players, frame-rate converters and timestamp code that assume 30."
     tags: [video, codec-h264, codec-aac]
     expect: { width: 1280, height: 720, vcodec: h264, acodec: aac, fps: 60.0 }

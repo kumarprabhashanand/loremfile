@@ -40,6 +40,15 @@ def _inputs(
     return [*args, "-t", f"{duration:g}"]
 
 
+def _x264_args(asm: str | None) -> list[str]:
+    """X264_ARGS, with `asm=` appended to the one `-x264-params` value when it is pinned."""
+    args = list(X264_ARGS)
+    if asm:
+        at = args.index("-x264-params") + 1
+        args[at] = f"{args[at]}:asm={asm}"
+    return args
+
+
 def _target(ctx: GeneratorContext, suffix: str) -> Path:
     ctx.workdir.mkdir(parents=True, exist_ok=True)
     return ctx.workdir / f"{ctx.path.replace('/', '_')}{suffix}"
@@ -65,14 +74,17 @@ def mp4(
     container: str = "mp4",
     faststart: bool = True,
     rotation: int = 0,
+    x264_asm: str | None = None,
 ) -> bytes:
     """H.264 video with AAC audio in MP4, MOV or MPEG-TS.
 
     `rotation` is the clockwise turn, in degrees, that the video track's display matrix asks
     a player to apply. The encode is the unrotated one, byte for byte: only the matrix moves.
+    `x264_asm` names the instruction sets x264 may use (`asm=` in `-x264-params`), which
+    pins the kernels it would otherwise pick from the CPU it finds (docs/06 §4).
     """
     args = _inputs(width, height, fps, duration, audio)
-    args += ["-c:v", encoder_for("h264"), *X264_ARGS]
+    args += ["-c:v", encoder_for("h264"), *_x264_args(x264_asm)]
     if profile:
         args += ["-profile:v", profile]
     if level:

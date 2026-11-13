@@ -4,9 +4,11 @@ Nine files in two formats, named by `catalog/_plan.yaml` and not by subtraction.
 that take seconds to encode are built twice in fresh directories and must match themselves;
 the four that take minutes (30 s of 720p, 60 s of 1080p, 4K, 1080p VP9) are encoded by CI's
 `build --new`, validated there, and held to the manifest by `manifest check`, which is a
-stronger run-twice than another copy of it here. Every control builds the file without its
-one declared difference and watches the validator refuse it for the property that
-difference carries, and every claim a description makes is pinned to the fact behind it.
+stronger run-twice than another copy of it here (each also rebuilt byte-identically twice by
+hand on 2026-11-13). Which of them reproduce across CPUs is CI's to say; see below. Every
+control builds the file without its one declared difference and watches the validator refuse
+it for the property that difference carries, and every claim a description makes is pinned to
+the fact behind it.
 """
 
 from __future__ import annotations
@@ -24,7 +26,13 @@ from loremfile.build import load_generators
 from loremfile.catalog import Catalog
 from loremfile.generators import media_video
 from loremfile.generators.base import REGISTRY, GeneratorContext
-from loremfile.generators.media_video import ROTATION_MATRICES, _boxes, set_rotation
+from loremfile.generators.media_video import (
+    ROTATION_MATRICES,
+    X264_ARGS,
+    _boxes,
+    _x264_args,
+    set_rotation,
+)
 from loremfile.util.determinism import deterministic
 from loremfile.util.ffmpeg import alpha_plane
 from loremfile.validators import load, validate
@@ -160,6 +168,52 @@ def test_the_validators_still_measure_published_files_as_published(path, tmp_pat
     entry = CATALOG.by_path[path]
     report = validate(build(path, tmp_path), entry, CATALOG.mime_for(entry))
     assert report.ok and report.props == MANIFEST[path]["props"]
+
+
+# --- the cross-CPU evidence, and what was done about it -------------------------------------
+
+#: CI's first run of this batch (run 43401786770, an AMD EPYC 9V45) rebuilt six of the nine
+#: files to bytes that differ from the Intel Core i5-8210Y's: the four H.264 files below and
+#: the two libvpx files. Three reproduced: `4k-5s`, the rotated file and the VP8 file.
+PINNED_X264 = (
+    "mp4/720p-30s.mp4",
+    "mp4/1080p-60s.mp4",
+    "mp4/square-720x720-5s.mp4",
+    "mp4/60fps-720p-5s.mp4",
+)
+LIBVPX_DRIFT = ("webm/1080p-10s-vp9.webm", "webm/alpha-vp9-512x512-5s.webm")
+X264_SIMD_PIN = "MMX2,SSE2,SSSE3,SSE4.2,AVX"
+
+
+def test_the_x264_pin_is_on_the_four_files_that_drifted_and_on_no_published_row() -> None:
+    """`x264_asm` is new, so no published row can carry it: their commands are unchanged."""
+    carrying = {p for p, f in CATALOG.by_path.items() if "x264_asm" in f.params}
+    assert carrying == set(PINNED_X264)
+    assert all(CATALOG.by_path[p].params["x264_asm"] == X264_SIMD_PIN for p in PINNED_X264)
+    assert all(MANIFEST[p]["added_in"] == "1.14.0" for p in carrying)
+
+
+def test_the_pin_edits_the_one_x264_params_value_and_nothing_else() -> None:
+    assert _x264_args(None) == list(X264_ARGS), "unpinned, the published recipe exactly"
+    pinned = _x264_args("MMX2,SSE2")
+    at = pinned.index("-x264-params") + 1
+    assert pinned[at] == "threads=1:asm=MMX2,SSE2"
+    assert pinned[:at] + pinned[at + 1 :] == list(X264_ARGS[:at] + X264_ARGS[at + 1 :])
+
+
+def test_the_libvpx_files_are_marked_expected_drift_and_the_others_are_not() -> None:
+    """Only CI's runs can say; the evidence is the run above, and libvpx has no knob."""
+    marked = {p for p in PATHS if CATALOG.by_path[p].expected_drift}
+    assert marked == set(LIBVPX_DRIFT)
+    assert all("RISK-21" in CATALOG.by_path[p].expected_drift for p in marked)
+
+
+@pytest.mark.container
+def test_the_instruction_set_changes_what_x264_writes_so_the_pin_is_doing_something(tmp_path):
+    """The premise, measured on whatever machine runs it: capped at SSE2, x264 writes other
+    bytes than capped at AVX. Without this the pin could be a no-op nobody would notice."""
+    square = "mp4/square-720x720-5s.mp4"
+    assert build(square, tmp_path / "avx") != build(square, tmp_path / "sse2", x264_asm="MMX2,SSE2")
 
 
 # --- the controls: each file without its one difference -------------------------------------
