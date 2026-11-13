@@ -186,6 +186,11 @@ def test_nothing_unmarked_is_quietly_exempt(catalog: Catalog) -> None:
         "webm/720p-5s-vp9.webm",
         # 1.11.0: the same VP9 and Opus encode in Matroska (docs/11 §7.9b).
         "mkv/vp9-opus-720p-5s.mkv",
+        # 1.14.0: libvpx and x264 again, on CI's AMD EPYC against the author's Intel i5-8210Y.
+        "webm/1080p-10s-vp9.webm",
+        "webm/alpha-vp9-512x512-5s.webm",
+        "mp4/60fps-720p-5s.mp4",
+        "mp4/1080p-60s.mp4",
     }, f"expected_drift set changed: {sorted(marked)}"
 
 

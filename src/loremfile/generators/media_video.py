@@ -13,6 +13,7 @@ reachable analytically rather than by search: bytes are bitrate x seconds / 8.
 
 from __future__ import annotations
 
+import struct
 from pathlib import Path
 
 from loremfile.config import APPROX_TOLERANCE
@@ -30,11 +31,22 @@ AUDIO_BITS_PER_SECOND = 128_000
 X264_ARGS = ("-preset", "medium", "-crf", "23", "-pix_fmt", "yuv420p", "-x264-params", "threads=1")
 
 
-def _inputs(width: int, height: int, fps: int, duration: float, audio: bool) -> list[str]:
-    args = ["-f", "lavfi", "-i", f"testsrc2=size={width}x{height}:rate={fps}"]
+def _inputs(
+    width: int, height: int, fps: int, duration: float, audio: bool, effects: str = ""
+) -> list[str]:
+    args = ["-f", "lavfi", "-i", f"testsrc2=size={width}x{height}:rate={fps}{effects}"]
     if audio:
         args += ["-f", "lavfi", "-i", AUDIO_SOURCE]
     return [*args, "-t", f"{duration:g}"]
+
+
+def _x264_args(asm: str | None) -> list[str]:
+    """X264_ARGS, with `asm=` appended to the one `-x264-params` value when it is pinned."""
+    args = list(X264_ARGS)
+    if asm:
+        at = args.index("-x264-params") + 1
+        args[at] = f"{args[at]}:asm={asm}"
+    return args
 
 
 def _target(ctx: GeneratorContext, suffix: str) -> Path:
@@ -61,10 +73,18 @@ def mp4(
     level: str | None = None,
     container: str = "mp4",
     faststart: bool = True,
+    rotation: int = 0,
+    x264_asm: str | None = None,
 ) -> bytes:
-    """H.264 video with AAC audio in MP4, MOV or MPEG-TS."""
+    """H.264 video with AAC audio in MP4, MOV or MPEG-TS.
+
+    `rotation` is the clockwise turn, in degrees, that the video track's display matrix asks
+    a player to apply. The encode is the unrotated one, byte for byte: only the matrix moves.
+    `x264_asm` names the instruction sets x264 may use (`asm=` in `-x264-params`), which
+    pins the kernels it would otherwise pick from the CPU it finds (docs/06 §4).
+    """
     args = _inputs(width, height, fps, duration, audio)
-    args += ["-c:v", encoder_for("h264"), *X264_ARGS]
+    args += ["-c:v", encoder_for("h264"), *_x264_args(x264_asm)]
     if profile:
         args += ["-profile:v", profile]
     if level:
@@ -75,7 +95,70 @@ def mp4(
         args += ["-movflags", "+faststart"]
     suffix = {"mp4": ".mp4", "mov": ".mov", "mpegts": ".ts", "matroska": ".mkv"}[container]
     args += ["-f", container]
-    return _encode(ctx, suffix, args)
+    data = _encode(ctx, suffix, args)
+    return set_rotation(data, rotation) if rotation else data
+
+
+#: A display matrix (ISO/IEC 14496-12 §8.3.2) is nine 32-bit values, a b u / c d v / x y w.
+#: a, b, c and d are 16.16 fixed point and w is 2.30, so 0x10000 is 1 and 0x40000000 is 1.
+UNIT, UNIT_W = 0x10000, 0x40000000
+ROTATION_MATRICES = {
+    90: (0, UNIT, 0, -UNIT, 0, 0, 0, 0, UNIT_W),
+    180: (-UNIT, 0, 0, 0, -UNIT, 0, 0, 0, UNIT_W),
+    270: (0, -UNIT, 0, UNIT, 0, 0, 0, 0, UNIT_W),
+}
+BOX_HEADER_BYTES = 8
+#: Where the matrix sits in a `tkhd` box's payload: after the version and flags, the
+#: creation and modification times, the track id, a reserved word and the duration (32-bit
+#: fields in version 0, with 64-bit times and duration in version 1), then 16 bytes more.
+TKHD_MATRIX_OFFSET = {0: 4 + 20 + 16, 1: 4 + 32 + 16}
+
+
+def _boxes(data: bytes | bytearray, start: int, end: int) -> list[tuple[bytes, int, int]]:
+    """(name, payload start, box end) for each box between `start` and `end`."""
+    found, offset = [], start
+    while offset + BOX_HEADER_BYTES <= end:
+        (size,) = struct.unpack_from(">I", data, offset)
+        name, header = bytes(data[offset + 4 : offset + 8]), BOX_HEADER_BYTES
+        if size == 1:
+            (size,) = struct.unpack_from(">Q", data, offset + 8)
+            header = 16
+        elif size == 0:
+            size = end - offset
+        if size < header or offset + size > end:
+            raise ValueError(f"the {name!r} box at byte {offset} does not fit its parent")
+        found.append((name, offset + header, offset + size))
+        offset += size
+    return found
+
+
+def set_rotation(data: bytes, degrees: int) -> bytes:
+    """The same MP4 with the video track's display matrix turned `degrees` clockwise.
+
+    ffmpeg 5.1 cannot write it: `-display_rotation` arrives in 6.0 and the muxer ignores the
+    old `rotate` tag. The matrix is a fixed-size field, so no offset in the file moves. The
+    video track is found by its handler type, never by position.
+    """
+    if degrees not in ROTATION_MATRICES:
+        raise ValueError(f"rotation is one of {sorted(ROTATION_MATRICES)}, not {degrees}")
+    out = bytearray(data)
+    moov = [box for box in _boxes(out, 0, len(out)) if box[0] == b"moov"]
+    if len(moov) != 1:
+        raise ValueError(f"expected one moov box, found {len(moov)}")
+    for name, start, end in _boxes(out, moov[0][1], moov[0][2]):
+        if name != b"trak":
+            continue
+        children = {n: (s, e) for n, s, e in _boxes(out, start, end)}
+        mdia = children.get(b"mdia")
+        hdlr = {n: (s, e) for n, s, e in _boxes(out, *mdia)}.get(b"hdlr") if mdia else None
+        # hdlr's payload: version and flags, a pre-defined word, then the handler type.
+        if hdlr is None or out[hdlr[0] + 8 : hdlr[0] + 12] != b"vide":
+            continue
+        tkhd = children[b"tkhd"][0]
+        at = tkhd + TKHD_MATRIX_OFFSET[out[tkhd]]
+        out[at : at + 36] = struct.pack(">9i", *ROTATION_MATRICES[degrees])
+        return bytes(out)
+    raise ValueError("the file has no video track to rotate")
 
 
 #: The subtitle cues `mkv_tracks` embeds: (start, end, text), plain SRT.
@@ -157,6 +240,13 @@ def mkv_tracks(
     return _encode(ctx, ".mkv", args)
 
 
+#: Appended to the test pattern for `alpha`: a horizontal ramp, fully transparent at the left
+#: edge and opaque at the right, so a player that drops the alpha plane shows the picture
+#: whole and one that keeps it shows it fading in. The expression ignores time, so every
+#: frame carries the same alpha.
+ALPHA_RAMP = ",format=yuva420p,geq=lum='lum(X,Y)':cb='cb(X,Y)':cr='cr(X,Y)':a='255*X/(W-1)'"
+
+
 @generator(parallel_safe=False)
 def webm(
     ctx: GeneratorContext,
@@ -167,34 +257,62 @@ def webm(
     fps: int = 30,
     bitrate: str = "1M",
     container: str = "webm",
+    vcodec: str = "vp9",
+    alpha: bool = False,
 ) -> bytes:
-    """VP9 video with Opus audio, in WebM or (`container: matroska`) general Matroska.
+    """VP9 video with Opus audio, or (`vcodec: vp8`) VP8 with Vorbis, in WebM or (`container:
+    matroska`) general Matroska. `alpha` adds an alpha plane to the VP9 stream.
 
-    `-row-mt 0` keeps the encode single-threaded.
+    `-row-mt 0` keeps the VP9 encode single-threaded, and libvpx cannot write alpha with
+    alt-ref frames, so `alpha` turns them off (`-auto-alt-ref 0`).
     """
-    args = _inputs(width, height, fps, duration, audio=True)
-    args += [
-        "-c:v",
-        encoder_for("vp9"),
-        "-b:v",
-        bitrate,
-        "-row-mt",
-        "0",
-        "-threads",
-        "1",
-        "-deadline",
-        "good",
-        "-cpu-used",
-        "2",
-        "-pix_fmt",
-        "yuv420p",
-        "-c:a",
-        encoder_for("opus"),
-        "-b:a",
-        "96k",
-        "-f",
-        container,
-    ]
+    if vcodec not in {"vp8", "vp9"}:
+        raise ValueError(f"vcodec is vp8 or vp9, not {vcodec!r}")
+    if alpha and vcodec != "vp9":
+        raise ValueError("alpha is catalogued for VP9 only")
+    args = _inputs(width, height, fps, duration, audio=True, effects=ALPHA_RAMP if alpha else "")
+    if vcodec == "vp8":
+        args += [
+            "-c:v",
+            encoder_for("vp8"),
+            "-b:v",
+            bitrate,
+            "-threads",
+            "1",
+            "-deadline",
+            "good",
+            "-cpu-used",
+            "2",
+            "-pix_fmt",
+            "yuv420p",
+            "-c:a",
+            encoder_for("vorbis"),
+            "-q:a",
+            "4",
+        ]
+    else:
+        args += [
+            "-c:v",
+            encoder_for("vp9"),
+            "-b:v",
+            bitrate,
+            "-row-mt",
+            "0",
+            "-threads",
+            "1",
+            "-deadline",
+            "good",
+            "-cpu-used",
+            "2",
+            "-pix_fmt",
+            "yuva420p" if alpha else "yuv420p",
+            *(["-auto-alt-ref", "0"] if alpha else []),
+            "-c:a",
+            encoder_for("opus"),
+            "-b:a",
+            "96k",
+        ]
+    args += ["-f", container]
     return _encode(ctx, {"webm": ".webm", "matroska": ".mkv"}[container], args)
 
 

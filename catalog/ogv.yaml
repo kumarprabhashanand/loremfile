@@ -1,4 +1,4 @@
-# Ogg video (docs/05 §3.3). Launch-set rows only; the rest are P1b.
+# Ogg video (docs/05 §3.3). Every phase-1 row; the phase-2 rows follow.
 format: ogv
 family: video
 mime: video/ogg

@@ -162,6 +162,39 @@ def packet_bytes(path: Path, stream: str = "a:0", *, timeout: int = 120) -> int:
     return sum(int(packet["size"]) for packet in packets)
 
 
+#: The libvpx decoders: ffmpeg's native VP8 and VP9 decoders drop the alpha plane.
+ALPHA_DECODERS = {"vp8": "libvpx", "vp9": "libvpx-vp9"}
+
+
+def alpha_plane(path: Path, codec: str, *, timeout: int = 120) -> bytes:
+    """The first frame's alpha plane, one byte per pixel, decoded by the libvpx decoder."""
+    command = [
+        tool("ffmpeg"),
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-nostdin",
+        "-c:v",
+        ALPHA_DECODERS[codec],
+        "-i",
+        str(path),
+        "-frames:v",
+        "1",
+        "-vf",
+        "alphaextract,format=gray",
+        "-f",
+        "rawvideo",
+        "-",
+    ]
+    completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
+        command, capture_output=True, timeout=timeout, check=False
+    )
+    if completed.returncode != 0 or not completed.stdout:
+        tail = completed.stderr.decode("utf-8", "replace").strip()
+        raise FfmpegError(f"ffmpeg could not decode an alpha plane: {tail}")
+    return completed.stdout
+
+
 def available_encoders() -> set[str]:
     """Encoder names the installed ffmpeg offers. Used by the toolchain smoke test."""
     completed = subprocess.run(  # noqa: S603 - fixed argv, no shell

@@ -96,6 +96,10 @@ PINNED: dict[str, tuple[str, Any]] = {
         "names the displayed size; the props record the stored, rotated pixels",
         lambda p: (p["display_width"], p["display_height"]) == (640, 480),
     ),
+    "mp4/4k-5s.mp4": (
+        "4k names the Ultra HD frame, 3840 by 2160, and not 4,000 of anything",
+        lambda p: (p["width"], p["height"]) == (3840, 2160),
+    ),
     "svg/icons-24x24.svg": (
         "names each icon's size; the sheet's own width and height are the six icons side by side",
         lambda p: (

@@ -24,7 +24,14 @@ from PIL import Image
 
 from loremfile.catalog import Fixture
 from loremfile.util import tone
-from loremfile.util.ffmpeg import FfmpegError, decode_pcm, packet_bytes, probe
+from loremfile.util.ffmpeg import (
+    ALPHA_DECODERS,
+    FfmpegError,
+    alpha_plane,
+    decode_pcm,
+    packet_bytes,
+    probe,
+)
 from loremfile.validators import ValidationError, register
 
 #: Formats whose props come from ffprobe. HLS playlists are text and handled separately.
@@ -185,7 +192,8 @@ def _tone_props(data: bytes, suffix: str, props: dict[str, Any]) -> dict[str, An
 
 def _container_props(data: bytes, suffix: str, report: dict[str, Any]) -> dict[str, Any]:
     """What only some files carry, published only when present, so no other entry changes:
-    each audio track's tone when there is more than one, the subtitle codec, and chapters."""
+    each audio track's tone when there is more than one, the subtitle codec, chapters, and the
+    alpha plane of a stream that has one."""
     found: dict[str, Any] = {}
     tracks = _streams(report, "audio")
     if len(tracks) > 1:
@@ -198,7 +206,7 @@ def _container_props(data: bytes, suffix: str, report: dict[str, Any]) -> dict[s
         found["scodec"] = subtitles[0]["codec_name"]
     if report.get("chapters"):
         found["chapters"] = len(report["chapters"])
-    return found
+    return found | _alpha_props(data, suffix, report)
 
 
 def _ogg_chain_bytes(data: bytes) -> list[bytes]:
@@ -257,6 +265,7 @@ def _common_props(report: dict[str, Any]) -> dict[str, Any]:
         props["fps"] = round(int(numerator) / int(denominator or 1), 2) if int(numerator) else 0
         if first.get("profile"):
             props["profile"] = first["profile"]
+        props.update(_rotation(first))
         if first["codec_name"] == "h264" and int(first.get("level", -99)) > 0:
             # level_idc is ten times the level: 30 is level 3.0, 31 is level 3.1.
             props["level"] = f"{int(first['level']) / 10:.1f}"
@@ -266,6 +275,44 @@ def _common_props(report: dict[str, Any]) -> dict[str, Any]:
         props["sample_rate"] = int(first["sample_rate"])
         props["channels"] = int(first["channels"])
     return props
+
+
+def _rotation(video: dict[str, Any]) -> dict[str, Any]:
+    """`rotation`: the clockwise degrees a player turns the picture, from the display matrix.
+
+    ffprobe reports the matrix counterclockwise (an iPhone's portrait video reads -90), so
+    the sign is turned here and the key is the figure the old `rotate` tag carried. It is
+    published only for a track that has a matrix, so no other entry changes.
+    """
+    for side in video.get("side_data_list", []):
+        if side.get("side_data_type") == "Display Matrix" and "rotation" in side:
+            return {"rotation": round(-float(side["rotation"])) % 360}
+    return {}
+
+
+def _alpha_props(data: bytes, suffix: str, report: dict[str, Any]) -> dict[str, Any]:
+    """`alpha`, `alpha_min` and `alpha_max` for a stream the container flags as carrying alpha.
+
+    The flag is Matroska's AlphaMode (ffprobe's `alpha_mode` tag), which says an alpha plane
+    exists, not that it holds anything: a flagged stream with every pixel opaque would pass
+    on the flag alone. So the plane is decoded and its extremes measured, over the first
+    frame. They are the decoded values, not the ramp the generator asked for: VP9 is lossy.
+    """
+    video = _streams(report, "video")
+    tags = {k.lower(): v for k, v in (video[0].get("tags") or {}).items()} if video else {}
+    if tags.get("alpha_mode") != "1":
+        return {}
+    codec = video[0]["codec_name"]
+    if codec not in ALPHA_DECODERS:
+        raise ValidationError(f"an alpha stream in {codec}, which has no alpha decoder here")
+    with tempfile.TemporaryDirectory() as temporary:
+        path = Path(temporary) / f"fixture{suffix}"
+        path.write_bytes(data)
+        try:
+            plane = alpha_plane(path, codec)
+        except FfmpegError as exc:
+            raise ValidationError(f"its alpha plane could not be decoded: {exc}") from exc
+    return {"alpha": True, "alpha_min": min(plane), "alpha_max": max(plane)}
 
 
 def _audio_rates(

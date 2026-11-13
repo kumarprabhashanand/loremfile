@@ -180,6 +180,8 @@ PROVING_FIXTURES = [
     "pdf/form-fields-1page.pdf",
     # Catalog 1.10.0: XlsxWriter's clock, which the guard does not reach, pinned by hand.
     "pptx/with-chart.pptx",
+    # Catalog 1.14.0: a geq-drawn alpha plane through libvpx-vp9, and VP8 with Vorbis.
+    "webm/alpha-vp9-512x512-5s.webm",
 ]
 
 DETERMINISM_TABLE_HEADER = "| Library | Claim | Proving fixture | Verified |"
