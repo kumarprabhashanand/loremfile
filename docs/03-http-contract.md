@@ -126,6 +126,7 @@ Consequences: `fetch()` from any origin works; `<video>`, `<audio>`, `<img cross
 3. To fix a defective fixture, add a new fixture (e.g. `a4-3pages-v2.pdf`), set `supersededBy` on the old entry, mark it `deprecated: true`, keep serving it. In the catalog that is `superseded_by: <new path>` on the old row: `manifest update` writes both fields from it, and the site lists the replacement and names the old path in a Superseded section of its format page. First used in 1.8.0, when `jpg/cmyk-640x640.jpg` replaced `jpg/cmyk-640x480.jpg`, whose name misstated its size.
 4. Only a legal takedown may remove an object; the manifest entry then becomes `{"status": "removed", "reason": "…", "removed_at": …}` and the site marks it.
 5. The `manifest.json` document itself, `sha256sums.txt`, the site and `index.json` files are mutable.
+6. A `/{format}/sample.{format}` alias is a fixture like any other: a new path with the bytes of an existing one, frozen from publication, never repointed (`05` §8). If the file a format page starts with later changes, the alias keeps its bytes and the page follows the catalog.
 
 ## 8. Client guidance (published on the site)
 

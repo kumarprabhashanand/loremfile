@@ -176,9 +176,10 @@ def test_a_format_page_opens_with_a_url_to_copy_and_a_file_to_download(site: Pat
     html = page(site, "pdf")
     assert html.index("Start here") < html.index('class="prose intro"'), "above the guide"
     block = html.split('<section class="start"', 1)[1].split("</section>", 1)[0]
-    assert "<code>https://loremfile.dev/pdf/a4-3pages.pdf</code>" in block
-    assert 'data-copy="https://loremfile.dev/pdf/a4-3pages.pdf"' in block
-    assert re.search(r'<a class="download" href="/pdf/a4-3pages\.pdf" download>', block)
+    assert "<code>https://loremfile.dev/pdf/sample.pdf</code>" in block, "the alias is the URL"
+    assert 'data-copy="https://loremfile.dev/pdf/sample.pdf"' in block
+    assert re.search(r'<a class="download" href="/pdf/sample\.pdf" download>', block)
+    assert "same bytes as" in block.lower() and "pdf/a4-3pages.pdf" in block, "and whose bytes"
     assert "https://" not in re.search(r'href="([^"]*)" download', block).group(1)
 
 
@@ -239,7 +240,7 @@ def test_the_home_page_leads_with_the_example_then_search_and_the_grid_then_the_
         "<h1>",
         "You are testing something that takes files",
         "Here is one:",
-        "<code>https://loremfile.dev/pdf/a4-3pages.pdf</code>",
+        "<code>https://loremfile.dev/pdf/sample.pdf</code>",
         "Paste it into a browser",
         'id="search-heading"',
         'id="formats-heading"',
@@ -251,7 +252,7 @@ def test_the_home_page_leads_with_the_example_then_search_and_the_grid_then_the_
     positions = [html.index(marker) for marker in order]
     assert positions == sorted(positions), order
     example = html.split('<p class="example">', 1)[1].split("</p>", 1)[0]
-    assert 'data-copy="https://loremfile.dev/pdf/a4-3pages.pdf"' in example
+    assert 'data-copy="https://loremfile.dev/pdf/sample.pdf"' in example
 
 
 def test_the_paragraphs_that_moved_below_the_grid_kept_their_words() -> None:
@@ -270,8 +271,9 @@ def test_the_paragraphs_that_moved_below_the_grid_kept_their_words() -> None:
 
 
 def test_the_example_is_a_published_file() -> None:
-    assert POPULAR[0] in {e["path"] for e in MANIFEST}
-    assert f"loremfile.dev/{POPULAR[0]}" == icons.OG_URL, "the card shows the home example"
+    assert build.EXAMPLE in {e["path"] for e in MANIFEST}
+    assert f"loremfile.dev/{build.EXAMPLE}" == icons.OG_URL, "the card shows the home example"
+    assert next(e for e in MANIFEST if e["path"] == build.EXAMPLE)["aliasOf"] == POPULAR[0]
 
 
 # --- counts read as one or many --------------------------------------------------------------

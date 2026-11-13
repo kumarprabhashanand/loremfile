@@ -34,8 +34,10 @@ def validate_bin(data: bytes, fixture: Fixture, _mime: str) -> dict[str, Any]:
     """
     pattern = _detect_pattern(data)
     if pattern == "shake256":
+        # An alias serves its original's bytes, so it is held to the original's seed.
+        seeded = fixture.alias_of or fixture.path
         expected = hashlib.shake_256(
-            hashlib.sha256(f"loremfile:{fixture.path}".encode()).digest()
+            hashlib.sha256(f"loremfile:{seeded}".encode()).digest()
         ).digest(len(data))
         if data != expected:
             raise ValidationError("bytes are not the SHAKE-256 stream of this fixture's own seed")

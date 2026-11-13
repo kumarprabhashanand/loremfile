@@ -1,15 +1,15 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.14.0",
-  "generated_at": "2026-11-13T10:29:28Z",
+  "catalog_version": "1.15.0",
+  "generated_at": "2026-11-13T12:07:39Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:acc17d4e0b774e49f86c401ceb62da19420036ff075262e231eb9e64fcf378ae",
-  "count": 334,
-  "total_bytes": 739465804,
+  "count": 409,
+  "total_bytes": 764421099,
   "formats": [
     "7z",
     "aac",
@@ -125,6 +125,38 @@
       "supersededBy": null
     },
     {
+      "path": "7z/sample.7z",
+      "url": "https://loremfile.dev/7z/sample.7z",
+      "format": "7z",
+      "ext": "7z",
+      "mime": "application/x-7z-compressed",
+      "bytes": 1356,
+      "sha256": "096f365bcb768719ba75f2059c07085f29275cbdbda5c762b56e54bb329dc17d",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as 7z/3-text-files.7z, the file the 7z page starts with, at a name that is easy to guess.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 3,
+        "directories": 0,
+        "encrypted": false,
+        "uncompressed_bytes": 3323
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "7z/3-text-files.7z"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "7z/3-text-files.7z"
+    },
+    {
       "path": "aac/adts-30s.aac",
       "url": "https://loremfile.dev/aac/adts-30s.aac",
       "format": "aac",
@@ -165,6 +197,46 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "aac/sample.aac",
+      "url": "https://loremfile.dev/aac/sample.aac",
+      "format": "aac",
+      "ext": "aac",
+      "mime": "audio/aac",
+      "bytes": 490385,
+      "sha256": "025d763833640583eb310b7c016b4e1beefc884c57c3faafd92111f2d3d8da23",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as aac/adts-30s.aac, the file the aac page starts with, at a name that is easy to guess.",
+      "tags": [
+        "audio",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 30042,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 130.6,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "aac/adts-30s.aac"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "aac/adts-30s.aac"
     },
     {
       "path": "aiff/3s.aiff",
@@ -208,6 +280,46 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "aiff/sample.aiff",
+      "url": "https://loremfile.dev/aiff/sample.aiff",
+      "format": "aiff",
+      "ext": "aiff",
+      "mime": "audio/aiff",
+      "bytes": 529254,
+      "sha256": "adb6ccfcc326d079189b74ac88b7da5ea1dca42b556db47d29e300c45829e610",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as aiff/3s.aiff, the file the aiff page starts with, at a name that is easy to guess.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 3000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "pcm_s16be",
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 1411.2,
+        "bit_depth": 16,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "aiff/3s.aiff"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "aiff/3s.aiff"
     },
     {
       "path": "arrow/all-types.arrow",
@@ -598,6 +710,71 @@
       "supersededBy": null
     },
     {
+      "path": "arrow/sample.arrow",
+      "url": "https://loremfile.dev/arrow/sample.arrow",
+      "format": "arrow",
+      "ext": "arrow",
+      "mime": "application/vnd.apache.arrow.file",
+      "bytes": 4810,
+      "sha256": "72e206e0e13e82bf02160413a053220ee12ce883c9ef35269a2a558b5604f691",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as arrow/all-types.arrow, the file the arrow page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "rows": 20,
+        "columns": 9,
+        "row_groups": 1,
+        "column_names": [
+          "list_int32",
+          "struct",
+          "map_string_int32",
+          "dictionary_string",
+          "decimal128",
+          "timestamp_utc",
+          "date32",
+          "time64_us",
+          "binary"
+        ],
+        "ipc_format": "file",
+        "compression": "none",
+        "column_types": [
+          "list<item: int32>",
+          "struct<x: int32, word: string>",
+          "map<string, int32>",
+          "dictionary<values=string, indices=int32, ordered=0>",
+          "decimal128(18, 2)",
+          "timestamp[us, tz=UTC]",
+          "date32[day]",
+          "time64[us]",
+          "binary"
+        ],
+        "null_counts": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "arrow/all-types.arrow"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "arrow/all-types.arrow"
+    },
+    {
       "path": "avi/640x480-5s.avi",
       "url": "https://loremfile.dev/avi/640x480-5s.avi",
       "format": "avi",
@@ -640,6 +817,49 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "avi/sample.avi",
+      "url": "https://loremfile.dev/avi/sample.avi",
+      "format": "avi",
+      "ext": "avi",
+      "mime": "video/x-msvideo",
+      "bytes": 1734596,
+      "sha256": "30db7d163cc591c4253792e38af294566a1ab3d589c94944d914d9f8a40c1521",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as avi/640x480-5s.avi, the file the avi page starts with, at a name that is easy to guess.",
+      "tags": [
+        "video",
+        "codec-mp3"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5040,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 640,
+        "height": 480,
+        "vcodec": "mpeg4",
+        "fps": 30.0,
+        "profile": "Simple Profile",
+        "acodec": "mp3",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "avi/640x480-5s.avi"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "avi/640x480-5s.avi"
     },
     {
       "path": "avif/640x480.avif",
@@ -714,6 +934,40 @@
       "supersededBy": null
     },
     {
+      "path": "avif/sample.avif",
+      "url": "https://loremfile.dev/avif/sample.avif",
+      "format": "avif",
+      "ext": "avif",
+      "mime": "image/avif",
+      "bytes": 1284,
+      "sha256": "c8e3c01650f906bed2073056b23fdaf3f7373b23bbb4ad006d8b06ef30d7c681",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as avif/640x480.avif, the file the avif page starts with, at a name that is easy to guess.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "avif",
+        "progressive": false
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "avif/640x480.avif"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "avif/640x480.avif"
+    },
+    {
       "path": "avro/people-1000.avro",
       "url": "https://loremfile.dev/avro/people-1000.avro",
       "format": "avro",
@@ -758,6 +1012,53 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "avro/sample.avro",
+      "url": "https://loremfile.dev/avro/sample.avro",
+      "format": "avro",
+      "ext": "avro",
+      "mime": "application/avro",
+      "bytes": 109157,
+      "sha256": "5222ff857db756363624c0e5ccd80578865b8dfb2155d3dabda89f9ebb979978",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as avro/people-1000.avro, the file the avro page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "rows": 1000,
+        "columns": 14,
+        "compression": "deflate",
+        "column_names": [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "phone",
+          "street",
+          "city",
+          "country",
+          "birth_date",
+          "signup_at",
+          "balance",
+          "is_active",
+          "tags",
+          "bio"
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "avro/people-1000.avro"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "avro/people-1000.avro"
     },
     {
       "path": "bin/1-byte.bin",
@@ -1356,6 +1657,36 @@
       "supersededBy": null
     },
     {
+      "path": "bin/sample.bin",
+      "url": "https://loremfile.dev/bin/sample.bin",
+      "format": "bin",
+      "ext": "bin",
+      "mime": "application/octet-stream",
+      "bytes": 10485761,
+      "sha256": "c278c7fb096eb6b2c6afe0d9745088d51ff1b23f3e8f292a527237739fd8b243",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as bin/10mib-plus-1.bin, the file the bin page starts with, at a name that is easy to guess.",
+      "tags": [
+        "binary",
+        "boundary",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "pattern": "shake256"
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "bin/10mib-plus-1.bin"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "bin/10mib-plus-1.bin"
+    },
+    {
       "path": "bin/zeros-10mb.bin",
       "url": "https://loremfile.dev/bin/zeros-10mb.bin",
       "format": "bin",
@@ -1447,6 +1778,40 @@
       "supersededBy": null
     },
     {
+      "path": "bmp/sample.bmp",
+      "url": "https://loremfile.dev/bmp/sample.bmp",
+      "format": "bmp",
+      "ext": "bmp",
+      "mime": "image/bmp",
+      "bytes": 196662,
+      "sha256": "f6030a36778514f5f7bcb74a2266d24a3614730668e104cfb58b970ad0fd8a30",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as bmp/24bit-256x256.bmp, the file the bmp page starts with, at a name that is easy to guess.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 256,
+        "height": 256,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "bmp",
+        "progressive": false
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "bmp/24bit-256x256.bmp"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "bmp/24bit-256x256.bmp"
+    },
+    {
       "path": "bz2/lorem-1mb.txt.bz2",
       "url": "https://loremfile.dev/bz2/lorem-1mb.txt.bz2",
       "format": "bz2",
@@ -1478,6 +1843,37 @@
       "supersededBy": null
     },
     {
+      "path": "bz2/sample.bz2",
+      "url": "https://loremfile.dev/bz2/sample.bz2",
+      "format": "bz2",
+      "ext": "bz2",
+      "mime": "application/x-bzip2",
+      "bytes": 151824,
+      "sha256": "dd76e4d5e02c249359f9f9a89b97f9e0f9faba7a9f071785f33b80f6df22d4cd",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as bz2/lorem-1mb.txt.bz2, the file the bz2 page starts with, at a name that is easy to guess.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "compression": "bz2",
+        "members": 1,
+        "uncompressed_bytes": 1000000
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "bz2/lorem-1mb.txt.bz2"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "bz2/lorem-1mb.txt.bz2"
+    },
+    {
       "path": "css/basic.css",
       "url": "https://loremfile.dev/css/basic.css",
       "format": "css",
@@ -1504,6 +1900,37 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "css/sample.css",
+      "url": "https://loremfile.dev/css/sample.css",
+      "format": "css",
+      "ext": "css",
+      "mime": "text/css; charset=utf-8",
+      "bytes": 579,
+      "sha256": "8473e4d88c5f179f138ee8d35c711dbe5f3f0eb77714eb442f921d37d2242972",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as css/basic.css, the file the css page starts with, at a name that is easy to guess.",
+      "tags": [
+        "web",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "rules": 10,
+        "at_rules": 2,
+        "custom_properties": 9
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "css/basic.css"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "css/basic.css"
     },
     {
       "path": "csv/10mb.csv",
@@ -1904,6 +2331,83 @@
       "supersededBy": null
     },
     {
+      "path": "csv/sample.csv",
+      "url": "https://loremfile.dev/csv/sample.csv",
+      "format": "csv",
+      "ext": "csv",
+      "mime": "text/csv; charset=utf-8",
+      "bytes": 249645,
+      "sha256": "415edcfa97d82e5e532d5582d854fb836ab7a2167a1ea49c74e4e851719b586f",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as csv/people-1000.csv, the file the csv page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1001,
+        "max_line_bytes": 369,
+        "rows": 1000,
+        "columns": 14,
+        "delimiter": ",",
+        "has_header": true,
+        "quoted_fields": false,
+        "quoted_delimiter": false,
+        "quoted_newline": false
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "csv/people-1000.csv"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "csv/people-1000.csv"
+    },
+    {
+      "path": "der/sample.der",
+      "url": "https://loremfile.dev/der/sample.der",
+      "format": "der",
+      "ext": "der",
+      "mime": "application/pkix-cert",
+      "bytes": 359,
+      "sha256": "6a8241d991bef7242d2dce1dcb55bf4509a1949ddb4c107ad8424d5c1a18c551",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as der/self-signed-ed25519-cert.der, the file the der page starts with, at a name that is easy to guess.",
+      "tags": [
+        "binary"
+      ],
+      "edge_case": false,
+      "props": {
+        "kind": "certificate",
+        "subject_cn": "fixture.example",
+        "issuer_cn": "fixture.example",
+        "self_signed": true,
+        "algorithm": "ed25519",
+        "serial": 1409983142208024964197,
+        "dns_names": [
+          "fixture.example"
+        ],
+        "has_private_key": false
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "der/self-signed-ed25519-cert.der"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "der/self-signed-ed25519-cert.der"
+    },
+    {
       "path": "der/self-signed-ed25519-cert.der",
       "url": "https://loremfile.dev/der/self-signed-ed25519-cert.der",
       "format": "der",
@@ -2137,6 +2641,48 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "docx/sample.docx",
+      "url": "https://loremfile.dev/docx/sample.docx",
+      "format": "docx",
+      "ext": "docx",
+      "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "bytes": 37209,
+      "sha256": "955ad6f8d4da5ce212dc0ce961598e2ccc8cfe26a5940ed925da59941e29f3c8",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as docx/1page.docx, the file the docx page starts with, at a name that is easy to guess.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "paragraphs": 4,
+        "tables": 0,
+        "table_rows": 0,
+        "images": 0,
+        "words": 170,
+        "inline_images": 0,
+        "anchored_images": 0,
+        "images_with_alt_text": 0,
+        "contains_text": [
+          "Autem aute laborum eaque",
+          "Amet fuga veniam alias",
+          "Ea dolor aute cupidatat",
+          "Explicabo tempora qui sequitur"
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "docx/1page.docx"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "docx/1page.docx"
     },
     {
       "path": "docx/unicode-multilingual.docx",
@@ -3200,6 +3746,43 @@
       "supersededBy": null
     },
     {
+      "path": "eml/sample.eml",
+      "url": "https://loremfile.dev/eml/sample.eml",
+      "format": "eml",
+      "ext": "eml",
+      "mime": "message/rfc822",
+      "bytes": 1531,
+      "sha256": "3e56b059b9255395a67a74d341fab5b72a6e5b3e5682e9d3e9fc71c021ad44f8",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as eml/plain-text.eml, the file the eml page starts with, at a name that is easy to guess.",
+      "tags": [
+        "mail",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "parts": 1,
+        "content_types": [
+          "text/plain"
+        ],
+        "attachments": 0,
+        "multipart": false,
+        "date": "Wed, 01 Jan 2020 00:00:00 +0000",
+        "has_message_id": true,
+        "subject": "A plain text message"
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "eml/plain-text.eml"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "eml/plain-text.eml"
+    },
+    {
       "path": "eml/with-attachments.eml",
       "url": "https://loremfile.dev/eml/with-attachments.eml",
       "format": "eml",
@@ -3322,6 +3905,45 @@
       "supersededBy": null
     },
     {
+      "path": "epub/sample.epub",
+      "url": "https://loremfile.dev/epub/sample.epub",
+      "format": "epub",
+      "ext": "epub",
+      "mime": "application/epub+zip",
+      "bytes": 4871,
+      "sha256": "a4e177da44becedc8cfe1016d37b4b0a7c3e447b892842d9814c9cbecfc18090",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as epub/epub3-3chapters.epub, the file the epub page starts with, at a name that is easy to guess.",
+      "tags": [
+        "document",
+        "text",
+        "multi-page"
+      ],
+      "edge_case": false,
+      "props": {
+        "chapters": 3,
+        "documents": 4,
+        "epub_version": "3.0",
+        "has_nav": true,
+        "contains_text": [
+          "Sapiente perferendis architecto quia",
+          "Dolore nesciunt beatae id",
+          "Assumenda ex enim deserunt",
+          "Ipsum itaque do dolor"
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "epub/epub3-3chapters.epub"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "epub/epub3-3chapters.epub"
+    },
+    {
       "path": "epub/with-images.epub",
       "url": "https://loremfile.dev/epub/with-images.epub",
       "format": "epub",
@@ -3364,6 +3986,45 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "flac/sample.flac",
+      "url": "https://loremfile.dev/flac/sample.flac",
+      "format": "flac",
+      "ext": "flac",
+      "mime": "audio/flac",
+      "bytes": 411820,
+      "sha256": "9af664bced907c264292baf3e61e0d6e64d3c63ecf16d2ac26be80a9ece5a842",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as flac/sine-440hz-30s.flac, the file the flac page starts with, at a name that is easy to guess.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 30000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "flac",
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 107.6,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "flac/sine-440hz-30s.flac"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "flac/sine-440hz-30s.flac"
     },
     {
       "path": "flac/sine-440hz-30s.flac",
@@ -3443,6 +4104,45 @@
       "supersededBy": null
     },
     {
+      "path": "geojson/sample.geojson",
+      "url": "https://loremfile.dev/geojson/sample.geojson",
+      "format": "geojson",
+      "ext": "geojson",
+      "mime": "application/geo+json; charset=utf-8",
+      "bytes": 35344,
+      "sha256": "ed1a30ef9c8987db652a901a2eaa1c3170a89b06213a89b1712e0a7469c332a5",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as geojson/points-100.geojson, the file the geojson page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data",
+        "geo"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1711,
+        "max_line_bytes": 45,
+        "top_type": "object",
+        "items": 100,
+        "features": 100,
+        "geometry_types": [
+          "Point"
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "geojson/points-100.geojson"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "geojson/points-100.geojson"
+    },
+    {
       "path": "gif/1x1.gif",
       "url": "https://loremfile.dev/gif/1x1.gif",
       "format": "gif",
@@ -3516,6 +4216,40 @@
       "supersededBy": null
     },
     {
+      "path": "gif/sample.gif",
+      "url": "https://loremfile.dev/gif/sample.gif",
+      "format": "gif",
+      "ext": "gif",
+      "mime": "image/gif",
+      "bytes": 4904,
+      "sha256": "0b32bb43966a24fe5a5ca44e2cbdd05c27bed2a2ef697e8d10bea13e372cbe91",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as gif/static-256x256.gif, the file the gif page starts with, at a name that is easy to guess.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 256,
+        "height": 256,
+        "mode": "P",
+        "frames": 1,
+        "animated": false,
+        "format": "gif",
+        "progressive": false
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "gif/static-256x256.gif"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "gif/static-256x256.gif"
+    },
+    {
       "path": "gif/static-256x256.gif",
       "url": "https://loremfile.dev/gif/static-256x256.gif",
       "format": "gif",
@@ -3585,6 +4319,47 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "gpx/sample.gpx",
+      "url": "https://loremfile.dev/gpx/sample.gpx",
+      "format": "gpx",
+      "ext": "gpx",
+      "mime": "application/gpx+xml",
+      "bytes": 12873,
+      "sha256": "143bd0b1690ae9ab674233ec510a9fd06e173d37b37cbc3d0fa01821fdb3188f",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as gpx/track-100-points.gpx, the file the gpx page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data",
+        "geo"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 415,
+        "max_line_bytes": 102,
+        "root_element": "gpx",
+        "has_dtd": false,
+        "namespaces": [
+          "http://www.topografix.com/GPX/1/1",
+          "http://www.w3.org/2001/XMLSchema-instance"
+        ],
+        "track_points": 100,
+        "tracks": 1
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "gpx/track-100-points.gpx"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "gpx/track-100-points.gpx"
     },
     {
       "path": "gpx/track-100-points.gpx",
@@ -3688,6 +4463,69 @@
       "supersededBy": null
     },
     {
+      "path": "gz/sample.gz",
+      "url": "https://loremfile.dev/gz/sample.gz",
+      "format": "gz",
+      "ext": "gz",
+      "mime": "application/gzip",
+      "bytes": 252288,
+      "sha256": "c14dfc81ae69d4bd665228536358a3630ed8b8d58dccf8f79dc6dbc712c9eb6d",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as gz/lorem-1mb.txt.gz, the file the gz page starts with, at a name that is easy to guess.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "compression": "gz",
+        "members": 1,
+        "uncompressed_bytes": 1000000
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "gz/lorem-1mb.txt.gz"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "gz/lorem-1mb.txt.gz"
+    },
+    {
+      "path": "har/sample.har",
+      "url": "https://loremfile.dev/har/sample.har",
+      "format": "har",
+      "ext": "har",
+      "mime": "application/json; charset=utf-8",
+      "bytes": 3636,
+      "sha256": "7cc7125995effea6924dc1002299b710e8b1b0b09ac93619ecdc6cbb6bb7da38",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as har/simple-3-requests.har, the file the har page starts with, at a name that is easy to guess.",
+      "tags": [
+        "web",
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 3,
+        "version": "1.2",
+        "pages": 1,
+        "started": "2020-01-01T00:00:00Z"
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "har/simple-3-requests.har"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "har/simple-3-requests.har"
+    },
+    {
       "path": "har/simple-3-requests.har",
       "url": "https://loremfile.dev/har/simple-3-requests.har",
       "format": "har",
@@ -3751,6 +4589,41 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "heic/sample.heic",
+      "url": "https://loremfile.dev/heic/sample.heic",
+      "format": "heic",
+      "ext": "heic",
+      "mime": "image/heic",
+      "bytes": 5066,
+      "sha256": "61aace709cfad9d9155e2b57b484097f77737536e34932075160fc3da6f87fe7",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as heic/640x480.heic, the file the heic page starts with, at a name that is easy to guess.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "major_brand": "heic",
+        "compatible_brands": "mif1,heic,miaf",
+        "primary_item_type": "hvc1",
+        "items": 1,
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "format": "heic"
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "heic/640x480.heic"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "heic/640x480.heic"
     },
     {
       "path": "hls/360p-10s/index.m3u8",
@@ -4410,6 +5283,47 @@
       "supersededBy": null
     },
     {
+      "path": "html/sample.html",
+      "url": "https://loremfile.dev/html/sample.html",
+      "format": "html",
+      "ext": "html",
+      "mime": "text/html; charset=utf-8",
+      "bytes": 696,
+      "sha256": "025f933b4f2d4219651eebea1ef6ccc6fff9221c8e8b4285b27b2a570cd85fc2",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as html/with-inline-css.html, the file the html page starts with, at a name that is easy to guess.",
+      "tags": [
+        "web",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "markup": "html",
+        "elements": 9,
+        "lang": "en",
+        "dir": "",
+        "inline_style": true,
+        "inline_script": false,
+        "tables": 0,
+        "contains_text": [
+          "Inline styles",
+          "Numquam quasi explicabo cillum",
+          "Voluptates magnam rerum recusandae",
+          "Sequi quis asperiores aute"
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "html/with-inline-css.html"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "html/with-inline-css.html"
+    },
+    {
       "path": "html/with-inline-css.html",
       "url": "https://loremfile.dev/html/with-inline-css.html",
       "format": "html",
@@ -4528,6 +5442,45 @@
       "supersededBy": null
     },
     {
+      "path": "ico/sample.ico",
+      "url": "https://loremfile.dev/ico/sample.ico",
+      "format": "ico",
+      "ext": "ico",
+      "mime": "image/x-icon",
+      "bytes": 1507,
+      "sha256": "db56d2d53c213822ca18b51cd58592ebc88774a3c93a1fd1e75377100b3170ae",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as ico/favicon-16-32-48.ico, the file the ico page starts with, at a name that is easy to guess.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 48,
+        "height": 48,
+        "mode": "RGBA",
+        "frames": 1,
+        "animated": false,
+        "format": "ico",
+        "progressive": false,
+        "sizes": [
+          16,
+          32,
+          48
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "ico/favicon-16-32-48.ico"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "ico/favicon-16-32-48.ico"
+    },
+    {
       "path": "ics/recurring-weekly-rrule.ics",
       "url": "https://loremfile.dev/ics/recurring-weekly-rrule.ics",
       "format": "ics",
@@ -4558,6 +5511,39 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "ics/sample.ics",
+      "url": "https://loremfile.dev/ics/sample.ics",
+      "format": "ics",
+      "ext": "ics",
+      "mime": "text/calendar; charset=utf-8",
+      "bytes": 318,
+      "sha256": "e4a3d58c558f217d01d599c488bd1d8c39e82c47dfbc922f0e7323e3cf6ebb67",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as ics/recurring-weekly-rrule.ics, the file the ics page starts with, at a name that is easy to guess.",
+      "tags": [
+        "calendar",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "events": 1,
+        "timezones": 0,
+        "recurring": true,
+        "all_day": false,
+        "timezone_ids": []
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "ics/recurring-weekly-rrule.ics"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "ics/recurring-weekly-rrule.ics"
     },
     {
       "path": "ics/single-event.ics",
@@ -4618,6 +5604,71 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "ini/sample.ini",
+      "url": "https://loremfile.dev/ini/sample.ini",
+      "format": "ini",
+      "ext": "ini",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 468,
+      "sha256": "886ca94c8f0a4761e944f6fbe8c5842bbecec1d942d1a80b5d62bb52e3593502",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as ini/config.ini, the file the ini page starts with, at a name that is easy to guess.",
+      "tags": [
+        "text",
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 26,
+        "max_line_bytes": 51
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "ini/config.ini"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "ini/config.ini"
+    },
+    {
+      "path": "ipynb/sample.ipynb",
+      "url": "https://loremfile.dev/ipynb/sample.ipynb",
+      "format": "ipynb",
+      "ext": "ipynb",
+      "mime": "application/x-ipynb+json",
+      "bytes": 1094,
+      "sha256": "2233f68dec9e15f341bb94aede12648220f599641702e8bcf18206382d69aa58",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as ipynb/simple-with-outputs.ipynb, the file the ipynb page starts with, at a name that is easy to guess.",
+      "tags": [
+        "web",
+        "data",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "cells": 3,
+        "code_cells": 2,
+        "outputs": 2
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "ipynb/simple-with-outputs.ipynb"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "ipynb/simple-with-outputs.ipynb"
     },
     {
       "path": "ipynb/simple-with-outputs.ipynb",
@@ -5229,6 +6280,40 @@
       "supersededBy": null
     },
     {
+      "path": "jpg/sample.jpg",
+      "url": "https://loremfile.dev/jpg/sample.jpg",
+      "format": "jpg",
+      "ext": "jpg",
+      "mime": "image/jpeg",
+      "bytes": 56817,
+      "sha256": "071f0c721c4efa457b26160300ef2d6f2e3fa82b4667f3ba6e687d77005c0330",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as jpg/1920x1080.jpg, the file the jpg page starts with, at a name that is easy to guess.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 1920,
+        "height": 1080,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "jpeg",
+        "progressive": false
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "jpg/1920x1080.jpg"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "jpg/1920x1080.jpg"
+    },
+    {
       "path": "js/hello-console.js",
       "url": "https://loremfile.dev/js/hello-console.js",
       "format": "js",
@@ -5254,6 +6339,36 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "js/sample.js",
+      "url": "https://loremfile.dev/js/sample.js",
+      "format": "js",
+      "ext": "js",
+      "mime": "text/javascript; charset=utf-8",
+      "bytes": 158,
+      "sha256": "65a874537624bd682428f5c53d2acca15c29e078fec691147ec4aec069bbd943",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as js/hello-console.js, the file the js page starts with, at a name that is easy to guess.",
+      "tags": [
+        "web",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "lines": 6,
+        "logs": 1
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "js/hello-console.js"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "js/hello-console.js"
     },
     {
       "path": "json/10mb.json",
@@ -5466,6 +6581,42 @@
       "supersededBy": null
     },
     {
+      "path": "json/sample.json",
+      "url": "https://loremfile.dev/json/sample.json",
+      "format": "json",
+      "ext": "json",
+      "mime": "application/json; charset=utf-8",
+      "bytes": 512687,
+      "sha256": "31eaccbd1d079346d0aa2abf75d6b4fdfedbec298b04ed1dbf13f10e3a5a62d8",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as json/people-1000.json, the file the json page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 18237,
+        "max_line_bytes": 225,
+        "top_type": "array",
+        "items": 1000,
+        "max_depth": 3
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "json/people-1000.json"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "json/people-1000.json"
+    },
+    {
       "path": "kml/placemarks-10.kml",
       "url": "https://loremfile.dev/kml/placemarks-10.kml",
       "format": "kml",
@@ -5504,6 +6655,45 @@
       "supersededBy": null
     },
     {
+      "path": "kml/sample.kml",
+      "url": "https://loremfile.dev/kml/sample.kml",
+      "format": "kml",
+      "ext": "kml",
+      "mime": "application/vnd.google-earth.kml+xml",
+      "bytes": 2394,
+      "sha256": "bb0a4902d30eb160b440839017b984b47d470ea3be9a73df1b9aa2272ccf5120",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as kml/placemarks-10.kml, the file the kml page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data",
+        "geo"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 57,
+        "max_line_bytes": 113,
+        "root_element": "kml",
+        "has_dtd": false,
+        "namespaces": [
+          "http://www.opengis.net/kml/2.2"
+        ],
+        "placemarks": 10
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "kml/placemarks-10.kml"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "kml/placemarks-10.kml"
+    },
+    {
       "path": "kmz/placemarks-10.kmz",
       "url": "https://loremfile.dev/kmz/placemarks-10.kmz",
       "format": "kmz",
@@ -5537,6 +6727,42 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "kmz/sample.kmz",
+      "url": "https://loremfile.dev/kmz/sample.kmz",
+      "format": "kmz",
+      "ext": "kmz",
+      "mime": "application/vnd.google-earth.kmz",
+      "bytes": 790,
+      "sha256": "1912370c5f3ab5d9da84442c589ed3d5032c6000e6d3c261635040080f9f626b",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as kmz/placemarks-10.kmz, the file the kmz page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data",
+        "geo",
+        "archive"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 1,
+        "directories": 0,
+        "method": "deflate",
+        "encrypted": false,
+        "zip64": false,
+        "comment": "",
+        "placemarks": 10
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "kmz/placemarks-10.kmz"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "kmz/placemarks-10.kmz"
     },
     {
       "path": "log/json-lines-app-1000.log",
@@ -5601,6 +6827,39 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "log/sample.log",
+      "url": "https://loremfile.dev/log/sample.log",
+      "format": "log",
+      "ext": "log",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 110093,
+      "sha256": "542b5e7e5bea196e34ae724d9837e0f7de2554a9ea66d51fe28ff2c688c9e2fc",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as log/nginx-access-1000-lines.log, the file the log page starts with, at a name that is easy to guess.",
+      "tags": [
+        "text",
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1000,
+        "max_line_bytes": 127
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "log/nginx-access-1000-lines.log"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "log/nginx-access-1000-lines.log"
     },
     {
       "path": "m4a/aac-30s.m4a",
@@ -5688,6 +6947,46 @@
       "supersededBy": null
     },
     {
+      "path": "m4a/sample.m4a",
+      "url": "https://loremfile.dev/m4a/sample.m4a",
+      "format": "m4a",
+      "ext": "m4a",
+      "mime": "audio/mp4",
+      "bytes": 247060,
+      "sha256": "95440810fceca2522a6194e0f3270da74ececfc15f678f293774b6aba9c15a48",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as m4a/aac-64k-44k-30s.m4a, the file the m4a page starts with, at a name that is easy to guess.",
+      "tags": [
+        "audio",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 30000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "aac",
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 64.3,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "m4a/aac-64k-44k-30s.m4a"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "m4a/aac-64k-44k-30s.m4a"
+    },
+    {
       "path": "mbox/3-messages.mbox",
       "url": "https://loremfile.dev/mbox/3-messages.mbox",
       "format": "mbox",
@@ -5722,6 +7021,43 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "mbox/sample.mbox",
+      "url": "https://loremfile.dev/mbox/sample.mbox",
+      "format": "mbox",
+      "ext": "mbox",
+      "mime": "application/mbox",
+      "bytes": 2922,
+      "sha256": "176774b9f6720f5d2bac78e752513644e1764e1cd5d3460c06e704ff65495d48",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as mbox/3-messages.mbox, the file the mbox page starts with, at a name that is easy to guess.",
+      "tags": [
+        "mail",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "messages": 3,
+        "subjects": [
+          "Message 1 of 3",
+          "Message 2 of 3",
+          "Message 3 of 3"
+        ],
+        "content_types": [
+          "text/plain"
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "mbox/3-messages.mbox"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "mbox/3-messages.mbox"
     },
     {
       "path": "md/all-elements.md",
@@ -5847,6 +7183,48 @@
       "supersededBy": null
     },
     {
+      "path": "md/sample.md",
+      "url": "https://loremfile.dev/md/sample.md",
+      "format": "md",
+      "ext": "md",
+      "mime": "text/markdown; charset=utf-8",
+      "bytes": 920,
+      "sha256": "2ca6240ea3aceb259413b32bf6d60994567e897c8520660048e43011f6ba5221",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as md/all-elements.md, the file the md page starts with, at a name that is easy to guess.",
+      "tags": [
+        "text",
+        "document"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 50,
+        "max_line_bytes": 171,
+        "headings": 8,
+        "anchor_links": 0,
+        "footnotes": 1,
+        "contains_text": [
+          "Officiis ipsa amet repudiandae",
+          "hello from a fenced block",
+          "The footnote body, rendered at the end of the document",
+          "A raw HTML block, which Markdown passes through untouched"
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "md/all-elements.md"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "md/all-elements.md"
+    },
+    {
       "path": "mkv/720p-5s.mkv",
       "url": "https://loremfile.dev/mkv/720p-5s.mkv",
       "format": "mkv",
@@ -5950,6 +7328,51 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "mkv/sample.mkv",
+      "url": "https://loremfile.dev/mkv/sample.mkv",
+      "format": "mkv",
+      "ext": "mkv",
+      "mime": "video/x-matroska",
+      "bytes": 1971254,
+      "sha256": "d97d49b7549a830a722c235fff583532e846f397a39d5cae5856fbb9b41f82e4",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as mkv/720p-5s.mkv, the file the mkv page starts with, at a name that is easy to guess.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5021,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "mkv/720p-5s.mkv"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "mkv/720p-5s.mkv"
     },
     {
       "added_in": "1.11.0",
@@ -6142,6 +7565,51 @@
       "supersededBy": null
     },
     {
+      "path": "mov/sample.mov",
+      "url": "https://loremfile.dev/mov/sample.mov",
+      "format": "mov",
+      "ext": "mov",
+      "mime": "video/quicktime",
+      "bytes": 1974629,
+      "sha256": "1832e6b344fb62c99916b22d291cd48b2e209135a6db1cdfd6d27e57fbf0acc6",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as mov/720p-5s.mov, the file the mov page starts with, at a name that is easy to guess.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "mov/720p-5s.mov"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "mov/720p-5s.mov"
+    },
+    {
       "path": "mp3/10mb.mp3",
       "url": "https://loremfile.dev/mp3/10mb.mp3",
       "format": "mp3",
@@ -6221,6 +7689,46 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "mp3/sample.mp3",
+      "url": "https://loremfile.dev/mp3/sample.mp3",
+      "format": "mp3",
+      "ext": "mp3",
+      "mime": "audio/mpeg",
+      "bytes": 480788,
+      "sha256": "3820efa1481d02e6db8bfd1782ddee1a2d1c27cfab1d470ff0757b2f93770c1e",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as mp3/sine-440hz-30s.mp3, the file the mp3 page starts with, at a name that is easy to guess.",
+      "tags": [
+        "audio",
+        "codec-mp3"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 30024,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 128.0,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "mp3/sine-440hz-30s.mp3"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "mp3/sine-440hz-30s.mp3"
     },
     {
       "path": "mp3/silence-5s.mp3",
@@ -7078,6 +8586,51 @@
       "supersededBy": null
     },
     {
+      "path": "mp4/sample.mp4",
+      "url": "https://loremfile.dev/mp4/sample.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 1974574,
+      "sha256": "62f538e309e954d684da11d56aca69d68317bf2f023d2674c61486f0acd61c17",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as mp4/720p-5s.mp4, the file the mp4 page starts with, at a name that is easy to guess.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "mp4/720p-5s.mp4"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "mp4/720p-5s.mp4"
+    },
+    {
       "path": "mp4/square-720x720-5s.mp4",
       "url": "https://loremfile.dev/mp4/square-720x720-5s.mp4",
       "format": "mp4",
@@ -7205,6 +8758,42 @@
       "supersededBy": null
     },
     {
+      "path": "ndjson/sample.ndjson",
+      "url": "https://loremfile.dev/ndjson/sample.ndjson",
+      "format": "ndjson",
+      "ext": "ndjson",
+      "mime": "application/x-ndjson; charset=utf-8",
+      "bytes": 408525,
+      "sha256": "dc26a29b2bc4f2e59721bf7bed312ccb4c4cf486954c229bd4869c3fcca14ead",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as ndjson/people-1000.ndjson, the file the ndjson page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1000,
+        "max_line_bytes": 531,
+        "top_type": "object",
+        "items": 1000,
+        "max_depth": 2
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "ndjson/people-1000.ndjson"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "ndjson/people-1000.ndjson"
+    },
+    {
       "path": "ogg/chained-2-streams-10s.ogg",
       "url": "https://loremfile.dev/ogg/chained-2-streams-10s.ogg",
       "format": "ogg",
@@ -7303,6 +8892,49 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "ogg/sample.ogg",
+      "url": "https://loremfile.dev/ogg/sample.ogg",
+      "format": "ogg",
+      "ext": "ogg",
+      "mime": "audio/ogg",
+      "bytes": 15365,
+      "sha256": "8d820a02f9f14539de7b92dbdfb95c9c9a3d79f97f4a1aea7a368595b5d0e40c",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as ogg/vorbis-mono-22k-10s.ogg, the file the ogg page starts with, at a name that is easy to guess.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 10000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "vorbis",
+        "sample_rate": 22050,
+        "channels": 1,
+        "chains": 1,
+        "header_pages": 2,
+        "tags": {
+          "ENCODER": "Lavc libvorbis"
+        },
+        "bitrate_kbps": 9.0,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "ogg/vorbis-mono-22k-10s.ogg"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "ogg/vorbis-mono-22k-10s.ogg"
     },
     {
       "path": "ogg/vorbis-30s.ogg",
@@ -7615,6 +9247,40 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "otf/sample.otf",
+      "url": "https://loremfile.dev/otf/sample.otf",
+      "format": "otf",
+      "ext": "otf",
+      "mime": "font/otf",
+      "bytes": 4268,
+      "sha256": "c127a5370fe65f0041381d1b77ec63cafb4718b3d6df0c8f70e6046805979ab6",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as otf/loremfile-sans.otf, the file the otf page starts with, at a name that is easy to guess.",
+      "tags": [
+        "font"
+      ],
+      "edge_case": false,
+      "props": {
+        "glyphs": 96,
+        "cmap_entries": 95,
+        "units_per_em": 1000,
+        "family": "Loremfile Sans",
+        "outlines": "cff",
+        "flavor": "",
+        "embeddable": true
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "otf/loremfile-sans.otf"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "otf/loremfile-sans.otf"
     },
     {
       "path": "parquet/nested-types.parquet",
@@ -7978,6 +9644,52 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "parquet/sample.parquet",
+      "url": "https://loremfile.dev/parquet/sample.parquet",
+      "format": "parquet",
+      "ext": "parquet",
+      "mime": "application/vnd.apache.parquet",
+      "bytes": 47369,
+      "sha256": "6446952ebb32b72d0618b42bf6b15077f30b1bec3718ed2e9eefb12df8ca2db5",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as parquet/nested-types.parquet, the file the parquet page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "rows": 1000,
+        "columns": 9,
+        "row_groups": 1,
+        "compression": "snappy",
+        "column_names": [
+          "id",
+          "name",
+          "address",
+          "contacts",
+          "tags"
+        ],
+        "column_types": [
+          "int32",
+          "struct<first: string, last: string>",
+          "struct<street: string, city: string, country: string>",
+          "map<string, string ('contacts')>",
+          "list<element: string>"
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "parquet/nested-types.parquet"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "parquet/nested-types.parquet"
     },
     {
       "path": "pdf/10mb.pdf",
@@ -8753,6 +10465,48 @@
       "supersededBy": null
     },
     {
+      "path": "pdf/sample.pdf",
+      "url": "https://loremfile.dev/pdf/sample.pdf",
+      "format": "pdf",
+      "ext": "pdf",
+      "mime": "application/pdf",
+      "bytes": 4351,
+      "sha256": "2eb9f305a958647fc9bab6c64ec975f61c7ad0031f62b142a8ebe21c2cb6f67e",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as pdf/a4-3pages.pdf, the file the pdf page starts with, at a name that is easy to guess.",
+      "tags": [
+        "document",
+        "multi-page",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "pages": 3,
+        "page_width_pt": 595.28,
+        "page_height_pt": 841.89,
+        "encrypted": false,
+        "pdf_version": "1.4",
+        "has_outline": false,
+        "has_images": false,
+        "contains_text": [
+          "Lorem sequitur modi debitis",
+          "Do fugiat anim tempor",
+          "Adipiscing maiores minim necessitatibus",
+          "Commodo assumenda voluptas quis"
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "pdf/a4-3pages.pdf"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "pdf/a4-3pages.pdf"
+    },
+    {
       "path": "pdf/scanned-1page.pdf",
       "url": "https://loremfile.dev/pdf/scanned-1page.pdf",
       "format": "pdf",
@@ -8786,6 +10540,44 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "pem/sample.pem",
+      "url": "https://loremfile.dev/pem/sample.pem",
+      "format": "pem",
+      "ext": "pem",
+      "mime": "application/x-pem-file",
+      "bytes": 542,
+      "sha256": "cbefdc05c831c5f36240181c08344b1387a112507f50f92b90c6bab8920faeb2",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as pem/self-signed-ed25519-cert.pem, the file the pem page starts with, at a name that is easy to guess.",
+      "tags": [
+        "text",
+        "binary"
+      ],
+      "edge_case": false,
+      "props": {
+        "kind": "certificate",
+        "subject_cn": "fixture.example",
+        "issuer_cn": "fixture.example",
+        "self_signed": true,
+        "algorithm": "ed25519",
+        "serial": 1409983142208024964197,
+        "dns_names": [
+          "fixture.example"
+        ],
+        "has_private_key": false
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "pem/self-signed-ed25519-cert.pem"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "pem/self-signed-ed25519-cert.pem"
     },
     {
       "path": "pem/self-signed-ed25519-cert.pem",
@@ -9254,6 +11046,40 @@
       "supersededBy": null
     },
     {
+      "path": "png/sample.png",
+      "url": "https://loremfile.dev/png/sample.png",
+      "format": "png",
+      "ext": "png",
+      "mime": "image/png",
+      "bytes": 4208,
+      "sha256": "5329c9114fbac502ca9dd40c79414c1ba1c43f90e26da1f0f8edbe546a3fb4ff",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as png/640x480.png, the file the png page starts with, at a name that is easy to guess.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "png",
+        "progressive": false
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "png/640x480.png"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "png/640x480.png"
+    },
+    {
       "path": "png/transparent-256x256.png",
       "url": "https://loremfile.dev/png/transparent-256x256.png",
       "format": "png",
@@ -9487,6 +11313,49 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "pptx/sample.pptx",
+      "url": "https://loremfile.dev/pptx/sample.pptx",
+      "format": "pptx",
+      "ext": "pptx",
+      "mime": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "bytes": 28621,
+      "sha256": "4b5e7d13384211f5f1287f5ff9118849fb824c6e723d7838ab5ad2b2078c1069",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as pptx/1slide.pptx, the file the pptx page starts with, at a name that is easy to guess.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "slides": 1,
+        "layouts": 1,
+        "images": 0,
+        "slide_width_emu": 12191695,
+        "slide_height_emu": 6858000,
+        "notes": 0,
+        "tables": 0,
+        "charts": 0,
+        "hidden_slides": 0,
+        "contains_text": [
+          "Proident culpa et aliqua",
+          "Proident quia occaecat magna",
+          "Itaque quasi alias fugit",
+          "Sequi nemo irure assumenda"
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "pptx/1slide.pptx"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "pptx/1slide.pptx"
     },
     {
       "path": "pptx/with-chart.pptx",
@@ -9737,6 +11606,41 @@
       "supersededBy": null
     },
     {
+      "path": "rtf/sample.rtf",
+      "url": "https://loremfile.dev/rtf/sample.rtf",
+      "format": "rtf",
+      "ext": "rtf",
+      "mime": "application/rtf",
+      "bytes": 1694,
+      "sha256": "c7d9d289bfe739af9adcc14890294c2aea3d3b3d69d3cb4c751d1624ab8792e0",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as rtf/simple.rtf, the file the rtf page starts with, at a name that is easy to guess.",
+      "tags": [
+        "document",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 5,
+        "max_line_bytes": 740,
+        "paragraphs": 3,
+        "has_font_table": true
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "rtf/simple.rtf"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "rtf/simple.rtf"
+    },
+    {
       "path": "rtf/simple.rtf",
       "url": "https://loremfile.dev/rtf/simple.rtf",
       "format": "rtf",
@@ -9844,6 +11748,39 @@
       "supersededBy": null
     },
     {
+      "path": "sql/sample.sql",
+      "url": "https://loremfile.dev/sql/sample.sql",
+      "format": "sql",
+      "ext": "sql",
+      "mime": "application/sql",
+      "bytes": 429863,
+      "sha256": "7979a92f6555b6ab292a5a227728ed34df170fa53cc095d082cdcbcc00d08071",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as sql/people-1000-inserts-portable.sql, the file the sql page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1018,
+        "max_line_bytes": 549
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "sql/people-1000-inserts-portable.sql"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "sql/people-1000-inserts-portable.sql"
+    },
+    {
       "path": "sqlite/multi-table-with-fk-indexes-views.sqlite",
       "url": "https://loremfile.dev/sqlite/multi-table-with-fk-indexes-views.sqlite",
       "format": "sqlite",
@@ -9926,6 +11863,50 @@
       "supersededBy": null
     },
     {
+      "path": "sqlite/sample.sqlite",
+      "url": "https://loremfile.dev/sqlite/sample.sqlite",
+      "format": "sqlite",
+      "ext": "sqlite",
+      "mime": "application/vnd.sqlite3",
+      "bytes": 131072,
+      "sha256": "2cd9dd7ef369cfdbea875729d0bede93d029b10ba14006a596267a01ea5a7798",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as sqlite/multi-table-with-fk-indexes-views.sqlite, the file the sqlite page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data",
+        "dataset-people",
+        "dataset-orders",
+        "dataset-products"
+      ],
+      "edge_case": false,
+      "props": {
+        "tables": 4,
+        "table_names": [
+          "audit",
+          "orders",
+          "people",
+          "products"
+        ],
+        "rows_total": 800,
+        "page_size": 4096,
+        "journal_mode": "delete",
+        "has_fts": false,
+        "views": 1,
+        "indexes": 2,
+        "triggers": 1
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "sqlite/multi-table-with-fk-indexes-views.sqlite"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "sqlite/multi-table-with-fk-indexes-views.sqlite"
+    },
+    {
       "path": "srt/3-cues.srt",
       "url": "https://loremfile.dev/srt/3-cues.srt",
       "format": "srt",
@@ -9953,6 +11934,36 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "srt/sample.srt",
+      "url": "https://loremfile.dev/srt/sample.srt",
+      "format": "srt",
+      "ext": "srt",
+      "mime": "application/x-subrip",
+      "bytes": 268,
+      "sha256": "5bb48da561bdf662a782954640db67350200ac1fb8607ba612b8958678cdf21b",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as srt/3-cues.srt, the file the srt page starts with, at a name that is easy to guess.",
+      "tags": [
+        "text",
+        "web"
+      ],
+      "edge_case": false,
+      "props": {
+        "cues": 3,
+        "encoding": "utf-8"
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "srt/3-cues.srt"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "srt/3-cues.srt"
     },
     {
       "path": "svg/icons-24x24.svg",
@@ -9994,6 +12005,45 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "svg/sample.svg",
+      "url": "https://loremfile.dev/svg/sample.svg",
+      "format": "svg",
+      "ext": "svg",
+      "mime": "image/svg+xml",
+      "bytes": 604,
+      "sha256": "0f7654a2b8cb71143681fcc3b8bf3f6b17b0dd4f4be937c6e8a92288c28b59bd",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as svg/viewbox-responsive.svg, the file the svg page starts with, at a name that is easy to guess.",
+      "tags": [
+        "image",
+        "web"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 10,
+        "max_line_bytes": 94,
+        "root_element": "svg",
+        "width": null,
+        "height": null,
+        "viewbox": "0 0 400 300",
+        "has_dtd": false,
+        "elements": 7
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "svg/viewbox-responsive.svg"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "svg/viewbox-responsive.svg"
     },
     {
       "path": "svg/simple-shapes.svg",
@@ -10260,6 +12310,44 @@
       "supersededBy": null
     },
     {
+      "path": "tar/sample.tar",
+      "url": "https://loremfile.dev/tar/sample.tar",
+      "format": "tar",
+      "ext": "tar",
+      "mime": "application/x-tar",
+      "bytes": 10240,
+      "sha256": "151c9747df1ec4e3aca336c53827db51359bf906b58d5605f9973bcc51229ca6",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as tar/3-text-files.tar, the file the tar page starts with, at a name that is easy to guess.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 3,
+        "directories": 0,
+        "symlinks": 0,
+        "tar_format": "pax",
+        "compression": "",
+        "max_name_bytes": 12,
+        "mtimes": [
+          0
+        ],
+        "uncompressed_bytes": 2812
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "tar/3-text-files.tar"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "tar/3-text-files.tar"
+    },
+    {
       "path": "tiff/16bit-gray-big-endian-640x480.tiff",
       "url": "https://loremfile.dev/tiff/16bit-gray-big-endian-640x480.tiff",
       "format": "tiff",
@@ -10476,6 +12564,47 @@
       "supersededBy": null
     },
     {
+      "path": "tiff/sample.tiff",
+      "url": "https://loremfile.dev/tiff/sample.tiff",
+      "format": "tiff",
+      "ext": "tiff",
+      "mime": "image/tiff",
+      "bytes": 25108,
+      "sha256": "697f5bb0b53b22eec351173e2e678f7d8f34ffc35e743980a8554a9574768aa6",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as tiff/lzw-640x480.tiff, the file the tiff page starts with, at a name that is easy to guess.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "tiff",
+        "progressive": false,
+        "compression": "tiff_lzw",
+        "byte_order": "II",
+        "bits_per_sample": [
+          8,
+          8,
+          8
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "tiff/lzw-640x480.tiff"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "tiff/lzw-640x480.tiff"
+    },
+    {
       "path": "toml/config.toml",
       "url": "https://loremfile.dev/toml/config.toml",
       "format": "toml",
@@ -10512,6 +12641,47 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "toml/sample.toml",
+      "url": "https://loremfile.dev/toml/sample.toml",
+      "format": "toml",
+      "ext": "toml",
+      "mime": "application/toml; charset=utf-8",
+      "bytes": 751,
+      "sha256": "a150205d8b5820503abc0b6f2465e098f4e5657ca4fff251ba531a9739aa0599",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as toml/config.toml, the file the toml page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 39,
+        "max_line_bytes": 76,
+        "documents": 1,
+        "top_keys": [
+          "dates",
+          "endpoints",
+          "notes",
+          "owner",
+          "server",
+          "title"
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "toml/config.toml"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "toml/config.toml"
     },
     {
       "path": "ts/720p-5s.ts",
@@ -10601,6 +12771,46 @@
       "supersededBy": null
     },
     {
+      "path": "tsv/sample.tsv",
+      "url": "https://loremfile.dev/tsv/sample.tsv",
+      "format": "tsv",
+      "ext": "tsv",
+      "mime": "text/tab-separated-values; charset=utf-8",
+      "bytes": 249645,
+      "sha256": "e71259a6d256308cc3c10951a6925db712e10e3efc9a0196ba03ba7ad0526aaf",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as tsv/people-1000.tsv, the file the tsv page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 1001,
+        "max_line_bytes": 369,
+        "rows": 1000,
+        "columns": 14,
+        "delimiter": "\t",
+        "has_header": true,
+        "quoted_fields": false,
+        "quoted_delimiter": false,
+        "quoted_newline": false
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "tsv/people-1000.tsv"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "tsv/people-1000.tsv"
+    },
+    {
       "path": "ttf/loremfile-sans.ttf",
       "url": "https://loremfile.dev/ttf/loremfile-sans.ttf",
       "format": "ttf",
@@ -10630,6 +12840,40 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "ttf/sample.ttf",
+      "url": "https://loremfile.dev/ttf/sample.ttf",
+      "format": "ttf",
+      "ext": "ttf",
+      "mime": "font/ttf",
+      "bytes": 5616,
+      "sha256": "3dcec7f2c8f0e8150e04260b6ccf1b5219553fc74ed27e8c8fd785f3e34118f9",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as ttf/loremfile-sans.ttf, the file the ttf page starts with, at a name that is easy to guess.",
+      "tags": [
+        "font"
+      ],
+      "edge_case": false,
+      "props": {
+        "glyphs": 96,
+        "cmap_entries": 95,
+        "units_per_em": 1000,
+        "family": "Loremfile Sans",
+        "outlines": "glyf",
+        "flavor": "",
+        "embeddable": true
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "ttf/loremfile-sans.ttf"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "ttf/loremfile-sans.ttf"
     },
     {
       "path": "txt/crlf.txt",
@@ -10954,6 +13198,39 @@
       "supersededBy": null
     },
     {
+      "path": "txt/sample.txt",
+      "url": "https://loremfile.dev/txt/sample.txt",
+      "format": "txt",
+      "ext": "txt",
+      "mime": "text/plain; charset=utf-8",
+      "bytes": 1000,
+      "sha256": "c69d094dae487a6ce9de7ab9799d434f8e854d954483a8f651ec724f25c7db90",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as txt/lorem-1kb.txt, the file the txt page starts with, at a name that is easy to guess.",
+      "tags": [
+        "text",
+        "sized"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 3,
+        "max_line_bytes": 622
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "txt/lorem-1kb.txt"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "txt/lorem-1kb.txt"
+    },
+    {
       "path": "txt/shift-jis.txt",
       "url": "https://loremfile.dev/txt/shift-jis.txt",
       "format": "txt",
@@ -11187,6 +13464,38 @@
       "supersededBy": null
     },
     {
+      "path": "vcf/sample.vcf",
+      "url": "https://loremfile.dev/vcf/sample.vcf",
+      "format": "vcf",
+      "ext": "vcf",
+      "mime": "text/vcard; charset=utf-8",
+      "bytes": 384,
+      "sha256": "d4445f47c2ac0d2c516d78d09ff92b535e594734635db953f28453dad93a8540",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as vcf/vcard4-single.vcf, the file the vcf page starts with, at a name that is easy to guess.",
+      "tags": [
+        "mail",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "cards": 1,
+        "version": "4.0",
+        "has_photo": false,
+        "fn": "Alex Sample"
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "vcf/vcard4-single.vcf"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "vcf/vcard4-single.vcf"
+    },
+    {
       "path": "vcf/vcard3-single.vcf",
       "url": "https://loremfile.dev/vcf/vcard3-single.vcf",
       "format": "vcf",
@@ -11275,6 +13584,37 @@
       "supersededBy": null
     },
     {
+      "path": "vtt/sample.vtt",
+      "url": "https://loremfile.dev/vtt/sample.vtt",
+      "format": "vtt",
+      "ext": "vtt",
+      "mime": "text/vtt; charset=utf-8",
+      "bytes": 251,
+      "sha256": "84b2f43d1df647e43c765e2010812ff80a2a17a0bfcae2f6f03174d64bcf489d",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as vtt/3-cues.vtt, the file the vtt page starts with, at a name that is easy to guess.",
+      "tags": [
+        "text",
+        "web"
+      ],
+      "edge_case": false,
+      "props": {
+        "cues": 3,
+        "has_style": false,
+        "has_region": false
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "vtt/3-cues.vtt"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "vtt/3-cues.vtt"
+    },
+    {
       "path": "wasm/minimal-add.wasm",
       "url": "https://loremfile.dev/wasm/minimal-add.wasm",
       "format": "wasm",
@@ -11315,6 +13655,51 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "wasm/sample.wasm",
+      "url": "https://loremfile.dev/wasm/sample.wasm",
+      "format": "wasm",
+      "ext": "wasm",
+      "mime": "application/wasm",
+      "bytes": 41,
+      "sha256": "f61fd62f57c41269c3c23f360eeaf1090b1db9c38651106674d48bc65dba88ba",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as wasm/minimal-add.wasm, the file the wasm page starts with, at a name that is easy to guess.",
+      "tags": [
+        "binary",
+        "web"
+      ],
+      "edge_case": false,
+      "props": {
+        "exports": [
+          "add"
+        ],
+        "types": 1,
+        "params": [
+          "i32",
+          "i32"
+        ],
+        "results": [
+          "i32"
+        ],
+        "sections": [
+          1,
+          3,
+          7,
+          10
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "wasm/minimal-add.wasm"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "wasm/minimal-add.wasm"
     },
     {
       "path": "wav/10mb.wav",
@@ -11361,6 +13746,47 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "wav/sample.wav",
+      "url": "https://loremfile.dev/wav/sample.wav",
+      "format": "wav",
+      "ext": "wav",
+      "mime": "audio/wav",
+      "bytes": 264644,
+      "sha256": "72e287d3226d1d27537980eca453ac8abdf31816343f1bd5b542bf965b0706f2",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as wav/sine-440hz-3s-44k-16bit-mono.wav, the file the wav page starts with, at a name that is easy to guess.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 3000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "pcm_s16le",
+        "sample_rate": 44100,
+        "channels": 1,
+        "bitrate_kbps": 705.6,
+        "bit_depth": 16,
+        "tone_hz": [
+          440.0
+        ],
+        "header_format": "pcm",
+        "header_bytes": 44
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "wav/sine-440hz-3s-44k-16bit-mono.wav"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "wav/sine-440hz-3s-44k-16bit-mono.wav"
     },
     {
       "path": "wav/sine-440hz-3s-44k-16bit-mono.wav",
@@ -11817,6 +14243,91 @@
       "url": "https://loremfile.dev/webm/alpha-vp9-512x512-5s.webm"
     },
     {
+      "path": "webm/sample.webm",
+      "url": "https://loremfile.dev/webm/sample.webm",
+      "format": "webm",
+      "ext": "webm",
+      "mime": "video/webm",
+      "bytes": 653219,
+      "sha256": "c65a926de39f8897aa5d30671ac2b8bfb1309c497297946e830a4be28e7c8de3",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as webm/720p-5s-vp8.webm, the file the webm page starts with, at a name that is easy to guess.",
+      "tags": [
+        "video"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5003,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "vp8",
+        "fps": 30.0,
+        "profile": "0",
+        "acodec": "vorbis",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "webm/720p-5s-vp8.webm"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "webm/720p-5s-vp8.webm"
+    },
+    {
+      "path": "webmanifest/sample.webmanifest",
+      "url": "https://loremfile.dev/webmanifest/sample.webmanifest",
+      "format": "webmanifest",
+      "ext": "webmanifest",
+      "mime": "application/manifest+json",
+      "bytes": 542,
+      "sha256": "1a837bca38e88fd1f578c324856f16ba89b2ab5efd0ac8bb3d1a85cc18b3381f",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as webmanifest/site.webmanifest, the file the webmanifest page starts with, at a name that is easy to guess.",
+      "tags": [
+        "web",
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "icons": 2,
+        "display": "standalone",
+        "keys": [
+          "background_color",
+          "description",
+          "dir",
+          "display",
+          "icons",
+          "lang",
+          "name",
+          "scope",
+          "short_name",
+          "start_url",
+          "theme_color"
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "webmanifest/site.webmanifest"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "webmanifest/site.webmanifest"
+    },
+    {
       "path": "webmanifest/site.webmanifest",
       "url": "https://loremfile.dev/webmanifest/site.webmanifest",
       "format": "webmanifest",
@@ -12005,6 +14516,40 @@
       "supersededBy": null
     },
     {
+      "path": "webp/sample.webp",
+      "url": "https://loremfile.dev/webp/sample.webp",
+      "format": "webp",
+      "ext": "webp",
+      "mime": "image/webp",
+      "bytes": 938,
+      "sha256": "481ffbbcedf9ae8273be1b6f37fa1a2daebbfa7976143eea08af66e75cbe2bbc",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as webp/lossless-640x480.webp, the file the webp page starts with, at a name that is easy to guess.",
+      "tags": [
+        "image"
+      ],
+      "edge_case": false,
+      "props": {
+        "width": 640,
+        "height": 480,
+        "mode": "RGB",
+        "frames": 1,
+        "animated": false,
+        "format": "webp",
+        "progressive": false
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "webp/lossless-640x480.webp"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "webp/lossless-640x480.webp"
+    },
+    {
       "path": "woff/loremfile-sans.woff",
       "url": "https://loremfile.dev/woff/loremfile-sans.woff",
       "format": "woff",
@@ -12038,6 +14583,40 @@
       "supersededBy": null
     },
     {
+      "path": "woff/sample.woff",
+      "url": "https://loremfile.dev/woff/sample.woff",
+      "format": "woff",
+      "ext": "woff",
+      "mime": "font/woff",
+      "bytes": 1848,
+      "sha256": "51cd2c5b916f39ada8fa67f08bca44ef0bb38bab913781f89bde5c86bcbd6fd1",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as woff/loremfile-sans.woff, the file the woff page starts with, at a name that is easy to guess.",
+      "tags": [
+        "font"
+      ],
+      "edge_case": false,
+      "props": {
+        "glyphs": 96,
+        "cmap_entries": 95,
+        "units_per_em": 1000,
+        "family": "Loremfile Sans",
+        "outlines": "glyf",
+        "flavor": "woff",
+        "embeddable": true
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "woff/loremfile-sans.woff"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "woff/loremfile-sans.woff"
+    },
+    {
       "path": "woff2/loremfile-sans.woff2",
       "url": "https://loremfile.dev/woff2/loremfile-sans.woff2",
       "format": "woff2",
@@ -12069,6 +14648,40 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "woff2/sample.woff2",
+      "url": "https://loremfile.dev/woff2/sample.woff2",
+      "format": "woff2",
+      "ext": "woff2",
+      "mime": "font/woff2",
+      "bytes": 1072,
+      "sha256": "d04f107117857f18fb5a722f5437fb4e93a6f41f433aafc9d1ad35d1f4f5bcc9",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as woff2/loremfile-sans.woff2, the file the woff2 page starts with, at a name that is easy to guess.",
+      "tags": [
+        "font"
+      ],
+      "edge_case": false,
+      "props": {
+        "glyphs": 96,
+        "cmap_entries": 95,
+        "units_per_em": 1000,
+        "family": "Loremfile Sans",
+        "outlines": "glyf",
+        "flavor": "woff2",
+        "embeddable": true
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "woff2/loremfile-sans.woff2"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "woff2/loremfile-sans.woff2"
     },
     {
       "path": "xlsx/10mb.xlsx",
@@ -12323,6 +14936,47 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "xlsx/sample.xlsx",
+      "url": "https://loremfile.dev/xlsx/sample.xlsx",
+      "format": "xlsx",
+      "ext": "xlsx",
+      "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 156719,
+      "sha256": "1319893c8f4022a2cb64c886d3ede05a77ea44d2465bad1affbd39935a166af8",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as xlsx/1sheet-1000rows.xlsx, the file the xlsx page starts with, at a name that is easy to guess.",
+      "tags": [
+        "document",
+        "data",
+        "dataset-people"
+      ],
+      "edge_case": false,
+      "props": {
+        "sheets": 1,
+        "sheet_names": "People",
+        "rows": 1001,
+        "columns": 14,
+        "formulas": 0,
+        "images": 0,
+        "contains_text": [
+          "rafael.haas250@example.org",
+          "hannah.okafor500@example.org",
+          "pia.herrera750@example.org",
+          "paulo.achterberg1000@example.org"
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "xlsx/1sheet-1000rows.xlsx"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "xlsx/1sheet-1000rows.xlsx"
     },
     {
       "path": "xlsx/unicode-strings.xlsx",
@@ -12692,6 +15346,45 @@
       "supersededBy": null
     },
     {
+      "path": "xml/sample.xml",
+      "url": "https://loremfile.dev/xml/sample.xml",
+      "format": "xml",
+      "ext": "xml",
+      "mime": "application/xml; charset=utf-8",
+      "bytes": 913,
+      "sha256": "04cd8c9a27b781647ca874f4c3dad82d7119c746bcf4cde532157e6402f948e5",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as xml/with-namespaces.xml, the file the xml page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 18,
+        "max_line_bytes": 166,
+        "root_element": "catalogue",
+        "has_dtd": false,
+        "namespaces": [
+          "http://purl.org/dc/elements/1.1/",
+          "http://www.w3.org/2001/XMLSchema-instance",
+          "https://loremfile.dev/ns/catalogue"
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "xml/with-namespaces.xml"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "xml/with-namespaces.xml"
+    },
+    {
       "path": "xml/with-namespaces.xml",
       "url": "https://loremfile.dev/xml/with-namespaces.xml",
       "format": "xml",
@@ -12759,6 +15452,37 @@
       "supersededBy": null
     },
     {
+      "path": "xz/sample.xz",
+      "url": "https://loremfile.dev/xz/sample.xz",
+      "format": "xz",
+      "ext": "xz",
+      "mime": "application/x-xz",
+      "bytes": 198972,
+      "sha256": "f9b04cc3558784637ad05dc07407eaa7c4196c4657599f48917f0d353d999c32",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as xz/lorem-1mb.txt.xz, the file the xz page starts with, at a name that is easy to guess.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "compression": "xz",
+        "members": 1,
+        "uncompressed_bytes": 1000000
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "xz/lorem-1mb.txt.xz"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "xz/lorem-1mb.txt.xz"
+    },
+    {
       "path": "yaml/config-all-types.yaml",
       "url": "https://loremfile.dev/yaml/config-all-types.yaml",
       "format": "yaml",
@@ -12796,6 +15520,48 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "yaml/sample.yaml",
+      "url": "https://loremfile.dev/yaml/sample.yaml",
+      "format": "yaml",
+      "ext": "yaml",
+      "mime": "application/yaml; charset=utf-8",
+      "bytes": 1091,
+      "sha256": "ce56ca74cf85cf6309bbfd65619875d0388fe2fcb40835dda390750dcd3b1217",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as yaml/config-all-types.yaml, the file the yaml page starts with, at a name that is easy to guess.",
+      "tags": [
+        "data"
+      ],
+      "edge_case": false,
+      "props": {
+        "encoding": "utf-8",
+        "bom": false,
+        "line_ending": "lf",
+        "lines": 56,
+        "max_line_bytes": 60,
+        "documents": 2,
+        "top_keys": [
+          "block_folded",
+          "block_literal",
+          "defaults",
+          "development",
+          "production",
+          "sequences",
+          "types"
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "yaml/config-all-types.yaml"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "yaml/config-all-types.yaml"
     },
     {
       "path": "zip/100mb.zip",
@@ -13087,6 +15853,42 @@
       "supersededBy": null
     },
     {
+      "path": "zip/sample.zip",
+      "url": "https://loremfile.dev/zip/sample.zip",
+      "format": "zip",
+      "ext": "zip",
+      "mime": "application/zip",
+      "bytes": 1822,
+      "sha256": "3dd88cad3dab2fae753611bb216040def2b92d63fcd430c00a616f52f11971c0",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as zip/3-text-files.zip, the file the zip page starts with, at a name that is easy to guess.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "entries": 3,
+        "directories": 0,
+        "method": "deflate",
+        "encrypted": false,
+        "zip64": false,
+        "comment": false,
+        "utf8_names": false,
+        "uncompressed_bytes": 3228
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "zip/3-text-files.zip"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "zip/3-text-files.zip"
+    },
+    {
       "path": "zip/zip64-70000-empty-files.zip",
       "url": "https://loremfile.dev/zip/zip64-70000-empty-files.zip",
       "format": "zip",
@@ -13153,6 +15955,37 @@
       "status": "active",
       "deprecated": false,
       "supersededBy": null
+    },
+    {
+      "path": "zst/sample.zst",
+      "url": "https://loremfile.dev/zst/sample.zst",
+      "format": "zst",
+      "ext": "zst",
+      "mime": "application/zstd",
+      "bytes": 239346,
+      "sha256": "19e0696f0e0b1ab431963d5097e826671da026a6eacec1b883b378f5304e1c3b",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as zst/lorem-1mb.txt.zst, the file the zst page starts with, at a name that is easy to guess.",
+      "tags": [
+        "archive",
+        "text"
+      ],
+      "edge_case": false,
+      "props": {
+        "compression": "zst",
+        "members": 1,
+        "uncompressed_bytes": 1000000
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "zst/lorem-1mb.txt.zst"
+      },
+      "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null,
+      "aliasOf": "zst/lorem-1mb.txt.zst"
     }
   ]
 }

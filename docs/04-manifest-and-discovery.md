@@ -72,6 +72,7 @@ Field rules:
 | `added_in` | semver | Catalog version that introduced it. |
 | `status` | enum | `active`, `removed` (legal takedown tombstone, see §1.5). |
 | `deprecated`, `supersededBy` | boolean, string/null | Derived, never set here: the catalog's `superseded_by` is the input, and `manifest update` writes both fields from it (`03` §7.3), so a value set by hand in the manifest is overwritten by the next update and `manifest check` reports it until then. `supersededBy` is the replacing path. A superseded entry stays active and served, and stays in `manifest.json`, `sha256sums.txt` and `{format}/index.json`; format pages, the search index and `llms-full.txt` list its replacement instead. |
+| `aliasOf` | string | Present only on a `sample.{format}` alias (since 1.15.0, additive: an entry without it is unchanged). The path whose bytes this path serves, under the name `/{format}/sample.{format}` that is easy to guess. `sha256`, `bytes`, `mime` and `props` equal the original's, and a test holds that. An alias is not a second file: the site's counts, format pages, `search-index.json`, `llms-full.txt`, `formats.json` and `{format}/index.json` leave it out, and `manifest.json`, `sha256sums.txt` and `get --format` (which reads the manifest) carry it. `catalog/_aliases.yaml` lists them; `05` §8 gives the rule and the table. |
 
 ### 1.3 `props` by format (what validators measure)
 

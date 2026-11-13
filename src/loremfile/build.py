@@ -27,6 +27,7 @@ from loremfile.util.determinism import deterministic
 #: Generator modules to import so their @generator decorators run. A family is added
 #: here by the milestone that writes it.
 GENERATOR_MODULES = (
+    "alias",
     "binary",
     "text",
     "data",

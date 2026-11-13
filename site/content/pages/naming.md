@@ -41,6 +41,12 @@ The manifest's `size_class` says:
 HLS is the one nested case. A playlist sits at `hls/{variant}/index.m3u8`, and its numbered
 segments sit beside it, such as `hls/720p-10s/seg-000.ts`.
 
+## Is there a name I can guess?
+
+`/{format}/sample.{format}`, for example `/pdf/sample.pdf`, serves the same bytes as the file that
+format's page starts with, for every format except `hls`, `edge`, `ogv`, `ts` and `opus`; `sample` is
+reserved for it.
+
 ## Will a name ever point at different bytes?
 
 No. The bytes at a published name never change. A fix gets a new name, and the old entry points
