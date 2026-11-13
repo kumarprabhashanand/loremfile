@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="prose">{{ intro }}</div>
+<p class="meta">Read on {{ checked }}.</p>
+
+<div class="table-wrap">
+<table class="files replacements">
+  <caption>URLs that fail today</caption>
+  <thead>
+    <tr><th scope="col">URL</th><th scope="col">What was seen</th><th scope="col">Nearest here</th></tr>
+  </thead>
+  <tbody>
+{% for row in rows %}
+    <tr>
+      <th scope="row"><code>{{ row.url }}</code></th>
+      <td>{{ row.seen }}</td>
+      <td><a href="/{{ row.nearest.path }}"><code>{{ row.nearest.url }}</code></a> <span class="size">{{ row.nearest.size }}</span>
+        <button type="button" class="copy" data-copy="{{ row.nearest.url }}" hidden>Copy URL</button>
+        <a class="download" href="/{{ row.nearest.path }}" download>Download</a></td>
+    </tr>
+{% endfor %}
+  </tbody>
+</table>
+</div>
+
+<p class="prose">{{ differs }}</p>
+{% endblock %}

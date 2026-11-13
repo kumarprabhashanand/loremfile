@@ -22,7 +22,7 @@ from xml.sax.saxutils import escape as xml_escape
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from markupsafe import Markup
 
-from loremfile import config
+from loremfile import config, replacements
 from loremfile.catalog import Catalog, FormatCatalog
 from loremfile.manifest import Manifest
 from loremfile.site import defaults, icons, markdown, page_dates, routes
@@ -81,7 +81,18 @@ LABELS = {
 }
 #: Top-level keys the site owns; a format of the same name would overwrite one.
 RESERVED = frozenset(
-    {"formats", "docs", "legal", "changelog", "status", "assets", "schema", "testing", "sample"}
+    {
+        "formats",
+        "docs",
+        "legal",
+        "changelog",
+        "status",
+        "assets",
+        "schema",
+        "testing",
+        "sample",
+        "replacements",
+    }
 )
 SECURITY_TXT_DAYS = 365
 #: docs/04 §6, exactly; tests/unit/test_site_build.py compares the two.
@@ -1352,6 +1363,53 @@ def status_page() -> Page:
     )
 
 
+def replacements_page(root: Path, manifest: Manifest) -> Page:
+    """/replacements: sample-file URLs that fail for a plain client, and the nearest file here.
+
+    The rows are `site/content/replacements.yaml`, read monthly by `loremfile replacements
+    check`. Each URL is shown as text and never linked: it is somebody else's host, and the
+    page loads and links nothing from it.
+    """
+    checked, rows = replacements.load(root / "site" / "content" / "replacements.yaml")
+    by_path = {e["path"]: e for e in manifest.active}
+    shown = []
+    for row in rows:
+        near = by_path.get(row["nearest"])
+        if near is None:
+            raise SiteError(f"replacements.yaml: {row['nearest']} is not a published file")
+        shown.append(
+            {
+                "url": row["url"],
+                "seen": row["seen"],
+                "nearest": {
+                    "path": near["path"],
+                    "url": f"{config.BASE_URL}{near['path']}",
+                    "size": sized(near["bytes"]),
+                },
+            }
+        )
+    video = by_path["mp4/sample.mp4"]
+    seconds = video["props"]["duration_ms"] / 1000
+    return Page(
+        "replacements",
+        "Sample file URLs that stopped working",
+        "Sample-file URLs that fail for a plain client today, what was seen and when, and the "
+        "nearest file here, at a URL that stays put.",
+        "replacements.html",
+        crumbs=[("Home", "/")],
+        context={
+            "intro": trusted(markdown.render(content(root, "replacements.md"))),
+            "checked": dt.date.fromisoformat(checked).strftime("%-d %B %Y"),
+            "rows": shown,
+            "differs": (
+                f"Where ours differs: a {seconds:g}-second synthetic test card is not a film. "
+                f"The file behind {config.BASE_URL}mp4/sample.mp4 is {seconds:g} seconds of a test "
+                "pattern and a tone, made to test software that takes video, not to be watched."
+            ),
+        },
+    )
+
+
 # --- discovery files ----------------------------------------------------------------------------
 
 
@@ -1413,6 +1471,8 @@ def llms(
         "- Verify from a page alone: the JSON-LD Dataset on every format and guide page gives "
         "each file's contentSize and sha256, so a download can be checked without the manifest",
         f"- Working examples in five languages: {base}docs/languages",
+        f"- Sample-file URLs elsewhere that no longer work, with the nearest file here: "
+        f"{base}replacements",
         "- MCP server for agents: `npx -y loremfile mcp` or `uvx loremfile mcp`, three read-only "
         f"tools (list_fixtures, describe_fixture, verify_file): {base}docs/mcp",
         "",
@@ -1575,6 +1635,7 @@ def site_pages(
         *legal_pages(root, committed),
         changelog_page(root),
         status_page(),
+        replacements_page(root, manifest),
     ]
 
 

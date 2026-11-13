@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- A `/replacements` page lists sample-file URLs elsewhere that fail for a plain client today, what was seen and the nearest file here.
+
 ## [1.15.0] - 2026-11-13
 
 - A URL you can guess: `/{format}/sample.{format}`, for example `/pdf/sample.pdf`, serves the
