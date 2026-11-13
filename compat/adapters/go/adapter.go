@@ -213,7 +213,7 @@ func readXML(path, _, _ string) (props, error) {
 	}
 	defer file.Close()
 	decoder := xml.NewDecoder(file)
-	root := ""
+	root, namespace := "", ""
 	for {
 		token, err := decoder.Token()
 		if err == io.EOF {
@@ -223,12 +223,15 @@ func readXML(path, _, _ string) (props, error) {
 			return nil, err
 		}
 		if start, ok := token.(xml.StartElement); ok && root == "" {
-			root = start.Name.Local
+			root, namespace = start.Name.Local, start.Name.Space
 		}
 	}
 	report := props{}
 	if root != "" {
 		report["root_element"] = root
+	}
+	if namespace != "" {
+		report["root_namespace"] = namespace
 	}
 	return report, nil
 }

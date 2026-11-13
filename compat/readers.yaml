@@ -78,7 +78,31 @@
     },
     "tolerance": {
       "duration_ms": 1
-    }
+    },
+    "exceptions": [
+      {
+        "name": "Duration",
+        "applies": [
+          "python/wave"
+        ],
+        "text": "A reported duration_ms within 1 ms of the manifest's is equal. This is the only tolerance anywhere."
+      },
+      {
+        "name": "CSV header",
+        "applies": [
+          "go/encoding/csv",
+          "python/csv"
+        ],
+        "text": "rows is compared with the manifest's rows plus one when has_header is true: the header is a record to a reader and not a data row."
+      },
+      {
+        "name": "Clark notation",
+        "applies": [
+          "python/xml.etree.ElementTree"
+        ],
+        "text": "A root name in Clark notation, {namespace}local, is reduced to its local name before it is reported as root_element, the form the manifest and the other readers use. The namespace is reported as its own property, root_namespace, which is not compared."
+      }
+    ]
   },
   "readers": [
     {
@@ -212,7 +236,8 @@
         "xml"
       ],
       "props": [
-        "root_element"
+        "root_element",
+        "root_namespace"
       ],
       "controls": [
         {
@@ -385,7 +410,8 @@
         "xml"
       ],
       "props": [
-        "root_element"
+        "root_element",
+        "root_namespace"
       ],
       "controls": [
         {
@@ -403,7 +429,8 @@
         "xml"
       ],
       "props": [
-        "root_element"
+        "root_element",
+        "root_namespace"
       ],
       "controls": [
         {

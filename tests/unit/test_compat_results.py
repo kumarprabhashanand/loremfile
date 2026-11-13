@@ -124,3 +124,27 @@ def test_the_translations_are_visible_in_the_results(fmt: str) -> None:
         if fmt == "csv"
         else {"root_element": "catalogue"}
     )
+
+
+def test_the_namespaced_file_reads_in_every_xml_reader_on_every_version() -> None:
+    """The first run read ElementTree's Clark notation as five `differs`; the adapter now
+    reports the local name, as the manifest and the other readers do (docs/07 §8)."""
+    rows = {row["path"]: row for row in document("xml")["files"]}
+    row = rows["xml/with-namespaces.xml"]
+    assert row["expect"] == {"root_element": "catalogue"}
+    seen = 0
+    for reader_id, per in row["cells"].items():
+        for version, cell in per.items():
+            seen += 1
+            assert cell["outcome"] == "reads", (reader_id, version, cell)
+            assert cell["props"]["root_element"] == "catalogue", (reader_id, version)
+            assert cell["props"]["root_namespace"] == "https://loremfile.dev/ns/catalogue"
+    versions = merge.runtime_versions(CONFIG)
+    expected = sum(
+        1
+        for reader in CONFIG["readers"]
+        if "xml" in reader["formats"]
+        for rt, _ in versions
+        if rt == reader["runtime"]
+    )
+    assert seen == expected and seen > 0, "control: every xml reader and version was seen"

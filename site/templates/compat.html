@@ -15,6 +15,12 @@
 
 <h2 id="method">Method</h2>
 <p>{{ method|join(" ") }}</p>
+<h3 id="exceptions">Named exceptions</h3>
+<ul>
+{% for e in exceptions %}
+  <li><strong>{{ e.name }}</strong> ({% for r in e.applies %}<code>{{ r }}</code>{{ "" if loop.last else ", " }}{% endfor %}): {{ e.text }}</li>
+{% endfor %}
+</ul>
 
 <h2 id="run">This run</h2>
 <p class="meta">Run on {{ date }} against catalogue {{ catalog_version }}. Each runtime's supported versions were read from its own page on {{ checked }}:{% for s in sources %} {{ s.name }}, <code>{{ s.source }}</code>{{ "." if loop.last else ";" }}{% endfor %} <a href="{{ run_url }}">The run's record</a>.</p>

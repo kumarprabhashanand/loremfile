@@ -180,3 +180,12 @@ def test_llms_txt_has_one_line_for_the_scoreboard_and_the_sitemap_lists_every_pa
 
 def test_the_status_page_names_the_agent_the_compat_run_sends(site: Path) -> None:
     assert config.COMPAT_USER_AGENT in text(site, "status")
+
+
+def test_the_named_exceptions_are_on_the_index_page_and_in_its_twin(site: Path) -> None:
+    body = main_text(text(site, "compat"))
+    twin = (site / routes.disk_path(routes.twin_key("compat"))).read_text(encoding="utf-8")
+    for exception in READERS["scope"]["exceptions"]:
+        assert exception["name"] in body and exception["name"] in twin
+        assert exception["text"].split(".")[0] in body
+    assert "Clark notation" in body and "root_namespace" in body

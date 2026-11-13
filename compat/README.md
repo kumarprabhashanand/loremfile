@@ -33,7 +33,8 @@ It prints exactly one JSON object and exits 0. Anything else is `crashes`.
 - Read the whole file, not the header: every archive member's bytes, every audio frame, every
   pixel, every row. A reader that stops early is the finding.
 - Report only the properties the reader gives natively, under the manifest's own names. Compute
-  nothing clever. The harness compares only names present on both sides.
+  nothing clever beyond the named exceptions below. The harness compares only names present on both
+  sides.
 - Default settings, except what the harness passes: `--password` for a file whose manifest says
   `encrypted`, and `--delimiter` (the manifest's) for CSV.
 - Never write an archive member to disk. `error` is the first line, 200 characters at most.
@@ -46,9 +47,14 @@ and gif `width`, `height`, `frames`; json `top_type`, `items`; csv `rows`, `colu
 `members` and `frames` only where its reader exposes them with default settings.
 
 The harness judges, not the adapter. `reads` means no error and every property both sides hold is
-equal; `differs` means at least one is not. The one tolerance is 1 ms on `duration_ms`. The one
-translation: a CSV reader returns every record, the header among them, where the manifest's `rows`
-counts data rows, so the expected value is `rows` plus one when the manifest says `has_header`.
+equal; `differs` means at least one is not. There are three named exceptions, listed in
+`readers.yaml` under `scope.exceptions` and shown on the page: a 1 ms tolerance on `duration_ms`;
+for CSV, the expected `rows` is the manifest's plus one when it says `has_header`, because the
+header is a record to a reader and not a data row; and a root name in Clark notation,
+`{namespace}local`, is reduced by the adapter to its local name before it is reported as
+`root_element`, the form the manifest holds (the manifest lists the namespace URIs apart, under
+`namespaces`). A reader may report the namespace as its own property, `root_namespace`, which is
+never compared and is not `root_element`.
 
 ## Outcomes
 

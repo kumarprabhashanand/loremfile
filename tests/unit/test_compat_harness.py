@@ -7,6 +7,7 @@ real manifest, with named files, so an empty corpus cannot pass them.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
 import sys
@@ -14,6 +15,7 @@ import textwrap
 import urllib.error
 from pathlib import Path
 from typing import Any
+from xml.etree import ElementTree
 
 import pytest
 import yaml
@@ -486,3 +488,59 @@ def test_every_runtime_names_the_page_that_lists_its_versions_and_the_date() -> 
         found = next(r for r in runtimes["runtimes"] if r["id"] == runtime["id"])
         assert found["source"].startswith("https://") and found["versions"]
     assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", CONFIG["checked"])
+
+
+# --- the named exceptions ---------------------------------------------------------------------
+
+NAMESPACED = (
+    '<?xml version="1.0"?>\n<catalogue xmlns="https://loremfile.dev/ns/catalogue" '
+    'xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>x</dc:title></catalogue>\n'
+)
+
+
+def load_python_adapter() -> Any:
+    spec = importlib.util.spec_from_file_location(
+        "compat_python_adapter", ROOT / "compat" / "adapters" / "python" / "adapter.py"
+    )
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_the_exceptions_are_named_in_readers_yaml_beside_the_tolerance() -> None:
+    exceptions = {e["name"]: e for e in CONFIG["scope"]["exceptions"]}
+    assert set(exceptions) == {"Duration", "CSV header", "Clark notation"}
+    assert f"{CONFIG['scope']['tolerance']['duration_ms']} ms" in exceptions["Duration"]["text"]
+    ids = {r["id"] for r in CONFIG["readers"]}
+    for exception in exceptions.values():
+        assert exception["applies"] and set(exception["applies"]) <= ids, exception["name"]
+
+
+def test_a_root_in_clark_notation_is_reported_as_its_local_name_and_namespace_apart(
+    tmp_path: Path,
+) -> None:
+    adapter = load_python_adapter()
+    plain, spaced = tmp_path / "plain.xml", tmp_path / "spaced.xml"
+    plain.write_text("<people><p/></people>")
+    spaced.write_text(NAMESPACED)
+    for reader_id in ("python/xml.etree.ElementTree", "python/xml.dom.minidom"):
+        found = adapter.answer(reader_id, str(spaced), None, None)["props"]
+        assert found == {
+            "root_element": "catalogue",
+            "root_namespace": "https://loremfile.dev/ns/catalogue",
+        }, reader_id
+        assert adapter.answer(reader_id, str(plain), None, None)["props"] == {
+            "root_element": "people"
+        }, reader_id
+    # Control: the library's own spelling is the one being reduced, so the reduction does work.
+    own = ElementTree.parse(spaced).getroot().tag  # noqa: S314 - our own test file
+    assert own == "{https://loremfile.dev/ns/catalogue}catalogue"
+
+
+def test_a_namespace_is_never_compared_and_so_never_reads_as_a_difference() -> None:
+    expect = {"root_element": "catalogue"}
+    reported = {"root_element": "catalogue", "root_namespace": "https://loremfile.dev/ns/catalogue"}
+    assert compare.differences("xml", reported, expect, {}) == {}
+    assert compare.compared("xml", reported, expect) == ["root_element"]
+    assert compare.differences("xml", {"root_element": "{x}catalogue"}, expect, {}) != {}

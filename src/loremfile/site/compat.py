@@ -247,9 +247,8 @@ def method_sentences(results: Results) -> list[str]:
         "natively.",
         f"Every reader and file is one process with a limit of {scope['timeout_seconds']} seconds, "
         "run in every supported version of the runtime.",
-        "What a reader reports is compared with the manifest's measured properties for that file, "
-        f"with a tolerance of {scope['tolerance']['duration_ms']} ms on audio duration and none "
-        "anywhere else.",
+        "What a reader reports is compared with the manifest's measured properties for that file; "
+        "the exceptions to that are named below.",
         f"Files over {scope['max_bytes'] // 1_000_000} MB are skipped and listed, and a reader "
         "whose two controls do not hold is shown as not-run.",
     ]
@@ -344,6 +343,7 @@ def index_context(results: Results) -> dict[str, Any]:
     return {
         "outcomes": list(OUTCOME_DEFINITIONS.items()),
         "method": method_sentences(results),
+        "exceptions": results.config["scope"]["exceptions"],
         "date": results.run["date"],
         "catalog_version": results.run["catalog_version"],
         "runs": run_rows(results),
@@ -407,6 +407,11 @@ def index_twin(context: dict[str, Any]) -> str:
         [
             f"## Outcomes\n\n{outcomes}",
             "## Method\n\n" + " ".join(context["method"]),
+            "## Named exceptions\n\n"
+            + "\n".join(
+                f"- **{e['name']}** ({', '.join(e['applies'])}): {e['text']}"
+                for e in context["exceptions"]
+            ),
             f"## This run\n\n{run}\n\n{runs}",
             "## Readers by format\n\n"
             + "\n".join([head, "|" + "---|" * (4 + len(TALLIED)), *rows]),

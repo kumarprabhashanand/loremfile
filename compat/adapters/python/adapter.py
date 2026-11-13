@@ -103,13 +103,24 @@ def csv_reader(path: str, _password: str | None, delimiter: str | None) -> dict[
 def etree_reader(path: str, _password: str | None, _delimiter: str | None) -> dict[str, Any]:
     from xml.etree import ElementTree
 
-    return {"root_element": ElementTree.parse(path).getroot().tag}
+    tag = ElementTree.parse(path).getroot().tag
+    # A named exception (readers.yaml): a name in Clark notation, {namespace}local, is reduced to
+    # its local name, and the namespace is reported as its own property.
+    namespace, _, local = tag[1:].partition("}") if tag.startswith("{") else ("", "", tag)
+    report: dict[str, Any] = {"root_element": local}
+    if namespace:
+        report["root_namespace"] = namespace
+    return report
 
 
 def minidom_reader(path: str, _password: str | None, _delimiter: str | None) -> dict[str, Any]:
     from xml.dom import minidom
 
-    return {"root_element": minidom.parse(path).documentElement.tagName}
+    root = minidom.parse(path).documentElement
+    report: dict[str, Any] = {"root_element": root.localName}
+    if root.namespaceURI:
+        report["root_namespace"] = root.namespaceURI
+    return report
 
 
 READERS = {
