@@ -198,7 +198,8 @@ def test_the_tar_page_says_who_decompresses_and_shows_each_cell_in_its_own_state
     for part in ("python/tarfile is given the file as it is", "Go has no reader", "no xz"):
         assert part in body, part
     assert "archive/tar + compress/gzip" in body
-    assert body.count("not given this file") == 4, "two Go readers and two files each is not given"
+    # The plain file is not given to the gzip chain and the gzip file not to plain archive/tar.
+    assert body.count("not given this file") == 2
     assert body.count("no-reader") >= 2, "the xz file has no Go reader, in both Go columns"
     twin = (site / routes.disk_path(routes.twin_key("compat/tar"))).read_text(encoding="utf-8")
     assert "not given this file" in twin and "**no-reader**" in twin

@@ -287,7 +287,7 @@ def format_context(results: Results, fmt: str, size: Callable[[int], str]) -> di
     order = {r["id"]: runtime_order(results, r["runtime"]) for r in readers}
     rows = []
     for row in document["files"]:
-        cells = []
+        cells: list[dict[str, Any]] = []
         for column in columns:
             if column["id"] not in row["cells"]:
                 # Not handed this file (`when` in readers.yaml); where the runtime has no reader
