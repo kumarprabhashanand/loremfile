@@ -111,6 +111,7 @@
     "uncompressed_bytes": 1000000
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "gz/lorem-1mb.txt.gz",
    "role": "ordinary",
    "sha256": "c14dfc81ae69d4bd665228536358a3630ed8b8d58dccf8f79dc6dbc712c9eb6d",
@@ -193,6 +194,7 @@
     "uncompressed_bytes": 1440
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "gz/multi-member-3.gz",
    "role": "ordinary",
    "sha256": "2d2e7dbef7362d34a0c8c7369b836e509a4dda12bdcc838a79131251001faa39",

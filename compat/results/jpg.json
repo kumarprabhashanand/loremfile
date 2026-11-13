@@ -31,6 +31,7 @@
    "edge_outcome": "may-recover",
    "expect": {},
    "kind": "edge",
+   "no_reader": [],
    "path": "edge/jpg-truncated-50pct.jpg",
    "role": "intended",
    "sha256": "cc4e1314fe88d3d09fafad05845ea00b152a916962939a5673423a8cdcbf293e",
@@ -71,6 +72,7 @@
     "width": 100
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "jpg/100x100.jpg",
    "role": "ordinary",
    "sha256": "5c738d2f9ffa80a8294e2dde32ebfd400a71ae5db26cc9742de982b4ea53a3b3",
@@ -111,6 +113,7 @@
     "width": 1024
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "jpg/10mb.jpg",
    "role": "ordinary",
    "sha256": "9c0aafe20bc223c40b33dde4c15581994be7ac49b0285cf88693a81de6585bbe",
@@ -151,6 +154,7 @@
     "width": 1920
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "jpg/1920x1080.jpg",
    "role": "ordinary",
    "sha256": "071f0c721c4efa457b26160300ef2d6f2e3fa82b4667f3ba6e687d77005c0330",
@@ -191,6 +195,7 @@
     "width": 1024
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "jpg/1mb.jpg",
    "role": "ordinary",
    "sha256": "63382ed1cbb89249822074bf9675d58829e444934f32a3acd7ee2facbd7f27e2",
@@ -231,6 +236,7 @@
     "width": 4000
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "jpg/4000x3000.jpg",
    "role": "ordinary",
    "sha256": "d2acbce8dafa6e22f458735c1f817e6e87e4465373e55288574ec6d18f507d7a",
@@ -271,6 +277,7 @@
     "width": 640
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "jpg/640x480.jpg",
    "role": "ordinary",
    "sha256": "9ce1d9c344dc3fb5a9f893729d098422d753295d540539110dbb91db7c43166d",
@@ -299,6 +306,7 @@
     "width": 640
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "jpg/cmyk-640x640.jpg",
    "role": "ordinary",
    "sha256": "492ccd56ac18fee7453597967e56b517f03c75f837efa9201f0b6b2b593a1d58",
@@ -339,6 +347,7 @@
     "width": 640
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "jpg/exif-gps-640x480.jpg",
    "role": "ordinary",
    "sha256": "159f0a969cd1f78559ac7ec6b58d952a8ac1178ed837cd172a08c4802b82c46d",
@@ -379,6 +388,7 @@
     "width": 640
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "jpg/exif-orientation-1-640x480.jpg",
    "role": "ordinary",
    "sha256": "912528aaac637a126cb558e1d7261eaf1cda2d200fe4192febd9a8d00ef19113",
@@ -419,6 +429,7 @@
     "width": 640
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "jpg/exif-orientation-3-640x480.jpg",
    "role": "ordinary",
    "sha256": "698469165281b0d455b3e54492f12c026c17b6123e13737a9b1bb79028692d09",
@@ -459,6 +470,7 @@
     "width": 480
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "jpg/exif-orientation-6-640x480.jpg",
    "role": "ordinary",
    "sha256": "bba067a21d2463486b5f51d34951d7bcaea760762ad20179ca832d86c3e48bec",
@@ -499,6 +511,7 @@
     "width": 480
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "jpg/exif-orientation-8-640x480.jpg",
    "role": "ordinary",
    "sha256": "765cca26c02abc4bca1f23d2e4d45b63b0fa8056a05eea89b8a5a4ae419f0b0d",
@@ -539,6 +552,7 @@
     "width": 640
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "jpg/grayscale-640x480.jpg",
    "role": "ordinary",
    "sha256": "d1b4104817c2db3692031ea06e2737de3301c1e651911776f8342e6b52ce1e2e",
@@ -579,6 +593,7 @@
     "width": 1920
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "jpg/progressive-1920x1080.jpg",
    "role": "ordinary",
    "sha256": "0079d22b465f5ef8c79d702feec659d880ac9e521d3a2437d6e05b40d3166255",
@@ -619,6 +634,7 @@
     "width": 640
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "jpg/quality-10-640x480.jpg",
    "role": "ordinary",
    "sha256": "f878a87beb422130989f6db93482f5e72fd8e2174fedb6d6c7bbe189be1ce303",

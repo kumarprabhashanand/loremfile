@@ -113,6 +113,7 @@
     "sample_rate": 44100
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "wav/10mb.wav",
    "role": "ordinary",
    "sha256": "d92572b5e46746358943922a462cf33f8a001cb488173a35b5ec8c3057eab4a2",
@@ -207,6 +208,7 @@
     "sample_rate": 44100
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "wav/sine-440hz-3s-44k-16bit-mono.wav",
    "role": "ordinary",
    "sha256": "72e287d3226d1d27537980eca453ac8abdf31816343f1bd5b542bf965b0706f2",
@@ -301,6 +303,7 @@
     "sample_rate": 44100
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "wav/sine-440hz-3s-44k-16bit-stereo.wav",
    "role": "ordinary",
    "sha256": "4e9e029040d3cf648ec3878c847189bf48a4dde12c8305f7aa37657f8fb14c64",
@@ -355,6 +358,7 @@
     "sample_rate": 44100
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "wav/sine-440hz-3s-44k-32bit-float-stereo.wav",
    "role": "ordinary",
    "sha256": "040b6944f931020080d02f36e8d6a21a5f2787cf6d6ad372f6a5dd2981456383",
@@ -449,6 +453,7 @@
     "sample_rate": 44100
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "wav/sine-440hz-3s-44k-8bit-stereo.wav",
    "role": "ordinary",
    "sha256": "c3073ea697d72ad2583001c31b9b04396d082bad56ce2848073c390b91a49c52",
@@ -533,6 +538,7 @@
     "sample_rate": 48000
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "wav/sine-440hz-3s-48k-24bit-stereo.wav",
    "role": "ordinary",
    "sha256": "28720b160bc4d0f902bb3bab49130cdc858875fe618fcfce7824c917022551e1",
@@ -627,6 +633,7 @@
     "sample_rate": 44100
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "wav/with-list-chunk-3s.wav",
    "role": "ordinary",
    "sha256": "9ec8fe0492070740821975c1b3f7b6ff2d754cdd6802a1e1c6380452ff525792",

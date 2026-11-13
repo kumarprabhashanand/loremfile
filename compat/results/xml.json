@@ -129,6 +129,7 @@
    "edge_outcome": "must-fail",
    "expect": {},
    "kind": "edge",
+   "no_reader": [],
    "path": "edge/xml-unclosed-tag.xml",
    "role": "intended",
    "sha256": "34ecd6048dd18aaa5ef43b0fa2644896e6bf7a90a0713fe3022c996c782ae5cb",
@@ -257,6 +258,7 @@
     "root_element": "people"
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "xml/people-10.xml",
    "role": "ordinary",
    "sha256": "c035826a1be09ddf4eeef67bdf76d0df62e35bacac731aadf6311b4e3378d672",
@@ -385,6 +387,7 @@
     "root_element": "rss"
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "xml/rss2-feed.xml",
    "role": "ordinary",
    "sha256": "f77ecc196c5974310057c1c08bda92de4b53c239412690e9235abab4adf9692d",
@@ -525,6 +528,7 @@
     "root_element": "catalogue"
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "xml/with-namespaces.xml",
    "role": "ordinary",
    "sha256": "04cd8c9a27b781647ca874f4c3dad82d7119c746bcf4cde532157e6402f948e5",

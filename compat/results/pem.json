@@ -66,6 +66,7 @@
     "subject_cn": "fixture.example"
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "pem/self-signed-ed25519-cert.pem",
    "role": "ordinary",
    "sha256": "cbefdc05c831c5f36240181c08344b1387a112507f50f92b90c6bab8920faeb2",

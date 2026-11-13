@@ -66,6 +66,7 @@
     "subject_cn": "fixture.example"
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "der/self-signed-ed25519-cert.der",
    "role": "ordinary",
    "sha256": "6a8241d991bef7242d2dce1dcb55bf4509a1949ddb4c107ad8424d5c1a18c551",

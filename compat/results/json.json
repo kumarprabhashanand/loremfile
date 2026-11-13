@@ -80,6 +80,7 @@
    "edge_outcome": "varies",
    "expect": {},
    "kind": "edge",
+   "no_reader": [],
    "path": "edge/json-bom.json",
    "role": "intended",
    "sha256": "f5f8c80d2a1ae06f3688cee56c6ee09eed3586e9c41b17c5af272d0411ca9b6a",
@@ -131,6 +132,7 @@
    "edge_outcome": "must-fail",
    "expect": {},
    "kind": "edge",
+   "no_reader": [],
    "path": "edge/json-trailing-comma.json",
    "role": "intended",
    "sha256": "1530058a5dcb98221617a8ecfcecaf43a488bd4fb740d39a5a5fbc26a7c5f042",
@@ -182,6 +184,7 @@
    "edge_outcome": "must-fail",
    "expect": {},
    "kind": "edge",
+   "no_reader": [],
    "path": "edge/zero-byte.json",
    "role": "intended",
    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -278,6 +281,7 @@
     "top_type": "array"
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "json/10mb.json",
    "role": "ordinary",
    "sha256": "1f68350e3e19ab908209cf0b8847098a8a1b195f42098e469bdfafdec9ea2cdd",
@@ -374,6 +378,7 @@
     "top_type": "array"
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "json/1mb.json",
    "role": "ordinary",
    "sha256": "3ed7ca2999e2dbf99c56e11b0e950e6b524919c6ca8370180fcb00a70d392c3c",
@@ -470,6 +475,7 @@
     "top_type": "object"
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "json/all-types.json",
    "role": "ordinary",
    "sha256": "ad8102e4fb3e348ccd991bb1426cc8b233e83a4f4568a798f5314fc7001a8baf",
@@ -566,6 +572,7 @@
     "top_type": "object"
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "json/nested-100-levels.json",
    "role": "ordinary",
    "sha256": "ddb1c93ed61e7cdead0f4de82c7aea553e89c0c25d16e6d88bd1f1b7a861d001",
@@ -662,6 +669,7 @@
     "top_type": "array"
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "json/people-10.json",
    "role": "ordinary",
    "sha256": "f7d7ab0e1247de87ab92d0bfe52166cc9b56a5e18bdb06f559759762a64bfad1",
@@ -758,6 +766,7 @@
     "top_type": "array"
    },
    "kind": "ordinary",
+   "no_reader": [],
    "path": "json/people-1000.json",
    "role": "ordinary",
    "sha256": "31eaccbd1d079346d0aa2abf75d6b4fdfedbec298b04ed1dbf13f10e3a5a62d8",
