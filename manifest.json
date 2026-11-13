@@ -1,8 +1,8 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.15.0",
-  "generated_at": "2026-11-13T12:07:39Z",
+  "catalog_version": "1.15.1",
+  "generated_at": "2026-11-13T16:14:55Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
@@ -153,8 +153,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "7z/3-text-files.7z"
+      "supersededBy": null
     },
     {
       "path": "aac/adts-30s.aac",
@@ -235,8 +234,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "aac/adts-30s.aac"
+      "supersededBy": null
     },
     {
       "path": "aiff/3s.aiff",
@@ -318,8 +316,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "aiff/3s.aiff"
+      "supersededBy": null
     },
     {
       "path": "arrow/all-types.arrow",
@@ -771,8 +768,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "arrow/all-types.arrow"
+      "supersededBy": null
     },
     {
       "path": "avi/640x480-5s.avi",
@@ -858,8 +854,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "avi/640x480-5s.avi"
+      "supersededBy": null
     },
     {
       "path": "avif/640x480.avif",
@@ -964,8 +959,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "avif/640x480.avif"
+      "supersededBy": null
     },
     {
       "path": "avro/people-1000.avro",
@@ -1057,8 +1051,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "avro/people-1000.avro"
+      "supersededBy": null
     },
     {
       "path": "bin/1-byte.bin",
@@ -1683,8 +1676,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "bin/10mib-plus-1.bin"
+      "supersededBy": null
     },
     {
       "path": "bin/zeros-10mb.bin",
@@ -1808,8 +1800,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "bmp/24bit-256x256.bmp"
+      "supersededBy": null
     },
     {
       "path": "bz2/lorem-1mb.txt.bz2",
@@ -1870,8 +1861,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "bz2/lorem-1mb.txt.bz2"
+      "supersededBy": null
     },
     {
       "path": "css/basic.css",
@@ -1929,8 +1919,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "css/basic.css"
+      "supersededBy": null
     },
     {
       "path": "csv/10mb.csv",
@@ -2367,8 +2356,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "csv/people-1000.csv"
+      "supersededBy": null
     },
     {
       "path": "der/sample.der",
@@ -2404,8 +2392,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "der/self-signed-ed25519-cert.der"
+      "supersededBy": null
     },
     {
       "path": "der/self-signed-ed25519-cert.der",
@@ -2681,8 +2668,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "docx/1page.docx"
+      "supersededBy": null
     },
     {
       "path": "docx/unicode-multilingual.docx",
@@ -3779,8 +3765,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "eml/plain-text.eml"
+      "supersededBy": null
     },
     {
       "path": "eml/with-attachments.eml",
@@ -3940,8 +3925,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "epub/epub3-3chapters.epub"
+      "supersededBy": null
     },
     {
       "path": "epub/with-images.epub",
@@ -4023,8 +4007,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "flac/sine-440hz-30s.flac"
+      "supersededBy": null
     },
     {
       "path": "flac/sine-440hz-30s.flac",
@@ -4139,8 +4122,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "geojson/points-100.geojson"
+      "supersededBy": null
     },
     {
       "path": "gif/1x1.gif",
@@ -4246,8 +4228,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "gif/static-256x256.gif"
+      "supersededBy": null
     },
     {
       "path": "gif/static-256x256.gif",
@@ -4358,8 +4339,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "gpx/track-100-points.gpx"
+      "supersededBy": null
     },
     {
       "path": "gpx/track-100-points.gpx",
@@ -4490,8 +4470,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "gz/lorem-1mb.txt.gz"
+      "supersededBy": null
     },
     {
       "path": "har/sample.har",
@@ -4522,8 +4501,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "har/simple-3-requests.har"
+      "supersededBy": null
     },
     {
       "path": "har/simple-3-requests.har",
@@ -4622,8 +4600,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "heic/640x480.heic"
+      "supersededBy": null
     },
     {
       "path": "hls/360p-10s/index.m3u8",
@@ -5320,8 +5297,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "html/with-inline-css.html"
+      "supersededBy": null
     },
     {
       "path": "html/with-inline-css.html",
@@ -5477,8 +5453,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "ico/favicon-16-32-48.ico"
+      "supersededBy": null
     },
     {
       "path": "ics/recurring-weekly-rrule.ics",
@@ -5542,8 +5517,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "ics/recurring-weekly-rrule.ics"
+      "supersededBy": null
     },
     {
       "path": "ics/single-event.ics",
@@ -5635,8 +5609,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "ini/config.ini"
+      "supersededBy": null
     },
     {
       "path": "ipynb/sample.ipynb",
@@ -5667,8 +5640,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "ipynb/simple-with-outputs.ipynb"
+      "supersededBy": null
     },
     {
       "path": "ipynb/simple-with-outputs.ipynb",
@@ -6310,8 +6282,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "jpg/1920x1080.jpg"
+      "supersededBy": null
     },
     {
       "path": "js/hello-console.js",
@@ -6367,8 +6338,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "js/hello-console.js"
+      "supersededBy": null
     },
     {
       "path": "json/10mb.json",
@@ -6613,8 +6583,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "json/people-1000.json"
+      "supersededBy": null
     },
     {
       "path": "kml/placemarks-10.kml",
@@ -6690,8 +6659,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "kml/placemarks-10.kml"
+      "supersededBy": null
     },
     {
       "path": "kmz/placemarks-10.kmz",
@@ -6761,8 +6729,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "kmz/placemarks-10.kmz"
+      "supersededBy": null
     },
     {
       "path": "log/json-lines-app-1000.log",
@@ -6858,8 +6825,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "log/nginx-access-1000-lines.log"
+      "supersededBy": null
     },
     {
       "path": "m4a/aac-30s.m4a",
@@ -6983,8 +6949,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "m4a/aac-64k-44k-30s.m4a"
+      "supersededBy": null
     },
     {
       "path": "mbox/3-messages.mbox",
@@ -7056,8 +7021,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "mbox/3-messages.mbox"
+      "supersededBy": null
     },
     {
       "path": "md/all-elements.md",
@@ -7221,8 +7185,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "md/all-elements.md"
+      "supersededBy": null
     },
     {
       "path": "mkv/720p-5s.mkv",
@@ -7371,8 +7334,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "mkv/720p-5s.mkv"
+      "supersededBy": null
     },
     {
       "added_in": "1.11.0",
@@ -7606,8 +7568,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "mov/720p-5s.mov"
+      "supersededBy": null
     },
     {
       "path": "mp3/10mb.mp3",
@@ -7727,8 +7688,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "mp3/sine-440hz-30s.mp3"
+      "supersededBy": null
     },
     {
       "path": "mp3/silence-5s.mp3",
@@ -8627,8 +8587,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "mp4/720p-5s.mp4"
+      "supersededBy": null
     },
     {
       "path": "mp4/square-720x720-5s.mp4",
@@ -8790,8 +8749,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "ndjson/people-1000.ndjson"
+      "supersededBy": null
     },
     {
       "path": "ogg/chained-2-streams-10s.ogg",
@@ -8933,8 +8891,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "ogg/vorbis-mono-22k-10s.ogg"
+      "supersededBy": null
     },
     {
       "path": "ogg/vorbis-30s.ogg",
@@ -9279,8 +9236,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "otf/loremfile-sans.otf"
+      "supersededBy": null
     },
     {
       "path": "parquet/nested-types.parquet",
@@ -9688,8 +9644,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "parquet/nested-types.parquet"
+      "supersededBy": null
     },
     {
       "path": "pdf/10mb.pdf",
@@ -10503,8 +10458,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "pdf/a4-3pages.pdf"
+      "supersededBy": null
     },
     {
       "path": "pdf/scanned-1page.pdf",
@@ -10576,8 +10530,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "pem/self-signed-ed25519-cert.pem"
+      "supersededBy": null
     },
     {
       "path": "pem/self-signed-ed25519-cert.pem",
@@ -11076,8 +11029,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "png/640x480.png"
+      "supersededBy": null
     },
     {
       "path": "png/transparent-256x256.png",
@@ -11354,8 +11306,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "pptx/1slide.pptx"
+      "supersededBy": null
     },
     {
       "path": "pptx/with-chart.pptx",
@@ -11637,8 +11588,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "rtf/simple.rtf"
+      "supersededBy": null
     },
     {
       "path": "rtf/simple.rtf",
@@ -11777,8 +11727,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "sql/people-1000-inserts-portable.sql"
+      "supersededBy": null
     },
     {
       "path": "sqlite/multi-table-with-fk-indexes-views.sqlite",
@@ -11903,8 +11852,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "sqlite/multi-table-with-fk-indexes-views.sqlite"
+      "supersededBy": null
     },
     {
       "path": "srt/3-cues.srt",
@@ -11962,8 +11910,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "srt/3-cues.srt"
+      "supersededBy": null
     },
     {
       "path": "svg/icons-24x24.svg",
@@ -12042,8 +11989,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "svg/viewbox-responsive.svg"
+      "supersededBy": null
     },
     {
       "path": "svg/simple-shapes.svg",
@@ -12344,8 +12290,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "tar/3-text-files.tar"
+      "supersededBy": null
     },
     {
       "path": "tiff/16bit-gray-big-endian-640x480.tiff",
@@ -12601,8 +12546,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "tiff/lzw-640x480.tiff"
+      "supersededBy": null
     },
     {
       "path": "toml/config.toml",
@@ -12680,8 +12624,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "toml/config.toml"
+      "supersededBy": null
     },
     {
       "path": "ts/720p-5s.ts",
@@ -12807,8 +12750,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "tsv/people-1000.tsv"
+      "supersededBy": null
     },
     {
       "path": "ttf/loremfile-sans.ttf",
@@ -12872,8 +12814,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "ttf/loremfile-sans.ttf"
+      "supersededBy": null
     },
     {
       "path": "txt/crlf.txt",
@@ -13227,8 +13168,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "txt/lorem-1kb.txt"
+      "supersededBy": null
     },
     {
       "path": "txt/shift-jis.txt",
@@ -13492,8 +13432,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "vcf/vcard4-single.vcf"
+      "supersededBy": null
     },
     {
       "path": "vcf/vcard3-single.vcf",
@@ -13611,8 +13550,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "vtt/3-cues.vtt"
+      "supersededBy": null
     },
     {
       "path": "wasm/minimal-add.wasm",
@@ -13698,8 +13636,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "wasm/minimal-add.wasm"
+      "supersededBy": null
     },
     {
       "path": "wav/10mb.wav",
@@ -13785,8 +13722,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "wav/sine-440hz-3s-44k-16bit-mono.wav"
+      "supersededBy": null
     },
     {
       "path": "wav/sine-440hz-3s-44k-16bit-mono.wav",
@@ -14281,8 +14217,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "webm/720p-5s-vp8.webm"
+      "supersededBy": null
     },
     {
       "path": "webmanifest/sample.webmanifest",
@@ -14324,8 +14259,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "webmanifest/site.webmanifest"
+      "supersededBy": null
     },
     {
       "path": "webmanifest/site.webmanifest",
@@ -14546,8 +14480,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "webp/lossless-640x480.webp"
+      "supersededBy": null
     },
     {
       "path": "woff/loremfile-sans.woff",
@@ -14613,8 +14546,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "woff/loremfile-sans.woff"
+      "supersededBy": null
     },
     {
       "path": "woff2/loremfile-sans.woff2",
@@ -14680,8 +14612,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "woff2/loremfile-sans.woff2"
+      "supersededBy": null
     },
     {
       "path": "xlsx/10mb.xlsx",
@@ -14975,8 +14906,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "xlsx/1sheet-1000rows.xlsx"
+      "supersededBy": null
     },
     {
       "path": "xlsx/unicode-strings.xlsx",
@@ -15381,8 +15311,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "xml/with-namespaces.xml"
+      "supersededBy": null
     },
     {
       "path": "xml/with-namespaces.xml",
@@ -15479,8 +15408,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "xz/lorem-1mb.txt.xz"
+      "supersededBy": null
     },
     {
       "path": "yaml/config-all-types.yaml",
@@ -15560,8 +15488,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "yaml/config-all-types.yaml"
+      "supersededBy": null
     },
     {
       "path": "zip/100mb.zip",
@@ -15885,8 +15812,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "zip/3-text-files.zip"
+      "supersededBy": null
     },
     {
       "path": "zip/zip64-70000-empty-files.zip",
@@ -15984,8 +15910,7 @@
       "added_in": "1.15.0",
       "status": "active",
       "deprecated": false,
-      "supersededBy": null,
-      "aliasOf": "zst/lorem-1mb.txt.zst"
+      "supersededBy": null
     }
   ]
 }

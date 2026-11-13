@@ -232,7 +232,8 @@ class Fixture(BaseModel):
     label: str | None = Field(default=None, min_length=2, max_length=MAX_LABEL_CHARS)
     #: Set on an alias only: the path whose bytes this path serves under a name that is easy to
     #: guess (docs/05 §8). Aliases are not written in `catalog/{format}.yaml`; the loader makes
-    #: each from a row of `catalog/_aliases.yaml`, and the manifest entry names the original.
+    #: each from a row of `catalog/_aliases.yaml`. The manifest entry has no field for it: its
+    #: `generator` is `alias.copy` and its original is `generator_params.of` (docs/04 §1.4).
     alias_of: str | None = Field(default=None, min_length=1)
 
     # The owning format, injected by the loader so a Fixture can compute its own path.

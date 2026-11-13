@@ -77,8 +77,7 @@
         "status": { "const": "active" },
         "deprecated": { "type": "boolean" },
         "supersededBy": { "type": ["string", "null"] },
-        "notes": { "type": ["string", "null"] },
-        "aliasOf": { "$ref": "#/$defs/path" }
+        "notes": { "type": ["string", "null"] }
       }
     },
     "tombstone": {

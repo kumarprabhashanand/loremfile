@@ -72,7 +72,7 @@ Field rules:
 | `added_in` | semver | Catalog version that introduced it. |
 | `status` | enum | `active`, `removed` (legal takedown tombstone, see §1.5). |
 | `deprecated`, `supersededBy` | boolean, string/null | Derived, never set here: the catalog's `superseded_by` is the input, and `manifest update` writes both fields from it (`03` §7.3), so a value set by hand in the manifest is overwritten by the next update and `manifest check` reports it until then. `supersededBy` is the replacing path. A superseded entry stays active and served, and stays in `manifest.json`, `sha256sums.txt` and `{format}/index.json`; format pages, the search index and `llms-full.txt` list its replacement instead. |
-| `aliasOf` | string | Present only on a `sample.{format}` alias (since 1.15.0, additive: an entry without it is unchanged). The path whose bytes this path serves, under the name `/{format}/sample.{format}` that is easy to guess. `sha256`, `bytes`, `mime` and `props` equal the original's, and a test holds that. An alias is not a second file: the site's counts, format pages, `search-index.json`, `llms-full.txt`, `formats.json` and `{format}/index.json` leave it out, and `manifest.json`, `sha256sums.txt` and `get --format` (which reads the manifest) carry it. `catalog/_aliases.yaml` lists them; `05` §8 gives the rule and the table. |
+| `generator`, `generator_params.of` | string, string | How an alias says what it is (since 1.15.0), with no field of its own: a `sample.{format}` alias is an entry whose `generator` is `alias.copy`, and its original is the `of` in its `generator_params`. Its `sha256`, `bytes`, `mime` and `props` equal the original's, and a test holds that. An alias is not a second file: the site's counts, format pages, `search-index.json`, `llms-full.txt`, `formats.json` and `{format}/index.json` leave it out, and `manifest.json`, `sha256sums.txt` and `get --format` (which reads the manifest) carry it. `catalog/_aliases.yaml` lists them; `05` §8 gives the rule and the table. 1.15.0 briefly wrote a field `aliasOf`, which the published schema does not allow: see §1.4. |
 
 ### 1.3 `props` by format (what validators measure)
 
@@ -152,7 +152,7 @@ Three to five strings each file is known to contain, so a parser test can check 
 
 ### 1.4 JSON Schema
 
-`src/loremfile/schema/manifest-v1.json` (deployed at `/schema/manifest-v1.json`). Draft 2020-12. For `status: active` the required fields are exactly those in §1.2 except `notes`; `additionalProperties: false` so drift is caught. For `status: removed` the entry is a tombstone (§1.5) validated by an `if/then` branch. CI validates the manifest on every run (`tests/unit/test_manifest.py`). The schema document is itself immutable once published; a new schema is `manifest-v2.json` and bumps `schema_version`.
+`src/loremfile/schema/manifest-v1.json` (deployed at `/schema/manifest-v1.json`). Draft 2020-12. For `status: active` the required fields are exactly those in §1.2 except `notes`; `additionalProperties: false` so drift is caught. For `status: removed` the entry is a tombstone (§1.5) validated by an `if/then` branch. CI validates the manifest on every run (`tests/unit/test_manifest.py`). The schema document is itself immutable once published; a new schema is `manifest-v2.json` and bumps `schema_version`. **A new entry field is such a change, and no edit to v1 is allowed for it.** On 2026-11-13 #153 added `aliasOf` to v1 anyway: the document is served with an immutable cache header and was never purged, so the edge kept the old copy, `verify-live` read the difference as a hash mismatch, and because the entry definition is `additionalProperties: false` a client holding the old copy rejected all 75 alias entries. 1.15.1 restored the file to its bytes at `285fda6` and dropped the field: whatever a reader needs is derived from fields that already exist (the alias rule in §1.2). `tests/unit/test_manifest_schema_pinned.py` pins the file's SHA-256, and a deploy purges it anyway (`09` §6).
 
 ### 1.5 Tombstone entry (`status: removed`)
 
@@ -372,7 +372,7 @@ Policy: https://loremfile.dev/docs/security-policy
 
 ## 9. `schema/manifest-v1.json`
 
-Deployed copy of the JSON Schema (§1.4). `application/schema+json`, immutable cache headers.
+Deployed copy of the JSON Schema (§1.4). `application/schema+json`, immutable cache headers, and a deploy purges it as insurance although it should never change.
 
 ## 10. Structured data on pages
 

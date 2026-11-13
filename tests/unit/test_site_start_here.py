@@ -19,6 +19,7 @@ import pytest
 import yaml
 
 from loremfile.catalog import Catalog
+from loremfile.manifest import alias_original
 from loremfile.site import build, defaults, icons
 from loremfile.site.build import POPULAR, key_props
 
@@ -273,7 +274,7 @@ def test_the_paragraphs_that_moved_below_the_grid_kept_their_words() -> None:
 def test_the_example_is_a_published_file() -> None:
     assert build.EXAMPLE in {e["path"] for e in MANIFEST}
     assert f"loremfile.dev/{build.EXAMPLE}" == icons.OG_URL, "the card shows the home example"
-    assert next(e for e in MANIFEST if e["path"] == build.EXAMPLE)["aliasOf"] == POPULAR[0]
+    assert alias_original(next(e for e in MANIFEST if e["path"] == build.EXAMPLE)) == POPULAR[0]
 
 
 # --- counts read as one or many --------------------------------------------------------------

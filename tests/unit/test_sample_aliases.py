@@ -22,7 +22,7 @@ from catalog_helpers import minimal_fixture
 from loremfile.build import load_generators
 from loremfile.catalog import ALIAS_STEM, Catalog, CatalogError, Fixture, make_alias
 from loremfile.generators.base import REGISTRY, GeneratorContext
-from loremfile.manifest import Manifest
+from loremfile.manifest import Manifest, alias_original, is_alias
 from loremfile.site import build, defaults, routes
 from loremfile.util.determinism import deterministic
 from loremfile.validators import load, validate
@@ -55,8 +55,8 @@ def disagreements(entries: list[dict[str, Any]]) -> list[str]:
     return [
         e["path"]
         for e in entries
-        if e.get("aliasOf")
-        and tuple(e[k] for k in keys) != tuple(by_path[e["aliasOf"]][k] for k in keys)
+        if is_alias(e)
+        and tuple(e[k] for k in keys) != tuple(by_path[alias_original(e)][k] for k in keys)
     ]
 
 
@@ -67,7 +67,7 @@ def test_the_aliases_are_found_where_they_are_known_to_be() -> None:
     """Empty-set control: every check below holds of nothing if no alias exists."""
     assert len(ALIASES) == 75 and ALIASES["pdf"] == "pdf/a4-3pages.pdf"
     assert ALIASES["webm"] == "webm/720p-5s-vp8.webm" and ALIASES["gif"] == "gif/static-256x256.gif"
-    aliases = [e for e in MANIFEST if e.get("aliasOf")]
+    aliases = [e for e in MANIFEST if is_alias(e)]
     assert len(aliases) == 75 and "pdf/sample.pdf" in {e["path"] for e in aliases}
     assert set(FAMILY) - set(ALIASES) == NO_ALIAS, "hls, edge, ogv, ts and opus have none"
 
@@ -101,18 +101,20 @@ def test_the_alias_rows_the_loader_makes_are_the_originals_with_a_new_name() -> 
 
 
 def test_every_alias_has_the_sha256_and_everything_else_of_its_original() -> None:
-    aliases = [e for e in MANIFEST if e.get("aliasOf")]
+    aliases = [e for e in MANIFEST if is_alias(e)]
     assert disagreements(MANIFEST) == [] and len(aliases) == 75
     for e in aliases:
         assert e["path"] == f"{e['format']}/sample.{e['format']}"
-        assert "aliasOf" not in BY_PATH[e["aliasOf"]]
+        assert not is_alias(BY_PATH[alias_original(e)])
+        assert e["generator_params"] == {"of": alias_original(e)}
+        assert "aliasOf" not in e, "the published schema has no such field (docs/04 §1.4)"
     sums = {
         path: sha
         for sha, path in (
             line.split("  ", 1) for line in (ROOT / "sha256sums.txt").read_text().splitlines()
         )
     }
-    assert all(sums[e["path"]] == sums[e["aliasOf"]] for e in aliases), "sha256sums.txt too"
+    assert all(sums[e["path"]] == sums[alias_original(e)] for e in aliases), "sha256sums.txt too"
 
 
 def test_a_hash_that_differs_is_what_the_comparison_catches() -> None:
@@ -151,7 +153,7 @@ def test_a_bin_alias_is_held_to_its_originals_seed_and_a_stranger_is_not(tmp_pat
 
 def test_no_alias_names_a_file_only_the_ci_fleet_reproduces() -> None:
     assert len(DRIFTING) == 11, "control: the exclusion has something to exclude"
-    assert not {e["aliasOf"] for e in MANIFEST if e.get("aliasOf")} & DRIFTING
+    assert not {alias_original(e) for e in MANIFEST if is_alias(e)} & DRIFTING
     assert not set(ALIASES.values()) & DRIFTING
     assert {p.split("/")[0] for p in DRIFTING} >= {"mp4", "webm", "mkv", "opus"}
 
@@ -197,7 +199,7 @@ def site(tmp_path_factory: pytest.TempPathFactory) -> Path:
 def test_the_counts_leave_aliases_out(site: Path) -> None:
     manifest = Manifest.load()
     files = len(manifest.current)
-    assert files == len([e for e in MANIFEST if not e.get("aliasOf") and not e.get("supersededBy")])
+    assert files == len([e for e in MANIFEST if not is_alias(e) and not e.get("supersededBy")])
     assert len(manifest.active) == len(MANIFEST) == files + 75 + 1, "75 aliases, 1 superseded"
     home = (site / "index.html").read_text(encoding="utf-8")
     assert f"Search {files} files by path or description" in home

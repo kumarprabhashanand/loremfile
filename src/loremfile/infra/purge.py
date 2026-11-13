@@ -56,12 +56,11 @@ SITE_FILES = (
     ".well-known/api-catalog",
     "favicon.ico",
     "apple-touch-icon.png",
+    # Never edited, so purging it is insurance and not routine: #153 edited it in place on
+    # 2026-11-13, the edge kept the old copy, and verify-live read the difference as a hash
+    # mismatch. One operation in a batch of 100 is cheap (docs/09 §6).
+    "schema/manifest-v1.json",
 )
-
-#: Never purged, and the reason is not tidiness: these bytes are immutable, so an entry
-#: in cache is always still correct, and dropping it costs an R2 read to refetch the
-#: identical object. `schema/` is versioned and equally immutable.
-NEVER_PURGE_PREFIXES = ("schema/",)
 
 
 class PurgeError(RuntimeError):

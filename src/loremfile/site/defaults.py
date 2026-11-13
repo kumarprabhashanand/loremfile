@@ -9,6 +9,8 @@ from __future__ import annotations
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from typing import Any
 
+from loremfile.catalog import ALIAS_GENERATOR
+
 #: Formats whose page is a collection and not one file: an HLS playlist is useless without its
 #: segments, and every `edge` file is broken on purpose.
 NO_DEFAULT = frozenset({"hls", "edge"})
@@ -51,7 +53,7 @@ def eligible(
         if e.get("status", "active") == "active"
         and not e.get("supersededBy")
         and not e.get("edge_case")
-        and not e.get("aliasOf")
+        and e.get("generator") != ALIAS_GENERATOR
         and e["path"] not in drifting
     ]
 
