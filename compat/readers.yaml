@@ -102,6 +102,28 @@
         ],
         "text": "A root name in Clark notation, {namespace}local, is reduced to its local name before it is reported as root_element, the form the manifest and the other readers use. The namespace is reported as its own property, root_namespace, which is not compared."
       }
+    ],
+    "no_reader_when": [
+      {
+        "runtime": "go",
+        "format": "tar",
+        "when": {
+          "compression": [
+            "xz"
+          ]
+        }
+      }
+    ],
+    "routing": [
+      {
+        "format": "tar",
+        "applies": [
+          "go/archive/tar",
+          "go/archive/tar+compress/gzip",
+          "python/tarfile"
+        ],
+        "text": "The manifest's compression decides what each tar reader is given. python/tarfile is given the file as it is, gzip and xz included, and decompresses it itself. archive/tar does not decompress, so go/archive/tar is given only uncompressed tar, compress/gzip is chained into archive/tar for gzip-compressed tar (the arrangement Go's documentation describes) under the reader go/archive/tar+compress/gzip, and for xz-compressed tar Go has no reader: its standard library has bzip2, flate, gzip, lzw and zlib, and no xz."
+      }
     ]
   },
   "readers": [
@@ -123,7 +145,37 @@
           "reads": "tar/3-text-files.tar",
           "must_not": "truncated"
         }
-      ]
+      ],
+      "when": {
+        "compression": [
+          ""
+        ]
+      }
+    },
+    {
+      "id": "go/archive/tar+compress/gzip",
+      "runtime": "go",
+      "module": "archive/tar + compress/gzip",
+      "docs": "https://pkg.go.dev/archive/tar",
+      "formats": [
+        "tar"
+      ],
+      "props": [
+        "entries",
+        "directories",
+        "uncompressed_bytes"
+      ],
+      "controls": [
+        {
+          "reads": "tar/3-text-files.tar.gz",
+          "must_not": "zero-byte"
+        }
+      ],
+      "when": {
+        "compression": [
+          "gz"
+        ]
+      }
     },
     {
       "id": "go/archive/zip",

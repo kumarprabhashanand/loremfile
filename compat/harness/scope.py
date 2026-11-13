@@ -81,6 +81,7 @@ def corpus(
             else None,
             "delimiter": props.get("delimiter") if "csv" in targets else None,
             "props": {k: v for k, v in props.items() if k in expected_names(scope)},
+            "route": {k: props.get(k) for k in route_names(config)},
         }
         (skipped if entry["bytes"] > scope["max_bytes"] else files).append(record)
     return files, skipped
@@ -91,11 +92,42 @@ def expected_names(scope: dict[str, Any]) -> set[str]:
     return names | {"has_header"}
 
 
+def route_names(config: dict[str, Any]) -> set[str]:
+    """The manifest props that decide which readers a file goes to (`when` in readers.yaml)."""
+    names: set[str] = set()
+    for item in [*config["readers"], *config["scope"].get("no_reader_when", [])]:
+        names |= set(item.get("when", {}))
+    return names
+
+
+def matches(file: dict[str, Any], when: dict[str, list[Any]]) -> bool:
+    """True when every named manifest prop of the file is one of the values listed."""
+    return all(file["route"].get(name) in values for name, values in when.items())
+
+
 def readers_for(file: dict[str, Any], config: dict[str, Any]) -> list[dict[str, Any]]:
-    """The readers a file goes to: every reader of any format it targets, in id order."""
+    """The readers a file goes to, in id order: those of any format it targets, and, for a
+    reader that names a `when`, only the files whose manifest props say so. A reader that
+    takes uncompressed tar is not handed a gzip stream and then blamed for it."""
     targets = set(file["targets"])
-    found = [r for r in config["readers"] if targets & set(r["formats"])]
+    found = [
+        r
+        for r in config["readers"]
+        if targets & set(r["formats"]) and matches(file, r.get("when", {}))
+    ]
     return sorted(found, key=lambda r: r["id"])
+
+
+def no_reader_for(file: dict[str, Any], config: dict[str, Any]) -> list[str]:
+    """Runtimes whose standard library has no reader for this particular file (`no_reader_when`),
+    as opposed to none for its whole format (`no_reader`)."""
+    return sorted(
+        {
+            rule["runtime"]
+            for rule in config["scope"].get("no_reader_when", [])
+            if rule["format"] in file["targets"] and matches(file, rule["when"])
+        }
+    )
 
 
 def role_format(file: dict[str, Any], reader: dict[str, Any]) -> str:

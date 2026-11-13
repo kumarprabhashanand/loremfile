@@ -56,6 +56,17 @@ header is a record to a reader and not a data row; and a root name in Clark nota
 `namespaces`). A reader may report the namespace as its own property, `root_namespace`, which is
 never compared and is not `root_element`.
 
+## Routing
+
+A reader in `readers.yaml` may name a `when`: manifest props that a file must have to be given to it.
+`scope.no_reader_when` says the same for a runtime that has no reader for particular files. Both are
+read from the file's own manifest entry, never guessed from its name. The one use today is
+compressed tar, and it is recorded in `scope.routing` and shown on `/compat/tar`: `python/tarfile`
+is given every tar file as it is, `go/archive/tar` only the files whose `compression` is empty,
+`go/archive/tar+compress/gzip` (compress/gzip chained into archive/tar) those whose `compression` is
+`gz`, and Go has no reader for `xz`. A cell for a reader a file was not given does not exist;
+the page says "not given this file", and `no-reader` where the runtime has none at all.
+
 ## Outcomes
 
 `reads`, `differs`, `refuses`, `crashes` (the process died, printed no result, or passed 30

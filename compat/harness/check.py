@@ -70,7 +70,16 @@ def format_problems(
             found.append(f"{fmt}.json: {path} is not in the manifest")
         elif (row["sha256"], row["bytes"]) != (entry["sha256"], entry["bytes"]):
             found.append(f"{fmt}.json: {path} does not match the manifest's bytes")
+        file = next(f for f in files if f["path"] == path)
+        applies = {r["id"] for r in scope.readers_for(file, config) if fmt in r["formats"]}
+        if set(row["cells"]) != applies:
+            have, want = sorted(row["cells"]), sorted(applies)
+            found.append(f"{fmt}.json: {path} has cells for {have}, expected {want}")
+        if row.get("no_reader") != scope.no_reader_for(file, config):
+            found.append(f"{fmt}.json: {path} names the wrong runtimes as having no reader")
         for reader in readers:
+            if reader["id"] not in applies:
+                continue
             cells = row["cells"].get(reader["id"], {})
             for runtime, version in versions:
                 if runtime != reader["runtime"]:

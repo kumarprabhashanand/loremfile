@@ -148,3 +148,24 @@ def test_the_namespaced_file_reads_in_every_xml_reader_on_every_version() -> Non
         if rt == reader["runtime"]
     )
     assert seen == expected and seen > 0, "control: every xml reader and version was seen"
+
+
+def test_the_tar_asymmetry_the_page_states_is_what_the_results_hold() -> None:
+    """Python's tar reader decompresses and Go's does not: the sentence on /compat/tar is
+    owner-requested prose, so each part of it is held to the results here."""
+    rows = {row["path"]: row for row in document("tar")["files"]}
+    plain, gz, xz = (rows[f"tar/3-text-files.tar{ext}"] for ext in ("", ".gz", ".xz"))
+
+    def outcomes(row: dict[str, Any], reader: str) -> set[str]:
+        return {cell["outcome"] for cell in row["cells"][reader].values()}
+
+    for row in (plain, gz, xz):
+        assert outcomes(row, "python/tarfile") == {"reads"}, row["path"]
+        assert row["cells"]["python/tarfile"]["python-3.13"]["props"]["entries"] == 3
+    assert set(plain["cells"]) == {"go/archive/tar", "python/tarfile"}
+    assert set(gz["cells"]) == {"go/archive/tar+compress/gzip", "python/tarfile"}
+    assert set(xz["cells"]) == {"python/tarfile"} and xz["no_reader"] == ["go"]
+    assert outcomes(plain, "go/archive/tar") == {"reads"}
+    assert outcomes(gz, "go/archive/tar+compress/gzip") == {"reads"}
+    assert gz["cells"]["go/archive/tar+compress/gzip"]["go-1.27"]["props"]["entries"] == 3
+    assert gz["no_reader"] == plain["no_reader"] == []

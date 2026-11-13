@@ -26,9 +26,15 @@
       <td>{{ row.expect if row.expect else "nothing to compare" }}</td>
 {% for cell in row.cells %}
       <td>
-{% for g in cell %}
+{% if cell.state == "run" %}
+{% for g in cell.groups %}
         <p>{% if g.label %}<span class="size">{{ g.label }}</span> {% endif %}<strong>{{ g.outcome }}</strong>{% if g.text %} {{ g.text }}{% endif %}{% if g.note %} <em>({{ g.note }})</em>{% endif %}</p>
 {% endfor %}
+{% elif cell.state == "no-reader" %}
+        <p><strong>no-reader</strong></p>
+{% else %}
+        <p><span class="size">not given this file</span></p>
+{% endif %}
       </td>
 {% endfor %}
 {% for runtime in no_reader %}
@@ -39,6 +45,9 @@
   </tbody>
 </table>
 </div>
+{% for r in routing %}
+<p>{{ r.text }}</p>
+{% endfor %}
 {% if skipped %}
 <p>Skipped, over the size limit:{% for s in skipped %} <a href="/{{ s.path }}"><code>{{ s.path }}</code></a> ({{ s.size }}){{ "." if loop.last else "," }}{% endfor %}</p>
 {% endif %}

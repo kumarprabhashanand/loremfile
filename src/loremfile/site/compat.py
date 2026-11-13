@@ -289,17 +289,26 @@ def format_context(results: Results, fmt: str, size: Callable[[int], str]) -> di
     for row in document["files"]:
         cells = []
         for column in columns:
+            if column["id"] not in row["cells"]:
+                # Not handed this file (`when` in readers.yaml); where the runtime has no reader
+                # for the file at all, that is the cell's outcome.
+                missing = column["runtime"] in row.get("no_reader", [])
+                cells.append({"state": "no-reader" if missing else "not-given", "groups": []})
+                continue
             made = groups(row["cells"][column["id"]], order[column["id"]])
             cells.append(
-                [
-                    {
-                        "label": group["label"] if len(made) > 1 else "",
-                        "outcome": group["cell"]["outcome"],
-                        "text": cell_text(group["cell"], row, fmt),
-                        "note": edge_note(row, group["cell"]["outcome"]),
-                    }
-                    for group in made
-                ]
+                {
+                    "state": "run",
+                    "groups": [
+                        {
+                            "label": group["label"] if len(made) > 1 else "",
+                            "outcome": group["cell"]["outcome"],
+                            "text": cell_text(group["cell"], row, fmt),
+                            "note": edge_note(row, group["cell"]["outcome"]),
+                        }
+                        for group in made
+                    ],
+                }
             )
         rows.append(
             {
@@ -319,6 +328,7 @@ def format_context(results: Results, fmt: str, size: Callable[[int], str]) -> di
         "format": fmt,
         "columns": columns,
         "no_reader": document["no_reader"],
+        "routing": [r for r in results.config["scope"].get("routing", []) if r["format"] == fmt],
         "rows": rows,
         "skipped": [{**s, "size": size(s["bytes"])} for s in document["skipped"]],
         "tally": tally(results, fmt),
@@ -373,7 +383,12 @@ def format_twin(page_context: dict[str, Any]) -> str:
     lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for row in page_context["rows"]:
         link = f"[`{row['path']}`]({config.BASE_URL}{row['path']}) ({row['size']})"
-        cells = ["<br>".join(cell_markdown(g) for g in cell) for cell in row["cells"]]
+        cells = [
+            "<br>".join(cell_markdown(g) for g in cell["groups"])
+            if cell["state"] == "run"
+            else ("**no-reader**" if cell["state"] == "no-reader" else "not given this file")
+            for cell in row["cells"]
+        ]
         cells += ["**no-reader**"] * len(page_context["no_reader"])
         lines.append("| " + " | ".join([link, row["expect"] or "nothing compared", *cells]) + " |")
     out = ["\n".join(lines)]
@@ -383,6 +398,7 @@ def format_twin(page_context: dict[str, Any]) -> str:
             + ", ".join(f"`{s['path']}` ({s['size']})" for s in page_context["skipped"])
             + "."
         )
+    out.extend(f"{r['text']}" for r in page_context["routing"])
     out.append(f"The results as JSON: <{page_context['result_url']}>.")
     return "\n\n".join(out)
 

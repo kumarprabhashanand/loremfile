@@ -189,3 +189,17 @@ def test_the_named_exceptions_are_on_the_index_page_and_in_its_twin(site: Path) 
         assert exception["name"] in body and exception["name"] in twin
         assert exception["text"].split(".")[0] in body
     assert "Clark notation" in body and "root_namespace" in body
+
+
+def test_the_tar_page_says_who_decompresses_and_shows_each_cell_in_its_own_state(
+    site: Path,
+) -> None:
+    body = main_text(text(site, "compat/tar"))
+    for part in ("python/tarfile is given the file as it is", "Go has no reader", "no xz"):
+        assert part in body, part
+    assert "archive/tar + compress/gzip" in body
+    assert body.count("not given this file") == 4, "two Go readers and two files each is not given"
+    assert body.count("no-reader") >= 2, "the xz file has no Go reader, in both Go columns"
+    twin = (site / routes.disk_path(routes.twin_key("compat/tar"))).read_text(encoding="utf-8")
+    assert "not given this file" in twin and "**no-reader**" in twin
+    assert "no xz" not in main_text(text(site, "compat/zip")), "control: other pages do not say it"

@@ -77,7 +77,34 @@ func readTar(path, _, _ string) (props, error) {
 		return nil, err
 	}
 	defer file.Close()
-	archive := tar.NewReader(file)
+	return walkTar(file)
+}
+
+// readTarGzip chains compress/gzip into archive/tar, the arrangement the archive/tar documentation
+// describes for a compressed archive: archive/tar itself does not decompress. The gzip stream is
+// then read to its end, so that its checksum is verified too.
+func readTarGzip(path, _, _ string) (props, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	stream, err := gzip.NewReader(file)
+	if err != nil {
+		return nil, err
+	}
+	report, err := walkTar(stream)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := drain(stream); err != nil {
+		return nil, err
+	}
+	return report, nil
+}
+
+func walkTar(source io.Reader) (props, error) {
+	archive := tar.NewReader(source)
 	var entries, directories, size int64
 	for {
 		header, err := archive.Next()
@@ -267,16 +294,17 @@ func readCertificate(path, _, _ string) (props, error) {
 }
 
 var readers = map[string]func(path, password, delimiter string) (props, error){
-	"go/archive/tar":   readTar,
-	"go/archive/zip":   readZip,
-	"go/compress/gzip": readGzip,
-	"go/crypto/x509":   readCertificate,
-	"go/encoding/csv":  readCSV,
-	"go/encoding/json": readJSON,
-	"go/encoding/xml":  readXML,
-	"go/image/gif":     readGIF,
-	"go/image/jpeg":    readJPEG,
-	"go/image/png":     readPNG,
+	"go/archive/tar":               readTar,
+	"go/archive/tar+compress/gzip": readTarGzip,
+	"go/archive/zip":               readZip,
+	"go/compress/gzip":             readGzip,
+	"go/crypto/x509":               readCertificate,
+	"go/encoding/csv":              readCSV,
+	"go/encoding/json":             readJSON,
+	"go/encoding/xml":              readXML,
+	"go/image/gif":                 readGIF,
+	"go/image/jpeg":                readJPEG,
+	"go/image/png":                 readPNG,
 }
 
 func option(args []string, name string) string {

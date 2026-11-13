@@ -359,6 +359,8 @@ def test_every_readers_control_files_are_in_the_corpus_and_every_reader_has_two(
             assert control["must_not"] in ("zero-byte", "truncated")
             fmt = BY_PATH[control["reads"]]["targets"][0]
             assert fmt in reader_["formats"], (reader_["id"], fmt)
+            routed = {r["id"] for r in scope.readers_for(BY_PATH[control["reads"]], CONFIG)}
+            assert reader_["id"] in routed, f"{reader_['id']} is never given its own control"
 
 
 # --- merging: partial runs do not publish ----------------------------------------------------
@@ -544,3 +546,38 @@ def test_a_namespace_is_never_compared_and_so_never_reads_as_a_difference() -> N
     assert compare.differences("xml", reported, expect, {}) == {}
     assert compare.compared("xml", reported, expect) == ["root_element"]
     assert compare.differences("xml", {"root_element": "{x}catalogue"}, expect, {}) != {}
+
+
+# --- routing: a reader that does not decompress is not handed a compressed file ----------------
+
+
+def routed(path: str) -> set[str]:
+    return {r["id"] for r in scope.readers_for(BY_PATH[path], CONFIG)}
+
+
+def test_a_reader_that_takes_uncompressed_tar_is_not_given_a_compressed_one() -> None:
+    assert routed("tar/3-text-files.tar") == {"go/archive/tar", "python/tarfile"}
+    assert routed("tar/3-text-files.tar.gz") == {"go/archive/tar+compress/gzip", "python/tarfile"}
+    assert routed("tar/3-text-files.tar.xz") == {"python/tarfile"}
+    assert BY_PATH["tar/3-text-files.tar.gz"]["route"] == {"compression": "gz"}
+    assert BY_PATH["tar/3-text-files.tar"]["route"] == {"compression": ""}, "plain tar says so"
+
+
+def test_go_has_no_reader_for_xz_tar_and_only_for_that_file() -> None:
+    assert scope.no_reader_for(BY_PATH["tar/3-text-files.tar.xz"], CONFIG) == ["go"]
+    assert scope.no_reader_for(BY_PATH["tar/3-text-files.tar.gz"], CONFIG) == []
+    assert scope.no_reader_for(BY_PATH["zip/3-text-files.zip"], CONFIG) == []
+
+
+def test_routing_matches_on_the_files_manifest_props_and_a_file_without_one_matches_none() -> None:
+    plain = {"route": {"compression": ""}}
+    assert scope.matches(plain, {"compression": [""]})
+    assert not scope.matches(plain, {"compression": ["gz"]})
+    assert not scope.matches({"route": {"compression": None}}, {"compression": [""]})
+    assert scope.matches({"route": {}}, {})
+
+
+def test_the_routing_text_names_readers_that_exist() -> None:
+    ids = {r["id"] for r in CONFIG["readers"]}
+    for entry in CONFIG["scope"]["routing"]:
+        assert entry["format"] in CONFIG["scope"]["formats"] and set(entry["applies"]) <= ids

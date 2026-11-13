@@ -43,6 +43,39 @@ def expectation(file: dict[str, Any], fmt: str, config: dict[str, Any]) -> dict[
     return {k: v for k, v in sorted(file["props"].items()) if k in names}
 
 
+def file_cells(
+    file: dict[str, Any],
+    readers: list[dict[str, Any]],
+    config: dict[str, Any],
+    versions: list[tuple[str, str]],
+    by_runtime: dict[tuple[str, str], dict[str, Any]],
+    failed: dict[str, str],
+) -> dict[str, dict[str, Any]]:
+    """{reader id: {runtime-version: cell}} for the readers this file goes to."""
+    cells: dict[str, dict[str, Any]] = {}
+    applies = {r["id"] for r in scope.readers_for(file, config)}
+    for reader in sorted(readers, key=lambda r: r["id"]):
+        if reader["id"] not in applies:
+            continue
+        per: dict[str, Any] = {}
+        for runtime, version in versions:
+            if runtime != reader["runtime"]:
+                continue
+            part = by_runtime.get((runtime, version))
+            key = f"{reader['id']}|{file['path']}"
+            if file["path"] in failed:
+                cell = not_run(f"the file did not fetch: {failed[file['path']]}")
+            elif part is None:
+                cell = not_run("the runtime job did not report")
+            elif "setup_error" in part:
+                cell = not_run(f"the runtime could not be set up: {part['setup_error']}")
+            else:
+                cell = part["cells"].get(key) or not_run("no result for this cell")
+            per[f"{runtime}-{version}"] = cell
+        cells[reader["id"]] = per
+    return cells
+
+
 def merge(
     config: dict[str, Any],
     manifest: dict[str, Any],
@@ -74,24 +107,7 @@ def merge(
         for file in files:
             if fmt not in file["targets"]:
                 continue
-            cells: dict[str, dict[str, Any]] = {}
-            for reader in sorted(readers, key=lambda r: r["id"]):
-                per: dict[str, Any] = {}
-                for runtime, version in versions:
-                    if runtime != reader["runtime"]:
-                        continue
-                    part = by_runtime.get((runtime, version))
-                    key = f"{reader['id']}|{file['path']}"
-                    if file["path"] in failed:
-                        cell = not_run(f"the file did not fetch: {failed[file['path']]}")
-                    elif part is None:
-                        cell = not_run("the runtime job did not report")
-                    elif "setup_error" in part:
-                        cell = not_run(f"the runtime could not be set up: {part['setup_error']}")
-                    else:
-                        cell = part["cells"].get(key) or not_run("no result for this cell")
-                    per[f"{runtime}-{version}"] = cell
-                cells[reader["id"]] = per
+            cells = file_cells(file, readers, config, versions, by_runtime, failed)
             rows.append(
                 {
                     "path": file["path"],
@@ -102,6 +118,7 @@ def merge(
                     "role": role(file, fmt),
                     "edge_outcome": file["edge_outcome"],
                     "expect": expectation(file, fmt, config),
+                    "no_reader": scope.no_reader_for(file, config),
                     "cells": cells,
                 }
             )
