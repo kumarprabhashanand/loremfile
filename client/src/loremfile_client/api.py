@@ -153,13 +153,28 @@ def active(document: dict[str, Any]) -> list[dict[str, Any]]:
     return [e for e in document.get("fixtures", []) if e.get("status", "active") == "active"]
 
 
+#: A `sample.{format}` alias is a second URL for bytes that already have one. Its manifest entry is
+#: the only place that says so, and the field that does is `generator`; its original is
+#: `generator_params.of`. (`aliasOf`, which 1.15.0 carried until 1.15.1, matches nothing.)
+ALIAS_GENERATOR = "alias.copy"
+
+
+def is_alias(entry: dict[str, Any]) -> bool:
+    return entry.get("generator") == ALIAS_GENERATOR
+
+
 def select(
     entries: list[dict[str, Any]],
     *,
     paths: list[str] | None = None,
     formats: list[str] | None = None,
+    include_aliases: bool = False,
 ) -> list[dict[str, Any]]:
-    """The entries a request names, or `Refused` naming what does not exist."""
+    """The entries a request names, or `Refused` naming what does not exist.
+
+    A format selects its files, not the aliases that repeat them, unless `include_aliases`; a
+    path that is named is always honoured, alias or not.
+    """
     wanted_paths, wanted_formats = set(paths or []), set(formats or [])
     if not wanted_paths and not wanted_formats:
         raise Refused("name at least one path or format")
@@ -172,7 +187,10 @@ def select(
     if unknown_formats:
         raise Refused(f"no such format: {', '.join(unknown_formats)}")
     chosen = {
-        e["path"]: e for e in entries if e["path"] in wanted_paths or e["format"] in wanted_formats
+        e["path"]: e
+        for e in entries
+        if e["path"] in wanted_paths
+        or (e["format"] in wanted_formats and (include_aliases or not is_alias(e)))
     }
     return [chosen[path] for path in sorted(chosen)]
 

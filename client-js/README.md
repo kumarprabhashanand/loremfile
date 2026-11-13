@@ -26,7 +26,9 @@ correctly by default: every file is verified, and a file that fails is not writt
 
 Every command takes `--json` for scripts, `--quiet`, and `--catalog-version X.Y.Z` to
 refuse to run if loremfile.dev has moved on. `get` also takes `--force` (overwrite) and
-`--dry-run` (what it would fetch, and how many bytes).
+`--dry-run` (what it would fetch, and how many bytes). `get`, `list` and `verify` leave out the
+`sample.{format}` aliases, which repeat another file's bytes, unless you pass `--include-aliases`;
+a path you name is always fetched.
 
 Exit codes: `0` fine, `1` a file failed verification or is missing, `2` the request was
 wrong, `3` loremfile.dev could not be read.

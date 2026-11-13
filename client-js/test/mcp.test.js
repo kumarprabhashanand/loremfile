@@ -270,6 +270,18 @@ test("list_fixtures pages through the published fixtures and says where it is", 
   assert.deepEqual([last.count, last.next_offset], [1, null]);
 });
 
+test("list_fixtures leaves the sample aliases out; describe_fixture still finds one", async () => {
+  child = start();
+  const listed = (await call("list_fixtures", { format: ["pdf"] })).structuredContent;
+  assert.deepEqual(
+    listed.fixtures.map((f) => f.path),
+    ["pdf/other.pdf", "pdf/small.pdf"],
+  );
+  assert.equal(listed.total, 2);
+  const described = (await call("describe_fixture", { path: "pdf/sample.pdf" })).structuredContent;
+  assert.equal(described.path, "pdf/sample.pdf", "control: the alias exists and can be asked for");
+});
+
 test("list_fixtures filters as `loremfile list` does", async () => {
   child = start();
   const paths = async (args) =>

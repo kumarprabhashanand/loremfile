@@ -130,8 +130,11 @@ async function listFixtures(document, args) {
   const limit = integer(args.limit, "limit", { min: 1, max: MAX_LIMIT, fallback: DEFAULT_LIMIT });
   const offset = integer(args.offset, "offset", { min: 0, fallback: 0 });
   // The same filters as `loremfile list`: any of the formats, any of the tags, all three kinds.
+  // The sample.{format} aliases repeat another file's bytes and stay out; describe_fixture and
+  // verify_file still take one by path.
   const matches = api
     .active(document)
+    .filter((e) => !api.isAlias(e))
     .filter((e) => formats.length === 0 || formats.includes(e.format))
     .filter((e) => tags.length === 0 || (e.tags ?? []).some((tag) => tags.includes(tag)))
     .filter((e) => maxBytes === null || e.bytes <= maxBytes)

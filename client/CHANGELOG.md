@@ -4,6 +4,10 @@ All notable changes to the `loremfile` client. The files it downloads have their
 versions, published at <https://loremfile.dev/changelog>: a catalog version says what is
 on the service, this one says what the client does.
 
+## [0.3.1] - 2026-11-13
+
+- `get --format`, `list` and the MCP `list_fixtures` leave out the `sample.{format}` aliases, which repeat another file's bytes, so a format no longer arrives twice. `--include-aliases` brings them back; a path named outright is always fetched.
+
 ## [0.3.0] - 2026-10-15
 
 - A `loremfile` pytest fixture for files too big to commit: `loremfile("mp4/10mb.mp4")` returns the file as a verified local path. It is cached in `.pytest_cache`, so each file is downloaded once and a filled cache needs no network. pytest loads it wherever the client is installed, and it does nothing until a test asks for it. Still no dependencies.

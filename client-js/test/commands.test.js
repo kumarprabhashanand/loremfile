@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 
 import * as api from "../src/api.js";
 import { FAILED, OK, REFUSED, UNREACHABLE } from "../src/cli.js";
-import { BODIES, HALF, run, startServer, waitFor } from "./server.js";
+import { ALIASES, BODIES, HALF, MANIFEST, run, startServer, waitFor } from "./server.js";
 
 const BIN = fileURLToPath(new URL("../bin/loremfile.js", import.meta.url));
 const PART = /^\.large\.bin\.[0-9a-f]+\.part$/;
@@ -65,6 +65,86 @@ test("get writes the files it verified", async () => {
 test("get by format takes every file of it", async () => {
   assert.equal((await run(["get", "--format", "pdf", "--dest", dest])).code, OK);
   assert.deepEqual((await readdir(join(dest, "pdf"))).sort(), ["other.pdf", "small.pdf"]);
+});
+
+test("the fake manifest carries an alias the way the real one does", () => {
+  // Control for the tests below: they mean nothing if the alias is not really there.
+  const aliases = MANIFEST.fixtures.filter((e) => e.generator === "alias.copy");
+  assert.deepEqual(
+    aliases.map((e) => e.path),
+    Object.keys(ALIASES),
+  );
+  assert.deepEqual(Object.keys(ALIASES), ["pdf/sample.pdf"]);
+  assert.deepEqual(aliases[0].generator_params, { of: "pdf/small.pdf" });
+  assert.equal("aliasOf" in aliases[0], false, "docs/04 §1.4: there is no such field");
+  const original = MANIFEST.fixtures.find((e) => e.path === "pdf/small.pdf");
+  assert.equal(aliases[0].sha256, original.sha256);
+});
+
+test("get by format leaves the aliases out unless asked", async () => {
+  assert.equal((await run(["get", "--format", "pdf", "--dest", dest])).code, OK);
+  assert.equal(await exists(join(dest, "pdf", "sample.pdf")), false);
+  const asked = ["get", "--format", "pdf", "--include-aliases", "--dest", dest];
+  assert.equal((await run(asked)).code, OK);
+  assert.deepEqual(await readFile(join(dest, "pdf", "sample.pdf")), BODIES["pdf/small.pdf"]);
+});
+
+test("a dry run counts the bytes it would fetch without the duplicate", async () => {
+  const summary = async (...extra) => {
+    const argv = ["get", "--format", "pdf", ...extra, "--dry-run", "--json"];
+    return JSON.parse((await run(argv)).out).summary;
+  };
+  const without = await summary();
+  const withAliases = await summary("--include-aliases");
+  assert.deepEqual([without.files, withAliases.files], [2, 3]);
+  assert.equal(withAliases.bytes - without.bytes, BODIES["pdf/small.pdf"].length);
+});
+
+test("a path named outright is fetched even when it is an alias", async () => {
+  assert.equal((await run(["get", "pdf/sample.pdf", "--dest", dest])).code, OK);
+  assert.deepEqual(await readFile(join(dest, "pdf", "sample.pdf")), BODIES["pdf/small.pdf"]);
+});
+
+test("filtering on the field the manifest does not have would match nothing", () => {
+  // The mistake the 1.15.1 brief warns about, made on purpose: `aliasOf` finds no alias.
+  const entries = api.active(MANIFEST);
+  assert.deepEqual(
+    entries.filter((e) => "aliasOf" in e).map((e) => e.path),
+    [],
+  );
+  assert.deepEqual(
+    entries.filter(api.isAlias).map((e) => e.path),
+    ["pdf/sample.pdf"],
+  );
+});
+
+test("list leaves the aliases out unless asked", async () => {
+  const listed = async (...argv) =>
+    new Set(JSON.parse((await run(["list", ...argv, "--json"])).out).items.map((i) => i.path));
+  assert.equal((await listed()).has("pdf/sample.pdf"), false);
+  assert.equal((await listed("--format", "pdf")).has("pdf/sample.pdf"), false);
+  assert.equal((await listed("--format", "pdf", "--include-aliases")).has("pdf/sample.pdf"), true);
+  assert.deepEqual(
+    await listed("--include-aliases"),
+    new Set([...(await listed()), ...Object.keys(ALIASES)]),
+  );
+});
+
+test("verify checks an alias that is on disk, and by format only with the flag", async () => {
+  assert.equal((await run(["get", "pdf/sample.pdf", "--dest", dest])).code, OK);
+  assert.equal((await run(["verify", "--dest", dest])).code, OK);
+  await writeFile(join(dest, "pdf", "sample.pdf"), "not what was published");
+  assert.equal((await run(["verify", "--dest", dest])).code, FAILED, "a held alias is checked");
+  assert.equal((await run(["verify", "--format", "pdf", "--dest", dest])).code, FAILED);
+  await writeFile(join(dest, "pdf", "small.pdf"), BODIES["pdf/small.pdf"]);
+  await writeFile(join(dest, "pdf", "other.pdf"), BODIES["pdf/other.pdf"]);
+  assert.equal(
+    (await run(["verify", "--format", "pdf", "--dest", dest])).code,
+    OK,
+    "the bad alias is skipped",
+  );
+  const asked = ["verify", "--format", "pdf", "--include-aliases", "--dest", dest];
+  assert.equal((await run(asked)).code, FAILED, "and asked for, it is checked");
 });
 
 test("a withdrawn entry is not offered", async () => {

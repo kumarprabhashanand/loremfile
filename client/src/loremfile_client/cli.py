@@ -29,6 +29,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"loremfile {__version__}")
     subcommands = parser.add_subparsers(dest="command", required=True)
 
+    def aliases(sub: argparse.ArgumentParser) -> None:
+        sub.add_argument(
+            "--include-aliases",
+            action="store_true",
+            help="Also the sample.{format} copies, which repeat another file's bytes.",
+        )
+
     def shared(sub: argparse.ArgumentParser) -> None:
         sub.add_argument("--json", action="store_true", help="Print one JSON object.")
         sub.add_argument("--quiet", action="store_true", help="Print nothing but failures.")
@@ -50,18 +57,21 @@ def build_parser() -> argparse.ArgumentParser:
     get.add_argument("--dest", default=DEFAULT_DEST, type=Path, help=f"Default: {DEFAULT_DEST}")
     get.add_argument("--force", action="store_true", help="Overwrite files already there.")
     get.add_argument("--dry-run", action="store_true", help="List what would be fetched.")
+    aliases(get)
     shared(get)
 
     listing = subcommands.add_parser("list", help="What is published, without downloading.")
     listing.add_argument("--format", action="append", default=[], metavar="FMT")
     listing.add_argument("--tag", action="append", default=[], metavar="TAG")
     listing.add_argument("--max-bytes", type=int, metavar="N")
+    aliases(listing)
     shared(listing)
 
     check = subcommands.add_parser("verify", help="Check files on disk against the manifest.")
     check.add_argument("paths", nargs="*", metavar="PATH")
     check.add_argument("--format", action="append", default=[], metavar="FMT")
     check.add_argument("--dest", default=DEFAULT_DEST, type=Path, help=f"Default: {DEFAULT_DEST}")
+    aliases(check)
     shared(check)
 
     subcommands.add_parser(
@@ -88,6 +98,7 @@ def run_get(args: argparse.Namespace) -> int:
         api.active(api.manifest(catalog_version=args.catalog_version)),
         paths=args.paths,
         formats=args.format,
+        include_aliases=args.include_aliases,
     )
     if args.dry_run:
         total = sum(e["bytes"] for e in entries)
@@ -108,6 +119,8 @@ def run_get(args: argparse.Namespace) -> int:
 
 def run_list(args: argparse.Namespace) -> int:
     entries = api.active(api.manifest(catalog_version=args.catalog_version))
+    if not args.include_aliases:
+        entries = [e for e in entries if not api.is_alias(e)]
     if args.format:
         entries = [e for e in entries if e["format"] in set(args.format)]
     if args.tag:
@@ -124,9 +137,12 @@ def run_list(args: argparse.Namespace) -> int:
 def run_verify(args: argparse.Namespace) -> int:
     entries = api.active(api.manifest(catalog_version=args.catalog_version))
     if args.paths or args.format:
-        entries = api.select(entries, paths=args.paths, formats=args.format)
+        entries = api.select(
+            entries, paths=args.paths, formats=args.format, include_aliases=args.include_aliases
+        )
     else:
-        # Everything the destination actually holds, so `verify` alone checks a directory.
+        # Everything the destination actually holds, so `verify` alone checks a directory,
+        # aliases included: a copy that is on disk was put there on purpose.
         entries = [e for e in entries if (args.dest / Path(e["path"])).is_file()]
     results = [api.verify(entry, args.dest) for entry in entries]
     failing = [r for r in results if not r.ok]

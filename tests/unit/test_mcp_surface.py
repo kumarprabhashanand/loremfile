@@ -58,18 +58,50 @@ def release(version: str) -> tuple[int, ...]:
     return tuple(int(part) for part in version.split("."))
 
 
-def test_the_entry_names_one_version_no_tree_is_short_of() -> None:
-    """A client release that leaves the MCP server alone leaves the entry alone (docs/09
-    §3.9): Python 0.3.0 added the pytest fixture and the entry still names 0.2.0. What must
-    hold is that the entry is one version, and that both trees have reached it."""
-    entry = server_json()
+def entry_problems(entry: dict, npm: str, pypi: str) -> list[str]:
+    """What is wrong with an entry given the versions the two trees are at."""
+    by_registry = {p["registryType"]: p for p in entry["packages"]}
+    problems = []
+    if set(by_registry) != {"npm", "pypi"}:
+        return [f"the entry lists {sorted(by_registry)}, not npm and pypi"]
+    if by_registry["npm"]["version"] != entry["version"]:
+        problems.append("the entry's version is the npm package's, the one it points at")
+    if release(by_registry["npm"]["version"]) > release(npm):
+        problems.append(f"npm names {by_registry['npm']['version']} and the tree is at {npm}")
+    if release(by_registry["pypi"]["version"]) > release(pypi):
+        problems.append(f"PyPI names {by_registry['pypi']['version']} and the tree is at {pypi}")
+    return problems
+
+
+def test_the_entry_is_the_npm_version_and_no_package_names_a_release_its_tree_has_not_reached() -> (
+    None
+):
+    """The entry points at the npm package, so its `version` is that package's. The PyPI package
+    names a release of its own, which no longer has to match: Python 0.3.1 and npm 0.2.1 are one
+    change, and 0.2.1 does not exist on PyPI. The publish workflow checks that every version the
+    entry names is live and claims the name (docs/09 §3.9)."""
     npm = json.loads((ROOT / "client-js" / "package.json").read_text())["version"]
     pypi = tomllib.loads((ROOT / "client" / "pyproject.toml").read_text())["project"]["version"]
-    by_registry = {p["registryType"]: p for p in entry["packages"]}
-    assert set(by_registry) == {"npm", "pypi"}, "control: both packages are listed"
-    assert by_registry["npm"]["version"] == by_registry["pypi"]["version"] == entry["version"]
-    assert release(entry["version"]) <= release(npm), f"npm is at {npm}"
-    assert release(entry["version"]) <= release(pypi), f"PyPI is at {pypi}"
+    assert entry_problems(server_json(), npm, pypi) == []
+
+
+def test_the_entry_check_fires_on_each_thing_it_names() -> None:
+    """Control: an entry that is wrong in each way is reported, and the real one is not."""
+    entry = server_json()
+    npm, pypi = "0.2.1", "0.3.1"
+
+    def with_versions(top: str, npm_version: str, pypi_version: str) -> dict:
+        packages = [
+            {**p, "version": npm_version if p["registryType"] == "npm" else pypi_version}
+            for p in entry["packages"]
+        ]
+        return {**entry, "version": top, "packages": packages}
+
+    assert entry_problems(with_versions("0.2.1", "0.2.1", "0.2.0"), npm, pypi) == []
+    assert entry_problems(with_versions("0.2.0", "0.2.1", "0.2.0"), npm, pypi), "top != npm"
+    assert entry_problems(with_versions("0.2.2", "0.2.2", "0.2.0"), npm, pypi), "npm ahead of tree"
+    assert entry_problems(with_versions("0.2.1", "0.2.1", "0.3.2"), npm, pypi), "PyPI ahead of tree"
+    assert entry_problems({**entry, "packages": entry["packages"][:1]}, npm, pypi), "one package"
 
 
 def test_both_packages_run_the_mcp_command_on_stdio_and_nothing_is_hosted() -> None:

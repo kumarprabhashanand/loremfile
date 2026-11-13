@@ -232,6 +232,16 @@ def test_list_fixtures_pages_and_says_where_it_is(child: Client, server: str) ->
     assert (last["count"], last["next_offset"]) == (1, None)
 
 
+def test_list_fixtures_leaves_the_sample_aliases_out_and_describe_still_finds_one(
+    child: Client,
+) -> None:
+    listed = child.call("list_fixtures", {"format": ["pdf"]})["structuredContent"]
+    assert [f["path"] for f in listed["fixtures"]] == ["pdf/other.pdf", "pdf/small.pdf"]
+    assert listed["total"] == 2
+    described = child.call("describe_fixture", {"path": "pdf/sample.pdf"})["structuredContent"]
+    assert described["path"] == "pdf/sample.pdf", "control: the alias exists and can be asked for"
+
+
 def test_list_fixtures_filters_as_loremfile_list_does(child: Client) -> None:
     def paths(arguments: dict[str, Any]) -> list[str]:
         result = child.call("list_fixtures", arguments)["structuredContent"]

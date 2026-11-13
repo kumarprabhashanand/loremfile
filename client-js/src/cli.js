@@ -33,6 +33,10 @@ const SHARED = {
 };
 const FORMAT = { type: "string", multiple: true, value: "FMT" };
 const DEST = { type: "string", value: "DIR", help: `Default: ${DEFAULT_DEST}` };
+const ALIASES = {
+  type: "boolean",
+  help: "Also the sample.{format} copies, which repeat another file's bytes.",
+};
 
 /** Every option each command accepts. Exported so a test can read them off, not the source. */
 export const COMMANDS = {
@@ -44,6 +48,7 @@ export const COMMANDS = {
       dest: DEST,
       force: { type: "boolean", help: "Overwrite files already there." },
       "dry-run": { type: "boolean", help: "List what would be fetched." },
+      "include-aliases": ALIASES,
       ...SHARED,
     },
   },
@@ -54,6 +59,7 @@ export const COMMANDS = {
       format: { ...FORMAT, help: "Only this format. Repeatable." },
       tag: { type: "string", multiple: true, value: "TAG", help: "Only this tag. Repeatable." },
       "max-bytes": { type: "string", value: "N", help: "Only files of at most N bytes." },
+      "include-aliases": ALIASES,
       ...SHARED,
     },
   },
@@ -63,6 +69,7 @@ export const COMMANDS = {
     options: {
       format: { ...FORMAT, help: "Every published file of this format. Repeatable." },
       dest: DEST,
+      "include-aliases": ALIASES,
       ...SHARED,
     },
   },
@@ -138,6 +145,7 @@ function parse(argv) {
     dest: values.dest ?? DEFAULT_DEST,
     force: Boolean(values.force),
     dryRun: Boolean(values["dry-run"]),
+    includeAliases: Boolean(values["include-aliases"]),
     json: Boolean(values.json),
     quiet: Boolean(values.quiet),
     catalogVersion: values["catalog-version"],
@@ -173,7 +181,11 @@ function emit(args, summary, results, io) {
 
 async function runGet(args, io) {
   const published = api.active(await api.manifest({ catalogVersion: args.catalogVersion }));
-  const entries = api.select(published, { paths: args.paths, formats: args.format });
+  const entries = api.select(published, {
+    paths: args.paths,
+    formats: args.format,
+    includeAliases: args.includeAliases,
+  });
   if (args.dryRun) {
     const total = entries.reduce((sum, entry) => sum + entry.bytes, 0);
     emit(
@@ -197,6 +209,9 @@ async function runGet(args, io) {
 
 async function runList(args, io) {
   let entries = api.active(await api.manifest({ catalogVersion: args.catalogVersion }));
+  if (!args.includeAliases) {
+    entries = entries.filter((e) => !api.isAlias(e));
+  }
   if (args.format.length > 0) {
     entries = entries.filter((e) => args.format.includes(e.format));
   }
@@ -216,9 +231,14 @@ async function runList(args, io) {
 async function runVerify(args, io) {
   let entries = api.active(await api.manifest({ catalogVersion: args.catalogVersion }));
   if (args.paths.length > 0 || args.format.length > 0) {
-    entries = api.select(entries, { paths: args.paths, formats: args.format });
+    entries = api.select(entries, {
+      paths: args.paths,
+      formats: args.format,
+      includeAliases: args.includeAliases,
+    });
   } else {
-    // Everything the destination actually holds, so `verify` alone checks a directory.
+    // Everything the destination actually holds, so `verify` alone checks a directory,
+    // aliases included: a copy that is on disk was put there on purpose.
     const held = [];
     for (const entry of entries) {
       if (await api.held(entry, args.dest)) {

@@ -24,6 +24,8 @@ Location: repository root (committed) and `https://loremfile.dev/manifest.json` 
 }
 ```
 
+`count` and `total_bytes` count every entry, the `sample.{format}` aliases included (at 1.15.1, 409 entries, 75 of them aliases, against the 334 files the site counts), and `total_bytes` includes the duplicated bytes because R2 stores each alias as an object of its own. Subtract the entries whose `generator` is `alias.copy` for the site's figures.
+
 ### 1.2 Fixture entry
 
 ```json
@@ -72,7 +74,7 @@ Field rules:
 | `added_in` | semver | Catalog version that introduced it. |
 | `status` | enum | `active`, `removed` (legal takedown tombstone, see §1.5). |
 | `deprecated`, `supersededBy` | boolean, string/null | Derived, never set here: the catalog's `superseded_by` is the input, and `manifest update` writes both fields from it (`03` §7.3), so a value set by hand in the manifest is overwritten by the next update and `manifest check` reports it until then. `supersededBy` is the replacing path. A superseded entry stays active and served, and stays in `manifest.json`, `sha256sums.txt` and `{format}/index.json`; format pages, the search index and `llms-full.txt` list its replacement instead. |
-| `generator`, `generator_params.of` | string, string | How an alias says what it is (since 1.15.0), with no field of its own: a `sample.{format}` alias is an entry whose `generator` is `alias.copy`, and its original is the `of` in its `generator_params`. Its `sha256`, `bytes`, `mime` and `props` equal the original's, and a test holds that. An alias is not a second file: the site's counts, format pages, `search-index.json`, `llms-full.txt`, `formats.json` and `{format}/index.json` leave it out, and `manifest.json`, `sha256sums.txt` and `get --format` (which reads the manifest) carry it. `catalog/_aliases.yaml` lists them; `05` §8 gives the rule and the table. 1.15.0 briefly wrote a field `aliasOf`, which the published schema does not allow: see §1.4. |
+| `generator`, `generator_params.of` | string, string | How an alias says what it is (since 1.15.0), with no field of its own: a `sample.{format}` alias is an entry whose `generator` is `alias.copy`, and its original is the `of` in its `generator_params`. Its `sha256`, `bytes`, `mime` and `props` equal the original's, and a test holds that. An alias is not a second file: the site's counts, format pages, `search-index.json`, `llms-full.txt`, `formats.json` and `{format}/index.json` leave it out, and `manifest.json` and `sha256sums.txt` carry it. The clients skip aliases when they list or select by format, and `--include-aliases` brings them back; a path named outright is always fetched. `catalog/_aliases.yaml` lists them; `05` §8 gives the rule and the table. 1.15.0 briefly wrote a field `aliasOf`, which the published schema does not allow: see §1.4. |
 
 ### 1.3 `props` by format (what validators measure)
 

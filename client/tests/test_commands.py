@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from loremfile_client import api, cli
 
-from conftest import BODIES, Handler
+from conftest import ALIASES, BODIES, MANIFEST, Handler
 
 
 def run(*argv: str) -> int:
@@ -26,6 +26,80 @@ def test_get_writes_the_files_it_verified(server: str, dest: Path) -> None:
 def test_get_by_format_takes_every_file_of_it(server: str, dest: Path) -> None:
     assert run("get", "--format", "pdf", "--dest", str(dest)) == cli.OK
     assert sorted(p.name for p in (dest / "pdf").iterdir()) == ["other.pdf", "small.pdf"]
+
+
+def test_the_fake_manifest_carries_an_alias_the_way_the_real_one_does() -> None:
+    """Control for the tests below: they mean nothing if the alias is not really there."""
+    aliases = [e for e in MANIFEST["fixtures"] if e.get("generator") == "alias.copy"]
+    assert [e["path"] for e in aliases] == list(ALIASES) == ["pdf/sample.pdf"]
+    assert aliases[0]["generator_params"] == {"of": "pdf/small.pdf"}
+    assert "aliasOf" not in aliases[0], "docs/04 §1.4: there is no such field"
+    assert aliases[0]["sha256"] == next(
+        e["sha256"] for e in MANIFEST["fixtures"] if e["path"] == "pdf/small.pdf"
+    )
+
+
+def test_get_by_format_leaves_the_aliases_out_unless_asked(server: str, dest: Path) -> None:
+    assert run("get", "--format", "pdf", "--dest", str(dest)) == cli.OK
+    assert not (dest / "pdf" / "sample.pdf").exists()
+    assert run("get", "--format", "pdf", "--include-aliases", "--dest", str(dest)) == cli.OK
+    assert (dest / "pdf" / "sample.pdf").read_bytes() == BODIES["pdf/small.pdf"]
+
+
+def test_a_dry_run_counts_the_bytes_it_would_fetch_without_the_duplicate(
+    server: str, capsys: pytest.CaptureFixture
+) -> None:
+    run("get", "--format", "pdf", "--dry-run", "--json")
+    without = json.loads(capsys.readouterr().out)["summary"]
+    run("get", "--format", "pdf", "--include-aliases", "--dry-run", "--json")
+    with_aliases = json.loads(capsys.readouterr().out)["summary"]
+    assert (without["files"], with_aliases["files"]) == (2, 3)
+    assert with_aliases["bytes"] - without["bytes"] == len(BODIES["pdf/small.pdf"])
+
+
+def test_a_path_named_outright_is_fetched_even_when_it_is_an_alias(server: str, dest: Path) -> None:
+    assert run("get", "pdf/sample.pdf", "--dest", str(dest)) == cli.OK
+    assert (dest / "pdf" / "sample.pdf").read_bytes() == BODIES["pdf/small.pdf"]
+
+
+def test_filtering_on_the_field_the_manifest_does_not_have_would_match_nothing() -> None:
+    """The mistake the 1.15.1 brief warns about, made on purpose: `aliasOf` finds no alias."""
+    entries = api.active(MANIFEST)
+    assert [e["path"] for e in entries if "aliasOf" in e] == []
+    assert [e["path"] for e in entries if api.is_alias(e)] == ["pdf/sample.pdf"]
+
+
+def test_list_leaves_the_aliases_out_unless_asked(
+    server: str, capsys: pytest.CaptureFixture
+) -> None:
+    def listed(*argv: str) -> set[str]:
+        run("list", *argv, "--json")
+        return {item["path"] for item in json.loads(capsys.readouterr().out)["items"]}
+
+    assert "pdf/sample.pdf" not in listed()
+    assert "pdf/sample.pdf" not in listed("--format", "pdf")
+    assert "pdf/sample.pdf" in listed("--format", "pdf", "--include-aliases")
+    assert listed("--include-aliases") == listed() | set(ALIASES)
+
+
+def test_verify_checks_an_alias_that_is_on_disk_and_by_format_only_with_the_flag(
+    server: str, dest: Path
+) -> None:
+    assert run("get", "pdf/sample.pdf", "--dest", str(dest)) == cli.OK
+    assert run("verify", "--dest", str(dest)) == cli.OK
+    (dest / "pdf" / "sample.pdf").write_bytes(b"not what was published")
+    assert run("verify", "--dest", str(dest)) == cli.FAILED, "a held alias is checked"
+    assert run("verify", "--format", "pdf", "--dest", str(dest)) == cli.FAILED, (
+        "small.pdf and other.pdf are missing"
+    )
+    (dest / "pdf" / "small.pdf").write_bytes(BODIES["pdf/small.pdf"])
+    (dest / "pdf" / "other.pdf").write_bytes(BODIES["pdf/other.pdf"])
+    assert run("verify", "--format", "pdf", "--dest", str(dest)) == cli.OK, (
+        "the bad alias is skipped"
+    )
+    assert (
+        run("verify", "--format", "pdf", "--include-aliases", "--dest", str(dest)) == cli.FAILED
+    ), "and asked for, it is checked"
 
 
 def test_a_withdrawn_entry_is_not_offered(server: str, dest: Path) -> None:
