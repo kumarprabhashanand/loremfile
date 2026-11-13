@@ -45,7 +45,7 @@
   },
   "compat": {
     "date": "2026-11-13",
-    "sha256": "42804213556971515cac6b7609d99e2bd456de29ec03a38f76d72b74cf961636"
+    "sha256": "89b2f1bd0cf8e8b57117747418e6974b586806fe53ff2887b11690a4847f33ca"
   },
   "compat/csv": {
     "date": "2026-11-13",
@@ -81,7 +81,7 @@
   },
   "compat/tar": {
     "date": "2026-11-13",
-    "sha256": "e72a52c77f28f7b777b08ee8bbf6e6e137d8f1baf708715d3316ec667358e641"
+    "sha256": "0689cc8eba712fd381e06e8503abe9e4e499c4a8dd2a519fedb535edb586da89"
   },
   "compat/wav": {
     "date": "2026-11-13",
