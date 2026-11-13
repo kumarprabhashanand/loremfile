@@ -40,8 +40,8 @@
     "sha256": "2d97fd02ca13e1ad6d60cef2f26bfe7185c44563d0f02f642c94eae9b0027e40"
   },
   "changelog": {
-    "date": "2026-11-12",
-    "sha256": "d91fa03b28c61f5f9284bfb4ddf94de3e1e11d040181da3c059810edf09b0173"
+    "date": "2026-11-13",
+    "sha256": "c4f488849d2e3d8f551435e418ce37127b197fe83720af1503cc503031744565"
   },
   "css": {
     "date": "2026-11-03",
@@ -80,8 +80,8 @@
     "sha256": "663d49c4d1e104fa0d0935e40c7dd62e62f35d780c9e2a07616b9357ddbce857"
   },
   "docs/manifest": {
-    "date": "2026-11-12",
-    "sha256": "eff5bdbb7377eee229466cf06f58c762dda2e3025c2aecf0dc344fa790dab068"
+    "date": "2026-11-13",
+    "sha256": "9ee19c8c6a01b748c42a8e27cbba25af50d06b607b3bf4112f887e77358c1045"
   },
   "docs/mcp": {
     "date": "2026-11-03",
@@ -116,8 +116,8 @@
     "sha256": "4793c445d9c61e8771356cbaf738575e285022800ee19f1266da3b375737d412"
   },
   "formats": {
-    "date": "2026-11-12",
-    "sha256": "a0b7bbd6f4413528995411a3828c7ebb07c57d84d92977e31fa92e443bcbb59b"
+    "date": "2026-11-13",
+    "sha256": "4065d0d1efabe1d42d96bd48e806d1705ecc0c46593585ff2f7a3b7e593df591"
   },
   "geojson": {
     "date": "2026-11-03",
@@ -160,8 +160,8 @@
     "sha256": "de6e46a509d21bb3506c2310fda4120ece9b0a648249fc6603103f3051dd0c78"
   },
   "index.html": {
-    "date": "2026-11-12",
-    "sha256": "72e2914ccf634b71b3a6fb86fc2816a402307ddf84c7d7bd069fb553e2cdb310"
+    "date": "2026-11-13",
+    "sha256": "c29d8715b78eaf5ff40499438a8b0f220ff4c36b32abaa75ad7850d7ab09c7d0"
   },
   "ini": {
     "date": "2026-11-03",
@@ -220,8 +220,8 @@
     "sha256": "ab03b3d6aba0743b13610366039f31c62bfb4d030467419e5eb77865bbfdc10b"
   },
   "mp4": {
-    "date": "2026-11-03",
-    "sha256": "ac73aa2d2c55b88b74374304586b3ac0afd9c6796bda5ae9ebbfd7af6f7c3a5d"
+    "date": "2026-11-13",
+    "sha256": "3a205f22ef51b614c8e0a4c259e05dc160d22fb4dd9e6e2771e4a84d5fd5c87c"
   },
   "ndjson": {
     "date": "2026-11-03",
@@ -348,8 +348,8 @@
     "sha256": "6fe99786c67c43a5b7719e38fab196c8c589e9f361494f3a1b115e4614f7f606"
   },
   "webm": {
-    "date": "2026-11-03",
-    "sha256": "3a6c6db91a6b166157128aba57109d050c71f9e7491356555f6dea41ca05bbea"
+    "date": "2026-11-13",
+    "sha256": "b31d469f3065d60fb5c75f98269001b0d6b49d54c2cf859e8e4814d3c0165f5b"
   },
   "webmanifest": {
     "date": "2026-11-03",
