@@ -1359,6 +1359,7 @@ def status_page() -> Page:
             # The strings the checks send, read from config so the page cannot drift (docs/08 §5.7).
             "verify_agent": config.VERIFY_USER_AGENT,
             "probe_agent": config.PROBE_USER_AGENT,
+            "compat_agent": config.COMPAT_USER_AGENT,
         },
     )
 

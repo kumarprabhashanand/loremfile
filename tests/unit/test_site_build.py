@@ -982,6 +982,7 @@ def test_the_status_page_names_the_agents_our_own_checks_send(site: Path) -> Non
     reads them from config, and this holds that it shows them whole."""
     status = text(site, "status")
     assert config.VERIFY_USER_AGENT in status and config.PROBE_USER_AGENT in status
+    assert config.COMPAT_USER_AGENT in status
     assert config.VERIFY_USER_AGENT.startswith("loremfile-verify/")
     # Controls: a page that names neither, and an agent as it would read after a version bump.
     assert config.VERIFY_USER_AGENT not in text(site, "docs/faq")

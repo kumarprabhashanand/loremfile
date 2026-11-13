@@ -1,0 +1,448 @@
+{
+  "scope": {
+    "formats": [
+      "zip",
+      "tar",
+      "gz",
+      "wav",
+      "jpg",
+      "png",
+      "gif",
+      "json",
+      "csv",
+      "xml",
+      "pem",
+      "der"
+    ],
+    "max_bytes": 16000000,
+    "timeout_seconds": 30,
+    "properties": {
+      "zip": [
+        "entries",
+        "directories",
+        "uncompressed_bytes"
+      ],
+      "tar": [
+        "entries",
+        "directories",
+        "uncompressed_bytes"
+      ],
+      "gz": [
+        "uncompressed_bytes",
+        "members"
+      ],
+      "wav": [
+        "channels",
+        "sample_rate",
+        "bit_depth",
+        "duration_ms"
+      ],
+      "jpg": [
+        "width",
+        "height",
+        "frames"
+      ],
+      "png": [
+        "width",
+        "height",
+        "frames"
+      ],
+      "gif": [
+        "width",
+        "height",
+        "frames"
+      ],
+      "json": [
+        "top_type",
+        "items"
+      ],
+      "csv": [
+        "rows",
+        "columns"
+      ],
+      "xml": [
+        "root_element"
+      ],
+      "pem": [
+        "subject_cn",
+        "issuer_cn",
+        "serial",
+        "dns_names"
+      ],
+      "der": [
+        "subject_cn",
+        "issuer_cn",
+        "serial",
+        "dns_names"
+      ]
+    },
+    "tolerance": {
+      "duration_ms": 1
+    }
+  },
+  "readers": [
+    {
+      "id": "go/archive/tar",
+      "runtime": "go",
+      "module": "archive/tar",
+      "docs": "https://pkg.go.dev/archive/tar",
+      "formats": [
+        "tar"
+      ],
+      "props": [
+        "entries",
+        "directories",
+        "uncompressed_bytes"
+      ],
+      "controls": [
+        {
+          "reads": "tar/3-text-files.tar",
+          "must_not": "truncated"
+        }
+      ]
+    },
+    {
+      "id": "go/archive/zip",
+      "runtime": "go",
+      "module": "archive/zip",
+      "docs": "https://pkg.go.dev/archive/zip",
+      "formats": [
+        "zip"
+      ],
+      "props": [
+        "entries",
+        "directories",
+        "uncompressed_bytes"
+      ],
+      "controls": [
+        {
+          "reads": "zip/3-text-files.zip",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "go/compress/gzip",
+      "runtime": "go",
+      "module": "compress/gzip",
+      "docs": "https://pkg.go.dev/compress/gzip",
+      "formats": [
+        "gz"
+      ],
+      "props": [
+        "uncompressed_bytes"
+      ],
+      "controls": [
+        {
+          "reads": "gz/lorem-1mb.txt.gz",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "go/crypto/x509",
+      "runtime": "go",
+      "module": "crypto/x509",
+      "docs": "https://pkg.go.dev/crypto/x509",
+      "formats": [
+        "pem",
+        "der"
+      ],
+      "props": [
+        "subject_cn",
+        "issuer_cn",
+        "serial",
+        "dns_names"
+      ],
+      "controls": [
+        {
+          "reads": "pem/self-signed-ed25519-cert.pem",
+          "must_not": "zero-byte"
+        },
+        {
+          "reads": "der/self-signed-ed25519-cert.der",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "go/encoding/csv",
+      "runtime": "go",
+      "module": "encoding/csv",
+      "docs": "https://pkg.go.dev/encoding/csv",
+      "formats": [
+        "csv"
+      ],
+      "props": [
+        "rows",
+        "columns"
+      ],
+      "controls": [
+        {
+          "reads": "csv/people-10.csv",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "go/encoding/json",
+      "runtime": "go",
+      "module": "encoding/json",
+      "docs": "https://pkg.go.dev/encoding/json",
+      "formats": [
+        "json"
+      ],
+      "props": [
+        "top_type",
+        "items"
+      ],
+      "controls": [
+        {
+          "reads": "json/people-10.json",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "go/encoding/xml",
+      "runtime": "go",
+      "module": "encoding/xml",
+      "docs": "https://pkg.go.dev/encoding/xml",
+      "formats": [
+        "xml"
+      ],
+      "props": [
+        "root_element"
+      ],
+      "controls": [
+        {
+          "reads": "xml/people-10.xml",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "go/image/gif",
+      "runtime": "go",
+      "module": "image/gif",
+      "docs": "https://pkg.go.dev/image/gif",
+      "formats": [
+        "gif"
+      ],
+      "props": [
+        "width",
+        "height",
+        "frames"
+      ],
+      "controls": [
+        {
+          "reads": "gif/static-256x256.gif",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "go/image/jpeg",
+      "runtime": "go",
+      "module": "image/jpeg",
+      "docs": "https://pkg.go.dev/image/jpeg",
+      "formats": [
+        "jpg"
+      ],
+      "props": [
+        "width",
+        "height"
+      ],
+      "controls": [
+        {
+          "reads": "jpg/100x100.jpg",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "go/image/png",
+      "runtime": "go",
+      "module": "image/png",
+      "docs": "https://pkg.go.dev/image/png",
+      "formats": [
+        "png"
+      ],
+      "props": [
+        "width",
+        "height"
+      ],
+      "controls": [
+        {
+          "reads": "png/100x100.png",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "python/csv",
+      "runtime": "python",
+      "module": "csv",
+      "docs": "https://docs.python.org/3/library/csv.html",
+      "formats": [
+        "csv"
+      ],
+      "props": [
+        "rows",
+        "columns"
+      ],
+      "controls": [
+        {
+          "reads": "csv/people-10.csv",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "python/gzip",
+      "runtime": "python",
+      "module": "gzip",
+      "docs": "https://docs.python.org/3/library/gzip.html",
+      "formats": [
+        "gz"
+      ],
+      "props": [
+        "uncompressed_bytes"
+      ],
+      "controls": [
+        {
+          "reads": "gz/lorem-1mb.txt.gz",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "python/json",
+      "runtime": "python",
+      "module": "json",
+      "docs": "https://docs.python.org/3/library/json.html",
+      "formats": [
+        "json"
+      ],
+      "props": [
+        "top_type",
+        "items"
+      ],
+      "controls": [
+        {
+          "reads": "json/people-10.json",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "python/tarfile",
+      "runtime": "python",
+      "module": "tarfile",
+      "docs": "https://docs.python.org/3/library/tarfile.html",
+      "formats": [
+        "tar"
+      ],
+      "props": [
+        "entries",
+        "directories",
+        "uncompressed_bytes"
+      ],
+      "controls": [
+        {
+          "reads": "tar/3-text-files.tar",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "python/wave",
+      "runtime": "python",
+      "module": "wave",
+      "docs": "https://docs.python.org/3/library/wave.html",
+      "formats": [
+        "wav"
+      ],
+      "props": [
+        "channels",
+        "sample_rate",
+        "bit_depth",
+        "duration_ms"
+      ],
+      "controls": [
+        {
+          "reads": "wav/sine-440hz-3s-44k-16bit-mono.wav",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "python/xml.dom.minidom",
+      "runtime": "python",
+      "module": "xml.dom.minidom",
+      "docs": "https://docs.python.org/3/library/xml.dom.minidom.html",
+      "formats": [
+        "xml"
+      ],
+      "props": [
+        "root_element"
+      ],
+      "controls": [
+        {
+          "reads": "xml/people-10.xml",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "python/xml.etree.ElementTree",
+      "runtime": "python",
+      "module": "xml.etree.ElementTree",
+      "docs": "https://docs.python.org/3/library/xml.etree.elementtree.html",
+      "formats": [
+        "xml"
+      ],
+      "props": [
+        "root_element"
+      ],
+      "controls": [
+        {
+          "reads": "xml/people-10.xml",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "python/zipfile",
+      "runtime": "python",
+      "module": "zipfile",
+      "docs": "https://docs.python.org/3/library/zipfile.html",
+      "formats": [
+        "zip"
+      ],
+      "props": [
+        "entries",
+        "directories",
+        "uncompressed_bytes"
+      ],
+      "controls": [
+        {
+          "reads": "zip/3-text-files.zip",
+          "must_not": "zero-byte"
+        }
+      ]
+    }
+  ],
+  "no_reader": {
+    "python": [
+      "jpg",
+      "png",
+      "gif",
+      "pem",
+      "der"
+    ],
+    "go": [
+      "wav"
+    ]
+  }
+}

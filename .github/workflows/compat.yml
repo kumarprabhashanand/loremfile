@@ -1,0 +1,139 @@
+# /compat: how standard libraries read our files (docs/20).
+#
+# One job fetches the corpus from production and shares it; one job per runtime version gives it
+# to that version's readers; a last job merges the parts into compat/results/. Never a required
+# check, and nothing here touches the toolchain image, the lock or a deploy: the runtimes are the
+# latest supported ones, recorded and never pinned, because the question is what a fresh install
+# does. The results in a pull request come from that pull request's own run (`gh run download`),
+# never from a laptop. The monthly schedule arrives with the second runtime batch.
+name: compat
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "compat/**"
+      - "!compat/results/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: compat-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fetch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Fetch the corpus from production, one file at a time, and check every hash
+        run: python3 -m harness fetch --out ../compat-work
+        working-directory: compat
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: compat-corpus
+          path: compat-work
+          if-no-files-found: error
+          retention-days: 7
+
+  python:
+    needs: fetch
+    # A runtime that cannot be set up must not stop the others: its cells read not-run.
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.version }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: compat-corpus
+          path: compat-work
+      - name: Give each Python ${{ matrix.version }} reader every file
+        run: python -m harness run --runtime python --version "${{ matrix.version }}" --work ../compat-work --out ../compat-parts
+        working-directory: compat
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: compat-part-python-${{ matrix.version }}
+          path: compat-parts
+          if-no-files-found: ignore
+          retention-days: 7
+
+  go:
+    needs: fetch
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["1.26", "1.27"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ matrix.version }}
+          check-latest: true
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: compat-corpus
+          path: compat-work
+      - name: Give each Go ${{ matrix.version }} reader every file
+        run: python3 -m harness run --runtime go --version "${{ matrix.version }}" --work ../compat-work --out ../compat-parts
+        working-directory: compat
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: compat-part-go-${{ matrix.version }}
+          path: compat-parts
+          if-no-files-found: ignore
+          retention-days: 7
+
+  merge:
+    needs: [fetch, python, go]
+    # Even when a runtime job failed: a part that never arrived is not-run, not an error.
+    if: ${{ !cancelled() && needs.fetch.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: compat-corpus
+          path: compat-work
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: compat-part-*
+          path: compat-parts
+          merge-multiple: true
+      - name: Merge the parts; a run that failed on more than three files writes nothing
+        run: python3 -m harness merge --parts ../compat-parts --work ../compat-work --out ../compat-results
+        working-directory: compat
+        env:
+          GITHUB_RUN_ID: ${{ github.run_id }}
+      - name: The merged results hold up to the manifest and the reader list
+        run: python3 -m harness check --results ../compat-results
+        working-directory: compat
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: compat-results
+          path: compat-results
+          if-no-files-found: error
+          retention-days: 30

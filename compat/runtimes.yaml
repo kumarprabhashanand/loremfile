@@ -1,0 +1,29 @@
+{
+  "checked": "2026-11-13",
+  "policy": "Latest of everything, versions recorded, never pinned: the question is what a fresh install does (docs/20 section 2).",
+  "runtimes": [
+    {
+      "id": "python",
+      "name": "Python",
+      "source": "https://devguide.python.org/versions/",
+      "supported": "Versions the page lists as bugfix or security on the checked date",
+      "versions": [
+        "3.11",
+        "3.12",
+        "3.13",
+        "3.14",
+        "3.15"
+      ]
+    },
+    {
+      "id": "go",
+      "name": "Go",
+      "source": "https://go.dev/doc/devel/release",
+      "supported": "Each major release is supported until there are two newer major releases",
+      "versions": [
+        "1.26",
+        "1.27"
+      ]
+    }
+  ]
+}
