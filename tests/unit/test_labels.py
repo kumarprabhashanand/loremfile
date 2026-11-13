@@ -24,13 +24,13 @@ from loremfile.site.build import (
     MEASURED_TAIL_ONE,
     TITLE_LIMIT,
     SiteError,
+    demand_title,
     human_bytes,
     label,
     labelled_description,
     labelled_title,
     measured_description,
     page_labels,
-    title_head,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -192,22 +192,15 @@ def test_the_labelled_titles_and_descriptions_fit_and_say_test() -> None:
         labels = page_labels(info, served)
         sizes = [MANIFEST[f.path]["bytes"] for f in recommended(fmt)]
         assert len(labels) == len(sizes), fmt
-        title = labelled_title(label(fmt), labels, title_head(fmt))
         description = labelled_description(label(fmt), sizes, labels)
+        if fmt in DEMAND_FORMATS:
+            title = demand_title(fmt, sizes)
+            assert "test file" in title and "free sample download" in title, title
+        else:
+            title = labelled_title(label(fmt), labels)
+            assert title.startswith(f"Sample {label(fmt)} files: "), title
         assert len(title) <= TITLE_LIMIT, title
         assert "loremfile.dev" not in title
-        assert not {"free", "CC0", "hotlink"} & set(re.findall(r"[\w-]+", title)), title
-        if fmt in DEMAND_FORMATS:
-            assert title.startswith("Sample ") and "test" in title, "both words people type"
-            assert title.split(":")[0] in {
-                "Sample MP3 test files",
-                "Sample JPG files for testing",
-                "Sample SQLite database files for testing",
-                f"Sample {label(fmt)} files for testing",
-                f"Sample {label(fmt)} file for testing",
-            }, title
-        else:
-            assert title.startswith(f"Sample {label(fmt)} files: "), title
         assert DESCRIPTION_FLOOR <= len(description) <= DESCRIPTION_LIMIT, description
         assert f"{label(fmt)} test file" in description
         span = (
@@ -220,20 +213,19 @@ def test_the_labelled_titles_and_descriptions_fit_and_say_test() -> None:
         ), "the count and the size range come from the manifest"
 
 
-def test_tiffs_title_leads_with_its_big_endian_file() -> None:
-    """The catalog's order is the title's order (docs/05 §1 rule 9). tiff lists its big-endian
-    fixture first so that "big-endian" is in the title, which the demand head's extra twelve
-    characters would otherwise cut (2026-11-08)."""
+def test_tiffs_description_leads_with_its_big_endian_file() -> None:
+    """The catalog's order is the label order (docs/05 §1 rule 9). tiff lists its big-endian
+    fixture first so the description's labels open with it; a demand title carries no labels
+    since 2026-11-13, so the order now reaches the description alone."""
     info = CATALOG.format_by_name["tiff"]
     served = [MANIFEST[f.path] for f in info.fixtures if f.path in MANIFEST]
     labels = page_labels(info, served)
-    title = labelled_title(label("tiff"), labels, title_head("tiff"))
-    assert labels[0] == "16-bit big-endian" and "big-endian" in title, title
+    sizes = [MANIFEST[f.path]["bytes"] for f in recommended("tiff")]
+    assert labels[0] == "16-bit big-endian"
     assert info.fixtures[0].path == "tiff/16bit-gray-big-endian-640x480.tiff"
-    # Control: the order before the move cuts it.
+    assert ": 16-bit big-endian," in labelled_description("TIFF", sizes, labels)
     before = [*labels[1:3], labels[0], *labels[3:]]
-    assert before[2] == "16-bit big-endian"
-    assert "big-endian" not in labelled_title(label("tiff"), before, title_head("tiff"))
+    assert ": 16-bit big-endian," not in labelled_description("TIFF", sizes, before), "control"
 
 
 def test_a_labelled_page_with_one_file_takes_the_singular_tail_and_stays_in_the_band() -> None:
@@ -252,44 +244,69 @@ def test_a_labelled_page_with_one_file_takes_the_singular_tail_and_stays_in_the_
     assert [w for w in PLURAL_MARKERS if w in plural] == ["URLs"]
 
 
-def rendered_head(fmt: str, files: int = 2) -> str:
-    return title_head(fmt).format(name=label(fmt), s="" if files == 1 else "s")
+def demand_sizes(fmt: str) -> list[int]:
+    return [MANIFEST[f.path]["bytes"] for f in recommended(fmt)]
 
 
-def test_every_demand_head_names_its_format_as_people_type_it() -> None:
-    """docs/05 §1 rule 9: the format key is a keyword too. JPEG is jpg's name and label,
-    but people type "jpg"; Parquet passes because the match ignores case."""
+def test_a_demand_title_is_the_label_the_words_people_type_and_the_manifests_sizes() -> None:
+    """2026-11-13: `{Name} test files: free sample downloads, {smallest} to {largest}`, at most
+    sixty characters, with no brand suffix and no label."""
+    assert DEMAND_FORMATS  # control: nothing below is vacuous
     for fmt in sorted(DEMAND_FORMATS):
-        assert fmt in rendered_head(fmt).lower(), (fmt, rendered_head(fmt))
-    assert rendered_head("jpg") == "Sample JPG files for testing"
+        sizes = demand_sizes(fmt)
+        title = demand_title(fmt, sizes)
+        name = {"jpg": "JPG", "sqlite": "SQLite database"}.get(fmt, label(fmt))
+        singular = len(sizes) == 1
+        stem = (
+            f"{name} test file: free sample download"
+            if singular
+            else (f"{name} test files: free sample downloads")
+        )
+        assert title.startswith(stem), title
+        assert len(title) <= TITLE_LIMIT and "loremfile.dev" not in title, title
+        assert fmt in title.lower(), "the format key is a keyword too"
+        span = (
+            f", {human_bytes(sizes[0])}"
+            if singular
+            else f", {human_bytes(min(sizes))} to {human_bytes(max(sizes))}"
+        )
+        assert title in {stem, stem + span}, "sizes are the manifest's, or the title drops them"
+
+
+def test_a_demand_title_keeps_its_sizes_when_it_fits_and_loses_them_before_a_word() -> None:
+    assert demand_title("pdf", [586, 9_900_000]) == (
+        "PDF test files: free sample downloads, 586 B to 9.9 MB"
+    )
+    # One file reads singular, with its one size.
+    assert demand_title("avi", [1_734_596]) == "AVI test file: free sample download, 1.7 MB"
+    # sqlite's name is the longer "SQLite database": the sizes go, the words stay.
+    assert demand_title("sqlite", [8_192, 26_900_000]) == (
+        "SQLite database test files: free sample downloads"
+    )
+    assert len("SQLite database test files: free sample downloads, 8.2 KB to 26.9 MB") > TITLE_LIMIT
+    # A name too long even without its sizes stops the build instead of being cut.
+    with pytest.raises(SiteError, match="longer than"):
+        demand_title("x" * 40, [1, 2])
+
+
+def test_jpg_and_sqlite_are_titled_as_people_type_them_and_the_label_would_lose_it() -> None:
+    """JPEG is jpg's label, and people type "jpg"; sqlite keeps "database", the word its queries
+    carry (2026-11-08). Both are controls against reading `{Label}` literally."""
+    assert demand_title("jpg", demand_sizes("jpg")).startswith("JPG test files: ")
     assert label("jpg") == "JPEG", "the format's name stays in the prose and the description"
-    # sqlite keeps "database", the word its queries carry (2026-11-08); the control is the
-    # default demand head, which is what dropped it.
-    assert rendered_head("sqlite") == "Sample SQLite database files for testing"
-    default = "Sample {name} file{s} for testing".format(name=label("sqlite"), s="s")
-    assert "database" not in default
+    assert "jpg" not in f"{label('jpg')} test files".lower(), "control: the label alone loses it"
+    assert demand_title("sqlite", demand_sizes("sqlite")).startswith("SQLite database test files")
+    assert "database" not in f"{label('sqlite')} test files"
 
 
-def test_control_the_default_head_would_lose_jpg() -> None:
-    """Without its query head, jpg's title would say JPEG and never jpg."""
-    default = "Sample {name} files for testing".format(name=label("jpg"))
-    assert "jpg" not in default.lower()
-
-
-def test_a_label_that_would_cut_a_keyword_stops_the_build() -> None:
-    """docs/05 §1 rule 9: shorten a label before dropping a keyword. The head is never cut;
-    a first label too long to follow it is an error naming the head. The control is the
-    longest first label that fits, which is kept whole."""
-    head = title_head("pdf")
-    wide = "Sample PDF file for testing: "  # one label, so "file"
+def test_a_labelled_title_that_cannot_fit_its_first_label_stops_the_build() -> None:
+    """ogg and arrow keep the labelled title (docs/05 §1 rule 9): shorten a label before
+    dropping a keyword, and the head is never cut."""
+    wide = "Sample PDF file: "
     fits = "x" * (TITLE_LIMIT - len(wide))
-    assert labelled_title("PDF", [fits], head) == wide + fits
+    assert labelled_title("PDF", [fits]) == wide + fits
     with pytest.raises(SiteError, match="shorten the first label"):
-        labelled_title("PDF", [fits + "x"], head)
-    assert title_head("mp3") == "Sample {name} test file{s}"
-    assert title_head("ogg") == "Sample {name} file{s}", "ogg and arrow keep 1.9.0's head"
-    assert title_head("arrow") == "Sample {name} file{s}"
-    assert title_head("tiff") == "Sample {name} file{s} for testing", "tiff moved on 2026-11-08"
+        labelled_title("PDF", [fits + "x"])
 
 
 def test_a_superseded_file_never_contributes_a_label() -> None:

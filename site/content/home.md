@@ -4,9 +4,11 @@ download it and run offline.
 
 Here is one:
 
-`https://loremfile.dev/pdf/a4-3pages.pdf`
+<!-- example -->
 
 Paste it into a browser. There is no signup, and no key to send.
+
+<!-- below the grid -->
 
 The files are CC0, so copying one into your own repository is fine. Each has a SHA-256 in our
 manifest, and your test can compare it with what it downloaded. A published URL never changes

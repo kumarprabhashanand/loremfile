@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="pitch">{{ pitch }}</div>
+<p class="example"><code>{{ example.url }}</code>
+  <button type="button" class="copy" data-copy="{{ example.url }}" hidden>Copy URL</button></p>
+<div class="pitch">{{ pitch_after }}</div>
 
 <section class="search" aria-labelledby="search-heading">
   <h2 id="search-heading">Find a file</h2>
@@ -27,6 +30,8 @@
 {% endfor %}
   </div>
 </section>
+
+<div class="pitch below-grid">{{ pitch_below }}</div>
 
 <section aria-labelledby="tasks-heading">
   <h2 id="tasks-heading">By task</h2>

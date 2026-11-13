@@ -659,7 +659,8 @@ def test_every_data_download_carries_the_manifest_size_and_hash(
     for key, block in found.items():
         for download in block["distribution"]:
             entry = entries[download["contentUrl"].removeprefix("https://loremfile.dev/")]
-            assert download["contentSize"] == f"{entry['bytes']} bytes", (key, entry["path"])
+            unit = "byte" if entry["bytes"] == 1 else "bytes"
+            assert download["contentSize"] == f"{entry['bytes']} {unit}", (key, entry["path"])
             assert download["sha256"] == entry["sha256"], (key, entry["path"])
 
 
@@ -937,26 +938,32 @@ def test_the_popular_list_and_search_use_the_same_size_string(site: Path) -> Non
     assert "row.size" in script and '"MB"' not in script, "search formats sizes its own way"
 
 
-def test_a_fully_labelled_format_page_leads_with_its_labels(site: Path) -> None:
-    """docs/05 §1 rule 9: ogg, tiff and arrow from 1.9.0, the demand formats from 2026-10-22
-    keeping "Sample" and "test" in the head; every other page keeps its title."""
+def test_a_demand_page_leads_with_what_people_type_and_its_description_with_its_labels(
+    site: Path,
+) -> None:
+    """docs/05 §1 rule 9: ogg and arrow keep a labelled title; the sixteen demand formats lead
+    with `{Name} test files: free sample downloads` and the manifest's size range since
+    2026-11-13, and their descriptions keep the labels; every other page keeps its title."""
     ogg = text(site, "ogg")
     assert "<title>Sample OGG files: FLAC in Ogg, cover art, 2 chained streams</title>" in ogg
     assert '<meta name="description" content="5 OGG test files from ' in ogg
     mp3 = text(site, "mp3")
-    assert "<title>Sample MP3 test files: L/R channels, ID3v2 tags</title>" in mp3
-    assert "<title>Sample PDF files for testing: form fields, encrypted</title>" in text(
+    assert "<title>MP3 test files: free sample downloads, 48.8 KB to 10 MB</title>" in mp3
+    assert '<meta name="description" content="7 MP3 test files from 48.8 KB to 10 MB: ' in mp3
+    assert "L/R channels" in mp3.split('<meta name="description" content="')[1].split('"')[0]
+    assert "<title>PDF test files: free sample downloads, 586 B to 9.9 MB</title>" in text(
         site, "pdf"
     )
-    # The four added on 2026-11-08, tiff from the 1.9.0 head to the demand head.
-    assert "<title>Sample TIFF files for testing: 16-bit big-endian, LZW</title>" in text(
+    assert "<title>TIFF test files: free sample downloads, 25.1 KB to 2.8 MB</title>" in text(
         site, "tiff"
     )
-    assert "<title>Sample SQLite database files for testing: foreign key</title>" in text(
+    # sqlite's longer name leaves no room for its sizes, which go before a word does.
+    assert "<title>SQLite database test files: free sample downloads</title>" in text(
         site, "sqlite"
     )
-    assert "<title>Sample AVI file for testing: MPEG-4 Part 2 and MP3</title>" in text(site, "avi")
-    assert "<title>Sample EML files for testing: PDF and PNG attachments</title>" in text(
+    # One file reads singular.
+    assert "<title>AVI test file: free sample download, 1.7 MB</title>" in text(site, "avi")
+    assert "<title>EML test files: free sample downloads, 1.5 KB to 4.1 KB</title>" in text(
         site, "eml"
     )
     # Control: an unlabelled format is unchanged, brand suffix and all.

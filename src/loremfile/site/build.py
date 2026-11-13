@@ -25,7 +25,7 @@ from markupsafe import Markup
 from loremfile import config
 from loremfile.catalog import Catalog, FormatCatalog
 from loremfile.manifest import Manifest
-from loremfile.site import icons, markdown, page_dates, routes
+from loremfile.site import defaults, icons, markdown, page_dates, routes
 
 #: docs/05 §8, in order.
 POPULAR = (
@@ -359,30 +359,35 @@ DESCRIPTION_LIMIT = 155
 #: built page is held to [DESCRIPTION_FLOOR, DESCRIPTION_LIMIT] by test_site_build.py.
 DESCRIPTION_FLOOR = 120
 #: The formats with search demand: twelve from 2026-10-22, sqlite, tiff, avi and eml from
-#: 2026-11-08. Their labelled titles keep both words people type, "Sample" and "test"; ogg
-#: and arrow keep 1.9.0's head. What a member changes is listed in docs/05 §1 rule 9.
+#: 2026-11-08. Their titles lead with the words people type (`demand_title`); ogg and arrow keep
+#: 1.9.0's labelled title. What a member changes is listed in docs/05 §1 rule 9.
 DEMAND_FORMATS = frozenset(
     {"mp3", "mp4", "parquet", "docx", "pptx", "mkv", "png", "jpg", "pdf", "csv", "zip", "wav"}
     | {"avi", "sqlite", "tiff", "eml"}
 )
-#: Where the query differs from "sample {format} files for testing": "mp3 test file", "jpg",
-#: which people type where the format's name (and its label) is JPEG, and "sqlite", whose
-#: queries carry "database" (measured query demand, 2026-11-08). A longer head leaves fewer
-#: characters for the first label: sqlite's must fit in 18.
-QUERY_HEADS = {
-    "mp3": "Sample {name} test file{s}",
-    "jpg": "Sample JPG file{s} for testing",
-    "sqlite": "Sample {name} database file{s} for testing",
-}
+#: Where the name people type is not the format's label: "jpg", which they type where the
+#: label is JPEG, and "sqlite database" (measured query demand, 2026-11-08). Every demand
+#: title contains the format's key, which test_labels.py holds.
+TITLE_NAMES = {"jpg": "JPG", "sqlite": "SQLite database"}
 
 
-def title_head(fmt: str) -> str:
-    """The head of a format's labelled title (docs/05 §1 rule 9)."""
-    if fmt in QUERY_HEADS:
-        return QUERY_HEADS[fmt]
-    if fmt in DEMAND_FORMATS:
-        return "Sample {name} file{s} for testing"
-    return "Sample {name} file{s}"
+def demand_title(fmt: str, sizes: list[int]) -> str:
+    """`{Name} test files: free sample downloads, {smallest} to {largest}`, from the manifest.
+
+    One file reads singular with its size, and a title that would pass TITLE_LIMIT loses its
+    sizes before it loses a word people type. It carries no brand suffix (docs/05 §1 rule 9).
+    """
+    name = TITLE_NAMES.get(fmt, label(fmt))
+    if len(sizes) == 1:
+        full = f"{name} test file: free sample download, {human_bytes(sizes[0])}"
+        bare = f"{name} test file: free sample download"
+    else:
+        bare = f"{name} test files: free sample downloads"
+        full = f"{bare}, {human_bytes(min(sizes))} to {human_bytes(max(sizes))}"
+    for title in (full, bare):
+        if len(title) <= TITLE_LIMIT:
+            return title
+    raise SiteError(f"{bare!r} is longer than {TITLE_LIMIT} characters")
 
 
 def labelled_title(name: str, labels: list[str], head: str = "Sample {name} file{s}") -> str:
@@ -514,11 +519,17 @@ def key_props(props: dict[str, Any]) -> str:
             shown.append(str(props["outcome"]))
     if "width" in props and "height" in props:
         shown.append(f"{props['width']}x{props['height']}")
-    for name in ("pages", "slides", "sheets", "chapters", "segments", "features"):
+    for name, noun in (
+        ("pages", "page"),
+        ("slides", "slide"),
+        ("sheets", "sheet"),
+        ("chapters", "chapter"),
+        ("segments", "segment"),
+        ("features", "feature"),
+        ("rows", "row"),
+    ):
         if name in props:
-            shown.append(f"{props[name]} {name}")
-    if "rows" in props:
-        shown.append(f"{props['rows']:,} rows")
+            shown.append(counted(props[name], noun))
     if "duration_ms" in props:
         shown.append(f"{props['duration_ms'] / 1000:g} s")
     shown += [str(props[name]) for name in ("vcodec", "acodec") if props.get(name)]
@@ -527,7 +538,8 @@ def key_props(props: dict[str, Any]) -> str:
         if props.get("line_ending"):
             shown.append(str(props["line_ending"]).upper())
     if props.get("animated"):
-        shown.append(f"{props.get('frames')} frames")
+        frames = props.get("frames")
+        shown.append(counted(frames, "frame") if isinstance(frames, int) else "animated")
     if props.get("encrypted") is True:
         shown.append("encrypted")
     return ", ".join(shown[:4])
@@ -816,7 +828,7 @@ def dataset(
             "@type": "DataDownload",
             "contentUrl": f"{config.BASE_URL}{e['path']}",
             "encodingFormat": e["mime"],
-            "contentSize": f"{e['bytes']} bytes",
+            "contentSize": f"{e['bytes']} byte{'' if e['bytes'] == 1 else 's'}",
             "sha256": e["sha256"],
         }
         for e in entries
@@ -831,11 +843,32 @@ def dataset(
 DateOf = Callable[[str], dt.date | None]
 
 
+def start_here(fmt: str, entry: dict[str, Any]) -> dict[str, Any]:
+    """What a format page's "Start here" block shows of its default file (docs/05 §8): the
+    URL to copy, the size and type, and a preview only where a browser draws or plays it."""
+    props = entry.get("props") or {}
+    kind = defaults.PREVIEW.get(fmt)
+    dimensions = (props.get("width"), props.get("height"))
+    sized_box = kind in {"image", "video"} and all(str(v).isdigit() for v in dimensions)
+    return {
+        "path": entry["path"],
+        "name": entry["path"].split("/", 1)[1],
+        "url": f"{config.BASE_URL}{entry['path']}",
+        "size": sized(entry["bytes"]),
+        "mime": entry["mime"],
+        "description": entry["description"],
+        "kind": kind,
+        "width": int(str(dimensions[0])) if sized_box else None,
+        "height": int(str(dimensions[1])) if sized_box else None,
+    }
+
+
 def format_pages(
     root: Path, manifest: Manifest, catalogs: dict[str, FormatCatalog], *, date_of: DateOf
 ) -> list[Page]:
     formats = sorted({entry["format"] for entry in manifest.entries})
     pages: list[Page] = []
+    drifting = {f.path for c in catalogs.values() for f in c.fixtures if f.expected_drift}
     for fmt in formats:
         if fmt in RESERVED or fmt not in catalogs:
             raise SiteError(f"format {fmt!r} is reserved by the site or absent from the catalog")
@@ -862,14 +895,22 @@ def format_pages(
             }
             for e in active
         ]
+        sizes = [e["bytes"] for e in active]
         title = f"{info.seo_title} · loremfile.dev"
-        description = measured_description(label(fmt), [e["bytes"] for e in active])
+        description = measured_description(label(fmt), sizes)
         # The labelled shape, only where every recommended file has a label (docs/05 §1
-        # rule 9): ogg, tiff and arrow from 1.9.0, the demand formats from 2026-10-22 (tiff moved).
+        # rule 9): ogg and arrow keep a labelled title, and the demand formats a labelled
+        # description under the title of `demand_title`.
         labels = page_labels(info, served)
         if labels:
-            title = labelled_title(label(fmt), labels, title_head(fmt))
-            description = labelled_description(label(fmt), [e["bytes"] for e in active], labels)
+            title = labelled_title(label(fmt), labels)
+            description = labelled_description(label(fmt), sizes, labels)
+        if fmt in DEMAND_FORMATS and sizes:
+            title = demand_title(fmt, sizes)
+        choice = defaults.default_choice(
+            fmt, info.family.value, manifest.entries, drifting, POPULAR
+        )
+        by_path = {e["path"]: e for e in active}
         page = Page(
             key=fmt,
             h1=info.seo_title,
@@ -890,6 +931,7 @@ def format_pages(
                     )
                 ),
                 "rows": rows,
+                "start": start_here(fmt, by_path[choice[0]]) if choice else None,
                 "removed": [e for e in entries if e.get("status") == "removed"],
                 "superseded": superseded,
                 "related": [
@@ -943,6 +985,22 @@ def families(manifest: Manifest, catalogs: dict[str, FormatCatalog]) -> list[dic
     return grouped
 
 
+#: Where `home.md` is cut: the example URL gets a Copy button of its own, and everything after
+#: the second marker follows the format grid (the CC0 and hash paragraph and the client routes).
+HOME_EXAMPLE = "<!-- example -->"
+HOME_BELOW_GRID = "<!-- below the grid -->"
+
+
+def home_parts(text: str) -> tuple[str, str, str]:
+    """`home.md` as (above the example, between it and the grid, below the grid)."""
+    for marker in (HOME_EXAMPLE, HOME_BELOW_GRID):
+        if text.count(marker) != 1:
+            raise SiteError(f"site/content/home.md needs exactly one {marker}")
+    before, rest = text.split(HOME_EXAMPLE)
+    middle, below = rest.split(HOME_BELOW_GRID)
+    return before, middle, below
+
+
 def home_page(
     root: Path,
     manifest: Manifest,
@@ -953,6 +1011,7 @@ def home_page(
     missing = [path for path in POPULAR if path not in by_path]
     if missing:
         raise SiteError(f"popular paths not in the manifest: {', '.join(missing)} (docs/05 §8)")
+    above, between, below = home_parts(content(root, "home.md"))
     return Page(
         key="index.html",
         h1="Sample files you can hotlink or download",
@@ -963,7 +1022,10 @@ def home_page(
         ),
         template="home.html",
         context={
-            "pitch": trusted(markdown.render(content(root, "home.md"))),
+            "pitch": trusted(markdown.render(above)),
+            "pitch_after": trusted(markdown.render(between)),
+            "pitch_below": trusted(markdown.render(below)),
+            "example": {"path": POPULAR[0], "url": f"{config.BASE_URL}{POPULAR[0]}"},
             "families": families(manifest, catalogs),
             "popular": [
                 {
