@@ -378,7 +378,11 @@ def test_the_policy_token_the_watch_defers_is_not_a_waf_clause() -> None:
 
 # --- the trap: our own checks against the rule that guards the legal pages (docs/08 §5.7) ---
 
-OWN_AGENTS = {"verify": config.VERIFY_USER_AGENT, "probe": config.PROBE_USER_AGENT}
+OWN_AGENTS = {
+    "verify": config.VERIFY_USER_AGENT,
+    "probe": config.PROBE_USER_AGENT,
+    "compat": config.COMPAT_USER_AGENT,
+}
 
 
 def test_no_waf_token_is_contained_in_the_agent_our_own_checks_send() -> None:

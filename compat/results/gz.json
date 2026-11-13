@@ -1,0 +1,236 @@
+{
+ "controls": {
+  "go/compress/gzip": {
+   "go-1.26": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   },
+   "go-1.27": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   }
+  },
+  "python/gzip": {
+   "python-3.11": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   },
+   "python-3.12": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   },
+   "python-3.13": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   },
+   "python-3.14": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   },
+   "python-3.15": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   }
+  }
+ },
+ "files": [
+  {
+   "bytes": 252288,
+   "cells": {
+    "go/compress/gzip": {
+     "go-1.26": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     }
+    },
+    "python/gzip": {
+     "python-3.11": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "members": 1,
+    "uncompressed_bytes": 1000000
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "gz/lorem-1mb.txt.gz",
+   "role": "ordinary",
+   "sha256": "c14dfc81ae69d4bd665228536358a3630ed8b8d58dccf8f79dc6dbc712c9eb6d",
+   "url": "https://loremfile.dev/gz/lorem-1mb.txt.gz"
+  },
+  {
+   "bytes": 839,
+   "cells": {
+    "go/compress/gzip": {
+     "go-1.26": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     }
+    },
+    "python/gzip": {
+     "python-3.11": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "members": 3,
+    "uncompressed_bytes": 1440
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "gz/multi-member-3.gz",
+   "role": "ordinary",
+   "sha256": "2d2e7dbef7362d34a0c8c7369b836e509a4dda12bdcc838a79131251001faa39",
+   "url": "https://loremfile.dev/gz/multi-member-3.gz"
+  }
+ ],
+ "format": "gz",
+ "no_reader": [],
+ "readers": [
+  {
+   "docs": "https://pkg.go.dev/compress/gzip",
+   "id": "go/compress/gzip",
+   "module": "compress/gzip",
+   "props": [
+    "uncompressed_bytes"
+   ],
+   "runtime": "go"
+  },
+  {
+   "docs": "https://docs.python.org/3/library/gzip.html",
+   "id": "python/gzip",
+   "module": "gzip",
+   "props": [
+    "uncompressed_bytes"
+   ],
+   "runtime": "python"
+  }
+ ],
+ "runtimes": [
+  "python-3.11",
+  "python-3.12",
+  "python-3.13",
+  "python-3.14",
+  "python-3.15",
+  "go-1.26",
+  "go-1.27"
+ ],
+ "skipped": []
+}

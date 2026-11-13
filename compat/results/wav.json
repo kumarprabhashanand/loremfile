@@ -1,0 +1,671 @@
+{
+ "controls": {
+  "python/wave": {
+   "python-3.11": {
+    "reads:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok",
+    "zero-byte:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok"
+   },
+   "python-3.12": {
+    "reads:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok",
+    "zero-byte:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok"
+   },
+   "python-3.13": {
+    "reads:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok",
+    "zero-byte:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok"
+   },
+   "python-3.14": {
+    "reads:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok",
+    "zero-byte:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok"
+   },
+   "python-3.15": {
+    "reads:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok",
+    "zero-byte:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok"
+   }
+  }
+ },
+ "files": [
+  {
+   "bytes": 10000000,
+   "cells": {
+    "python/wave": {
+     "python-3.11": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 56689,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 56689,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 56689,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 56689,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 56689,
+       "sample_rate": 44100
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "bit_depth": 16,
+    "channels": 2,
+    "duration_ms": 56689,
+    "sample_rate": 44100
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "wav/10mb.wav",
+   "role": "ordinary",
+   "sha256": "d92572b5e46746358943922a462cf33f8a001cb488173a35b5ec8c3057eab4a2",
+   "url": "https://loremfile.dev/wav/10mb.wav"
+  },
+  {
+   "bytes": 264644,
+   "cells": {
+    "python/wave": {
+     "python-3.11": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 1,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 1,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 1,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 1,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 1,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "bit_depth": 16,
+    "channels": 1,
+    "duration_ms": 3000,
+    "sample_rate": 44100
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "wav/sine-440hz-3s-44k-16bit-mono.wav",
+   "role": "ordinary",
+   "sha256": "72e287d3226d1d27537980eca453ac8abdf31816343f1bd5b542bf965b0706f2",
+   "url": "https://loremfile.dev/wav/sine-440hz-3s-44k-16bit-mono.wav"
+  },
+  {
+   "bytes": 529244,
+   "cells": {
+    "python/wave": {
+     "python-3.11": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "bit_depth": 16,
+    "channels": 2,
+    "duration_ms": 3000,
+    "sample_rate": 44100
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "wav/sine-440hz-3s-44k-16bit-stereo.wav",
+   "role": "ordinary",
+   "sha256": "4e9e029040d3cf648ec3878c847189bf48a4dde12c8305f7aa37657f8fb14c64",
+   "url": "https://loremfile.dev/wav/sine-440hz-3s-44k-16bit-stereo.wav"
+  },
+  {
+   "bytes": 1058458,
+   "cells": {
+    "python/wave": {
+     "python-3.11": {
+      "error": "unknown format: 3",
+      "error_type": "wave.Error",
+      "outcome": "refuses"
+     },
+     "python-3.12": {
+      "error": "unknown format: 3",
+      "error_type": "wave.Error",
+      "outcome": "refuses"
+     },
+     "python-3.13": {
+      "error": "unknown format: 3",
+      "error_type": "wave.Error",
+      "outcome": "refuses"
+     },
+     "python-3.14": {
+      "error": "unknown format: 3",
+      "error_type": "wave.Error",
+      "outcome": "refuses"
+     },
+     "python-3.15": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 32,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "bit_depth": 32,
+    "channels": 2,
+    "duration_ms": 3000,
+    "sample_rate": 44100
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "wav/sine-440hz-3s-44k-32bit-float-stereo.wav",
+   "role": "ordinary",
+   "sha256": "040b6944f931020080d02f36e8d6a21a5f2787cf6d6ad372f6a5dd2981456383",
+   "url": "https://loremfile.dev/wav/sine-440hz-3s-44k-32bit-float-stereo.wav"
+  },
+  {
+   "bytes": 264644,
+   "cells": {
+    "python/wave": {
+     "python-3.11": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 8,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 8,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 8,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 8,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 8,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "bit_depth": 8,
+    "channels": 2,
+    "duration_ms": 3000,
+    "sample_rate": 44100
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "wav/sine-440hz-3s-44k-8bit-stereo.wav",
+   "role": "ordinary",
+   "sha256": "c3073ea697d72ad2583001c31b9b04396d082bad56ce2848073c390b91a49c52",
+   "url": "https://loremfile.dev/wav/sine-440hz-3s-44k-8bit-stereo.wav"
+  },
+  {
+   "bytes": 864068,
+   "cells": {
+    "python/wave": {
+     "python-3.11": {
+      "error": "unknown format: 65534",
+      "error_type": "wave.Error",
+      "outcome": "refuses"
+     },
+     "python-3.12": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 24,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 48000
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 24,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 48000
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 24,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 48000
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 24,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 48000
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "bit_depth": 24,
+    "channels": 2,
+    "duration_ms": 3000,
+    "sample_rate": 48000
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "wav/sine-440hz-3s-48k-24bit-stereo.wav",
+   "role": "ordinary",
+   "sha256": "28720b160bc4d0f902bb3bab49130cdc858875fe618fcfce7824c917022551e1",
+   "url": "https://loremfile.dev/wav/sine-440hz-3s-48k-24bit-stereo.wav"
+  },
+  {
+   "bytes": 529294,
+   "cells": {
+    "python/wave": {
+     "python-3.11": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "bit_depth": 16,
+    "channels": 2,
+    "duration_ms": 3000,
+    "sample_rate": 44100
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "wav/with-list-chunk-3s.wav",
+   "role": "ordinary",
+   "sha256": "9ec8fe0492070740821975c1b3f7b6ff2d754cdd6802a1e1c6380452ff525792",
+   "url": "https://loremfile.dev/wav/with-list-chunk-3s.wav"
+  }
+ ],
+ "format": "wav",
+ "no_reader": [
+  "go"
+ ],
+ "readers": [
+  {
+   "docs": "https://docs.python.org/3/library/wave.html",
+   "id": "python/wave",
+   "module": "wave",
+   "props": [
+    "channels",
+    "sample_rate",
+    "bit_depth",
+    "duration_ms"
+   ],
+   "runtime": "python"
+  }
+ ],
+ "runtimes": [
+  "python-3.11",
+  "python-3.12",
+  "python-3.13",
+  "python-3.14",
+  "python-3.15",
+  "go-1.26",
+  "go-1.27"
+ ],
+ "skipped": []
+}

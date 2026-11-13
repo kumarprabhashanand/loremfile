@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="meta">{{ summary }} <a href="/compat">How this is measured</a>. <a href="{{ result_url }}">The results as JSON</a>.</p>
+
+<div class="table-wrap">
+<table class="files compat">
+  <caption>{{ label }} files, by reader</caption>
+  <thead>
+    <tr>
+      <th scope="col">File</th><th scope="col">The manifest says</th>
+{% for c in columns %}
+      <th scope="col">{{ c.runtime_name }} <code>{{ c.module }}</code> <a href="{{ c.adapter }}">adapter</a></th>
+{% endfor %}
+{% for runtime in no_reader %}
+      <th scope="col">{{ runtime }}</th>
+{% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+{% for row in rows %}
+    <tr>
+      <th scope="row"><a href="/{{ row.path }}"><code>{{ row.path }}</code></a> <span class="size">{{ row.size }}</span>
+{% if row.kind == "edge" %}
+        <br><span class="size">edge file{% if row.edge %}: {{ row.edge }}{% endif %}</span>
+{% endif %}</th>
+      <td>{{ row.expect if row.expect else "nothing to compare" }}</td>
+{% for cell in row.cells %}
+      <td>
+{% if cell.state == "run" %}
+{% for g in cell.groups %}
+        <p>{% if g.label %}<span class="size">{{ g.label }}</span> {% endif %}<strong>{{ g.outcome }}</strong>{% if g.text %} {{ g.text }}{% endif %}{% if g.note %} <em>({{ g.note }})</em>{% endif %}</p>
+{% endfor %}
+{% elif cell.state == "no-reader" %}
+        <p><strong>no-reader</strong></p>
+{% else %}
+        <p><span class="size">not given this file</span></p>
+{% endif %}
+      </td>
+{% endfor %}
+{% for runtime in no_reader %}
+      <td><strong>no-reader</strong></td>
+{% endfor %}
+    </tr>
+{% endfor %}
+  </tbody>
+</table>
+</div>
+{% for r in routing %}
+<p>{{ r.text }}</p>
+{% endfor %}
+{% if skipped %}
+<p>Skipped, over the size limit:{% for s in skipped %} <a href="/{{ s.path }}"><code>{{ s.path }}</code></a> ({{ s.size }}){{ "." if loop.last else "," }}{% endfor %}</p>
+{% endif %}
+<p>The {{ label }} files themselves, and the measured properties each row is compared with: <a href="/{{ format }}">{{ label }} sample files</a>.</p>
+{% endblock %}

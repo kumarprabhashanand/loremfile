@@ -1,0 +1,1264 @@
+{
+ "controls": {
+  "go/archive/zip": {
+   "go-1.26": {
+    "reads:zip/3-text-files.zip": "ok",
+    "zero-byte:zip/3-text-files.zip": "ok"
+   },
+   "go-1.27": {
+    "reads:zip/3-text-files.zip": "ok",
+    "zero-byte:zip/3-text-files.zip": "ok"
+   }
+  },
+  "python/zipfile": {
+   "python-3.11": {
+    "reads:zip/3-text-files.zip": "ok",
+    "zero-byte:zip/3-text-files.zip": "ok"
+   },
+   "python-3.12": {
+    "reads:zip/3-text-files.zip": "ok",
+    "zero-byte:zip/3-text-files.zip": "ok"
+   },
+   "python-3.13": {
+    "reads:zip/3-text-files.zip": "ok",
+    "zero-byte:zip/3-text-files.zip": "ok"
+   },
+   "python-3.14": {
+    "reads:zip/3-text-files.zip": "ok",
+    "zero-byte:zip/3-text-files.zip": "ok"
+   },
+   "python-3.15": {
+    "reads:zip/3-text-files.zip": "ok",
+    "zero-byte:zip/3-text-files.zip": "ok"
+   }
+  }
+ },
+ "files": [
+  {
+   "bytes": 200,
+   "cells": {
+    "go/archive/zip": {
+     "go-1.26": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 39
+      }
+     },
+     "go-1.27": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 39
+      }
+     }
+    },
+    "python/zipfile": {
+     "python-3.11": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 39
+      }
+     },
+     "python-3.12": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 39
+      }
+     },
+     "python-3.13": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 39
+      }
+     },
+     "python-3.14": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 39
+      }
+     },
+     "python-3.15": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 39
+      }
+     }
+    }
+   },
+   "edge_outcome": "varies",
+   "expect": {},
+   "kind": "edge",
+   "no_reader": [],
+   "path": "edge/gif-zip-polyglot.gif",
+   "role": "also_valid_as",
+   "sha256": "9b282e8b0b248bcc4bfbd2e9cc45013c5e13f7e9b0bd9f281719ca244d3ee897",
+   "url": "https://loremfile.dev/edge/gif-zip-polyglot.gif"
+  },
+  {
+   "bytes": 800,
+   "cells": {
+    "go/archive/zip": {
+     "go-1.26": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 41
+      }
+     },
+     "go-1.27": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 41
+      }
+     }
+    },
+    "python/zipfile": {
+     "python-3.11": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 41
+      }
+     },
+     "python-3.12": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 41
+      }
+     },
+     "python-3.13": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 41
+      }
+     },
+     "python-3.14": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 41
+      }
+     },
+     "python-3.15": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 41
+      }
+     }
+    }
+   },
+   "edge_outcome": "varies",
+   "expect": {},
+   "kind": "edge",
+   "no_reader": [],
+   "path": "edge/pdf-zip-polyglot.pdf",
+   "role": "also_valid_as",
+   "sha256": "759337b3a30d123993fb473cb06ed5ced212cb0dbec147eb9b4d812d779e177a",
+   "url": "https://loremfile.dev/edge/pdf-zip-polyglot.pdf"
+  },
+  {
+   "bytes": 0,
+   "cells": {
+    "go/archive/zip": {
+     "go-1.26": {
+      "error": "zip: not a valid zip file",
+      "error_type": "errors.errorString",
+      "outcome": "refuses"
+     },
+     "go-1.27": {
+      "error": "zip: not a valid zip file",
+      "error_type": "errors.errorString",
+      "outcome": "refuses"
+     }
+    },
+    "python/zipfile": {
+     "python-3.11": {
+      "error": "File is not a zip file",
+      "error_type": "zipfile.BadZipFile",
+      "outcome": "refuses"
+     },
+     "python-3.12": {
+      "error": "File is not a zip file",
+      "error_type": "zipfile.BadZipFile",
+      "outcome": "refuses"
+     },
+     "python-3.13": {
+      "error": "File is not a zip file",
+      "error_type": "zipfile.BadZipFile",
+      "outcome": "refuses"
+     },
+     "python-3.14": {
+      "error": "File is not a zip file",
+      "error_type": "zipfile.BadZipFile",
+      "outcome": "refuses"
+     },
+     "python-3.15": {
+      "error": "File is not a zip file",
+      "error_type": "zipfile.BadZipFile",
+      "outcome": "refuses"
+     }
+    }
+   },
+   "edge_outcome": "must-fail",
+   "expect": {},
+   "kind": "edge",
+   "no_reader": [],
+   "path": "edge/zero-byte.zip",
+   "role": "intended",
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "url": "https://loremfile.dev/edge/zero-byte.zip"
+  },
+  {
+   "bytes": 782,
+   "cells": {
+    "go/archive/zip": {
+     "go-1.26": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 2,
+       "uncompressed_bytes": 1010
+      }
+     },
+     "go-1.27": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 2,
+       "uncompressed_bytes": 1010
+      }
+     }
+    },
+    "python/zipfile": {
+     "python-3.11": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 2,
+       "uncompressed_bytes": 1010
+      }
+     },
+     "python-3.12": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 2,
+       "uncompressed_bytes": 1010
+      }
+     },
+     "python-3.13": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 2,
+       "uncompressed_bytes": 1010
+      }
+     },
+     "python-3.14": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 2,
+       "uncompressed_bytes": 1010
+      }
+     },
+     "python-3.15": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 2,
+       "uncompressed_bytes": 1010
+      }
+     }
+    }
+   },
+   "edge_outcome": "varies",
+   "expect": {},
+   "kind": "edge",
+   "no_reader": [],
+   "path": "edge/zip-directory-traversal-name.zip",
+   "role": "intended",
+   "sha256": "d59046db73a6587cf4cd27b313a7a3c9e6217425c22400c73c129277423eacee",
+   "url": "https://loremfile.dev/edge/zip-directory-traversal-name.zip"
+  },
+  {
+   "bytes": 911,
+   "cells": {
+    "go/archive/zip": {
+     "go-1.26": {
+      "error": "zip: not a valid zip file",
+      "error_type": "errors.errorString",
+      "outcome": "refuses"
+     },
+     "go-1.27": {
+      "error": "zip: not a valid zip file",
+      "error_type": "errors.errorString",
+      "outcome": "refuses"
+     }
+    },
+    "python/zipfile": {
+     "python-3.11": {
+      "error": "File is not a zip file",
+      "error_type": "zipfile.BadZipFile",
+      "outcome": "refuses"
+     },
+     "python-3.12": {
+      "error": "File is not a zip file",
+      "error_type": "zipfile.BadZipFile",
+      "outcome": "refuses"
+     },
+     "python-3.13": {
+      "error": "File is not a zip file",
+      "error_type": "zipfile.BadZipFile",
+      "outcome": "refuses"
+     },
+     "python-3.14": {
+      "error": "File is not a zip file",
+      "error_type": "zipfile.BadZipFile",
+      "outcome": "refuses"
+     },
+     "python-3.15": {
+      "error": "File is not a zip file",
+      "error_type": "zipfile.BadZipFile",
+      "outcome": "refuses"
+     }
+    }
+   },
+   "edge_outcome": "may-recover",
+   "expect": {},
+   "kind": "edge",
+   "no_reader": [],
+   "path": "edge/zip-truncated-50pct.zip",
+   "role": "intended",
+   "sha256": "2589429530f531890bb47b74077884cd27ca3c85665fe522ea399ae6d757bbc4",
+   "url": "https://loremfile.dev/edge/zip-truncated-50pct.zip"
+  },
+  {
+   "bytes": 9993166,
+   "cells": {
+    "go/archive/zip": {
+     "go-1.26": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 9990000
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 9990000
+      }
+     }
+    },
+    "python/zipfile": {
+     "python-3.11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 9990000
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 9990000
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 9990000
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 9990000
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 9990000
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "directories": 0,
+    "entries": 1,
+    "uncompressed_bytes": 9990000
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "zip/10mb.zip",
+   "role": "ordinary",
+   "sha256": "5d0ba27090921a6e6beceb934ceba27cfe12c65d2be77ec54896755f70185dfe",
+   "url": "https://loremfile.dev/zip/10mb.zip"
+  },
+  {
+   "bytes": 999421,
+   "cells": {
+    "go/archive/zip": {
+     "go-1.26": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 999000
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 999000
+      }
+     }
+    },
+    "python/zipfile": {
+     "python-3.11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 999000
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 999000
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 999000
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 999000
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 999000
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "directories": 0,
+    "entries": 1,
+    "uncompressed_bytes": 999000
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "zip/1mb.zip",
+   "role": "ordinary",
+   "sha256": "0dfea23d5400bf6ad72d11d4e2af10a1069dfa52869a94fbee1dd07ef9b2c089",
+   "url": "https://loremfile.dev/zip/1mb.zip"
+  },
+  {
+   "bytes": 1822,
+   "cells": {
+    "go/archive/zip": {
+     "go-1.26": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 3228
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 3228
+      }
+     }
+    },
+    "python/zipfile": {
+     "python-3.11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 3228
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 3228
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 3228
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 3228
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 3228
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "directories": 0,
+    "entries": 3,
+    "uncompressed_bytes": 3228
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "zip/3-text-files.zip",
+   "role": "ordinary",
+   "sha256": "3dd88cad3dab2fae753611bb216040def2b92d63fcd430c00a616f52f11971c0",
+   "url": "https://loremfile.dev/zip/3-text-files.zip"
+  },
+  {
+   "bytes": 2064,
+   "cells": {
+    "go/archive/zip": {
+     "go-1.26": {
+      "error": "zip: unsupported compression algorithm",
+      "error_type": "errors.errorString",
+      "outcome": "refuses"
+     },
+     "go-1.27": {
+      "error": "zip: unsupported compression algorithm",
+      "error_type": "errors.errorString",
+      "outcome": "refuses"
+     }
+    },
+    "python/zipfile": {
+     "python-3.11": {
+      "error": "That compression method is not supported",
+      "error_type": "NotImplementedError",
+      "outcome": "refuses"
+     },
+     "python-3.12": {
+      "error": "That compression method is not supported",
+      "error_type": "NotImplementedError",
+      "outcome": "refuses"
+     },
+     "python-3.13": {
+      "error": "That compression method is not supported",
+      "error_type": "NotImplementedError",
+      "outcome": "refuses"
+     },
+     "python-3.14": {
+      "error": "That compression method is not supported",
+      "error_type": "NotImplementedError",
+      "outcome": "refuses"
+     },
+     "python-3.15": {
+      "error": "That compression method is not supported",
+      "error_type": "NotImplementedError",
+      "outcome": "refuses"
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "directories": 0,
+    "entries": 3,
+    "uncompressed_bytes": 3548
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "zip/aes256-password-loremfile.zip",
+   "role": "ordinary",
+   "sha256": "fabe5baeff21419ab2a9365facfbf5dcf921af58089f0926b02f70b80e876e77",
+   "url": "https://loremfile.dev/zip/aes256-password-loremfile.zip"
+  },
+  {
+   "bytes": 22,
+   "cells": {
+    "go/archive/zip": {
+     "go-1.26": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 0,
+       "uncompressed_bytes": 0
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 0,
+       "uncompressed_bytes": 0
+      }
+     }
+    },
+    "python/zipfile": {
+     "python-3.11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 0,
+       "uncompressed_bytes": 0
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 0,
+       "uncompressed_bytes": 0
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 0,
+       "uncompressed_bytes": 0
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 0,
+       "uncompressed_bytes": 0
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 0,
+       "uncompressed_bytes": 0
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "directories": 0,
+    "entries": 0,
+    "uncompressed_bytes": 0
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "zip/empty.zip",
+   "role": "ordinary",
+   "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85",
+   "url": "https://loremfile.dev/zip/empty.zip"
+  },
+  {
+   "bytes": 5175,
+   "cells": {
+    "go/archive/zip": {
+     "go-1.26": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 9838
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 9838
+      }
+     }
+    },
+    "python/zipfile": {
+     "python-3.11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 9838
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 9838
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 9838
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 9838
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 9838
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "directories": 0,
+    "entries": 4,
+    "uncompressed_bytes": 9838
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "zip/mixed-fixtures.zip",
+   "role": "ordinary",
+   "sha256": "21972b7a7ed8ddd68d8d2a63f3d6725365847f42131daa524e251392ca8a3cd0",
+   "url": "https://loremfile.dev/zip/mixed-fixtures.zip"
+  },
+  {
+   "bytes": 1215,
+   "cells": {
+    "go/archive/zip": {
+     "go-1.26": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 1368
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 1368
+      }
+     }
+    },
+    "python/zipfile": {
+     "python-3.11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 1368
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 1368
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 1368
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 1368
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 1368
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "directories": 0,
+    "entries": 4,
+    "uncompressed_bytes": 1368
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "zip/nested-directories.zip",
+   "role": "ordinary",
+   "sha256": "c97215fee7ecb63e33b1bfb31d2022738cf8dca6dc77da6ef919bf967741884f",
+   "url": "https://loremfile.dev/zip/nested-directories.zip"
+  },
+  {
+   "bytes": 7420098,
+   "cells": {
+    "go/archive/zip": {
+     "go-1.26": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 70000,
+       "uncompressed_bytes": 0
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 70000,
+       "uncompressed_bytes": 0
+      }
+     }
+    },
+    "python/zipfile": {
+     "python-3.11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 70000,
+       "uncompressed_bytes": 0
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 70000,
+       "uncompressed_bytes": 0
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 70000,
+       "uncompressed_bytes": 0
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 70000,
+       "uncompressed_bytes": 0
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 70000,
+       "uncompressed_bytes": 0
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "directories": 0,
+    "entries": 70000,
+    "uncompressed_bytes": 0
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "zip/zip64-70000-empty-files.zip",
+   "role": "ordinary",
+   "sha256": "13185dbd86346b4e5d96624f7c4427b99d55fc67fe31a12af8526b039a03aa36",
+   "url": "https://loremfile.dev/zip/zip64-70000-empty-files.zip"
+  }
+ ],
+ "format": "zip",
+ "no_reader": [],
+ "readers": [
+  {
+   "docs": "https://pkg.go.dev/archive/zip",
+   "id": "go/archive/zip",
+   "module": "archive/zip",
+   "props": [
+    "entries",
+    "directories",
+    "uncompressed_bytes"
+   ],
+   "runtime": "go"
+  },
+  {
+   "docs": "https://docs.python.org/3/library/zipfile.html",
+   "id": "python/zipfile",
+   "module": "zipfile",
+   "props": [
+    "entries",
+    "directories",
+    "uncompressed_bytes"
+   ],
+   "runtime": "python"
+  }
+ ],
+ "runtimes": [
+  "python-3.11",
+  "python-3.12",
+  "python-3.13",
+  "python-3.14",
+  "python-3.15",
+  "go-1.26",
+  "go-1.27"
+ ],
+ "skipped": [
+  {
+   "bytes": 99030316,
+   "path": "zip/100mb.zip",
+   "reason": "over the size limit"
+  }
+ ]
+}

@@ -41,7 +41,59 @@
   },
   "changelog": {
     "date": "2026-11-13",
-    "sha256": "f8acbe81e114342356f60aa4906cd9d59494984c8ae962e8faca380bfad92c3b"
+    "sha256": "cc2c1f6bda478135614cd697bfa21c23ddd886b846e7474ef3b154a3a58cedd8"
+  },
+  "compat": {
+    "date": "2026-11-13",
+    "sha256": "89b2f1bd0cf8e8b57117747418e6974b586806fe53ff2887b11690a4847f33ca"
+  },
+  "compat/csv": {
+    "date": "2026-11-13",
+    "sha256": "b413e405b36a09724d98095e1121c02e10206ed78c89da645c5bbc4d460138c1"
+  },
+  "compat/der": {
+    "date": "2026-11-13",
+    "sha256": "cb411e5a8cb0cb78029475bdc9aa752861b936ebe85619d2254188224519f7b8"
+  },
+  "compat/gif": {
+    "date": "2026-11-13",
+    "sha256": "7cd60facc40e2dc5ba2344177a53b65e67bd38551eeef79655934f0b6771df2c"
+  },
+  "compat/gz": {
+    "date": "2026-11-13",
+    "sha256": "0edb7c073c54f845e3e8d49710d9cd87549dfc89b6580e1cfc238ba011a39395"
+  },
+  "compat/jpg": {
+    "date": "2026-11-13",
+    "sha256": "dce4ec450817de53477c246f0509d0af0844ba5e84ca441c25599a7a1f3979cf"
+  },
+  "compat/json": {
+    "date": "2026-11-13",
+    "sha256": "1767964e054bae25b586d7f02766512b32b6021046d5ad946dcb51e4e15fc4b9"
+  },
+  "compat/pem": {
+    "date": "2026-11-13",
+    "sha256": "83d5aa8ffec88a8b15f345ae2ac408c0c9462f4d9a01056dc916ea6c3038c8cd"
+  },
+  "compat/png": {
+    "date": "2026-11-13",
+    "sha256": "3b819a1d8753d01d0e11a93f53f45a223f256386176c9a6dd0b2780e62807b94"
+  },
+  "compat/tar": {
+    "date": "2026-11-13",
+    "sha256": "0689cc8eba712fd381e06e8503abe9e4e499c4a8dd2a519fedb535edb586da89"
+  },
+  "compat/wav": {
+    "date": "2026-11-13",
+    "sha256": "27f8749c3878fdbec10522e11c7f40ce62da96ba1ea3562f971fe5880655c2db"
+  },
+  "compat/xml": {
+    "date": "2026-11-13",
+    "sha256": "a096287fa2fc6bb1aff3b141f8ba761e02d9af2add2d091d63832c006ae35092"
+  },
+  "compat/zip": {
+    "date": "2026-11-13",
+    "sha256": "3e623aac46b043204066072b9aa12d58b2e2c75261278802d1e8d5070c038d95"
   },
   "css": {
     "date": "2026-11-13",
@@ -49,11 +101,11 @@
   },
   "csv": {
     "date": "2026-11-13",
-    "sha256": "37f0c11ee012a7781401173ae58c25bc3bd71dab13140eb2c5a31d65ae545e52"
+    "sha256": "4887510cb953d1df0e951fb0084d6aa030b5c268c5d366b7ccefa961e2eb108a"
   },
   "der": {
     "date": "2026-11-13",
-    "sha256": "5e92ca51aa190ebd34dee63a91671f14e44f9b6dfaee383c35bd813090d06637"
+    "sha256": "c7f4bfdb11031ba7d9621a4988c79d75c4ab14b4bb2b28bb778e9158d4a69961"
   },
   "docs": {
     "date": "2026-11-13",
@@ -125,7 +177,7 @@
   },
   "gif": {
     "date": "2026-11-13",
-    "sha256": "1ea22e2faef79feab30824a8b71f15cf4316f00e9173cecde7de5797f4855867"
+    "sha256": "50a5cd6375c04482c3dde2934c966b7ee02ae025818f8b9c10c62dac6c86e95a"
   },
   "gpx": {
     "date": "2026-11-13",
@@ -133,7 +185,7 @@
   },
   "gz": {
     "date": "2026-11-13",
-    "sha256": "eaaea620621a5ec4a53c8367329a71a2a642904a05c67f9be6cb44ee2d94c7db"
+    "sha256": "37cff35868e0e0d4f8e2c914e81b09440a7f5e6bb116129571a85be324ad6b11"
   },
   "har": {
     "date": "2026-11-13",
@@ -173,7 +225,7 @@
   },
   "jpg": {
     "date": "2026-11-13",
-    "sha256": "c51756dbf2d35d1d2a7f023ae498f4db95e6445a8388194db8daec9ee74e4d1a"
+    "sha256": "c34b8b3b6c170fbd8978ce252fced0cbba43359c896667856573ea886e55d29d"
   },
   "js": {
     "date": "2026-11-13",
@@ -181,7 +233,7 @@
   },
   "json": {
     "date": "2026-11-13",
-    "sha256": "0244ca85985218aae4bd1c3f0bb4fe097c918183d1805d9e5cbaa8de18392833"
+    "sha256": "8b4cb274da29f5e00db4f052235fee9bc612758e9ae1491e009340f4316ac288"
   },
   "kml": {
     "date": "2026-11-13",
@@ -253,11 +305,11 @@
   },
   "pem": {
     "date": "2026-11-13",
-    "sha256": "b1a2b44472c4c07c84a70c7cfb55e90b899b448e09b40ebe481629829391b334"
+    "sha256": "1594154bec6a09a126be4d2fb5fae91ad41407ae545c33eaf48aeadb99beca77"
   },
   "png": {
     "date": "2026-11-13",
-    "sha256": "0f869724afe6f618d956838ff246ad9629ad0f847888ec52ff19b83dfd28e269"
+    "sha256": "e5d6edacbe003e6725e649688751b0fdf25adec86db1aa1f2e7ec7e87124f9c2"
   },
   "pptx": {
     "date": "2026-11-13",
@@ -285,7 +337,7 @@
   },
   "status": {
     "date": "2026-11-13",
-    "sha256": "c54e170bb98de9ea7745119af49006815018bec9e308431972cc87dd305bba56"
+    "sha256": "3d2318dcaf852389c0b26ac628547849a091660ed4ae2d62eaff66e0699a7120"
   },
   "svg": {
     "date": "2026-11-13",
@@ -293,7 +345,7 @@
   },
   "tar": {
     "date": "2026-11-13",
-    "sha256": "0968b942d157176eb4017e3eebb883917a3042b45e19e6043820bfa9ec6fa7a3"
+    "sha256": "a4dd8857a2508901a723d9ccc3a3863c7bfccfdb11098c925d501528df4e5f64"
   },
   "testing": {
     "date": "2026-11-13",
@@ -349,7 +401,7 @@
   },
   "wav": {
     "date": "2026-11-13",
-    "sha256": "6c117e1f43961ab9713f46cbf303ef9aebf2106b671a05b195a77f6f63b5681d"
+    "sha256": "10a8a2a5ed9c7000439c0957e1118c7a1d9b0911055595f29c6d76f171599d48"
   },
   "webm": {
     "date": "2026-11-13",
@@ -377,7 +429,7 @@
   },
   "xml": {
     "date": "2026-11-13",
-    "sha256": "8136a475313cc8445f8a4c70438ff6f109552f3a16a8298ba3a3a3fac0555689"
+    "sha256": "3574013ae0a1c7622fdcb81640602044be550ec9cf24942ee4632afeb32253bf"
   },
   "xz": {
     "date": "2026-11-13",
@@ -389,7 +441,7 @@
   },
   "zip": {
     "date": "2026-11-13",
-    "sha256": "7519b0f8f2664b7965688c3846aa944196f3972737c1b55b0125396c84e9125d"
+    "sha256": "0a312018df71d3ce38c103a3ebd621c0703ba8d88e10ec9f60b3c2c188fd440c"
   },
   "zst": {
     "date": "2026-11-13",

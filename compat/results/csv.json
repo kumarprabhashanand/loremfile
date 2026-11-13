@@ -1,0 +1,1093 @@
+{
+ "controls": {
+  "go/encoding/csv": {
+   "go-1.26": {
+    "reads:csv/people-10.csv": "ok",
+    "zero-byte:csv/people-10.csv": "ok"
+   },
+   "go-1.27": {
+    "reads:csv/people-10.csv": "ok",
+    "zero-byte:csv/people-10.csv": "ok"
+   }
+  },
+  "python/csv": {
+   "python-3.11": {
+    "reads:csv/people-10.csv": "ok",
+    "zero-byte:csv/people-10.csv": "ok"
+   },
+   "python-3.12": {
+    "reads:csv/people-10.csv": "ok",
+    "zero-byte:csv/people-10.csv": "ok"
+   },
+   "python-3.13": {
+    "reads:csv/people-10.csv": "ok",
+    "zero-byte:csv/people-10.csv": "ok"
+   },
+   "python-3.14": {
+    "reads:csv/people-10.csv": "ok",
+    "zero-byte:csv/people-10.csv": "ok"
+   },
+   "python-3.15": {
+    "reads:csv/people-10.csv": "ok",
+    "zero-byte:csv/people-10.csv": "ok"
+   }
+  }
+ },
+ "files": [
+  {
+   "bytes": 9749583,
+   "cells": {
+    "go/encoding/csv": {
+     "go-1.26": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 38462
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 38462
+      }
+     }
+    },
+    "python/csv": {
+     "python-3.11": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 38462
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 38462
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 38462
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 38462
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 38462
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "columns": 14,
+    "has_header": true,
+    "rows": 38461
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "csv/10mb.csv",
+   "role": "ordinary",
+   "sha256": "2cc79929706451724223af6de04711327fcf0629bda08a623dfaa5397bc3eaf5",
+   "url": "https://loremfile.dev/csv/10mb.csv"
+  },
+  {
+   "bytes": 965447,
+   "cells": {
+    "go/encoding/csv": {
+     "go-1.26": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 3847
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 3847
+      }
+     }
+    },
+    "python/csv": {
+     "python-3.11": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 3847
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 3847
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 3847
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 3847
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 3847
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "columns": 14,
+    "has_header": true,
+    "rows": 3846
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "csv/1mb.csv",
+   "role": "ordinary",
+   "sha256": "349847940e5b32738c0984d0bb6b7d3e170c5ecd1afb47291da675b146f07726",
+   "url": "https://loremfile.dev/csv/1mb.csv"
+  },
+  {
+   "bytes": 2690,
+   "cells": {
+    "go/encoding/csv": {
+     "go-1.26": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
+    },
+    "python/csv": {
+     "python-3.11": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "columns": 14,
+    "has_header": true,
+    "rows": 10
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "csv/people-10-crlf.csv",
+   "role": "ordinary",
+   "sha256": "91a2c4158ea5bb79756bb57e6e6d876aaf27d91adbf9f3f7de15972298d1fcb0",
+   "url": "https://loremfile.dev/csv/people-10-crlf.csv"
+  },
+  {
+   "bytes": 2706,
+   "cells": {
+    "go/encoding/csv": {
+     "go-1.26": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
+    },
+    "python/csv": {
+     "python-3.11": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "columns": 14,
+    "has_header": true,
+    "rows": 10
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "csv/people-10-quoted-commas.csv",
+   "role": "ordinary",
+   "sha256": "ceff4f4cede74e64ed2af13fe3115ceb321da4644de96d6b8fe9c8ab78fcbf08",
+   "url": "https://loremfile.dev/csv/people-10-quoted-commas.csv"
+  },
+  {
+   "bytes": 2697,
+   "cells": {
+    "go/encoding/csv": {
+     "go-1.26": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
+    },
+    "python/csv": {
+     "python-3.11": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "columns": 14,
+    "has_header": true,
+    "rows": 10
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "csv/people-10-quoted-newlines.csv",
+   "role": "ordinary",
+   "sha256": "95f102f3c59a616c92bad2eadfae97c8081daee2722b87a11e5bddd0e061c160",
+   "url": "https://loremfile.dev/csv/people-10-quoted-newlines.csv"
+  },
+  {
+   "bytes": 2679,
+   "cells": {
+    "go/encoding/csv": {
+     "go-1.26": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
+    },
+    "python/csv": {
+     "python-3.11": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "columns": 14,
+    "has_header": true,
+    "rows": 10
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "csv/people-10-semicolon.csv",
+   "role": "ordinary",
+   "sha256": "31a1de884bdb372bb6b5a5e0ada211f8acd4e07f2c8068458cedb3cc49c30346",
+   "url": "https://loremfile.dev/csv/people-10-semicolon.csv"
+  },
+  {
+   "bytes": 2682,
+   "cells": {
+    "go/encoding/csv": {
+     "go-1.26": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
+    },
+    "python/csv": {
+     "python-3.11": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "columns": 14,
+    "has_header": true,
+    "rows": 10
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "csv/people-10-utf8-bom.csv",
+   "role": "ordinary",
+   "sha256": "cf14b9d8523c5d3d6a26dd13ceaaf8c953b175a560044a5820fb117eeb1c69a5",
+   "url": "https://loremfile.dev/csv/people-10-utf8-bom.csv"
+  },
+  {
+   "bytes": 2679,
+   "cells": {
+    "go/encoding/csv": {
+     "go-1.26": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
+    },
+    "python/csv": {
+     "python-3.11": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "columns": 14,
+    "has_header": true,
+    "rows": 10
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "csv/people-10.csv",
+   "role": "ordinary",
+   "sha256": "5b51c9c031ef0c7d098909ce79cd573300e75cb922ffe485bc47ebb8c8ea118b",
+   "url": "https://loremfile.dev/csv/people-10.csv"
+  },
+  {
+   "bytes": 249645,
+   "cells": {
+    "go/encoding/csv": {
+     "go-1.26": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 1001
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 1001
+      }
+     }
+    },
+    "python/csv": {
+     "python-3.11": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 1001
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 1001
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 1001
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 1001
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 1001
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "columns": 14,
+    "has_header": true,
+    "rows": 1000
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "csv/people-1000.csv",
+   "role": "ordinary",
+   "sha256": "415edcfa97d82e5e532d5582d854fb836ab7a2167a1ea49c74e4e851719b586f",
+   "url": "https://loremfile.dev/csv/people-1000.csv"
+  },
+  {
+   "bytes": 65,
+   "cells": {
+    "go/encoding/csv": {
+     "go-1.26": {
+      "error": "record on line 3: wrong number of fields",
+      "error_type": "csv.ParseError",
+      "outcome": "refuses"
+     },
+     "go-1.27": {
+      "error": "record on line 3: wrong number of fields",
+      "error_type": "csv.ParseError",
+      "outcome": "refuses"
+     }
+    },
+    "python/csv": {
+     "python-3.11": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "columns": 3,
+       "rows": 5
+      }
+     },
+     "python-3.12": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "columns": 3,
+       "rows": 5
+      }
+     },
+     "python-3.13": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "columns": 3,
+       "rows": 5
+      }
+     },
+     "python-3.14": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "columns": 3,
+       "rows": 5
+      }
+     },
+     "python-3.15": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "columns": 3,
+       "rows": 5
+      }
+     }
+    }
+   },
+   "edge_outcome": "varies",
+   "expect": {},
+   "kind": "edge",
+   "no_reader": [],
+   "path": "edge/csv-ragged-rows.csv",
+   "role": "intended",
+   "sha256": "9244d4cbab1ecaa017abf973bd9c84af96c2173f3641ac20c41e09dc01d28a99",
+   "url": "https://loremfile.dev/edge/csv-ragged-rows.csv"
+  },
+  {
+   "bytes": 0,
+   "cells": {
+    "go/encoding/csv": {
+     "go-1.26": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "rows": 0
+      }
+     },
+     "go-1.27": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "rows": 0
+      }
+     }
+    },
+    "python/csv": {
+     "python-3.11": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "rows": 0
+      }
+     },
+     "python-3.12": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "rows": 0
+      }
+     },
+     "python-3.13": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "rows": 0
+      }
+     },
+     "python-3.14": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "rows": 0
+      }
+     },
+     "python-3.15": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "rows": 0
+      }
+     }
+    }
+   },
+   "edge_outcome": "must-fail",
+   "expect": {},
+   "kind": "edge",
+   "no_reader": [],
+   "path": "edge/zero-byte.csv",
+   "role": "intended",
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "url": "https://loremfile.dev/edge/zero-byte.csv"
+  }
+ ],
+ "format": "csv",
+ "no_reader": [],
+ "readers": [
+  {
+   "docs": "https://pkg.go.dev/encoding/csv",
+   "id": "go/encoding/csv",
+   "module": "encoding/csv",
+   "props": [
+    "rows",
+    "columns"
+   ],
+   "runtime": "go"
+  },
+  {
+   "docs": "https://docs.python.org/3/library/csv.html",
+   "id": "python/csv",
+   "module": "csv",
+   "props": [
+    "rows",
+    "columns"
+   ],
+   "runtime": "python"
+  }
+ ],
+ "runtimes": [
+  "python-3.11",
+  "python-3.12",
+  "python-3.13",
+  "python-3.14",
+  "python-3.15",
+  "go-1.26",
+  "go-1.27"
+ ],
+ "skipped": [
+  {
+   "bytes": 25395296,
+   "path": "csv/people-100k.csv",
+   "reason": "over the size limit"
+  }
+ ]
+}

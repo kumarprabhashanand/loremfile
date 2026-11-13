@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- `/compat`: what the standard libraries of Python and Go do with our zip, tar, gz, wav, jpg, png, gif, json, csv, xml, pem and der files, per reader and runtime version, against the manifest's measured properties.
+
 ## [1.15.1] - 2026-11-13
 
 - `schema/manifest-v1.json` is back to its published bytes. 1.15.0 had added `aliasOf` to it,

@@ -1,0 +1,582 @@
+{
+ "controls": {
+  "go/encoding/xml": {
+   "go-1.26": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "go-1.27": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   }
+  },
+  "python/xml.dom.minidom": {
+   "python-3.11": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "python-3.12": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "python-3.13": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "python-3.14": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "python-3.15": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   }
+  },
+  "python/xml.etree.ElementTree": {
+   "python-3.11": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "python-3.12": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "python-3.13": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "python-3.14": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "python-3.15": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   }
+  }
+ },
+ "files": [
+  {
+   "bytes": 122,
+   "cells": {
+    "go/encoding/xml": {
+     "go-1.26": {
+      "error": "XML syntax error on line 5: element <item> closed by </catalog>",
+      "error_type": "xml.SyntaxError",
+      "outcome": "refuses"
+     },
+     "go-1.27": {
+      "error": "XML syntax error on line 5: element <item> closed by </catalog>",
+      "error_type": "xml.SyntaxError",
+      "outcome": "refuses"
+     }
+    },
+    "python/xml.dom.minidom": {
+     "python-3.11": {
+      "error": "mismatched tag: line 5, column 2",
+      "error_type": "xml.parsers.expat.ExpatError",
+      "outcome": "refuses"
+     },
+     "python-3.12": {
+      "error": "mismatched tag: line 5, column 2",
+      "error_type": "xml.parsers.expat.ExpatError",
+      "outcome": "refuses"
+     },
+     "python-3.13": {
+      "error": "mismatched tag: line 5, column 2",
+      "error_type": "xml.parsers.expat.ExpatError",
+      "outcome": "refuses"
+     },
+     "python-3.14": {
+      "error": "mismatched tag: line 5, column 2",
+      "error_type": "xml.parsers.expat.ExpatError",
+      "outcome": "refuses"
+     },
+     "python-3.15": {
+      "error": "mismatched tag: line 5, column 2",
+      "error_type": "xml.parsers.expat.ExpatError",
+      "outcome": "refuses"
+     }
+    },
+    "python/xml.etree.ElementTree": {
+     "python-3.11": {
+      "error": "mismatched tag: line 5, column 2",
+      "error_type": "xml.etree.ElementTree.ParseError",
+      "outcome": "refuses"
+     },
+     "python-3.12": {
+      "error": "mismatched tag: line 5, column 2",
+      "error_type": "xml.etree.ElementTree.ParseError",
+      "outcome": "refuses"
+     },
+     "python-3.13": {
+      "error": "mismatched tag: line 5, column 2",
+      "error_type": "xml.etree.ElementTree.ParseError",
+      "outcome": "refuses"
+     },
+     "python-3.14": {
+      "error": "mismatched tag: line 5, column 2",
+      "error_type": "xml.etree.ElementTree.ParseError",
+      "outcome": "refuses"
+     },
+     "python-3.15": {
+      "error": "mismatched tag: line 5, column 2",
+      "error_type": "xml.etree.ElementTree.ParseError",
+      "outcome": "refuses"
+     }
+    }
+   },
+   "edge_outcome": "must-fail",
+   "expect": {},
+   "kind": "edge",
+   "no_reader": [],
+   "path": "edge/xml-unclosed-tag.xml",
+   "role": "intended",
+   "sha256": "34ecd6048dd18aaa5ef43b0fa2644896e6bf7a90a0713fe3022c996c782ae5cb",
+   "url": "https://loremfile.dev/edge/xml-unclosed-tag.xml"
+  },
+  {
+   "bytes": 5843,
+   "cells": {
+    "go/encoding/xml": {
+     "go-1.26": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     }
+    },
+    "python/xml.dom.minidom": {
+     "python-3.11": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     }
+    },
+    "python/xml.etree.ElementTree": {
+     "python-3.11": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "root_element": "people"
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "xml/people-10.xml",
+   "role": "ordinary",
+   "sha256": "c035826a1be09ddf4eeef67bdf76d0df62e35bacac731aadf6311b4e3378d672",
+   "url": "https://loremfile.dev/xml/people-10.xml"
+  },
+  {
+   "bytes": 4036,
+   "cells": {
+    "go/encoding/xml": {
+     "go-1.26": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     }
+    },
+    "python/xml.dom.minidom": {
+     "python-3.11": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     }
+    },
+    "python/xml.etree.ElementTree": {
+     "python-3.11": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "root_element": "rss"
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "xml/rss2-feed.xml",
+   "role": "ordinary",
+   "sha256": "f77ecc196c5974310057c1c08bda92de4b53c239412690e9235abab4adf9692d",
+   "url": "https://loremfile.dev/xml/rss2-feed.xml"
+  },
+  {
+   "bytes": 913,
+   "cells": {
+    "go/encoding/xml": {
+     "go-1.26": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
+      }
+     }
+    },
+    "python/xml.dom.minidom": {
+     "python-3.11": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
+      }
+     }
+    },
+    "python/xml.etree.ElementTree": {
+     "python-3.11": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "root_element": "catalogue"
+   },
+   "kind": "ordinary",
+   "no_reader": [],
+   "path": "xml/with-namespaces.xml",
+   "role": "ordinary",
+   "sha256": "04cd8c9a27b781647ca874f4c3dad82d7119c746bcf4cde532157e6402f948e5",
+   "url": "https://loremfile.dev/xml/with-namespaces.xml"
+  }
+ ],
+ "format": "xml",
+ "no_reader": [],
+ "readers": [
+  {
+   "docs": "https://pkg.go.dev/encoding/xml",
+   "id": "go/encoding/xml",
+   "module": "encoding/xml",
+   "props": [
+    "root_element",
+    "root_namespace"
+   ],
+   "runtime": "go"
+  },
+  {
+   "docs": "https://docs.python.org/3/library/xml.dom.minidom.html",
+   "id": "python/xml.dom.minidom",
+   "module": "xml.dom.minidom",
+   "props": [
+    "root_element",
+    "root_namespace"
+   ],
+   "runtime": "python"
+  },
+  {
+   "docs": "https://docs.python.org/3/library/xml.etree.elementtree.html",
+   "id": "python/xml.etree.ElementTree",
+   "module": "xml.etree.ElementTree",
+   "props": [
+    "root_element",
+    "root_namespace"
+   ],
+   "runtime": "python"
+  }
+ ],
+ "runtimes": [
+  "python-3.11",
+  "python-3.12",
+  "python-3.13",
+  "python-3.14",
+  "python-3.15",
+  "go-1.26",
+  "go-1.27"
+ ],
+ "skipped": []
+}

@@ -55,6 +55,12 @@ INDEXNOW_KEY: Final = "6f5cebccab35f5982434418d5d001e12"
 #: deploy fails; `test_legal_pages.py` holds both against the committed rule.
 VERIFY_USER_AGENT: Final = f"loremfile-verify/{__version__} (+{BASE_URL}status)"
 PROBE_USER_AGENT: Final = f"loremfile-probe/{__version__} (+{BASE_URL}status)"
+#: The run behind /compat fetches about ninety published files with it (docs/07 §8). It has its own
+#: version, the harness's, because `compat/` imports nothing from here; `compat/harness/__init__.py`
+#: holds the same string and `test_compat_harness.py` holds the two equal. Held clear of the
+#: refused tokens like the other two.
+COMPAT_VERSION: Final = "1"
+COMPAT_USER_AGENT: Final = f"loremfile-compat/{COMPAT_VERSION} (+{BASE_URL}status)"
 
 
 def with_agent(headers: dict[str, str], agent: str) -> dict[str, str]:

@@ -30,6 +30,8 @@ SITE_PREFIXES = (
     f"{SITE_HOST}/_formats/",
     # The testing guides, their index, and the guides' twins' public URLs.
     f"{SITE_HOST}/testing",
+    # The scoreboard and its per-format pages, and their twins' public URLs (docs/07 §8).
+    f"{SITE_HOST}/compat",
 )
 
 #: Discovery files and the root, purged by exact URL.

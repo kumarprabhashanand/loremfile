@@ -89,6 +89,15 @@ ignore = [
 "tools/inspect_client_wheel.py" = ["T20"]  # the same: what it prints is the refusal
 "tools/inspect_client_tarball.py" = ["T20"]  # and its npm sibling
 "client/src/loremfile_client/cli.py" = ["T20"]   # the client's output is the client
+"compat/adapters/**" = ["T20", "PLC0415", "PTH123", "S314", "S318", "PLR2004"]  # one reader per
+                                                 # function, imported where it is used so a
+                                                 # runtime without the module answers
+                                                 # no-reader; the file is opened the way the
+                                                 # reader's documentation shows; and the
+                                                 # parse of our own file is the measurement
+"compat/harness/**" = ["T20", "S603", "S607", "S310"]  # a CLI that prints, and that runs
+                                                 # adapters by design; the URLs are the
+                                                 # manifest's https ones
 "examples/**" = ["S310", "T20"]           # published snippets: they fetch and they print,
                                           # and a `# noqa` in an example a reader copies
                                           # teaches noise rather than anything true

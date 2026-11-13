@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="prose">
+<p>Our sample files are measured: the manifest records what each one holds. Here each is handed to the standard-library readers of the supported versions of each runtime, and what the reader said is set beside what the manifest says. A cell is one reader, one runtime version and one file; its outcome is a word, never a colour.</p>
+<p>The runtimes are the latest supported ones, with the versions they resolved to recorded and none pinned: the question is what a fresh install does. A disagreement is as likely to be our measurement as the library's, and both are worth finding.</p>
+</div>
+
+<h2 id="outcomes">The six outcomes</h2>
+<dl class="edge">
+{% for name, text in outcomes %}
+  <dt><code>{{ name }}</code></dt><dd>{{ text }}</dd>
+{% endfor %}
+</dl>
+<p>For a file in <a href="/edge">edge</a> whose own outcome is must-fail, <code>refuses</code> is the expected cell and <code>reads</code> the notable one.</p>
+
+<h2 id="method">Method</h2>
+<p>{{ method|join(" ") }}</p>
+<h3 id="exceptions">Named exceptions</h3>
+<ul>
+{% for e in exceptions %}
+  <li><strong>{{ e.name }}</strong> ({% for r in e.applies %}<code>{{ r }}</code>{{ "" if loop.last else ", " }}{% endfor %}): {{ e.text }}</li>
+{% endfor %}
+</ul>
+
+<h2 id="run">This run</h2>
+<p class="meta">Run on {{ date }} against catalogue {{ catalog_version }}. Each runtime's supported versions were read from its own page on {{ checked }}:{% for s in sources %} {{ s.name }}, <code>{{ s.source }}</code>{{ "." if loop.last else ";" }}{% endfor %} <a href="{{ run_url }}">The run's record</a>.</p>
+<div class="table-wrap">
+<table class="files">
+  <caption>Runtime versions in this run</caption>
+  <thead>
+    <tr><th scope="col">Runtime</th><th scope="col">Resolved to</th></tr>
+  </thead>
+  <tbody>
+{% for run in runs %}
+    <tr><th scope="row">{{ run.name }}</th><td>{{ run.resolved }}{% if run.detail %} ({{ run.detail }}){% endif %}</td></tr>
+{% endfor %}
+  </tbody>
+</table>
+</div>
+
+<h2 id="readers">Readers by format</h2>
+<p>Each format links its own page, with a row per file and a column per reader. The counts are cells of the ordinary files across every runtime version; the edge files are on each format's page.</p>
+<div class="table-wrap">
+<table class="files">
+  <caption>Readers, and what they did with the ordinary files</caption>
+  <thead>
+    <tr><th scope="col">Format</th><th scope="col">Readers</th><th scope="col">No reader in</th><th scope="col">Files</th><th scope="col">reads</th><th scope="col">differs</th><th scope="col">refuses</th><th scope="col">crashes</th><th scope="col">Results</th></tr>
+  </thead>
+  <tbody>
+{% for row in by_format %}
+    <tr>
+      <th scope="row"><a href="/compat/{{ row.format }}">{{ row.format }}</a></th>
+      <td>{% for r in row.readers %}<code>{{ r.id }}</code>{{ "" if loop.last else ", " }}{% endfor %}</td>
+      <td>{{ row.no_reader|join(", ") if row.no_reader else "none" }}</td>
+      <td>{{ row.files }}</td>
+      <td>{{ row.tally.reads }}</td><td>{{ row.tally.differs }}</td><td>{{ row.tally.refuses }}</td><td>{{ row.tally.crashes }}</td>
+      <td><a href="{{ row.result_url }}">JSON</a></td>
+    </tr>
+{% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

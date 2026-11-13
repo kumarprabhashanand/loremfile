@@ -122,3 +122,9 @@ Tracking: one GitHub issue per milestone with the task table as checkboxes; the 
 ## M7: P1b batches (A, ≈ 30 h spread over the first three months after launch)
 
 Every catalog row marked phase 1 that is not in the `05` §9 launch list (188 files, ≈ 440 MB), in the family order of `05` §5, one PR per format family, each a minor release. Add new formats' bucket-lock rules (owner step) before their first deploy.
+
+## M8: /compat, how standard libraries read our files (A, ≈ 12 h; no owner step)
+
+1. `compat/` with the harness, the Python and Go adapters, `readers.yaml` and `runtimes.yaml`, two controls per reader, and `compat.yml` (`07` §8, ADR-034). Results come from the pull request's own run.
+2. The site: `/compat` and `/compat/{format}`, Markdown twins, a line in `llms.txt`, the agent on `/status`, a link from each in-scope format page.
+3. Node, Java and Ruby, a monthly schedule, and one line in `11` §3: the monthly maintenance pull request refreshes `compat/results/` from that month's run.
