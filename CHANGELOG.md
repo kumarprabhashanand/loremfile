@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-11-13
+
+- Nine more video files. MP4: 30 seconds of 720p, a minute of 1080p, 4K, square, 60 fps, and
+  a clip whose metadata asks players to turn it 90 degrees. WebM: 1080p VP9, VP8 with Vorbis,
+  and VP9 with an alpha channel.
+- Two new manifest props, each only on the files that have it: `rotation` on the turned MP4,
+  and `alpha`, `alpha_min` and `alpha_max` on the WebM with alpha.
+
 ## [1.13.0] - 2026-11-12
 
 - Eighteen more image files. PNG: 4K, indexed colour, 16-bit, interlaced, 10 MB. JPEG:

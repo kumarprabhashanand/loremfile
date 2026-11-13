@@ -1,9 +1,10 @@
-# WebM video (docs/05 §3.3). Launch-set rows only; the rest are P1b.
+# WebM video (docs/05 §3.3). Every phase-1 row; the phase-2 rows follow.
 format: webm
 family: video
 mime: video/webm
 description: >-
-  VP9 video with Opus audio in WebM: the royalty-free pair browsers decode natively.
+  VP9 video with Opus audio in WebM: the royalty-free pair browsers decode natively. Also a
+  VP8 and Vorbis file, the pair WebM started with, and a VP9 file with an alpha channel.
 seo_title: "Sample WebM video files for testing, free, CC0 and hotlinkable"
 related: [mp4, mkv, ogv]
 fixtures:
@@ -18,4 +19,28 @@ fixtures:
     description: "1280x720 at 30 fps, five seconds, VP9 video with Opus audio."
     tags: [video, codec-vp9, codec-opus]
     expect: { width: 1280, height: 720, vcodec: vp9, acodec: opus }
+    size_class: free
+  - name: 1080p-10s-vp9.webm
+    phase: 1
+    generator: media_video.webm
+    params: { width: 1920, height: 1080, duration: 10 }
+    description: "1920x1080 at 30 fps, ten seconds, VP9 video with Opus audio: Full HD through a browser's VP9 path, for transcoders and bitrate ladders."
+    tags: [video, codec-vp9, codec-opus]
+    expect: { width: 1920, height: 1080, vcodec: vp9, acodec: opus }
+    size_class: free
+  - name: 720p-5s-vp8.webm
+    phase: 1
+    generator: media_video.webm
+    params: { width: 1280, height: 720, duration: 5, vcodec: vp8 }
+    description: "1280x720 at 30 fps, five seconds, VP8 video with Vorbis audio: the codecs WebM started with, for players and converters that predate VP9 and Opus."
+    tags: [video]
+    expect: { width: 1280, height: 720, vcodec: vp8, acodec: vorbis }
+    size_class: free
+  - name: alpha-vp9-512x512-5s.webm
+    phase: 1
+    generator: media_video.webm
+    params: { width: 512, height: 512, duration: 5, alpha: true }
+    description: "512x512 at 30 fps, five seconds, VP9 with an alpha plane and Opus audio. Alpha rises from fully transparent at the left edge to nearly opaque at the right: a player that keeps it shows the picture fading in, and one that drops it shows the whole frame."
+    tags: [video, codec-vp9, codec-opus, transparent]
+    expect: { width: 512, height: 512, vcodec: vp9, acodec: opus, alpha: true, alpha_min: 0, alpha_max: 254 }
     size_class: free

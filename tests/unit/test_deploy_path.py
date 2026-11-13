@@ -303,6 +303,16 @@ AFTER_LAUNCH = (
     "svg/text-and-gradient.svg",
     "svg/viewbox-responsive.svg",
     "svg/icons-24x24.svg",
+    # 1.14.0: the phase-1 video rows that were not in the launch set (docs/05 §3.3).
+    "mp4/720p-30s.mp4",
+    "mp4/1080p-60s.mp4",
+    "mp4/4k-5s.mp4",
+    "mp4/square-720x720-5s.mp4",
+    "mp4/60fps-720p-5s.mp4",
+    "mp4/rotated-90-metadata-720p-5s.mp4",
+    "webm/1080p-10s-vp9.webm",
+    "webm/720p-5s-vp8.webm",
+    "webm/alpha-vp9-512x512-5s.webm",
 )
 
 

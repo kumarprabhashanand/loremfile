@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.13.0",
+  "catalog_version": "1.14.0",
   "formats": [
     {
       "format": "7z",
@@ -339,8 +339,8 @@
     },
     {
       "format": "mp4",
-      "count": 10,
-      "total_bytes": 81741491,
+      "count": 16,
+      "total_bytes": 160506368,
       "url": "https://loremfile.dev/mp4",
       "index": "https://loremfile.dev/mp4/index.json",
       "mime_default": "video/mp4"
@@ -555,8 +555,8 @@
     },
     {
       "format": "webm",
-      "count": 1,
-      "total_bytes": 621241,
+      "count": 4,
+      "total_bytes": 3208512,
       "url": "https://loremfile.dev/webm",
       "index": "https://loremfile.dev/webm/index.json",
       "mime_default": "video/webm"

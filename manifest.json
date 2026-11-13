@@ -1,15 +1,15 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.13.0",
-  "generated_at": "2026-11-12T07:22:34Z",
+  "catalog_version": "1.14.0",
+  "generated_at": "2026-11-13T09:06:35Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:acc17d4e0b774e49f86c401ceb62da19420036ff075262e231eb9e64fcf378ae",
-  "count": 325,
-  "total_bytes": 658119970,
+  "count": 334,
+  "total_bytes": 739472118,
   "formats": [
     "7z",
     "aac",
@@ -6475,6 +6475,53 @@
       "supersededBy": null
     },
     {
+      "path": "mp4/1080p-60s.mp4",
+      "url": "https://loremfile.dev/mp4/1080p-60s.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 46926750,
+      "sha256": "848ceb6b74da747c03c6ad1ad6abe120f468cbc562f56acf2d679f3fe3621cf7",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1920x1080 at 30 fps, sixty seconds, H.264 plus AAC: a full minute of Full HD for upload limits, transcode timing and streaming tests.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac",
+        "large"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 60000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1920,
+        "height": 1080,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "profile": "High",
+        "level": "4.0",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 1920,
+        "height": 1080,
+        "duration": 60
+      },
+      "added_in": "1.14.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "mp4/10mb.mp4",
       "url": "https://loremfile.dev/mp4/10mb.mp4",
       "format": "mp4",
@@ -6612,6 +6659,52 @@
       "supersededBy": null
     },
     {
+      "path": "mp4/4k-5s.mp4",
+      "url": "https://loremfile.dev/mp4/4k-5s.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 14177584,
+      "sha256": "6d9ff42bf921a555bcff6a163cf3fe7873862ad0698ab8bc9719500d1d37cdb7",
+      "size_class": "free",
+      "phase": 1,
+      "description": "3840x2160 at 30 fps, five seconds, H.264 plus AAC: the Ultra HD frame size, for decoders, thumbnailers and upload limits that choke on large frames.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 3840,
+        "height": 2160,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "profile": "High",
+        "level": "5.1",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 3840,
+        "height": 2160,
+        "duration": 5
+      },
+      "added_in": "1.14.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "mp4/50mb.mp4",
       "url": "https://loremfile.dev/mp4/50mb.mp4",
       "format": "mp4",
@@ -6653,6 +6746,99 @@
         "duration": 120
       },
       "added_in": "1.2.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp4/60fps-720p-5s.mp4",
+      "url": "https://loremfile.dev/mp4/60fps-720p-5s.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 2651820,
+      "sha256": "58a39c74f32184d248b33b856b091b35fe1c2257714ca58c645a9adf893b6ea2",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1280x720 at 60 fps, five seconds, H.264 plus AAC: twice the frame rate of the default sample, for players, frame-rate converters and timestamp code that assume 30.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 60.0,
+        "profile": "High",
+        "level": "3.2",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 1280,
+        "height": 720,
+        "duration": 5,
+        "fps": 60
+      },
+      "added_in": "1.14.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp4/720p-30s.mp4",
+      "url": "https://loremfile.dev/mp4/720p-30s.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 11839723,
+      "sha256": "9a607cda8ea1f2294f48d588ebd4ba0ee80e9d3e3072c0c1e88129eaf3bb8416",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1280x720 at 30 fps, thirty seconds, H.264 plus AAC. Long enough for seeking, buffering and progress-bar tests that a five-second clip cannot exercise.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 30000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 1280,
+        "height": 720,
+        "duration": 30
+      },
+      "added_in": "1.14.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -6836,6 +7022,100 @@
         "faststart": false
       },
       "added_in": "1.6.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp4/rotated-90-metadata-720p-5s.mp4",
+      "url": "https://loremfile.dev/mp4/rotated-90-metadata-720p-5s.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 1974574,
+      "sha256": "cecc01e9a2913f0f5eb2f795fbdcc4853dc954dddde8ff4586bb470c544b7785",
+      "size_class": "free",
+      "phase": 1,
+      "description": "The picture of mp4/720p-5s.mp4, still stored 1280x720, with a display matrix that tells the player to turn it 90 degrees clockwise, so it should play as portrait 720x1280. A player that ignores the matrix shows it sideways.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "profile": "High",
+        "rotation": 90,
+        "level": "3.1",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 1280,
+        "height": 720,
+        "duration": 5,
+        "rotation": 90
+      },
+      "added_in": "1.14.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp4/square-720x720-5s.mp4",
+      "url": "https://loremfile.dev/mp4/square-720x720-5s.mp4",
+      "format": "mp4",
+      "ext": "mp4",
+      "mime": "video/mp4",
+      "bytes": 1194426,
+      "sha256": "24a0090fb49bd26f155891f71e35bdad268cc4c41fd0889d0dcc602e1ee62345",
+      "size_class": "free",
+      "phase": 1,
+      "description": "720x720 at 30 fps, five seconds, H.264 plus AAC. A square frame, the shape social feeds use, for players and croppers that assume landscape.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 720,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "width": 720,
+        "height": 720,
+        "duration": 5
+      },
+      "added_in": "1.14.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -11349,6 +11629,95 @@
       "supersededBy": null
     },
     {
+      "path": "webm/1080p-10s-vp9.webm",
+      "url": "https://loremfile.dev/webm/1080p-10s-vp9.webm",
+      "format": "webm",
+      "ext": "webm",
+      "mime": "video/webm",
+      "bytes": 1419513,
+      "sha256": "16f36b9ad320462ae07158c6e6ef651d2f21c4d8692a0d5e2aea7bf863a8b84d",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1920x1080 at 30 fps, ten seconds, VP9 video with Opus audio: Full HD through a browser's VP9 path, for transcoders and bitrate ladders.",
+      "tags": [
+        "video",
+        "codec-vp9",
+        "codec-opus"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 10008,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1920,
+        "height": 1080,
+        "vcodec": "vp9",
+        "fps": 30.0,
+        "profile": "Profile 0",
+        "acodec": "opus",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "media_video.webm",
+      "generator_params": {
+        "width": 1920,
+        "height": 1080,
+        "duration": 10
+      },
+      "added_in": "1.14.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "webm/720p-5s-vp8.webm",
+      "url": "https://loremfile.dev/webm/720p-5s-vp8.webm",
+      "format": "webm",
+      "ext": "webm",
+      "mime": "video/webm",
+      "bytes": 653219,
+      "sha256": "c65a926de39f8897aa5d30671ac2b8bfb1309c497297946e830a4be28e7c8de3",
+      "size_class": "free",
+      "phase": 1,
+      "description": "1280x720 at 30 fps, five seconds, VP8 video with Vorbis audio: the codecs WebM started with, for players and converters that predate VP9 and Opus.",
+      "tags": [
+        "video"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5003,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "vp8",
+        "fps": 30.0,
+        "profile": "0",
+        "acodec": "vorbis",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "media_video.webm",
+      "generator_params": {
+        "width": 1280,
+        "height": 720,
+        "duration": 5,
+        "vcodec": "vp8"
+      },
+      "added_in": "1.14.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "webm/720p-5s-vp9.webm",
       "url": "https://loremfile.dev/webm/720p-5s-vp9.webm",
       "format": "webm",
@@ -11389,6 +11758,56 @@
         "duration": 5
       },
       "added_in": "1.2.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "webm/alpha-vp9-512x512-5s.webm",
+      "url": "https://loremfile.dev/webm/alpha-vp9-512x512-5s.webm",
+      "format": "webm",
+      "ext": "webm",
+      "mime": "video/webm",
+      "bytes": 514539,
+      "sha256": "03bd81d5d4cc3c94e34ae26a2d0b9b63d53e3ee2169e17ace3f967801dd11cfc",
+      "size_class": "free",
+      "phase": 1,
+      "description": "512x512 at 30 fps, five seconds, VP9 with an alpha plane and Opus audio. Alpha rises from fully transparent at the left edge to nearly opaque at the right: a player that keeps it shows the picture fading in, and one that drops it shows the whole frame.",
+      "tags": [
+        "video",
+        "codec-vp9",
+        "codec-opus",
+        "transparent"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5008,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 512,
+        "height": 512,
+        "vcodec": "vp9",
+        "fps": 30.0,
+        "profile": "Profile 0",
+        "acodec": "opus",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ],
+        "alpha": true,
+        "alpha_min": 0,
+        "alpha_max": 254
+      },
+      "generator": "media_video.webm",
+      "generator_params": {
+        "width": 512,
+        "height": 512,
+        "duration": 5,
+        "alpha": true
+      },
+      "added_in": "1.14.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
