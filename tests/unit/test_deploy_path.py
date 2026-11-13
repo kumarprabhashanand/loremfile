@@ -317,7 +317,8 @@ AFTER_LAUNCH = (
 
 
 def test_the_launch_set_still_adds_up() -> None:
-    catalogued = {f.path for f in CATALOG.fixtures()}
+    # An alias is the same file under a guessable name (docs/05 §8), so it is not a fixture here.
+    catalogued = {f.path for f in CATALOG.fixtures() if not f.alias_of}
     assert set(AFTER_LAUNCH) <= catalogued, "control: the post-launch rows are catalogued"
     assert len(catalogued) - len(AFTER_LAUNCH) + REMAINING_M37_M38 == LAUNCH_SET, (
         f"{len(catalogued)} catalogued less {len(AFTER_LAUNCH)} added after launch, plus "
@@ -333,9 +334,12 @@ def test_every_catalogued_fixture_is_in_the_manifest() -> None:
     manifest = json.loads((Path(__file__).resolve().parents[2] / "manifest.json").read_text())
     published = {e["path"] for e in manifest["fixtures"] if e.get("status", "active") == "active"}
     catalogued = {f.path for f in CATALOG.fixtures()}
+    files = {
+        p for p in published if not any(f.alias_of and f.path == p for f in CATALOG.fixtures())
+    }
 
     assert published == catalogued
-    assert len(published) - len(AFTER_LAUNCH) + REMAINING_M37_M38 == LAUNCH_SET
+    assert len(files) - len(AFTER_LAUNCH) + REMAINING_M37_M38 == LAUNCH_SET
     assert not [f.path for f in CATALOG.fixtures() if f.awaiting_publication]
     assert {f.path for f in CATALOG.fixtures() if f.expected_drift} <= published
 

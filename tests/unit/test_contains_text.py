@@ -22,7 +22,9 @@ from loremfile.validators import extract, load, validate
 
 CATALOG = Catalog.load()
 MANIFEST = Manifest.load()
-CONTAINING = sorted(f.path for f in CATALOG.fixtures() if f.contains_text)
+#: An alias carries its original's strings so its entry says the same, but only the original
+#: is made by the generator the strings come from, so only the original is held to them.
+CONTAINING = sorted(f.path for f in CATALOG.fixtures() if f.contains_text and not f.alias_of)
 build.load_generators()
 load()
 
@@ -112,7 +114,11 @@ def test_the_manifest_publishes_exactly_the_catalogs_strings() -> None:
         for entry in MANIFEST.active
         if "contains_text" in (entry.get("props") or {})
     }
-    assert published == {path: strings(path) for path in CONTAINING}
+    aliases = {f.path for f in CATALOG.fixtures() if f.alias_of and f.contains_text}
+    assert published == {path: strings(path) for path in [*CONTAINING, *sorted(aliases)]}
+    assert aliases, "control: an alias publishes its original's strings"
+    for alias in aliases:
+        assert published[alias] == published[CATALOG.by_path[alias].alias_of]
 
 
 # --- controls: each check above, watched failing ----------------------------------------
