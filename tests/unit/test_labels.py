@@ -156,7 +156,8 @@ def recommended(fmt: str) -> list[Fixture]:
     return [
         f
         for f in CATALOG.format_by_name[fmt].fixtures
-        if f.path in MANIFEST
+        if not f.alias_of
+        and f.path in MANIFEST
         and MANIFEST[f.path].get("status", "active") == "active"
         and not MANIFEST[f.path].get("supersededBy")
     ]
@@ -188,7 +189,7 @@ def test_the_labelled_pages_are_the_first_three_and_the_demand_formats() -> None
 def test_the_labelled_titles_and_descriptions_fit_and_say_test() -> None:
     for fmt in sorted(LABELLED_FORMATS):
         info = CATALOG.format_by_name[fmt]
-        served = [MANIFEST[f.path] for f in info.fixtures if f.path in MANIFEST]
+        served = [MANIFEST[f.path] for f in info.fixtures if f.path in MANIFEST and not f.alias_of]
         labels = page_labels(info, served)
         sizes = [MANIFEST[f.path]["bytes"] for f in recommended(fmt)]
         assert len(labels) == len(sizes), fmt
@@ -218,7 +219,7 @@ def test_tiffs_description_leads_with_its_big_endian_file() -> None:
     fixture first so the description's labels open with it; a demand title carries no labels
     since 2026-11-13, so the order now reaches the description alone."""
     info = CATALOG.format_by_name["tiff"]
-    served = [MANIFEST[f.path] for f in info.fixtures if f.path in MANIFEST]
+    served = [MANIFEST[f.path] for f in info.fixtures if f.path in MANIFEST and not f.alias_of]
     labels = page_labels(info, served)
     sizes = [MANIFEST[f.path]["bytes"] for f in recommended("tiff")]
     assert labels[0] == "16-bit big-endian"
@@ -323,7 +324,7 @@ def test_a_superseded_file_never_contributes_a_label() -> None:
             ]
         }
     )
-    served = [MANIFEST[f.path] for f in info.fixtures]
+    served = [MANIFEST[f.path] for f in info.fixtures if not f.alias_of]
     assert "old CMYK" not in page_labels(labelled, served)
     assert len(page_labels(labelled, served)) == len(recommended("jpg")) == 15
     unsuperseded = [

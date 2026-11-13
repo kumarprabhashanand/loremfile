@@ -73,7 +73,9 @@ def generate(path: str) -> bytes:
     return out if isinstance(out, bytes) else out.read_bytes()
 
 
-EVERY_MEDIA_FIXTURE = [p for p, f in CATALOG.by_path.items() if f.format in MEDIA_FORMATS]
+EVERY_MEDIA_FIXTURE = [
+    p for p, f in CATALOG.by_path.items() if f.format in MEDIA_FORMATS and not f.alias_of
+]
 
 
 @pytest.mark.parametrize("path", EVERY_MEDIA_FIXTURE)

@@ -210,9 +210,10 @@ def test_the_counts_leave_aliases_out(site: Path) -> None:
     index = json.loads((site / routes.format_index_key("pdf")).read_text(encoding="utf-8"))
     assert index["count"] == 20 and "pdf/sample.pdf" not in {e["path"] for e in index["fixtures"]}
     formats = json.loads((ROOT / "formats.json").read_text(encoding="utf-8"))["formats"]
-    assert sum(f["count"] for f in formats) == files, "formats.json"
+    assert sum(f["count"] for f in formats) == len(MANIFEST) - 75, "formats.json: no aliases"
     llms = (site / "llms-full.txt").read_text(encoding="utf-8")
-    assert "sample." not in llms.split("## Fixtures", 1)[1]
+    assert not re.search(r"^\| [a-z0-9]+/sample\.[a-z0-9]+ \|", llms, re.MULTILINE)
+    assert "| pdf/a4-3pages.pdf |" in llms, "control: the table lists the originals"
 
 
 def test_the_manifest_and_the_checksums_do_carry_them() -> None:

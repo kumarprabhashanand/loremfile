@@ -58,7 +58,7 @@ def refused(path: str, payload: bytes) -> str:
 
 
 def paths() -> list[str]:
-    return [f.path for f in CATALOG.fixtures() if f.format in {"ics", "vcf"}]
+    return [f.path for f in CATALOG.fixtures() if f.format in {"ics", "vcf"} and not f.alias_of]
 
 
 def test_the_calendar_and_contact_formats_are_catalogued() -> None:

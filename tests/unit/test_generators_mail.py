@@ -62,13 +62,13 @@ def local_paths() -> list[str]:
     return [
         f.path
         for f in CATALOG.fixtures()
-        if f.format in {"eml", "mbox"} and f.path not in NEEDS_PUBLISHED
+        if f.format in {"eml", "mbox"} and f.path not in NEEDS_PUBLISHED and not f.alias_of
     ]
 
 
 def test_the_mail_formats_are_catalogued() -> None:
     """Empty-set control: the parametrised tests below check nothing without these rows."""
-    paths = {f.path for f in CATALOG.fixtures() if f.format in {"eml", "mbox"}}
+    paths = {f.path for f in CATALOG.fixtures() if f.format in {"eml", "mbox"} and not f.alias_of}
     assert len(paths) == 3
     assert paths > NEEDS_PUBLISHED
 

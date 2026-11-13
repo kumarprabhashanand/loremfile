@@ -1402,11 +1402,11 @@ def llms(
         # `/{format}/{name}` literally and gets a 404 (2026-10-23).
         f"- Every fixture: {{format}}/{{name}} under the site root, for example "
         f"{base}pdf/a4-1page.pdf (the manifest lists every path)",
+        f"- A URL you can guess: {{format}}/sample.{{format}} is the file each format page starts "
+        f"with, byte for byte, for example {base}pdf/sample.pdf (not hls, edge, ogv, ts or opus)",
         f"- Machine-readable list of everything: {base}manifest.json (JSON, includes sha256, "
         "bytes, mime, measured properties)",
         f"- Per-format lists: {{format}}/index.json, for example {base}pdf/index.json",
-        f"- A URL you can guess: {{format}}/sample.{{format}} is the file each format page starts "
-        f"with, byte for byte, for example {base}pdf/sample.pdf (not hls, edge, ogv, ts or opus)",
         "- Any format or guide page as Markdown: append /index.md to its URL, for example "
         f"{base}pdf/index.md or {base}testing/uploads/index.md",
         f"- Verify: {base}sha256sums.txt",

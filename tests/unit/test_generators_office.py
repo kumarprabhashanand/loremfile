@@ -38,7 +38,7 @@ OOXML = ("docx/1page.docx", "xlsx/1sheet-10rows.xlsx", "pptx/1slide.pptx")
 EVERY_OFFICE_FIXTURE = [
     path
     for path, entry in CATALOG.by_path.items()
-    if entry.format in {"docx", "xlsx", "pptx", "rtf", "epub"}
+    if entry.format in {"docx", "xlsx", "pptx", "rtf", "epub"} and not entry.alias_of
 ]
 
 

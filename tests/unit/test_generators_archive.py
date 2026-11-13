@@ -70,7 +70,7 @@ def refused(path: str, payload: bytes) -> str:
 
 
 def archive_fixtures() -> list[str]:
-    return [f.path for f in CATALOG.fixtures() if f.format in ARCHIVE_FORMATS]
+    return [f.path for f in CATALOG.fixtures() if f.format in ARCHIVE_FORMATS and not f.alias_of]
 
 
 def buildable() -> list[str]:
