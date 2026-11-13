@@ -1,0 +1,251 @@
+{
+ "controls": {
+  "go/image/gif": {
+   "go-1.26": {
+    "reads:gif/static-256x256.gif": "ok",
+    "zero-byte:gif/static-256x256.gif": "ok"
+   },
+   "go-1.27": {
+    "reads:gif/static-256x256.gif": "ok",
+    "zero-byte:gif/static-256x256.gif": "ok"
+   }
+  }
+ },
+ "files": [
+  {
+   "bytes": 200,
+   "cells": {
+    "go/image/gif": {
+     "go-1.26": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 4,
+       "width": 4
+      }
+     },
+     "go-1.27": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 4,
+       "width": 4
+      }
+     }
+    }
+   },
+   "edge_outcome": "varies",
+   "expect": {},
+   "kind": "edge",
+   "path": "edge/gif-zip-polyglot.gif",
+   "role": "intended",
+   "sha256": "9b282e8b0b248bcc4bfbd2e9cc45013c5e13f7e9b0bd9f281719ca244d3ee897",
+   "url": "https://loremfile.dev/edge/gif-zip-polyglot.gif"
+  },
+  {
+   "bytes": 43,
+   "cells": {
+    "go/image/gif": {
+     "go-1.26": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 1,
+       "width": 1
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 1,
+       "width": 1
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 1,
+    "height": 1,
+    "width": 1
+   },
+   "kind": "ordinary",
+   "path": "gif/1x1.gif",
+   "role": "ordinary",
+   "sha256": "52aa9dc78b0daa1ea5bdec0d17e8acd7a4ea0c237d5c5a2398fcf530a62e9ff0",
+   "url": "https://loremfile.dev/gif/1x1.gif"
+  },
+  {
+   "bytes": 37550,
+   "cells": {
+    "go/image/gif": {
+     "go-1.26": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 10,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 10,
+       "height": 256,
+       "width": 256
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 10,
+    "height": 256,
+    "width": 256
+   },
+   "kind": "ordinary",
+   "path": "gif/animated-10frames-256x256.gif",
+   "role": "ordinary",
+   "sha256": "064f3026cf7096dea94ff7c948765d1c3972d6adb69cc0ac05069e202f1aaeb5",
+   "url": "https://loremfile.dev/gif/animated-10frames-256x256.gif"
+  },
+  {
+   "bytes": 4904,
+   "cells": {
+    "go/image/gif": {
+     "go-1.26": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 1,
+    "height": 256,
+    "width": 256
+   },
+   "kind": "ordinary",
+   "path": "gif/static-256x256.gif",
+   "role": "ordinary",
+   "sha256": "0b32bb43966a24fe5a5ca44e2cbdd05c27bed2a2ef697e8d10bea13e372cbe91",
+   "url": "https://loremfile.dev/gif/static-256x256.gif"
+  },
+  {
+   "bytes": 3743,
+   "cells": {
+    "go/image/gif": {
+     "go-1.26": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 1,
+    "height": 256,
+    "width": 256
+   },
+   "kind": "ordinary",
+   "path": "gif/transparent-256x256.gif",
+   "role": "ordinary",
+   "sha256": "6c96cb6b3236406d895966db3ae3e0e07d85586e74236680788c6ffa2e3c0a58",
+   "url": "https://loremfile.dev/gif/transparent-256x256.gif"
+  }
+ ],
+ "format": "gif",
+ "no_reader": [
+  "python"
+ ],
+ "readers": [
+  {
+   "docs": "https://pkg.go.dev/image/gif",
+   "id": "go/image/gif",
+   "module": "image/gif",
+   "props": [
+    "width",
+    "height",
+    "frames"
+   ],
+   "runtime": "go"
+  }
+ ],
+ "runtimes": [
+  "python-3.11",
+  "python-3.12",
+  "python-3.13",
+  "python-3.14",
+  "python-3.15",
+  "go-1.26",
+  "go-1.27"
+ ],
+ "skipped": []
+}

@@ -1,0 +1,801 @@
+{
+ "controls": {
+  "go/encoding/json": {
+   "go-1.26": {
+    "reads:json/people-10.json": "ok",
+    "zero-byte:json/people-10.json": "ok"
+   },
+   "go-1.27": {
+    "reads:json/people-10.json": "ok",
+    "zero-byte:json/people-10.json": "ok"
+   }
+  },
+  "python/json": {
+   "python-3.11": {
+    "reads:json/people-10.json": "ok",
+    "zero-byte:json/people-10.json": "ok"
+   },
+   "python-3.12": {
+    "reads:json/people-10.json": "ok",
+    "zero-byte:json/people-10.json": "ok"
+   },
+   "python-3.13": {
+    "reads:json/people-10.json": "ok",
+    "zero-byte:json/people-10.json": "ok"
+   },
+   "python-3.14": {
+    "reads:json/people-10.json": "ok",
+    "zero-byte:json/people-10.json": "ok"
+   },
+   "python-3.15": {
+    "reads:json/people-10.json": "ok",
+    "zero-byte:json/people-10.json": "ok"
+   }
+  }
+ },
+ "files": [
+  {
+   "bytes": 80,
+   "cells": {
+    "go/encoding/json": {
+     "go-1.26": {
+      "error": "invalid character 'ï' looking for beginning of value",
+      "error_type": "json.SyntaxError",
+      "outcome": "refuses"
+     },
+     "go-1.27": {
+      "error": "invalid character '\\ufeff' looking for beginning of value",
+      "error_type": "json.SyntaxError",
+      "outcome": "refuses"
+     }
+    },
+    "python/json": {
+     "python-3.11": {
+      "error": "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)",
+      "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     },
+     "python-3.12": {
+      "error": "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)",
+      "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     },
+     "python-3.13": {
+      "error": "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)",
+      "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     },
+     "python-3.14": {
+      "error": "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)",
+      "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     },
+     "python-3.15": {
+      "error": "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)",
+      "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     }
+    }
+   },
+   "edge_outcome": "varies",
+   "expect": {},
+   "kind": "edge",
+   "path": "edge/json-bom.json",
+   "role": "intended",
+   "sha256": "f5f8c80d2a1ae06f3688cee56c6ee09eed3586e9c41b17c5af272d0411ca9b6a",
+   "url": "https://loremfile.dev/edge/json-bom.json"
+  },
+  {
+   "bytes": 64,
+   "cells": {
+    "go/encoding/json": {
+     "go-1.26": {
+      "error": "invalid character ']' looking for beginning of value",
+      "error_type": "json.SyntaxError",
+      "outcome": "refuses"
+     },
+     "go-1.27": {
+      "error": "invalid character ']' looking for beginning of value",
+      "error_type": "json.SyntaxError",
+      "outcome": "refuses"
+     }
+    },
+    "python/json": {
+     "python-3.11": {
+      "error": "Expecting value: line 4 column 25 (char 59)",
+      "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     },
+     "python-3.12": {
+      "error": "Expecting value: line 4 column 25 (char 59)",
+      "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     },
+     "python-3.13": {
+      "error": "Illegal trailing comma before end of array: line 4 column 24 (char 58)",
+      "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     },
+     "python-3.14": {
+      "error": "Illegal trailing comma before end of array: line 4 column 24 (char 58)",
+      "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     },
+     "python-3.15": {
+      "error": "Illegal trailing comma before end of array: line 4 column 24 (char 58)",
+      "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     }
+    }
+   },
+   "edge_outcome": "must-fail",
+   "expect": {},
+   "kind": "edge",
+   "path": "edge/json-trailing-comma.json",
+   "role": "intended",
+   "sha256": "1530058a5dcb98221617a8ecfcecaf43a488bd4fb740d39a5a5fbc26a7c5f042",
+   "url": "https://loremfile.dev/edge/json-trailing-comma.json"
+  },
+  {
+   "bytes": 0,
+   "cells": {
+    "go/encoding/json": {
+     "go-1.26": {
+      "error": "unexpected end of JSON input",
+      "error_type": "json.SyntaxError",
+      "outcome": "refuses"
+     },
+     "go-1.27": {
+      "error": "unexpected end of JSON input",
+      "error_type": "json.SyntaxError",
+      "outcome": "refuses"
+     }
+    },
+    "python/json": {
+     "python-3.11": {
+      "error": "Expecting value: line 1 column 1 (char 0)",
+      "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     },
+     "python-3.12": {
+      "error": "Expecting value: line 1 column 1 (char 0)",
+      "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     },
+     "python-3.13": {
+      "error": "Expecting value: line 1 column 1 (char 0)",
+      "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     },
+     "python-3.14": {
+      "error": "Expecting value: line 1 column 1 (char 0)",
+      "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     },
+     "python-3.15": {
+      "error": "Expecting value: line 1 column 1 (char 0)",
+      "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     }
+    }
+   },
+   "edge_outcome": "must-fail",
+   "expect": {},
+   "kind": "edge",
+   "path": "edge/zero-byte.json",
+   "role": "intended",
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "url": "https://loremfile.dev/edge/zero-byte.json"
+  },
+  {
+   "bytes": 9996549,
+   "cells": {
+    "go/encoding/json": {
+     "go-1.26": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 19368,
+       "top_type": "array"
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 19368,
+       "top_type": "array"
+      }
+     }
+    },
+    "python/json": {
+     "python-3.11": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 19368,
+       "top_type": "array"
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 19368,
+       "top_type": "array"
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 19368,
+       "top_type": "array"
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 19368,
+       "top_type": "array"
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 19368,
+       "top_type": "array"
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "items": 19368,
+    "top_type": "array"
+   },
+   "kind": "ordinary",
+   "path": "json/10mb.json",
+   "role": "ordinary",
+   "sha256": "1f68350e3e19ab908209cf0b8847098a8a1b195f42098e469bdfafdec9ea2cdd",
+   "url": "https://loremfile.dev/json/10mb.json"
+  },
+  {
+   "bytes": 997720,
+   "cells": {
+    "go/encoding/json": {
+     "go-1.26": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1942,
+       "top_type": "array"
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1942,
+       "top_type": "array"
+      }
+     }
+    },
+    "python/json": {
+     "python-3.11": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1942,
+       "top_type": "array"
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1942,
+       "top_type": "array"
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1942,
+       "top_type": "array"
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1942,
+       "top_type": "array"
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1942,
+       "top_type": "array"
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "items": 1942,
+    "top_type": "array"
+   },
+   "kind": "ordinary",
+   "path": "json/1mb.json",
+   "role": "ordinary",
+   "sha256": "3ed7ca2999e2dbf99c56e11b0e950e6b524919c6ca8370180fcb00a70d392c3c",
+   "url": "https://loremfile.dev/json/1mb.json"
+  },
+  {
+   "bytes": 708,
+   "cells": {
+    "go/encoding/json": {
+     "go-1.26": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 21,
+       "top_type": "object"
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 21,
+       "top_type": "object"
+      }
+     }
+    },
+    "python/json": {
+     "python-3.11": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 21,
+       "top_type": "object"
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 21,
+       "top_type": "object"
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 21,
+       "top_type": "object"
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 21,
+       "top_type": "object"
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 21,
+       "top_type": "object"
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "items": 21,
+    "top_type": "object"
+   },
+   "kind": "ordinary",
+   "path": "json/all-types.json",
+   "role": "ordinary",
+   "sha256": "ad8102e4fb3e348ccd991bb1426cc8b233e83a4f4568a798f5314fc7001a8baf",
+   "url": "https://loremfile.dev/json/all-types.json"
+  },
+  {
+   "bytes": 1380,
+   "cells": {
+    "go/encoding/json": {
+     "go-1.26": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1,
+       "top_type": "object"
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1,
+       "top_type": "object"
+      }
+     }
+    },
+    "python/json": {
+     "python-3.11": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1,
+       "top_type": "object"
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1,
+       "top_type": "object"
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1,
+       "top_type": "object"
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1,
+       "top_type": "object"
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1,
+       "top_type": "object"
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "items": 1,
+    "top_type": "object"
+   },
+   "kind": "ordinary",
+   "path": "json/nested-100-levels.json",
+   "role": "ordinary",
+   "sha256": "ddb1c93ed61e7cdead0f4de82c7aea553e89c0c25d16e6d88bd1f1b7a861d001",
+   "url": "https://loremfile.dev/json/nested-100-levels.json"
+  },
+  {
+   "bytes": 5186,
+   "cells": {
+    "go/encoding/json": {
+     "go-1.26": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 10,
+       "top_type": "array"
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 10,
+       "top_type": "array"
+      }
+     }
+    },
+    "python/json": {
+     "python-3.11": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 10,
+       "top_type": "array"
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 10,
+       "top_type": "array"
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 10,
+       "top_type": "array"
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 10,
+       "top_type": "array"
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 10,
+       "top_type": "array"
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "items": 10,
+    "top_type": "array"
+   },
+   "kind": "ordinary",
+   "path": "json/people-10.json",
+   "role": "ordinary",
+   "sha256": "f7d7ab0e1247de87ab92d0bfe52166cc9b56a5e18bdb06f559759762a64bfad1",
+   "url": "https://loremfile.dev/json/people-10.json"
+  },
+  {
+   "bytes": 512687,
+   "cells": {
+    "go/encoding/json": {
+     "go-1.26": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1000,
+       "top_type": "array"
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1000,
+       "top_type": "array"
+      }
+     }
+    },
+    "python/json": {
+     "python-3.11": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1000,
+       "top_type": "array"
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1000,
+       "top_type": "array"
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1000,
+       "top_type": "array"
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1000,
+       "top_type": "array"
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1000,
+       "top_type": "array"
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "items": 1000,
+    "top_type": "array"
+   },
+   "kind": "ordinary",
+   "path": "json/people-1000.json",
+   "role": "ordinary",
+   "sha256": "31eaccbd1d079346d0aa2abf75d6b4fdfedbec298b04ed1dbf13f10e3a5a62d8",
+   "url": "https://loremfile.dev/json/people-1000.json"
+  }
+ ],
+ "format": "json",
+ "no_reader": [],
+ "readers": [
+  {
+   "docs": "https://pkg.go.dev/encoding/json",
+   "id": "go/encoding/json",
+   "module": "encoding/json",
+   "props": [
+    "top_type",
+    "items"
+   ],
+   "runtime": "go"
+  },
+  {
+   "docs": "https://docs.python.org/3/library/json.html",
+   "id": "python/json",
+   "module": "json",
+   "props": [
+    "top_type",
+    "items"
+   ],
+   "runtime": "python"
+  }
+ ],
+ "runtimes": [
+  "python-3.11",
+  "python-3.12",
+  "python-3.13",
+  "python-3.14",
+  "python-3.15",
+  "go-1.26",
+  "go-1.27"
+ ],
+ "skipped": []
+}

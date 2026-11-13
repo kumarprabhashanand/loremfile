@@ -1,6 +1,6 @@
 {
   "checked": "2026-11-13",
-  "policy": "Latest of everything, versions recorded, never pinned: the question is what a fresh install does (docs/20 section 2).",
+  "policy": "Latest of everything, versions recorded, never pinned: the question is what a fresh install does (docs/07 §8).",
   "runtimes": [
     {
       "id": "python",

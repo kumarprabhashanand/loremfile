@@ -1,7 +1,7 @@
 """Fetch each in-scope file from production, once, one at a time, and check its SHA-256.
 
 A file that will not fetch, or whose bytes do not match the committed manifest, is recorded as
-failed and is never handed to a reader (docs/20 section 5).
+failed and is never handed to a reader (docs/07 §8).
 """
 
 from __future__ import annotations

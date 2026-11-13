@@ -1,7 +1,7 @@
 # compat/
 
 How each runtime's standard library reads our files. The scoreboard is at
-<https://loremfile.dev/compat>; the reasoning is `docs/20-compat.md` and ADR-033. This file is the
+<https://loremfile.dev/compat>; the reasoning is `docs/07-website.md` §8 and ADR-033. This file is the
 adapter contract and how to add a reader.
 
 Nothing here imports `src/loremfile`, runs in the toolchain image, touches the lock or can fail a

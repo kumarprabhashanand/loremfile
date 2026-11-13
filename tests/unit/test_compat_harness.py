@@ -1,4 +1,4 @@
-"""The /compat harness, driven against fake adapters (compat/harness, docs/20).
+"""The /compat harness, driven against fake adapters (compat/harness, docs/07 §8).
 
 Each outcome is made to happen and watched, including a hang and a crash, because a harness that
 cannot report `crashes` reads a dead adapter as a quiet one. The corpus rules are held against the

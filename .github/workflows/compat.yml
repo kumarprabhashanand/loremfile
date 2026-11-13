@@ -1,4 +1,4 @@
-# /compat: how standard libraries read our files (docs/20).
+# /compat: how standard libraries read our files (docs/07 §8).
 #
 # One job fetches the corpus from production and shares it; one job per runtime version gives it
 # to that version's readers; a last job merges the parts into compat/results/. Never a required

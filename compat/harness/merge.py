@@ -1,6 +1,6 @@
 """Combine one run's parts into `results/`: sorted keys, no timestamps, one file per format.
 
-A partial run must not publish (docs/20 section 5): a file that did not fetch, or whose bytes
+A partial run must not publish (docs/07 §8): a file that did not fetch, or whose bytes
 did not match, is `not-run` in every cell; more than three such files and nothing is written.
 """
 

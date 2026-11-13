@@ -1,0 +1,616 @@
+{
+ "controls": {
+  "go/image/png": {
+   "go-1.26": {
+    "reads:png/100x100.png": "ok",
+    "zero-byte:png/100x100.png": "ok"
+   },
+   "go-1.27": {
+    "reads:png/100x100.png": "ok",
+    "zero-byte:png/100x100.png": "ok"
+   }
+  }
+ },
+ "files": [
+  {
+   "bytes": 1387,
+   "cells": {
+    "go/image/png": {
+     "go-1.26": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "height": 100,
+       "width": 100
+      }
+     },
+     "go-1.27": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "height": 100,
+       "width": 100
+      }
+     }
+    }
+   },
+   "edge_outcome": "varies",
+   "expect": {},
+   "kind": "edge",
+   "path": "edge/png-with-pdf-extension.pdf",
+   "role": "intended",
+   "sha256": "aad08c4f806eefeccf9bcec1430b4fe2a55ee176ff154c3999541f971b178b56",
+   "url": "https://loremfile.dev/edge/png-with-pdf-extension.pdf"
+  },
+  {
+   "bytes": 0,
+   "cells": {
+    "go/image/png": {
+     "go-1.26": {
+      "error": "unexpected EOF",
+      "error_type": "errors.errorString",
+      "outcome": "refuses"
+     },
+     "go-1.27": {
+      "error": "unexpected EOF",
+      "error_type": "errors.errorString",
+      "outcome": "refuses"
+     }
+    }
+   },
+   "edge_outcome": "must-fail",
+   "expect": {},
+   "kind": "edge",
+   "path": "edge/zero-byte.png",
+   "role": "intended",
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "url": "https://loremfile.dev/edge/zero-byte.png"
+  },
+  {
+   "bytes": 1387,
+   "cells": {
+    "go/image/png": {
+     "go-1.26": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 100,
+       "width": 100
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 100,
+       "width": 100
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 1,
+    "height": 100,
+    "width": 100
+   },
+   "kind": "ordinary",
+   "path": "png/100x100.png",
+   "role": "ordinary",
+   "sha256": "aad08c4f806eefeccf9bcec1430b4fe2a55ee176ff154c3999541f971b178b56",
+   "url": "https://loremfile.dev/png/100x100.png"
+  },
+  {
+   "bytes": 10015195,
+   "cells": {
+    "go/image/png": {
+     "go-1.26": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 3255,
+       "width": 1024
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 3255,
+       "width": 1024
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 1,
+    "height": 3255,
+    "width": 1024
+   },
+   "kind": "ordinary",
+   "path": "png/10mb.png",
+   "role": "ordinary",
+   "sha256": "ab92f1d41363a0a376c40f7f10f4e1c07fb9c7652daca1cc95bec98b7a76eec8",
+   "url": "https://loremfile.dev/png/10mb.png"
+  },
+  {
+   "bytes": 2357,
+   "cells": {
+    "go/image/png": {
+     "go-1.26": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 256,
+       "width": 256
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 256,
+       "width": 256
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 1,
+    "height": 256,
+    "width": 256
+   },
+   "kind": "ordinary",
+   "path": "png/16bit-256x256.png",
+   "role": "ordinary",
+   "sha256": "3a0fcfd26189392b33c3dbb3ea753e189d4b2471ce33eba3e472ec31ae608e46",
+   "url": "https://loremfile.dev/png/16bit-256x256.png"
+  },
+  {
+   "bytes": 11110,
+   "cells": {
+    "go/image/png": {
+     "go-1.26": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 1080,
+       "width": 1920
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 1080,
+       "width": 1920
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 1,
+    "height": 1080,
+    "width": 1920
+   },
+   "kind": "ordinary",
+   "path": "png/1920x1080.png",
+   "role": "ordinary",
+   "sha256": "94b8e6784b271a17691abde4552c2886876ce3d5861d6fd4df860f110ce4e85d",
+   "url": "https://loremfile.dev/png/1920x1080.png"
+  },
+  {
+   "bytes": 1000147,
+   "cells": {
+    "go/image/png": {
+     "go-1.26": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 325,
+       "width": 1024
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 325,
+       "width": 1024
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 1,
+    "height": 325,
+    "width": 1024
+   },
+   "kind": "ordinary",
+   "path": "png/1mb.png",
+   "role": "ordinary",
+   "sha256": "fa5e0d23a88567931ecf49361fe7643c9e5282d7cbe80a99538d5d9fdec26bf2",
+   "url": "https://loremfile.dev/png/1mb.png"
+  },
+  {
+   "bytes": 69,
+   "cells": {
+    "go/image/png": {
+     "go-1.26": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 1,
+       "width": 1
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 1,
+       "width": 1
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 1,
+    "height": 1,
+    "width": 1
+   },
+   "kind": "ordinary",
+   "path": "png/1x1.png",
+   "role": "ordinary",
+   "sha256": "c47dd9465c00e9a0c8b85e9ea58d3034a0d23b9cf926113602f3460752a4eb96",
+   "url": "https://loremfile.dev/png/1x1.png"
+  },
+  {
+   "bytes": 32365,
+   "cells": {
+    "go/image/png": {
+     "go-1.26": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 2160,
+       "width": 3840
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 2160,
+       "width": 3840
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 1,
+    "height": 2160,
+    "width": 3840
+   },
+   "kind": "ordinary",
+   "path": "png/3840x2160.png",
+   "role": "ordinary",
+   "sha256": "a05e0f3750fbd995943cc3bf7111fca7e7d4337494b7b3a57f4f6fb92ba07b63",
+   "url": "https://loremfile.dev/png/3840x2160.png"
+  },
+  {
+   "bytes": 4208,
+   "cells": {
+    "go/image/png": {
+     "go-1.26": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 480,
+       "width": 640
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 480,
+       "width": 640
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 1,
+    "height": 480,
+    "width": 640
+   },
+   "kind": "ordinary",
+   "path": "png/640x480.png",
+   "role": "ordinary",
+   "sha256": "5329c9114fbac502ca9dd40c79414c1ba1c43f90e26da1f0f8edbe546a3fb4ff",
+   "url": "https://loremfile.dev/png/640x480.png"
+  },
+  {
+   "bytes": 9083,
+   "cells": {
+    "go/image/png": {
+     "go-1.26": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 128,
+       "width": 128
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 128,
+       "width": 128
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 10,
+    "height": 128,
+    "width": 128
+   },
+   "kind": "ordinary",
+   "path": "png/animated-apng-10frames-128x128.png",
+   "role": "ordinary",
+   "sha256": "e4f0fcbc246f86af0b366de27935e75610ffad8153f8db94c04d7d03a4131068",
+   "url": "https://loremfile.dev/png/animated-apng-10frames-128x128.png"
+  },
+  {
+   "bytes": 1881,
+   "cells": {
+    "go/image/png": {
+     "go-1.26": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 512,
+       "width": 512
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 512,
+       "width": 512
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 1,
+    "height": 512,
+    "width": 512
+   },
+   "kind": "ordinary",
+   "path": "png/grayscale-512x512.png",
+   "role": "ordinary",
+   "sha256": "ecc0db02f7b421e5007b4b589f39058ed24c2372646ea2b152d754c67913dc16",
+   "url": "https://loremfile.dev/png/grayscale-512x512.png"
+  },
+  {
+   "bytes": 999,
+   "cells": {
+    "go/image/png": {
+     "go-1.26": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 256,
+       "width": 256
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 256,
+       "width": 256
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 1,
+    "height": 256,
+    "width": 256
+   },
+   "kind": "ordinary",
+   "path": "png/indexed-8bit-256x256.png",
+   "role": "ordinary",
+   "sha256": "64eee1ae41cb2677a758beba6ac2ede1b089235dfc48eac7205e4392061a474c",
+   "url": "https://loremfile.dev/png/indexed-8bit-256x256.png"
+  },
+  {
+   "bytes": 9124,
+   "cells": {
+    "go/image/png": {
+     "go-1.26": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 512,
+       "width": 512
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 512,
+       "width": 512
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 1,
+    "height": 512,
+    "width": 512
+   },
+   "kind": "ordinary",
+   "path": "png/interlaced-512x512.png",
+   "role": "ordinary",
+   "sha256": "53375a62e87dbd0305bb9ab18db9b4411e70be8b01875221000e7b60aa9ec8bd",
+   "url": "https://loremfile.dev/png/interlaced-512x512.png"
+  },
+  {
+   "bytes": 3231,
+   "cells": {
+    "go/image/png": {
+     "go-1.26": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 256,
+       "width": 256
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "height": 256,
+       "width": 256
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "frames": 1,
+    "height": 256,
+    "width": 256
+   },
+   "kind": "ordinary",
+   "path": "png/transparent-256x256.png",
+   "role": "ordinary",
+   "sha256": "7a1101a249d2324d0ce7629b2bb0eea0dc08dbc91b7c71454e2a2e341c754367",
+   "url": "https://loremfile.dev/png/transparent-256x256.png"
+  }
+ ],
+ "format": "png",
+ "no_reader": [
+  "python"
+ ],
+ "readers": [
+  {
+   "docs": "https://pkg.go.dev/image/png",
+   "id": "go/image/png",
+   "module": "image/png",
+   "props": [
+    "width",
+    "height"
+   ],
+   "runtime": "go"
+  }
+ ],
+ "runtimes": [
+  "python-3.11",
+  "python-3.12",
+  "python-3.13",
+  "python-3.14",
+  "python-3.15",
+  "go-1.26",
+  "go-1.27"
+ ],
+ "skipped": []
+}

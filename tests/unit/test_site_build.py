@@ -767,7 +767,11 @@ def test_twins_are_markdown_and_listed_nowhere_but_one_llms_line(
 ) -> None:
     twins = [key for key in keys if key.startswith("_formats/") and key.endswith(".md")]
     assert {"_formats/jpg.md", "_formats/testing/uploads.md"} <= set(twins)
-    assert len(twins) == len({p.split("/", 1)[0] for p in fixtures()}) + 3
+    compat_pages = 1 + len(
+        json.loads((ROOT / "compat" / "readers.yaml").read_text())["scope"]["formats"]
+    )
+    assert compat_pages == 13, "control: /compat and one page for each of the twelve formats"
+    assert len(twins) == len({p.split("/", 1)[0] for p in fixtures()}) + 3 + compat_pages
     for key in twins:
         assert routes.content_type(key) == "text/markdown; charset=utf-8"
     for index in ("sitemap.xml", "search-index.json"):
@@ -805,7 +809,15 @@ def test_every_advertised_twin_exists_in_the_build(site: Path, keys: dict[str, P
     pages = {key: text(site, key) for key in keys if routes.is_page(key)}
     advertising = {key for key, html_text in pages.items() if MARKDOWN_ALTERNATE.search(html_text)}
     formats = {p.split("/", 1)[0] for p in fixtures()}
-    assert formats | {"testing/uploads", "testing/parsers", "testing/media-playback"} == advertising
+    compat = {
+        "compat",
+        *(
+            f"compat/{f}"
+            for f in json.loads((ROOT / "compat" / "readers.yaml").read_text())["scope"]["formats"]
+        ),
+    }
+    testing = {"testing/uploads", "testing/parsers", "testing/media-playback"}
+    assert formats | testing | compat == advertising
     assert missing_twins(pages, set(keys)) == []
 
 

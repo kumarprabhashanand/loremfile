@@ -1,0 +1,375 @@
+{
+ "controls": {
+  "go/archive/tar": {
+   "go-1.26": {
+    "reads:tar/3-text-files.tar": "ok",
+    "truncated:tar/3-text-files.tar": "ok"
+   },
+   "go-1.27": {
+    "reads:tar/3-text-files.tar": "ok",
+    "truncated:tar/3-text-files.tar": "ok"
+   }
+  },
+  "python/tarfile": {
+   "python-3.11": {
+    "reads:tar/3-text-files.tar": "ok",
+    "zero-byte:tar/3-text-files.tar": "ok"
+   },
+   "python-3.12": {
+    "reads:tar/3-text-files.tar": "ok",
+    "zero-byte:tar/3-text-files.tar": "ok"
+   },
+   "python-3.13": {
+    "reads:tar/3-text-files.tar": "ok",
+    "zero-byte:tar/3-text-files.tar": "ok"
+   },
+   "python-3.14": {
+    "reads:tar/3-text-files.tar": "ok",
+    "zero-byte:tar/3-text-files.tar": "ok"
+   },
+   "python-3.15": {
+    "reads:tar/3-text-files.tar": "ok",
+    "zero-byte:tar/3-text-files.tar": "ok"
+   }
+  }
+ },
+ "files": [
+  {
+   "bytes": 10240,
+   "cells": {
+    "go/archive/tar": {
+     "go-1.26": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2812
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2812
+      }
+     }
+    },
+    "python/tarfile": {
+     "python-3.11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2812
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2812
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2812
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2812
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2812
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "directories": 0,
+    "entries": 3,
+    "uncompressed_bytes": 2812
+   },
+   "kind": "ordinary",
+   "path": "tar/3-text-files.tar",
+   "role": "ordinary",
+   "sha256": "151c9747df1ec4e3aca336c53827db51359bf906b58d5605f9973bcc51229ca6",
+   "url": "https://loremfile.dev/tar/3-text-files.tar"
+  },
+  {
+   "bytes": 1152,
+   "cells": {
+    "go/archive/tar": {
+     "go-1.26": {
+      "error": "archive/tar: invalid tar header",
+      "error_type": "errors.errorString",
+      "outcome": "refuses"
+     },
+     "go-1.27": {
+      "error": "archive/tar: invalid tar header",
+      "error_type": "errors.errorString",
+      "outcome": "refuses"
+     }
+    },
+    "python/tarfile": {
+     "python-3.11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2705
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2705
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2705
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2705
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2705
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "directories": 0,
+    "entries": 3,
+    "uncompressed_bytes": 2705
+   },
+   "kind": "ordinary",
+   "path": "tar/3-text-files.tar.gz",
+   "role": "ordinary",
+   "sha256": "1c202077fc9ef67d96a3028942ef8d3caa0acfe2e8ab14421ed94d6723676ff7",
+   "url": "https://loremfile.dev/tar/3-text-files.tar.gz"
+  },
+  {
+   "bytes": 1268,
+   "cells": {
+    "go/archive/tar": {
+     "go-1.26": {
+      "error": "archive/tar: invalid tar header",
+      "error_type": "errors.errorString",
+      "outcome": "refuses"
+     },
+     "go-1.27": {
+      "error": "archive/tar: invalid tar header",
+      "error_type": "errors.errorString",
+      "outcome": "refuses"
+     }
+    },
+    "python/tarfile": {
+     "python-3.11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2905
+      }
+     },
+     "python-3.12": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2905
+      }
+     },
+     "python-3.13": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2905
+      }
+     },
+     "python-3.14": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2905
+      }
+     },
+     "python-3.15": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2905
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "directories": 0,
+    "entries": 3,
+    "uncompressed_bytes": 2905
+   },
+   "kind": "ordinary",
+   "path": "tar/3-text-files.tar.xz",
+   "role": "ordinary",
+   "sha256": "223207bb0929a4bada3cc0d3d95e2e1637c5f2dc11ec3655790c24fa492bda4f",
+   "url": "https://loremfile.dev/tar/3-text-files.tar.xz"
+  }
+ ],
+ "format": "tar",
+ "no_reader": [],
+ "readers": [
+  {
+   "docs": "https://pkg.go.dev/archive/tar",
+   "id": "go/archive/tar",
+   "module": "archive/tar",
+   "props": [
+    "entries",
+    "directories",
+    "uncompressed_bytes"
+   ],
+   "runtime": "go"
+  },
+  {
+   "docs": "https://docs.python.org/3/library/tarfile.html",
+   "id": "python/tarfile",
+   "module": "tarfile",
+   "props": [
+    "entries",
+    "directories",
+    "uncompressed_bytes"
+   ],
+   "runtime": "python"
+  }
+ ],
+ "runtimes": [
+  "python-3.11",
+  "python-3.12",
+  "python-3.13",
+  "python-3.14",
+  "python-3.15",
+  "go-1.26",
+  "go-1.27"
+ ],
+ "skipped": []
+}

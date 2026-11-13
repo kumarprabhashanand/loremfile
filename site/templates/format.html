@@ -55,6 +55,9 @@
 </table>
 </div>
 <p>Every {{ label }} file in one command, each checked against its hash: <code>npx loremfile get --format {{ format }}</code>, or <code>loremfile get --format {{ format }}</code> after <code>pip install loremfile</code>.</p>
+{% if compat %}
+<p>How standard libraries read these files: <a href="/compat/{{ format }}">{{ label }} on the compatibility scoreboard</a>.</p>
+{% endif %}
 {% if removed %}
 
 <h2 id="removed">Removed</h2>

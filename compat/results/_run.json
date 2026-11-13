@@ -1,0 +1,31 @@
+{
+ "agent": "loremfile-compat/1 (+https://loremfile.dev/status)",
+ "catalog_version": "1.15.1",
+ "date": "2026-11-13",
+ "failed_files": {},
+ "harness": "1",
+ "run_id": "43511056811",
+ "runtimes": {
+  "go-1.26": {
+   "resolved": "1.26.11"
+  },
+  "go-1.27": {
+   "resolved": "1.27.4"
+  },
+  "python-3.11": {
+   "resolved": "3.11.18"
+  },
+  "python-3.12": {
+   "resolved": "3.12.16"
+  },
+  "python-3.13": {
+   "resolved": "3.13.18"
+  },
+  "python-3.14": {
+   "resolved": "3.14.10"
+  },
+  "python-3.15": {
+   "resolved": "3.15.2"
+  }
+ }
+}

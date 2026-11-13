@@ -1,0 +1,103 @@
+{
+ "controls": {
+  "go/crypto/x509": {
+   "go-1.26": {
+    "reads:der/self-signed-ed25519-cert.der": "ok",
+    "reads:pem/self-signed-ed25519-cert.pem": "ok",
+    "zero-byte:der/self-signed-ed25519-cert.der": "ok",
+    "zero-byte:pem/self-signed-ed25519-cert.pem": "ok"
+   },
+   "go-1.27": {
+    "reads:der/self-signed-ed25519-cert.der": "ok",
+    "reads:pem/self-signed-ed25519-cert.pem": "ok",
+    "zero-byte:der/self-signed-ed25519-cert.der": "ok",
+    "zero-byte:pem/self-signed-ed25519-cert.pem": "ok"
+   }
+  }
+ },
+ "files": [
+  {
+   "bytes": 359,
+   "cells": {
+    "go/crypto/x509": {
+     "go-1.26": {
+      "compared": [
+       "dns_names",
+       "issuer_cn",
+       "serial",
+       "subject_cn"
+      ],
+      "outcome": "reads",
+      "props": {
+       "dns_names": [
+        "fixture.example"
+       ],
+       "issuer_cn": "fixture.example",
+       "serial": 1409983142208024964197,
+       "subject_cn": "fixture.example"
+      }
+     },
+     "go-1.27": {
+      "compared": [
+       "dns_names",
+       "issuer_cn",
+       "serial",
+       "subject_cn"
+      ],
+      "outcome": "reads",
+      "props": {
+       "dns_names": [
+        "fixture.example"
+       ],
+       "issuer_cn": "fixture.example",
+       "serial": 1409983142208024964197,
+       "subject_cn": "fixture.example"
+      }
+     }
+    }
+   },
+   "edge_outcome": null,
+   "expect": {
+    "dns_names": [
+     "fixture.example"
+    ],
+    "issuer_cn": "fixture.example",
+    "serial": 1409983142208024964197,
+    "subject_cn": "fixture.example"
+   },
+   "kind": "ordinary",
+   "path": "der/self-signed-ed25519-cert.der",
+   "role": "ordinary",
+   "sha256": "6a8241d991bef7242d2dce1dcb55bf4509a1949ddb4c107ad8424d5c1a18c551",
+   "url": "https://loremfile.dev/der/self-signed-ed25519-cert.der"
+  }
+ ],
+ "format": "der",
+ "no_reader": [
+  "python"
+ ],
+ "readers": [
+  {
+   "docs": "https://pkg.go.dev/crypto/x509",
+   "id": "go/crypto/x509",
+   "module": "crypto/x509",
+   "props": [
+    "subject_cn",
+    "issuer_cn",
+    "serial",
+    "dns_names"
+   ],
+   "runtime": "go"
+  }
+ ],
+ "runtimes": [
+  "python-3.11",
+  "python-3.12",
+  "python-3.13",
+  "python-3.14",
+  "python-3.15",
+  "go-1.26",
+  "go-1.27"
+ ],
+ "skipped": []
+}
