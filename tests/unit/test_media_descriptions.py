@@ -30,6 +30,8 @@ from typing import Any
 
 import pytest
 
+from loremfile.manifest import is_alias
+
 ROOT = Path(__file__).resolve().parents[2]
 MEDIA = frozenset(
     {"mp3", "wav", "flac", "ogg", "opus", "m4a", "aac", "aiff"}
@@ -138,7 +140,7 @@ def media_entries() -> list[dict[str, Any]]:
     return [
         e
         for e in document["fixtures"]
-        if e["format"] in MEDIA and e.get("status", "active") == "active" and not e.get("aliasOf")
+        if e["format"] in MEDIA and e.get("status", "active") == "active" and not is_alias(e)
     ]
 
 
@@ -245,9 +247,7 @@ def media_pages() -> dict[str, str]:
 def all_entries() -> list[dict[str, Any]]:
     document = json.loads((ROOT / "manifest.json").read_text())
     return [
-        e
-        for e in document["fixtures"]
-        if e.get("status", "active") == "active" and not e.get("aliasOf")
+        e for e in document["fixtures"] if e.get("status", "active") == "active" and not is_alias(e)
     ]
 
 

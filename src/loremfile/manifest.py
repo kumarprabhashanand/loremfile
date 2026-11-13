@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from loremfile import config
-from loremfile.catalog import Fixture
+from loremfile.catalog import ALIAS_GENERATOR, Fixture
 
 #: Fields frozen once a path is published. Changing any of them is the one thing the
 #: whole project promises never to do.
@@ -46,6 +46,18 @@ TOMBSTONE_FIELDS = (
 
 class LockViolation(Exception):
     """A published entry would change. This is never allowed to merge."""
+
+
+def is_alias(entry: dict[str, Any]) -> bool:
+    """A `sample.{format}` alias (docs/05 §8): made by `alias.copy`, which both the catalog and
+    every entry already say. The entry carries no field of its own for it, because the
+    published schema is `additionalProperties: false` and cannot be edited (docs/04 §1.4)."""
+    return entry.get("generator") == ALIAS_GENERATOR
+
+
+def alias_original(entry: dict[str, Any]) -> str:
+    """The path whose bytes an alias serves: the `of` its generator was given."""
+    return str(entry["generator_params"]["of"])
 
 
 class ManifestError(Exception):
@@ -116,7 +128,7 @@ class Manifest:
         path is still served and still active; it is just no longer the one to recommend
         (docs/03 §7.3). An alias is the same file under a guessable name (docs/05 §8), so it is
         never a second file to count."""
-        return [e for e in self.active if not e.get("supersededBy") and not e.get("aliasOf")]
+        return [e for e in self.active if not e.get("supersededBy") and not is_alias(e)]
 
     def to_document(self) -> dict[str, Any]:
         """The full top-level object, sorted by path (docs/04 §1.1)."""
@@ -257,7 +269,6 @@ def build_entry(
         "deprecated": fixture.superseded_by is not None,
         "supersededBy": fixture.superseded_by,
         **({"notes": fixture.notes} if fixture.notes else {}),
-        **({"aliasOf": fixture.alias_of} if fixture.alias_of else {}),
     }
 
 
@@ -287,7 +298,7 @@ def render_formats_json(manifest: Manifest, mime_defaults: dict[str, str]) -> st
     """Per-format counts and byte totals (docs/04 §3). Active fixtures only, aliases not counted."""
     formats: dict[str, dict[str, Any]] = {}
     for entry in sorted(manifest.active, key=lambda e: e["path"]):
-        if entry.get("aliasOf"):
+        if is_alias(entry):
             continue
         fmt = entry["format"]
         row = formats.setdefault(

@@ -17,6 +17,7 @@ import pytest
 
 from loremfile import __version__, config
 from loremfile.infra import locks, purge
+from loremfile.manifest import is_alias
 from loremfile.site import build, checks, icons, legal, page_dates, routes
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -113,7 +114,7 @@ def test_the_page_that_reads_edge_case_counts_its_files_and_a_one_file_page_is_s
 def fixtures_manifest() -> list[dict[str, Any]]:
     """The listed files: an alias is the same file under a guessable name, so it is not one."""
     entries = json.loads((ROOT / "manifest.json").read_text())["fixtures"]
-    return [e for e in entries if not e.get("aliasOf")]
+    return [e for e in entries if not is_alias(e)]
 
 
 def test_every_built_key_is_what_its_public_path_reaches(keys: dict[str, Path]) -> None:
@@ -301,7 +302,7 @@ def test_a_format_index_has_the_manifest_shape_for_one_format(site: Path) -> Non
     active = [
         e
         for e in manifest["fixtures"]
-        if e["format"] == "pdf" and e.get("status") == "active" and not e.get("aliasOf")
+        if e["format"] == "pdf" and e.get("status") == "active" and not is_alias(e)
     ]
     assert set(index) == set(manifest) - {"formats"}
     assert index["fixtures"] == active
@@ -723,9 +724,7 @@ def test_every_format_page_has_a_twin_listing_exactly_its_files(site: Path) -> N
     current = {
         e["path"]
         for e in json.loads((ROOT / "manifest.json").read_text())["fixtures"]
-        if e.get("status", "active") == "active"
-        and not e.get("supersededBy")
-        and not e.get("aliasOf")
+        if e.get("status", "active") == "active" and not e.get("supersededBy") and not is_alias(e)
     }
     formats = sorted({path.split("/", 1)[0] for path in fixtures()})
     assert {"jpg", "wav", "7z"} <= set(formats)
@@ -835,8 +834,10 @@ def test_consecutive_markers_share_one_table() -> None:
 
 
 #: Built keys a deploy deliberately does not purge, because their bytes never change: the
-#: IndexNow key file is a constant, and a schema version is published once (docs/04 §2).
-NEVER_PURGED = {routes.INDEXNOW_KEY_FILE, "schema/manifest-v1.json"}
+#: IndexNow key file is a constant. The schema is not here since 2026-11-13: it should never
+#: change either (docs/04 §1.4), but #153 edited it and the edge served the old copy, so a
+#: deploy purges it as insurance.
+NEVER_PURGED = {routes.INDEXNOW_KEY_FILE}
 
 
 def unpurged(keys: dict[str, Path]) -> list[str]:

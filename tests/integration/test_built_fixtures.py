@@ -23,7 +23,7 @@ import pytest
 from loremfile import build as build_module
 from loremfile import config, validators
 from loremfile.catalog import Catalog, Status
-from loremfile.manifest import Manifest
+from loremfile.manifest import Manifest, is_alias
 from loremfile.validators import policy
 
 FIXTURES = build_module.fixtures_dir()
@@ -216,7 +216,7 @@ def test_formats_json_matches_the_manifest() -> None:
     counts = {row["format"]: row["count"] for row in document["formats"]}
     actual: dict[str, int] = {}
     for entry in manifest.active:
-        if entry.get("aliasOf"):
+        if is_alias(entry):
             continue  # an alias is the same file under a guessable name, not one to count
         actual[entry["format"]] = actual.get(entry["format"], 0) + 1
     assert counts == actual

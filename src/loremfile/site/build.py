@@ -24,7 +24,7 @@ from markupsafe import Markup
 
 from loremfile import config, replacements
 from loremfile.catalog import Catalog, FormatCatalog
-from loremfile.manifest import Manifest
+from loremfile.manifest import Manifest, alias_original, is_alias
 from loremfile.site import defaults, icons, markdown, page_dates, routes
 
 #: docs/05 §8, in order.
@@ -889,13 +889,13 @@ def format_pages(
     formats = sorted({entry["format"] for entry in manifest.entries})
     pages: list[Page] = []
     drifting = {f.path for c in catalogs.values() for f in c.fixtures if f.expected_drift}
-    aliases = {e["format"]: e for e in manifest.active if e.get("aliasOf")}
+    aliases = {e["format"]: e for e in manifest.active if is_alias(e)}
     for fmt in formats:
         if fmt in RESERVED or fmt not in catalogs:
             raise SiteError(f"format {fmt!r} is reserved by the site or absent from the catalog")
         info = catalogs[fmt]
         entries = sorted(
-            (e for e in manifest.entries if e["format"] == fmt and not e.get("aliasOf")),
+            (e for e in manifest.entries if e["format"] == fmt and not is_alias(e)),
             key=lambda e: e["path"],
         )
         served = [e for e in entries if e.get("status", "active") == "active"]
@@ -934,9 +934,9 @@ def format_pages(
         )
         by_path = {e["path"]: e for e in active}
         alias = aliases.get(fmt)
-        if alias is not None and alias["aliasOf"] not in by_path:
+        if alias is not None and alias_original(alias) not in by_path:
             raise SiteError(
-                f"{alias['path']} is an alias of {alias['aliasOf']}, which is not served"
+                f"{alias['path']} is an alias of {alias_original(alias)}, which is not served"
             )
         page = Page(
             key=fmt,
@@ -959,7 +959,7 @@ def format_pages(
                 ),
                 "rows": rows,
                 "start": (
-                    start_here(fmt, by_path[alias["aliasOf"]], alias)
+                    start_here(fmt, by_path[alias_original(alias)], alias)
                     if alias
                     else start_here(fmt, by_path[choice[0]])
                     if choice
@@ -1419,7 +1419,7 @@ def format_index(manifest: Manifest, fmt: str) -> bytes:
     active = [
         e
         for e in document["fixtures"]
-        if e["format"] == fmt and e.get("status", "active") == "active" and not e.get("aliasOf")
+        if e["format"] == fmt and e.get("status", "active") == "active" and not is_alias(e)
     ]
     document.pop("formats")
     document.update(count=len(active), total_bytes=sum(e["bytes"] for e in active), fixtures=active)

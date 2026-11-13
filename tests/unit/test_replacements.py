@@ -24,6 +24,7 @@ from click.testing import CliRunner
 from loremfile import config
 from loremfile import replacements as module
 from loremfile.cli import main
+from loremfile.manifest import is_alias
 from loremfile.replacements import Observation, Reading, classify, matches
 from loremfile.site import build
 
@@ -57,7 +58,7 @@ def test_the_list_is_the_five_that_were_read_and_not_the_one_that_was_not() -> N
 def test_every_row_names_a_published_alias_as_its_nearest_file() -> None:
     for row in ROWS:
         near = MANIFEST[row["nearest"]]
-        assert near.get("aliasOf") and near["path"].endswith(f"/sample.{near['format']}"), row
+        assert is_alias(near) and near["path"].endswith(f"/sample.{near['format']}"), row
         assert row["seen"] and row["url"].startswith("https://")
     assert {row["nearest"] for row in ROWS} == {
         "mp4/sample.mp4",

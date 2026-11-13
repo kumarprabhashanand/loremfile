@@ -2,7 +2,14 @@
 
 ## [Unreleased]
 
-- A `/replacements` page lists sample-file URLs elsewhere that fail for a plain client today, what was seen and the nearest file here.
+## [1.15.1] - 2026-11-13
+
+- `schema/manifest-v1.json` is back to its published bytes. 1.15.0 had added `aliasOf` to it,
+  and a client holding the published copy rejects that field. Manifest entries no longer carry
+  `aliasOf`: a `sample.{format}` alias is an entry whose `generator` is `alias.copy`, and its
+  original is `generator_params.of`. No URL and no file's bytes changed.
+- A `/replacements` page lists sample-file URLs elsewhere that fail for a plain client today,
+  what was seen and the nearest file here.
 
 ## [1.15.0] - 2026-11-13
 
