@@ -1,6 +1,6 @@
 {
   "name": "loremfile",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Download CC0 sample files from loremfile.dev and verify every byte",
   "keywords": ["fixtures", "test-data", "sample-files", "cc0", "download", "mcp"],
   "homepage": "https://loremfile.dev",

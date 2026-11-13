@@ -32,6 +32,20 @@ def entry(path: str, body: bytes, *, tags: list[str] | None = None) -> dict[str,
         "description": f"a {fmt} file",
         "tags": tags or [fmt],
         "status": "active",
+        "generator": "test.fake",
+        "generator_params": {},
+    }
+
+
+def alias(path: str, of: str) -> dict[str, Any]:
+    """What the manifest says about a `sample.{format}` copy: the original's bytes, and a
+    `generator` that names it. There is no `aliasOf` field (docs/04 §1.4)."""
+    original = entry(of, BODIES[of])
+    return {
+        **original,
+        "path": path,
+        "generator": "alias.copy",
+        "generator_params": {"of": of},
     }
 
 
@@ -41,11 +55,15 @@ BODIES = {
     "svg/square.svg": b"<svg xmlns='http://www.w3.org/2000/svg'/>\n",
     "txt/notes.txt": b"lorem ipsum\n",
 }
+#: alias path -> the file whose bytes it repeats. Served and listed, but not in BODIES, so a test
+#: that walks BODIES is also a test that the clients leave aliases out unless asked.
+ALIASES = {"pdf/sample.pdf": "pdf/small.pdf"}
 MANIFEST: dict[str, Any] = {
     "catalog_version": "9.9.9",
-    "count": len(BODIES),
+    "count": len(BODIES) + len(ALIASES),
     "fixtures": [
         *(entry(path, body) for path, body in BODIES.items()),
+        *(alias(path, of) for path, of in ALIASES.items()),
         {**entry("pdf/withdrawn.pdf", b"gone"), "status": "removed"},
     ],
 }
@@ -59,8 +77,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         path = self.path.lstrip("/")
         if path == "manifest.json":
             body = json.dumps(MANIFEST).encode()
-        elif path in BODIES:
-            body = b"tampered with" if path in self.corrupt else BODIES[path]
+        elif path in BODIES or path in ALIASES:
+            body = b"tampered with" if path in self.corrupt else BODIES[ALIASES.get(path, path)]
         else:
             self.send_error(404)
             return

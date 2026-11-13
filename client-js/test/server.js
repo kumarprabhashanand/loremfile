@@ -21,7 +21,17 @@ export function entry(path, body, { tags } = {}) {
     description: `a ${format} file`,
     tags: tags ?? [format],
     status: "active",
+    generator: "test.fake",
+    generator_params: {},
   };
+}
+
+/**
+ * What the manifest says about a `sample.{format}` copy: the original's bytes, and a `generator`
+ * that names it. There is no `aliasOf` field (docs/04 §1.4).
+ */
+export function alias(path, of, body) {
+  return { ...entry(of, body), path, generator: "alias.copy", generator_params: { of } };
 }
 
 /** Big enough to arrive in several chunks, so a test can stop it halfway. */
@@ -36,11 +46,18 @@ export const BODIES = {
   "bin/large.bin": LARGE,
 };
 
+/**
+ * alias path -> the file whose bytes it repeats. Served and listed, but not in BODIES, so a test
+ * that walks BODIES is also a test that the client leaves aliases out unless asked.
+ */
+export const ALIASES = { "pdf/sample.pdf": "pdf/small.pdf" };
+
 export const MANIFEST = {
   catalog_version: "9.9.9",
-  count: Object.keys(BODIES).length,
+  count: Object.keys(BODIES).length + Object.keys(ALIASES).length,
   fixtures: [
     ...Object.entries(BODIES).map(([path, body]) => entry(path, body)),
+    ...Object.entries(ALIASES).map(([path, of]) => alias(path, of, BODIES[of])),
     { ...entry("pdf/withdrawn.pdf", Buffer.from("gone")), status: "removed" },
   ],
 };
@@ -95,11 +112,12 @@ export async function startServer() {
       body = Buffer.from(JSON.stringify(MANIFEST));
     } else {
       const served = path.replace(/^moved\//, "");
-      if (!Object.hasOwn(BODIES, served)) {
+      const source = Object.hasOwn(ALIASES, served) ? ALIASES[served] : served;
+      if (!Object.hasOwn(BODIES, source)) {
         response.writeHead(404).end();
         return;
       }
-      body = state.corrupt.has(served) ? tampered(BODIES[served]) : BODIES[served];
+      body = state.corrupt.has(served) ? tampered(BODIES[source]) : BODIES[source];
     }
     response.writeHead(200, { "Content-Length": String(body.length) });
     const hold = state.holds.get(path);

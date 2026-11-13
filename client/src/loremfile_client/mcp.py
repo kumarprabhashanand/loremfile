@@ -148,12 +148,15 @@ def list_fixtures(document: dict[str, Any], args: Any) -> dict[str, Any]:  # noq
         args.get("limit", MISSING), "limit", low=1, high=MAX_LIMIT, fallback=DEFAULT_LIMIT
     )
     offset = _integer(args.get("offset", MISSING), "offset", low=0, high=None, fallback=0)
-    # The same filters as `loremfile list`: any of the formats, any of the tags, all three.
+    # The same filters as `loremfile list`: any of the formats, any of the tags, all three. The
+    # sample.{format} aliases repeat another file's bytes and stay out; describe_fixture and
+    # verify_file still take one by path.
     matches = sorted(
         (
             e
             for e in api.active(document)
-            if (not formats or e["format"] in formats)
+            if not api.is_alias(e)
+            and (not formats or e["format"] in formats)
             and (not tags or set(tags) & set(e.get("tags") or []))
             and (max_bytes is None or e["bytes"] <= max_bytes)
         ),

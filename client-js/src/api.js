@@ -209,8 +209,23 @@ export function active(document) {
   return (document.fixtures ?? []).filter((entry) => (entry.status ?? "active") === "active");
 }
 
-/** The entries a request names, or `Refused` naming what does not exist. */
-export function select(entries, { paths = [], formats = [] } = {}) {
+/**
+ * A `sample.{format}` alias is a second URL for bytes that already have one. Its manifest entry
+ * is the only place that says so, and the field that does is `generator`; its original is
+ * `generator_params.of`. (`aliasOf`, which 1.15.0 carried until 1.15.1, matches nothing.)
+ */
+export const ALIAS_GENERATOR = "alias.copy";
+
+export function isAlias(entry) {
+  return entry.generator === ALIAS_GENERATOR;
+}
+
+/**
+ * The entries a request names, or `Refused` naming what does not exist. A format selects its
+ * files, not the aliases that repeat them, unless `includeAliases`; a path that is named is
+ * always honoured, alias or not.
+ */
+export function select(entries, { paths = [], formats = [], includeAliases = false } = {}) {
   const wantedPaths = new Set(paths);
   const wantedFormats = new Set(formats);
   if (wantedPaths.size === 0 && wantedFormats.size === 0) {
@@ -227,7 +242,11 @@ export function select(entries, { paths = [], formats = [] } = {}) {
     throw new Refused(`no such format: ${unknownFormats.join(", ")}`);
   }
   return entries
-    .filter((entry) => wantedPaths.has(entry.path) || wantedFormats.has(entry.format))
+    .filter(
+      (entry) =>
+        wantedPaths.has(entry.path) ||
+        (wantedFormats.has(entry.format) && (includeAliases || !isAlias(entry))),
+    )
     .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
 }
 
