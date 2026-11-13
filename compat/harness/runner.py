@@ -192,6 +192,9 @@ def run_runtime(
     """Every cell of one runtime version, and its controls: the part `merge` combines."""
     timeout = float(config["scope"]["timeout_seconds"])
     compat_dir = scope.COMPAT_DIR
+    # Absolute, because each adapter runs in its own empty directory: a relative path to the
+    # file would name nothing there, and every control would miss (the first CI run did).
+    work = work.resolve()
     cwd = work / "cwd"
     cwd.mkdir(parents=True, exist_ok=True)
     part: dict[str, Any] = {"runtime": runtime, "version": version, "cells": {}, "controls": {}}

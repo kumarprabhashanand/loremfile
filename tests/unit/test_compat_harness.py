@@ -206,6 +206,18 @@ def test_a_reader_that_reads_the_file_and_not_its_empty_twin_keeps_its_cells(
     assert set(part["controls"]["python/echo"]) == {"reads:zip/a.zip", "zero-byte:zip/a.zip"}
 
 
+def test_a_relative_work_directory_still_reaches_the_files(
+    adapter: list[str], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The first CI run passed `--work ../compat-work`: the adapter's own working directory is
+    elsewhere, so a relative path named nothing and every reader's control missed."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "w").mkdir()
+    part = run_with(adapter, Path("w"), ["echo"])
+    assert part["cells"]["python/echo|zip/a.zip"]["outcome"] == "reads"
+    assert set(part["controls"]["python/echo"].values()) == {"ok"}
+
+
 def test_a_reader_that_reports_the_same_for_an_empty_file_is_not_run(
     adapter: list[str], tmp_path: Path
 ) -> None:
