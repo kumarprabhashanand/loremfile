@@ -187,6 +187,8 @@ def basic(ctx: GeneratorContext, *, pages: int, page_size: str = "A4",
   encoders are truly nondeterministic, which is why the distinction is worth keeping
   straight.
 
+  **x264 can be pinned; libvpx and libopus cannot (1.14.0, 2026-11-13).** `-x264-params asm=` takes instruction-set names as well as `0`. On the author's i5-8210Y, `asm=MMX2,SSE2` gives the same bytes as `asm=0` and `asm=MMX2,SSE2,SSSE3,SSE4.2,AVX` gives the default's, so the instruction set does reach the output (`tests/unit/test_catalog_1_14.py` holds it). CI's first run of 1.14.0 (`43401786770`, an AMD EPYC 9V45) rebuilt four H.264 files differently from that machine. With `x264_asm` set to the AVX list on those four, the second run (`43406014670`, the same CPU model) reproduced two, `mp4/square-720x720-5s.mp4` and `mp4/720p-30s.mp4`, and not `mp4/60fps-720p-5s.mp4` (CI's bytes unchanged by the pin) or `mp4/1080p-60s.mp4` (moved, but not to the author's). So the pin explains part of the x264 drift and not all of it, and those two are `expected_drift`. `x264_asm` is a parameter of the new rows only, because a published row's recipe cannot change. Whether the two that reproduced do so on other CPU models is for later runs to show.
+
   **CI is the authority**, because CI builds the bytes the deploy uploads. When an
   author's machine disagrees, `manifest check` prints the entries to commit and
   `manifest adopt --from` takes them; it refuses any path already published on the base
@@ -383,7 +385,7 @@ git push                              # green
 
 `manifest adopt` refuses any path already published on the base branch, so this loop can only ever set the bytes of a fixture the branch is *adding*. Everything that is not media matched on every machine through M3.1–M3.6, and needs one round trip as before.
 
-**If `manifest check` fails locally on a media path that is already committed, check `expected_drift` in its catalog entry before assuming a regression**: nine paths carry it today (`mp4/1080p-10s`, `mp4/10mb`, `mp4/50mb`, `opus/30s`, `opus/cbr-32k-30s`, `webm/720p-5s-vp9`, since 1.11.0 `mkv/vp9-opus-720p-5s`, and since 1.14.0 `webm/1080p-10s-vp9` and `webm/alpha-vp9-512x512-5s`), and `build --audit` reports them separately for exactly this reason.
+**If `manifest check` fails locally on a media path that is already committed, check `expected_drift` in its catalog entry before assuming a regression**: eleven paths carry it today (`mp4/1080p-10s`, `mp4/10mb`, `mp4/50mb`, `opus/30s`, `opus/cbr-32k-30s`, `webm/720p-5s-vp9`, since 1.11.0 `mkv/vp9-opus-720p-5s`, and since 1.14.0 `webm/1080p-10s-vp9`, `webm/alpha-vp9-512x512-5s`, `mp4/60fps-720p-5s` and `mp4/1080p-60s`), and `build --audit` reports them separately for exactly this reason.
 
 ## 12. Performance budget
 

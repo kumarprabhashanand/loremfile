@@ -124,6 +124,10 @@ fixtures:
     size_class: free
     label: "30 seconds"
   - name: 1080p-60s.mp4
+    expected_drift: >-
+      Not byte-reproducible off the CI reference fleet: libx264 chooses SIMD kernels from the
+      CPU features it finds, and pinning its instruction set (x264_asm) did not make CI's
+      bytes match the author's (docs/06 section 4, RISK-21).
     phase: 1
     generator: media_video.mp4
     params: { width: 1920, height: 1080, duration: 60, x264_asm: "MMX2,SSE2,SSSE3,SSE4.2,AVX" }
@@ -151,6 +155,10 @@ fixtures:
     size_class: free
     label: "square 720x720"
   - name: 60fps-720p-5s.mp4
+    expected_drift: >-
+      Not byte-reproducible off the CI reference fleet: libx264 chooses SIMD kernels from the
+      CPU features it finds, and pinning its instruction set (x264_asm) did not make CI's
+      bytes match the author's (docs/06 section 4, RISK-21).
     phase: 1
     generator: media_video.mp4
     params: { width: 1280, height: 720, duration: 5, fps: 60, x264_asm: "MMX2,SSE2,SSSE3,SSE4.2,AVX" }

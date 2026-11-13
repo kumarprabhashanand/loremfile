@@ -2,14 +2,14 @@
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
   "catalog_version": "1.14.0",
-  "generated_at": "2026-11-13T09:41:20Z",
+  "generated_at": "2026-11-13T10:29:28Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:acc17d4e0b774e49f86c401ceb62da19420036ff075262e231eb9e64fcf378ae",
   "count": 334,
-  "total_bytes": 739472118,
+  "total_bytes": 739465804,
   "formats": [
     "7z",
     "aac",
@@ -6475,51 +6475,52 @@
       "supersededBy": null
     },
     {
-      "path": "mp4/1080p-60s.mp4",
-      "url": "https://loremfile.dev/mp4/1080p-60s.mp4",
-      "format": "mp4",
-      "ext": "mp4",
-      "mime": "video/mp4",
-      "bytes": 46926750,
-      "sha256": "848ceb6b74da747c03c6ad1ad6abe120f468cbc562f56acf2d679f3fe3621cf7",
-      "size_class": "free",
-      "phase": 1,
+      "added_in": "1.14.0",
+      "bytes": 46920552,
+      "deprecated": false,
       "description": "1920x1080 at 30 fps, sixty seconds, H.264 plus AAC: a full minute of Full HD for upload limits, transcode timing and streaming tests.",
+      "edge_case": false,
+      "ext": "mp4",
+      "format": "mp4",
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "duration": 60,
+        "height": 1080,
+        "width": 1920,
+        "x264_asm": "MMX2,SSE2,SSSE3,SSE4.2,AVX"
+      },
+      "mime": "video/mp4",
+      "path": "mp4/1080p-60s.mp4",
+      "phase": 1,
+      "props": {
+        "acodec": "aac",
+        "audio_streams": 1,
+        "channels": 1,
+        "duration_ms": 60000,
+        "fps": 30.0,
+        "height": 1080,
+        "level": "4.0",
+        "profile": "High",
+        "sample_rate": 48000,
+        "subtitle_streams": 0,
+        "tone_hz": [
+          440.0
+        ],
+        "vcodec": "h264",
+        "video_streams": 1,
+        "width": 1920
+      },
+      "sha256": "c0d8ecb7b2c20bea9a75aa113c55915f6f01d2e2408e053b59671367253dbfd5",
+      "size_class": "free",
+      "status": "active",
+      "supersededBy": null,
       "tags": [
         "video",
         "codec-h264",
         "codec-aac",
         "large"
       ],
-      "edge_case": false,
-      "props": {
-        "duration_ms": 60000,
-        "video_streams": 1,
-        "audio_streams": 1,
-        "subtitle_streams": 0,
-        "width": 1920,
-        "height": 1080,
-        "vcodec": "h264",
-        "fps": 30.0,
-        "profile": "High",
-        "level": "4.0",
-        "acodec": "aac",
-        "sample_rate": 48000,
-        "channels": 1,
-        "tone_hz": [
-          440.0
-        ]
-      },
-      "generator": "media_video.mp4",
-      "generator_params": {
-        "width": 1920,
-        "height": 1080,
-        "duration": 60
-      },
-      "added_in": "1.14.0",
-      "status": "active",
-      "deprecated": false,
-      "supersededBy": null
+      "url": "https://loremfile.dev/mp4/1080p-60s.mp4"
     },
     {
       "path": "mp4/10mb.mp4",
@@ -6751,51 +6752,52 @@
       "supersededBy": null
     },
     {
-      "path": "mp4/60fps-720p-5s.mp4",
-      "url": "https://loremfile.dev/mp4/60fps-720p-5s.mp4",
-      "format": "mp4",
-      "ext": "mp4",
-      "mime": "video/mp4",
-      "bytes": 2651820,
-      "sha256": "58a39c74f32184d248b33b856b091b35fe1c2257714ca58c645a9adf893b6ea2",
-      "size_class": "free",
-      "phase": 1,
+      "added_in": "1.14.0",
+      "bytes": 2651704,
+      "deprecated": false,
       "description": "1280x720 at 60 fps, five seconds, H.264 plus AAC: twice the frame rate of the default sample, for players, frame-rate converters and timestamp code that assume 30.",
+      "edge_case": false,
+      "ext": "mp4",
+      "format": "mp4",
+      "generator": "media_video.mp4",
+      "generator_params": {
+        "duration": 5,
+        "fps": 60,
+        "height": 720,
+        "width": 1280,
+        "x264_asm": "MMX2,SSE2,SSSE3,SSE4.2,AVX"
+      },
+      "mime": "video/mp4",
+      "path": "mp4/60fps-720p-5s.mp4",
+      "phase": 1,
+      "props": {
+        "acodec": "aac",
+        "audio_streams": 1,
+        "channels": 1,
+        "duration_ms": 5000,
+        "fps": 60.0,
+        "height": 720,
+        "level": "3.2",
+        "profile": "High",
+        "sample_rate": 48000,
+        "subtitle_streams": 0,
+        "tone_hz": [
+          440.0
+        ],
+        "vcodec": "h264",
+        "video_streams": 1,
+        "width": 1280
+      },
+      "sha256": "030667f9b6095d51217eac18c75262431a126f8dcee73d25914daccde1f8b9a0",
+      "size_class": "free",
+      "status": "active",
+      "supersededBy": null,
       "tags": [
         "video",
         "codec-h264",
         "codec-aac"
       ],
-      "edge_case": false,
-      "props": {
-        "duration_ms": 5000,
-        "video_streams": 1,
-        "audio_streams": 1,
-        "subtitle_streams": 0,
-        "width": 1280,
-        "height": 720,
-        "vcodec": "h264",
-        "fps": 60.0,
-        "profile": "High",
-        "level": "3.2",
-        "acodec": "aac",
-        "sample_rate": 48000,
-        "channels": 1,
-        "tone_hz": [
-          440.0
-        ]
-      },
-      "generator": "media_video.mp4",
-      "generator_params": {
-        "width": 1280,
-        "height": 720,
-        "duration": 5,
-        "fps": 60
-      },
-      "added_in": "1.14.0",
-      "status": "active",
-      "deprecated": false,
-      "supersededBy": null
+      "url": "https://loremfile.dev/mp4/60fps-720p-5s.mp4"
     },
     {
       "path": "mp4/720p-30s.mp4",
@@ -6836,7 +6838,8 @@
       "generator_params": {
         "width": 1280,
         "height": 720,
-        "duration": 30
+        "duration": 30,
+        "x264_asm": "MMX2,SSE2,SSSE3,SSE4.2,AVX"
       },
       "added_in": "1.14.0",
       "status": "active",
@@ -7113,7 +7116,8 @@
       "generator_params": {
         "width": 720,
         "height": 720,
-        "duration": 5
+        "duration": 5,
+        "x264_asm": "MMX2,SSE2,SSSE3,SSE4.2,AVX"
       },
       "added_in": "1.14.0",
       "status": "active",

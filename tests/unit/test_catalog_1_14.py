@@ -182,6 +182,10 @@ PINNED_X264 = (
     "mp4/60fps-720p-5s.mp4",
 )
 LIBVPX_DRIFT = ("webm/1080p-10s-vp9.webm", "webm/alpha-vp9-512x512-5s.webm")
+#: The pin made `square-720x720-5s` and `720p-30s` reproduce on CI's EPYC 9V45 (run
+#: 43406014670) and not these two, whose CI bytes it left unchanged (60 fps) or moved without
+#: reaching the author's (1080p-60s).
+X264_DRIFT = ("mp4/60fps-720p-5s.mp4", "mp4/1080p-60s.mp4")
 X264_SIMD_PIN = "MMX2,SSE2,SSSE3,SSE4.2,AVX"
 
 
@@ -201,11 +205,13 @@ def test_the_pin_edits_the_one_x264_params_value_and_nothing_else() -> None:
     assert pinned[:at] + pinned[at + 1 :] == list(X264_ARGS[:at] + X264_ARGS[at + 1 :])
 
 
-def test_the_libvpx_files_are_marked_expected_drift_and_the_others_are_not() -> None:
-    """Only CI's runs can say; the evidence is the run above, and libvpx has no knob."""
+def test_the_files_that_still_drifted_are_marked_expected_drift_and_the_others_are_not() -> None:
+    """Only CI's runs can say; the evidence is the two runs above, and libvpx has no knob."""
     marked = {p for p in PATHS if CATALOG.by_path[p].expected_drift}
-    assert marked == set(LIBVPX_DRIFT)
+    assert marked == {*LIBVPX_DRIFT, *X264_DRIFT}
     assert all("RISK-21" in CATALOG.by_path[p].expected_drift for p in marked)
+    reproduced = set(PATHS) - marked
+    assert reproduced >= {"mp4/4k-5s.mp4", ROTATED, "webm/720p-5s-vp8.webm"}
 
 
 @pytest.mark.container
