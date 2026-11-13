@@ -78,8 +78,10 @@ def test_the_entry_is_the_npm_version_and_no_package_names_a_release_its_tree_ha
 ):
     """The entry points at the npm package, so its `version` is that package's. The PyPI package
     names a release of its own, which no longer has to match: Python 0.3.1 and npm 0.2.1 are one
-    change, and 0.2.1 does not exist on PyPI. The publish workflow checks that every version the
-    entry names is live and claims the name (docs/09 §3.9)."""
+    change, and 0.2.1 does not exist on PyPI. Each is the release an MCP client installs from its
+    registry, so each must be the one that carries the server's current behaviour. The publish
+    workflow checks that every version the entry names is live and claims the name (docs/09
+    §3.9)."""
     npm = json.loads((ROOT / "client-js" / "package.json").read_text())["version"]
     pypi = tomllib.loads((ROOT / "client" / "pyproject.toml").read_text())["project"]["version"]
     assert entry_problems(server_json(), npm, pypi) == []
@@ -97,7 +99,10 @@ def test_the_entry_check_fires_on_each_thing_it_names() -> None:
         ]
         return {**entry, "version": top, "packages": packages}
 
-    assert entry_problems(with_versions("0.2.1", "0.2.1", "0.2.0"), npm, pypi) == []
+    assert entry_problems(with_versions("0.2.1", "0.2.1", "0.3.1"), npm, pypi) == []
+    assert entry_problems(with_versions("0.2.1", "0.2.1", "0.2.0"), npm, pypi) == [], (
+        "older is allowed"
+    )
     assert entry_problems(with_versions("0.2.0", "0.2.1", "0.2.0"), npm, pypi), "top != npm"
     assert entry_problems(with_versions("0.2.2", "0.2.2", "0.2.0"), npm, pypi), "npm ahead of tree"
     assert entry_problems(with_versions("0.2.1", "0.2.1", "0.3.2"), npm, pypi), "PyPI ahead of tree"
