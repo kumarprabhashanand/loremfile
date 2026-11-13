@@ -400,7 +400,8 @@
       ],
       "outcome": "reads",
       "props": {
-       "root_element": "catalogue"
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
       }
      },
      "go-1.27": {
@@ -409,7 +410,8 @@
       ],
       "outcome": "reads",
       "props": {
-       "root_element": "catalogue"
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
       }
      }
     },
@@ -420,7 +422,8 @@
       ],
       "outcome": "reads",
       "props": {
-       "root_element": "catalogue"
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
       }
      },
      "python-3.12": {
@@ -429,7 +432,8 @@
       ],
       "outcome": "reads",
       "props": {
-       "root_element": "catalogue"
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
       }
      },
      "python-3.13": {
@@ -438,7 +442,8 @@
       ],
       "outcome": "reads",
       "props": {
-       "root_element": "catalogue"
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
       }
      },
      "python-3.14": {
@@ -447,7 +452,8 @@
       ],
       "outcome": "reads",
       "props": {
-       "root_element": "catalogue"
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
       }
      },
      "python-3.15": {
@@ -456,7 +462,8 @@
       ],
       "outcome": "reads",
       "props": {
-       "root_element": "catalogue"
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
       }
      }
     },
@@ -465,75 +472,50 @@
       "compared": [
        "root_element"
       ],
-      "differs": {
-       "root_element": {
-        "expected": "catalogue",
-        "reported": "{https://loremfile.dev/ns/catalogue}catalogue"
-       }
-      },
-      "outcome": "differs",
+      "outcome": "reads",
       "props": {
-       "root_element": "{https://loremfile.dev/ns/catalogue}catalogue"
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
       }
      },
      "python-3.12": {
       "compared": [
        "root_element"
       ],
-      "differs": {
-       "root_element": {
-        "expected": "catalogue",
-        "reported": "{https://loremfile.dev/ns/catalogue}catalogue"
-       }
-      },
-      "outcome": "differs",
+      "outcome": "reads",
       "props": {
-       "root_element": "{https://loremfile.dev/ns/catalogue}catalogue"
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
       }
      },
      "python-3.13": {
       "compared": [
        "root_element"
       ],
-      "differs": {
-       "root_element": {
-        "expected": "catalogue",
-        "reported": "{https://loremfile.dev/ns/catalogue}catalogue"
-       }
-      },
-      "outcome": "differs",
+      "outcome": "reads",
       "props": {
-       "root_element": "{https://loremfile.dev/ns/catalogue}catalogue"
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
       }
      },
      "python-3.14": {
       "compared": [
        "root_element"
       ],
-      "differs": {
-       "root_element": {
-        "expected": "catalogue",
-        "reported": "{https://loremfile.dev/ns/catalogue}catalogue"
-       }
-      },
-      "outcome": "differs",
+      "outcome": "reads",
       "props": {
-       "root_element": "{https://loremfile.dev/ns/catalogue}catalogue"
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
       }
      },
      "python-3.15": {
       "compared": [
        "root_element"
       ],
-      "differs": {
-       "root_element": {
-        "expected": "catalogue",
-        "reported": "{https://loremfile.dev/ns/catalogue}catalogue"
-       }
-      },
-      "outcome": "differs",
+      "outcome": "reads",
       "props": {
-       "root_element": "{https://loremfile.dev/ns/catalogue}catalogue"
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
       }
      }
     }
@@ -557,7 +539,8 @@
    "id": "go/encoding/xml",
    "module": "encoding/xml",
    "props": [
-    "root_element"
+    "root_element",
+    "root_namespace"
    ],
    "runtime": "go"
   },
@@ -566,7 +549,8 @@
    "id": "python/xml.dom.minidom",
    "module": "xml.dom.minidom",
    "props": [
-    "root_element"
+    "root_element",
+    "root_namespace"
    ],
    "runtime": "python"
   },
@@ -575,7 +559,8 @@
    "id": "python/xml.etree.ElementTree",
    "module": "xml.etree.ElementTree",
    "props": [
-    "root_element"
+    "root_element",
+    "root_namespace"
    ],
    "runtime": "python"
   }
