@@ -60,7 +60,13 @@ def test_the_defaults_are_found_where_they_are_known_to_be() -> None:
     assert choice("mp4") == ("mp4/720p-5s.mp4", "popular")
     assert choice("webm") == ("webm/720p-5s-vp8.webm", "smallest"), "its VP9 file is expected_drift"
     assert choice("gif") == ("gif/static-256x256.gif", "override")
-    assert len([f for f in FAMILY if choice(f)]) == 75
+    assert len([f for f in FAMILY if choice(f)]) == 77
+    assert choice("ogv") == ("ogv/720p-5s.ogv", "smallest"), "its only file, under 4 MB"
+    assert choice("ts") == ("ts/720p-5s.ts", "smallest")
+    assert choice("wav") == ("wav/sine-440hz-3s-44k-16bit-mono.wav", "override")
+    assert choice("bin")[1] == "popular", (
+        "Popular wins whatever its size (bin/sample.bin is 10.5 MB)"
+    )
 
 
 def test_no_default_is_a_file_only_the_ci_fleet_reproduces_or_a_broken_one() -> None:
@@ -79,10 +85,7 @@ def test_no_default_is_a_file_only_the_ci_fleet_reproduces_or_a_broken_one() -> 
 
 def test_a_format_with_no_ordinary_file_has_no_default() -> None:
     nones = sorted(fmt for fmt in FAMILY if choice(fmt) is None)
-    assert nones == ["edge", "hls", "ogv", "opus", "ts"], "collections, drift, and files over 2 MB"
-    sizes = {e["path"]: e["bytes"] for e in MANIFEST}
-    for fmt in ("ogv", "ts"):
-        assert all(sizes[e["path"]] >= defaults.MEDIA_LIMIT for e in MANIFEST if e["format"] == fmt)
+    assert nones == ["edge", "hls", "opus"], "collections, and a format whose files all drift"
     assert {p for p in DRIFTING if p.startswith("opus/")} == {
         e["path"] for e in MANIFEST if e["format"] == "opus"
     }
@@ -116,28 +119,51 @@ def test_the_rule_on_entries_a_smaller_drifting_or_broken_file_is_never_chosen()
     )
 
 
-def test_a_media_default_is_under_two_megabytes_or_there_is_none() -> None:
+def test_the_order_is_popular_whatever_its_size_then_the_smallest_and_media_has_limits() -> None:
+    """docs/05 §8: the Popular file, then the smallest ordinary file; a media file chosen as the
+    smallest is under 2 MB, or under 4 MB when it is the format's only ordinary file."""
     big, small = entry("mp3/big.mp3", 3_000_000), entry("mp3/small.mp3", 1_900_000)
     assert defaults.default_choice("mp3", "audio", [big, small], set(), ()) == (
         "mp3/small.mp3",
         "smallest",
     )
-    # Popular does not exempt a media file from the limit.
+    # Popular wins whatever its size, media or not: the most-copied URL is the owner's choice.
     assert defaults.default_choice("mp3", "audio", [big, small], set(), ("mp3/big.mp3",)) == (
-        "mp3/small.mp3",
+        "mp3/big.mp3",
+        "popular",
+    )
+    # Two media files, neither under 2 MB: the 4 MB allowance is for a format's only file.
+    both = [big, entry("mp3/other.mp3", 2_500_000)]
+    assert defaults.default_choice("mp3", "audio", both, set(), ()) is None
+    # A format's only ordinary file is media: up to, and not including, 4 MB.
+    assert defaults.default_choice("mp3", "audio", [big], set(), ()) == ("mp3/big.mp3", "smallest")
+    huge = entry("mp3/huge.mp3", 4_000_000)
+    assert defaults.default_choice("mp3", "audio", [huge], set(), ()) is None
+    # Only the ordinary files count: a drifting second file leaves the first the only one.
+    drifting = entry("mp3/drift.mp3", 100)
+    assert defaults.default_choice("mp3", "audio", [big, drifting], {"mp3/drift.mp3"}, ()) == (
+        "mp3/big.mp3",
         "smallest",
     )
-    # Nothing under the limit: no default, rather than a heavy one.
-    assert defaults.default_choice("mp3", "audio", [big], set(), ()) is None
-    # Control: the same two sizes in a format that is not media have no limit.
-    csvs = [entry("csv/big.csv", 3_000_000), entry("csv/small.csv", 2_500_000)]
+    # Control: the same sizes in a format that is not media have no limit at all.
+    csvs = [entry("csv/big.csv", 5_000_000), entry("csv/small.csv", 4_500_000)]
     assert defaults.default_choice("csv", "data", csvs, set(), ())[0] == "csv/small.csv"
-    assert defaults.default_choice("csv", "data", csvs[:1], set(), ())[0] == "csv/big.csv"
     sizes = {e["path"]: e["bytes"] for e in MANIFEST}
     for fmt, family in FAMILY.items():
         found = choice(fmt)
-        if family in defaults.MEDIA_FAMILIES and found:
-            assert sizes[found[0]] < defaults.MEDIA_LIMIT, fmt
+        if family in defaults.MEDIA_FAMILIES and found and found[1] != "popular":
+            limit = defaults.MEDIA_LIMIT
+            only = (
+                sum(
+                    1
+                    for e in MANIFEST
+                    if e["format"] == fmt
+                    and e["path"] not in DRIFTING
+                    and e["generator"] != "alias.copy"
+                )
+                == 1
+            )
+            assert sizes[found[0]] < (defaults.ONLY_MEDIA_FILE_LIMIT if only else limit), fmt
 
 
 def test_every_override_is_eligible_and_changes_the_answer(monkeypatch) -> None:
@@ -159,7 +185,7 @@ def test_every_override_is_eligible_and_changes_the_answer(monkeypatch) -> None:
 def test_the_table_in_docs_05_is_what_the_code_chooses() -> None:
     rows = re.findall(r"^\| `([a-z0-9]+)` \| `([^`]+)` \| ([^|]+) \|$", DOCS, re.MULTILINE)
     documented = {fmt: (path, basis) for fmt, path, basis in rows}
-    assert len(documented) == 75 and documented["pdf"][0] == "pdf/a4-3pages.pdf"
+    assert len(documented) == 77 and documented["pdf"][0] == "pdf/a4-3pages.pdf"
     for fmt in FAMILY:
         found = choice(fmt)
         if found is None:

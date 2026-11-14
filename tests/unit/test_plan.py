@@ -64,7 +64,7 @@ PLAN_ROWS_CATALOGUED_AS_PHASE_2 = ("wav/sine-440hz-3s-48k-24bit-stereo.wav",)
 
 #: Families with every plan row catalogued. A family joins when its last row does, so a
 #: later release that drops one fails here instead of leaving the remainder to be inferred.
-COMPLETE_FAMILIES = ("documents", "images", "video")
+COMPLETE_FAMILIES = ("documents", "images", "video", "audio")
 
 #: How §3 writes a name that a literal search for the name does not find. Each value is the
 #: text §3 must hold for the name to be there at all.

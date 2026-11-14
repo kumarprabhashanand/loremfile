@@ -73,6 +73,7 @@ def corpus(
             "url": entry["url"],
             "bytes": entry["bytes"],
             "sha256": entry["sha256"],
+            "added_in": entry.get("added_in", "1.0.0"),
             "kind": kind,
             "intended": props.get("intended_format") if kind == "edge" else entry["format"],
             "targets": targets,

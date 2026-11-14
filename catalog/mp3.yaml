@@ -75,3 +75,57 @@ fixtures:
     size_class: approx
     nominal_bytes: 10000000
     label: "10 MB"
+  - name: sweep-20-20khz-10s.mp3
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: mp3, duration: 10, source: sweep, bitrate: 128k }
+    description: "Ten seconds of a sine that rises linearly from 20 hertz at the start to 20,000 at the end, 128 kbps stereo: every frequency once, in order, so a spectrogram of the decoded file is one diagonal line."
+    tags: [audio, codec-mp3]
+    expect: { acodec: mp3, channels: 2, sample_rate: 48000, bitrate_kbps: 128.0 }
+    size_class: free
+    label: "frequency sweep"
+  - name: noise-white-5s.mp3
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: mp3, duration: 5, source: noise-white, bitrate: 128k }
+    description: "Five seconds of white noise from ffmpeg's seeded generator (seed 1, amplitude 0.5), 128 kbps stereo: a signal with no tone in it, for code that expects one."
+    tags: [audio, codec-mp3]
+    expect: { acodec: mp3, channels: 2, sample_rate: 48000, bitrate_kbps: 128.0 }
+    size_class: free
+    label: "white noise"
+  - name: 128kbps-30s.mp3
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: mp3, duration: 30, source: sweep, bitrate: 128k }
+    description: "Thirty seconds of the sweep from 20 to 20,000 hertz at a constant 128 kbps, 48 kHz stereo, beside `320kbps-30s.mp3`, the same sweep at the top of the range. A sweep and not a sine, because a sine at this rate is `sine-440hz-30s.mp3` byte for byte."
+    tags: [audio, codec-mp3]
+    expect: { acodec: mp3, channels: 2, sample_rate: 48000, bitrate_kbps: 128.0 }
+    size_class: free
+    label: "128 kbps"
+  - name: 320kbps-30s.mp3
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: mp3, duration: 30, source: sweep, bitrate: 320k }
+    description: "Thirty seconds of the sweep from 20 to 20,000 hertz at a constant 320 kbps, 48 kHz stereo, the highest rate MP3 allows, and the same signal as `128kbps-30s.mp3`: a file for checking what a pipeline does with a bitrate it did not expect."
+    tags: [audio, codec-mp3]
+    expect: { acodec: mp3, channels: 2, sample_rate: 48000, bitrate_kbps: 320.0 }
+    size_class: free
+    label: "320 kbps"
+  - name: vbr-v2-30s.mp3
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: mp3, duration: 30, source: sweep, quality: "2" }
+    description: "Thirty seconds of the sweep from 20 to 20,000 hertz as variable bitrate, libmp3lame quality 2 (V2), with the Xing header that holds its frame count. The rate follows the signal, so the average, 48.2 kbps, is read from the file and not from a setting."
+    tags: [audio, codec-mp3]
+    expect: { acodec: mp3, channels: 2, sample_rate: 48000, bitrate_kbps: 48.2 }
+    size_class: free
+    label: "variable bitrate"
+  - name: mono-22khz-64kbps-30s.mp3
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: mp3, duration: 30, sample_rate: 22050, channels: 1, bitrate: 64k }
+    description: "Thirty seconds of a 440 Hz sine as mono at 22.05 kHz and a constant 64 kbps: MPEG-2 Layer III, the half-rate family that speech recordings and old podcasts use, and one that a decoder written only for the CD and video rates may refuse."
+    tags: [audio, codec-mp3]
+    expect: { acodec: mp3, channels: 1, sample_rate: 22050, bitrate_kbps: 64.0 }
+    size_class: free
+    label: "22.05 kHz mono"

@@ -1,15 +1,15 @@
 {
   "$schema": "https://loremfile.dev/schema/manifest-v1.json",
   "schema_version": 1,
-  "catalog_version": "1.15.1",
-  "generated_at": "2026-11-13T16:14:55Z",
+  "catalog_version": "1.16.0",
+  "generated_at": "2026-11-14T11:06:09Z",
   "base_url": "https://loremfile.dev/",
   "license": "CC0-1.0",
   "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
   "source": "https://github.com/kumarprabhashanand/loremfile",
   "toolchain_image": "ghcr.io/kumarprabhashanand/loremfile-toolchain@sha256:acc17d4e0b774e49f86c401ceb62da19420036ff075262e231eb9e64fcf378ae",
-  "count": 409,
-  "total_bytes": 764421099,
+  "count": 422,
+  "total_bytes": 876900842,
   "formats": [
     "7z",
     "aac",
@@ -3972,6 +3972,49 @@
       "supersededBy": null
     },
     {
+      "path": "flac/24bit-96k-10s.flac",
+      "url": "https://loremfile.dev/flac/24bit-96k-10s.flac",
+      "format": "flac",
+      "ext": "flac",
+      "mime": "audio/flac",
+      "bytes": 1067344,
+      "sha256": "c3ed5cd9f4787b4fe5439a347c54d6cbdc06d04d821a5b24eb30af901846f323",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Ten seconds of a 440 Hz sine as 24-bit stereo at 96 kHz, losslessly compressed: the sample size and rate of studio masters, which a decoder that assumes CD-quality samples may truncate or refuse.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 10000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "flac",
+        "sample_rate": 96000,
+        "channels": 2,
+        "bitrate_kbps": 847.3,
+        "bit_depth": 24,
+        "tone_hz": [
+          440.0,
+          440.0
+        ]
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "flac",
+        "duration": 10,
+        "sample_rate": 96000,
+        "bits": 24,
+        "channels": 2
+      },
+      "added_in": "1.16.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "flac/sample.flac",
       "url": "https://loremfile.dev/flac/sample.flac",
       "format": "flac",
@@ -7612,6 +7655,44 @@
       "supersededBy": null
     },
     {
+      "path": "mp3/128kbps-30s.mp3",
+      "url": "https://loremfile.dev/mp3/128kbps-30s.mp3",
+      "format": "mp3",
+      "ext": "mp3",
+      "mime": "audio/mpeg",
+      "bytes": 480788,
+      "sha256": "6d70358f3d9ce46e8fc2beeb4d24938de217ef34266654695ed375ce894bafd1",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Thirty seconds of the sweep from 20 to 20,000 hertz at a constant 128 kbps, 48 kHz stereo, beside `320kbps-30s.mp3`, the same sweep at the top of the range. A sweep and not a sine, because a sine at this rate is `sine-440hz-30s.mp3` byte for byte.",
+      "tags": [
+        "audio",
+        "codec-mp3"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 30024,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 128.0
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "mp3",
+        "duration": 30,
+        "source": "sweep",
+        "bitrate": "128k"
+      },
+      "added_in": "1.16.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "mp3/1mb.mp3",
       "url": "https://loremfile.dev/mp3/1mb.mp3",
       "format": "mp3",
@@ -7647,6 +7728,124 @@
         "size": 1000000
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp3/320kbps-30s.mp3",
+      "url": "https://loremfile.dev/mp3/320kbps-30s.mp3",
+      "format": "mp3",
+      "ext": "mp3",
+      "mime": "audio/mpeg",
+      "bytes": 1201940,
+      "sha256": "af3b40415da0e35aed7de68981eaf7cb8f5caa5ab1445a6d9f8235408392304f",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Thirty seconds of the sweep from 20 to 20,000 hertz at a constant 320 kbps, 48 kHz stereo, the highest rate MP3 allows, and the same signal as `128kbps-30s.mp3`: a file for checking what a pipeline does with a bitrate it did not expect.",
+      "tags": [
+        "audio",
+        "codec-mp3"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 30024,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 320.0
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "mp3",
+        "duration": 30,
+        "source": "sweep",
+        "bitrate": "320k"
+      },
+      "added_in": "1.16.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp3/mono-22khz-64kbps-30s.mp3",
+      "url": "https://loremfile.dev/mp3/mono-22khz-64kbps-30s.mp3",
+      "format": "mp3",
+      "ext": "mp3",
+      "mime": "audio/mpeg",
+      "bytes": 240763,
+      "sha256": "d8c28a5e33d1d79a3bb34370534d454186641ba75fd393721bb70cfaf6cff272",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Thirty seconds of a 440 Hz sine as mono at 22.05 kHz and a constant 64 kbps: MPEG-2 Layer III, the half-rate family that speech recordings and old podcasts use, and one that a decoder written only for the CD and video rates may refuse.",
+      "tags": [
+        "audio",
+        "codec-mp3"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 30067,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "mp3",
+        "sample_rate": 22050,
+        "channels": 1,
+        "bitrate_kbps": 64.0,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "mp3",
+        "duration": 30,
+        "sample_rate": 22050,
+        "channels": 1,
+        "bitrate": "64k"
+      },
+      "added_in": "1.16.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp3/noise-white-5s.mp3",
+      "url": "https://loremfile.dev/mp3/noise-white-5s.mp3",
+      "format": "mp3",
+      "ext": "mp3",
+      "mime": "audio/mpeg",
+      "bytes": 81044,
+      "sha256": "0507cc070589484af04ca9e201d318a457a4ca3f82ef88f3065f396208a8f0a2",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Five seconds of white noise from ffmpeg's seeded generator (seed 1, amplitude 0.5), 128 kbps stereo: a signal with no tone in it, for code that expects one.",
+      "tags": [
+        "audio",
+        "codec-mp3"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5040,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 128.0
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "mp3",
+        "duration": 5,
+        "source": "noise-white",
+        "bitrate": "128k"
+      },
+      "added_in": "1.16.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -7848,6 +8047,82 @@
         "bitrate": "128k"
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp3/sweep-20-20khz-10s.mp3",
+      "url": "https://loremfile.dev/mp3/sweep-20-20khz-10s.mp3",
+      "format": "mp3",
+      "ext": "mp3",
+      "mime": "audio/mpeg",
+      "bytes": 160916,
+      "sha256": "52325a7cce67da5740d2b039739c1c884f9af5ac513fa75354ec8c6f9fc8184b",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Ten seconds of a sine that rises linearly from 20 hertz at the start to 20,000 at the end, 128 kbps stereo: every frequency once, in order, so a spectrogram of the decoded file is one diagonal line.",
+      "tags": [
+        "audio",
+        "codec-mp3"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 10032,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 128.0
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "mp3",
+        "duration": 10,
+        "source": "sweep",
+        "bitrate": "128k"
+      },
+      "added_in": "1.16.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "mp3/vbr-v2-30s.mp3",
+      "url": "https://loremfile.dev/mp3/vbr-v2-30s.mp3",
+      "format": "mp3",
+      "ext": "mp3",
+      "mime": "audio/mpeg",
+      "bytes": 180932,
+      "sha256": "b02c18d1b54ffb21a4eca868bcda6c0509dc80e62dea18f9bdcc2640ee18ed6e",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Thirty seconds of the sweep from 20 to 20,000 hertz as variable bitrate, libmp3lame quality 2 (V2), with the Xing header that holds its frame count. The rate follows the signal, so the average, 48.2 kbps, is read from the file and not from a setting.",
+      "tags": [
+        "audio",
+        "codec-mp3"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 30024,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "mp3",
+        "sample_rate": 48000,
+        "channels": 2,
+        "bitrate_kbps": 48.2
+      },
+      "generator": "media_audio.encoded",
+      "generator_params": {
+        "codec": "mp3",
+        "duration": 30,
+        "source": "sweep",
+        "quality": "2"
+      },
+      "added_in": "1.16.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -9085,6 +9360,46 @@
         "duration": 5
       },
       "added_in": "1.0.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "ogv/sample.ogv",
+      "url": "https://loremfile.dev/ogv/sample.ogv",
+      "format": "ogv",
+      "ext": "ogv",
+      "mime": "video/ogg",
+      "bytes": 3801030,
+      "sha256": "6a1eb108c735d70a0c187961156a84356fcd9c28652dc743ff1f2e9ae8f40a5f",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as ogv/720p-5s.ogv, the file the ogv page starts with, at a name that is easy to guess.",
+      "tags": [
+        "video"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "theora",
+        "fps": 30.0,
+        "acodec": "vorbis",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "ogv/720p-5s.ogv"
+      },
+      "added_in": "1.16.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -12674,6 +12989,50 @@
       "supersededBy": null
     },
     {
+      "path": "ts/sample.ts",
+      "url": "https://loremfile.dev/ts/sample.ts",
+      "format": "ts",
+      "ext": "ts",
+      "mime": "video/mp2t",
+      "bytes": 2054840,
+      "sha256": "6c67c70e6774a111d13601b73c07ec854601acdabb6ddde0a2c114e61643ba1c",
+      "size_class": "free",
+      "phase": 2,
+      "description": "The same bytes as ts/720p-5s.ts, the file the ts page starts with, at a name that is easy to guess.",
+      "tags": [
+        "video",
+        "codec-h264",
+        "codec-aac"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5021,
+        "video_streams": 1,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "width": 1280,
+        "height": 720,
+        "vcodec": "h264",
+        "fps": 30.0,
+        "profile": "High",
+        "level": "3.1",
+        "acodec": "aac",
+        "sample_rate": 48000,
+        "channels": 1,
+        "tone_hz": [
+          440.0
+        ]
+      },
+      "generator": "alias.copy",
+      "generator_params": {
+        "of": "ts/720p-5s.ts"
+      },
+      "added_in": "1.16.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "tsv/people-1000.tsv",
       "url": "https://loremfile.dev/tsv/people-1000.tsv",
       "format": "tsv",
@@ -13639,6 +13998,52 @@
       "supersededBy": null
     },
     {
+      "path": "wav/100mb.wav",
+      "url": "https://loremfile.dev/wav/100mb.wav",
+      "format": "wav",
+      "ext": "wav",
+      "mime": "audio/wav",
+      "bytes": 100000000,
+      "sha256": "6c0a75c63a69574f74c6eb3f6d905f47bb0ed2d56ad7d964c3b15dd9da94382c",
+      "size_class": "exact",
+      "phase": 1,
+      "description": "Exactly 100,000,000 bytes: a 44-byte header plus 24,999,989 frames of 44.1 kHz 16-bit stereo sine, 566.9 seconds of audio. Not approximately: exactly.",
+      "tags": [
+        "audio",
+        "sized",
+        "large"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 566893,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "pcm_s16le",
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 1411.2,
+        "bit_depth": 16,
+        "tone_hz": [
+          440.0,
+          440.0
+        ],
+        "header_format": "pcm",
+        "header_bytes": 44
+      },
+      "generator": "media_audio.wav_sized",
+      "generator_params": {
+        "size": 100000000,
+        "sample_rate": 44100,
+        "bits": 16,
+        "channels": 2
+      },
+      "added_in": "1.16.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
       "path": "wav/10mb.wav",
       "url": "https://loremfile.dev/wav/10mb.wav",
       "format": "wav",
@@ -13720,6 +14125,47 @@
         "of": "wav/sine-440hz-3s-44k-16bit-mono.wav"
       },
       "added_in": "1.15.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "wav/silence-5s.wav",
+      "url": "https://loremfile.dev/wav/silence-5s.wav",
+      "format": "wav",
+      "ext": "wav",
+      "mime": "audio/wav",
+      "bytes": 882044,
+      "sha256": "728d8a027848aa5be1c3cbd20a1de4de177472efab72174d0f34bccfd3ec46e2",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Five seconds of digital silence as 44.1 kHz, 16-bit stereo PCM: 882,044 bytes of zeros behind the 44-byte header, for code that treats silence as failure.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 5000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "pcm_s16le",
+        "sample_rate": 44100,
+        "channels": 2,
+        "bitrate_kbps": 1411.2,
+        "bit_depth": 16,
+        "header_format": "pcm",
+        "header_bytes": 44
+      },
+      "generator": "media_audio.pcm",
+      "generator_params": {
+        "duration": 5,
+        "source": "silence",
+        "sample_rate": 44100,
+        "bits": 16,
+        "channels": 2
+      },
+      "added_in": "1.16.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null
@@ -13938,6 +14384,92 @@
         "channels": 2
       },
       "added_in": "1.7.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "wav/sine-440hz-3s-8k-8bit-mono.wav",
+      "url": "https://loremfile.dev/wav/sine-440hz-3s-8k-8bit-mono.wav",
+      "format": "wav",
+      "ext": "wav",
+      "mime": "audio/wav",
+      "bytes": 24044,
+      "sha256": "877a6a91ac3eb6bebebb31763bb01a3797e7a14301c58c84dc31badacf9471d7",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three seconds of a 440 Hz sine as 8 kHz, 8-bit, mono PCM: telephone quality, 24,044 bytes, and the lowest sample rate here. WAV stores 8-bit samples unsigned, centred on 128, and a reader that assumes the CD rate plays it about 5.5 times too fast.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 3000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "pcm_u8",
+        "sample_rate": 8000,
+        "channels": 1,
+        "bitrate_kbps": 64.0,
+        "bit_depth": 8,
+        "tone_hz": [
+          440.0
+        ],
+        "header_format": "pcm",
+        "header_bytes": 44
+      },
+      "generator": "media_audio.pcm",
+      "generator_params": {
+        "duration": 3,
+        "sample_rate": 8000,
+        "bits": 8,
+        "channels": 1
+      },
+      "added_in": "1.16.0",
+      "status": "active",
+      "deprecated": false,
+      "supersededBy": null
+    },
+    {
+      "path": "wav/sine-440hz-3s-96k-32bit-float.wav",
+      "url": "https://loremfile.dev/wav/sine-440hz-3s-96k-32bit-float.wav",
+      "format": "wav",
+      "ext": "wav",
+      "mime": "audio/wav",
+      "bytes": 2304058,
+      "sha256": "3b83425b85a9b84a12cbb8a1927c4eab2de13da19284aec43953bdd3adbfefb1",
+      "size_class": "free",
+      "phase": 1,
+      "description": "Three seconds of a 440 Hz sine as 32-bit IEEE float stereo at 96 kHz behind the plain float header (format tag 3, fact chunk, samples from byte 58). A reader that knows only integer PCM refuses it; one that counts float frames as bytes reports eight times the length.",
+      "tags": [
+        "audio"
+      ],
+      "edge_case": false,
+      "props": {
+        "duration_ms": 3000,
+        "video_streams": 0,
+        "audio_streams": 1,
+        "subtitle_streams": 0,
+        "acodec": "pcm_f32le",
+        "sample_rate": 96000,
+        "channels": 2,
+        "bitrate_kbps": 6144.0,
+        "bit_depth": 32,
+        "tone_hz": [
+          440.0,
+          440.0
+        ],
+        "header_format": "float",
+        "header_bytes": 58
+      },
+      "generator": "media_audio.wav_float",
+      "generator_params": {
+        "duration": 3,
+        "sample_rate": 96000,
+        "channels": 2
+      },
+      "added_in": "1.16.0",
       "status": "active",
       "deprecated": false,
       "supersededBy": null

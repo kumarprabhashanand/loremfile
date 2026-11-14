@@ -1,10 +1,11 @@
 """Audio fixtures: mp3, wav, flac, ogg, opus, m4a, aac, aiff (docs/05 §3.4).
 
 Every waveform comes from ffmpeg's `lavfi` sources so that no sample data is copied from
-anywhere: a 440 Hz sine, a stereo pair at 440/880 Hz, and digital silence. The bit-exact
-flags live in `util.ffmpeg`; the M3.6 spike confirmed every encoder used here reproduces
-byte for byte across processes *and* across invocations minutes apart, which is the check
-that caught openpyxl in M3.5.
+anywhere: a 440 Hz sine, a stereo pair at 440/880 Hz, digital silence, a linear 20 Hz to
+20 kHz sweep (`aevalsrc`, from a closed-form phase) and seeded white noise (`anoisesrc`).
+The bit-exact flags live in `util.ffmpeg`; the M3.6 spike confirmed every encoder used here
+reproduces byte for byte across processes *and* across invocations minutes apart, which is
+the check that caught openpyxl in M3.5.
 
 `with-id3v2-tags-3s.mp3` is the one fixture whose bytes are not written by ffmpeg alone:
 mutagen adds the ID3v2 frames afterwards. docs/06 §4 claimed the tags carry no timestamp;
@@ -31,9 +32,16 @@ from loremfile.util.sizing import SizingError, fit
 #: are built separately, the filter that merges them.
 FREQUENCY_HZ = 440
 RIGHT_FREQUENCY_HZ = 880
+#: The sweep rises linearly from the first to the second over the whole file, so its phase is
+#: 2*pi*(f0*t + (f1-f0)/(2*T)*t^2). The noise is `anoisesrc`'s own generator under a fixed seed.
+SWEEP_FROM_HZ = 20
+SWEEP_TO_HZ = 20_000
+NOISE_SEED = 1
+NOISE_AMPLITUDE = 0.5
 
 #: ffmpeg's PCM encoder for each bit depth. 8-bit WAV is unsigned; everything wider is
 #: signed little-endian, except AIFF, which is big-endian by definition.
+FLAC_WIDE_BITS = 24
 PCM_ENCODERS = {8: "pcm_u8", 16: "pcm_s16le", 24: "pcm_s24le", 32: "pcm_f32le"}
 
 #: A canonical WAV header: 12 bytes of RIFF, an 8+16 `fmt ` chunk, an 8-byte `data`
@@ -54,8 +62,14 @@ def _target(ctx: GeneratorContext) -> Path:
     return ctx.workdir / ctx.path.replace("/", "_")
 
 
-def _source_args(source: str, sample_rate: int, channels: int) -> tuple[list[str], list[str]]:
-    """(input arguments, mapping arguments) for one of the named waveforms."""
+def _source_args(
+    source: str, sample_rate: int, channels: int, duration: float | None = None
+) -> tuple[list[str], list[str]]:
+    """(input arguments, mapping arguments) for one of the named waveforms.
+
+    `duration` is the file's length in seconds, which only the sweep needs: it rises from
+    its first frequency to its last across exactly that long.
+    """
     if source == "sine":
         return (
             ["-f", "lavfi", "-i", f"sine=frequency={FREQUENCY_HZ}:sample_rate={sample_rate}"],
@@ -82,7 +96,22 @@ def _source_args(source: str, sample_rate: int, channels: int) -> tuple[list[str
     if source == "silence":
         layout = "mono" if channels == 1 else "stereo"
         return (["-f", "lavfi", "-i", f"anullsrc=r={sample_rate}:cl={layout}"], [])
-    known = "sine, stereo-lr, silence"
+    if source == "sweep":
+        if not duration or duration <= 0:
+            raise ValueError("the sweep source needs the duration it sweeps across")
+        rate_of_rise = (SWEEP_TO_HZ - SWEEP_FROM_HZ) / (2 * duration)
+        expression = f"sin(2*PI*({SWEEP_FROM_HZ}*t+{rate_of_rise!r}*t*t))"
+        return (
+            ["-f", "lavfi", "-i", f"aevalsrc={expression}:sample_rate={sample_rate}"],
+            [] if channels == 1 else ["-ac", str(channels)],
+        )
+    if source == "noise-white":
+        noise = f"anoisesrc=color=white:seed={NOISE_SEED}:amplitude={NOISE_AMPLITUDE}"
+        return (
+            ["-f", "lavfi", "-i", f"{noise}:sample_rate={sample_rate}"],
+            [] if channels == 1 else ["-ac", str(channels)],
+        )
+    known = "sine, stereo-lr, silence, sweep, noise-white"
     raise ValueError(f"unknown audio source '{source}'; known: {known}")
 
 
@@ -96,7 +125,7 @@ def _encode(
     channels: int,
     container: str | None = None,
 ) -> bytes:
-    inputs, mapping = _source_args(source, sample_rate, channels)
+    inputs, mapping = _source_args(source, sample_rate, channels, duration)
     args = [*inputs, "-t", f"{duration:g}", *mapping, *codec_args]
     if container:
         args += ["-f", container]
@@ -117,9 +146,20 @@ def encoded(
     quality: str | None = None,
     container: str | None = None,
     constant: bool = False,
+    bits: int | None = None,
 ) -> bytes:
-    """One compressed audio fixture: mp3, flac, vorbis, opus or AAC."""
+    """One compressed audio fixture: mp3, flac, vorbis, opus or AAC.
+
+    `bits` is FLAC's sample size where it is not the 16 an encoder defaults to: 24-bit goes in
+    as 32-bit samples declaring 24 raw bits, which is how ffmpeg's FLAC encoder takes it.
+    """
     codec_args = ["-c:a", encoder_for(codec)]
+    if bits is not None:
+        if codec != "flac" or bits != FLAC_WIDE_BITS:
+            raise ValueError(
+                f"a sample size is only asked of FLAC, and only 24 is built: {codec} {bits}"
+            )
+        codec_args += ["-sample_fmt", "s32", "-bits_per_raw_sample", str(bits)]
     if bitrate:
         codec_args += ["-b:a", bitrate]
     if quality:

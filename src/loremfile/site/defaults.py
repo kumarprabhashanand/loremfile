@@ -15,10 +15,14 @@ from loremfile.catalog import ALIAS_GENERATOR
 #: segments, and every `edge` file is broken on purpose.
 NO_DEFAULT = frozenset({"hls", "edge"})
 
-#: A media default is under this, so what a page offers to download or play is cheap. A media
-#: format with no file that small has no default: `ogv` (3.8 MB) and `ts` (2.05 MB).
+#: A media default chosen as "the smallest" is under this, so what a page offers to download or
+#: play is cheap; a format with nothing that small has no default. The Popular file is exempt
+#: (a format's most-copied URL is the owner's choice), and so is a format whose only ordinary
+#: file is media, up to the second limit: `ogv` (3.8 MB) and `ts` (2.05 MB) have nothing smaller
+#: to offer, and no default would leave their pages without a URL to copy.
 MEDIA_FAMILIES = frozenset({"audio", "video"})
 MEDIA_LIMIT = 2_000_000
+ONLY_MEDIA_FILE_LIMIT = 4_000_000
 
 #: Where "the smallest ordinary valid file" lands on something that is a case rather than a
 #: baseline. Each is the plainest file of its format, and the reason is printed in docs/05 §8.
@@ -27,6 +31,10 @@ OVERRIDES: Mapping[str, tuple[str, str]] = {
     "gz": (
         "gz/lorem-1mb.txt.gz",
         "the smallest, `gz/multi-member-3.gz`, is three streams joined end to end",
+    ),
+    "wav": (
+        "wav/sine-440hz-3s-44k-16bit-mono.wav",
+        "the smallest, `wav/sine-440hz-3s-8k-8bit-mono.wav`, is 8 kHz telephone quality",
     ),
     "tar": ("tar/3-text-files.tar", "the smallest is the gzipped copy of the same archive"),
     "zip": ("zip/3-text-files.zip", "the smallest, `zip/empty.zip`, has no entries"),
@@ -67,21 +75,27 @@ def default_choice(
 ) -> tuple[str, str] | None:
     """(path, basis) of a format's default, or None where it has none.
 
-    The file in the home page's Popular list where one exists, otherwise the smallest ordinary
-    valid file, unless OVERRIDES names a plainer one. A media file is under 2 MB or not
-    eligible. `basis` is what the docs table prints: `popular`, `smallest` or `override`.
+    The file in the home page's Popular list where one exists, whatever its size; otherwise the
+    smallest ordinary valid file, unless OVERRIDES names a plainer one. Where the smallest is
+    media it is under 2 MB, or under 4 MB when it is the format's only ordinary file.
+    `basis` is what the docs table prints: `popular`, `smallest` or `override`.
     """
     if fmt in NO_DEFAULT:
         return None
     pool = eligible([e for e in entries if e["format"] == fmt], drifting)
+    if not pool:
+        return None
+    for path in popular:
+        if path in {e["path"] for e in pool}:
+            return path, "popular"
     if family in MEDIA_FAMILIES:
-        pool = [e for e in pool if e["bytes"] < MEDIA_LIMIT]
+        light = [e for e in pool if e["bytes"] < MEDIA_LIMIT]
+        if not light and len(pool) == 1 and pool[0]["bytes"] < ONLY_MEDIA_FILE_LIMIT:
+            light = pool
+        pool = light
     if not pool:
         return None
     paths = {e["path"] for e in pool}
-    for path in popular:
-        if path in paths:
-            return path, "popular"
     if fmt in OVERRIDES:
         path = OVERRIDES[fmt][0]
         if path not in paths:

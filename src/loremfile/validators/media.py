@@ -318,7 +318,8 @@ def _alpha_props(data: bytes, suffix: str, report: dict[str, Any]) -> dict[str, 
 def _audio_rates(
     data: bytes, suffix: str, report: dict[str, Any], seconds: float | None = None
 ) -> dict[str, Any]:
-    """`bitrate_kbps` from the audio packets themselves, and `bit_depth` for PCM.
+    """`bitrate_kbps` from the audio packets themselves, and `bit_depth` for PCM, and for FLAC
+    where it is not 16.
 
     The rate is the audio packets' bytes over the stream's duration: what the codec
     actually spent, without container pages, tags or cover art. Neither ffprobe's stream
@@ -344,8 +345,18 @@ def _audio_rates(
     props: dict[str, Any] = {"bitrate_kbps": round(payload * 8 / seconds / 1000, 1)}
     if str(audio.get("codec_name", "")).startswith("pcm_"):
         props["bit_depth"] = int(audio["bits_per_sample"])
+    elif (
+        audio.get("codec_name") == "flac" and int(audio["bits_per_raw_sample"]) != FLAC_DEFAULT_BITS
+    ):
+        # FLAC declares its sample size as raw bits, from 4 to 24; `bits_per_sample` is 0.
+        # Published only where it is not the 16 an encoder defaults to (1.16.0), so that no
+        # published entry changes.
+        props["bit_depth"] = int(audio["bits_per_raw_sample"])
     return props
 
+
+#: What FLAC's encoder writes when no sample size is asked for.
+FLAC_DEFAULT_BITS = 16
 
 #: WAVE `fmt ` chunk format tags a fixture may carry.
 WAV_FORMAT_TAGS = {1: "pcm", 3: "float", 0xFFFE: "extensible"}

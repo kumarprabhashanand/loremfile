@@ -41,7 +41,7 @@
   },
   "changelog": {
     "date": "2026-11-14",
-    "sha256": "183b5cd304f509ee3f2eb02aaf6f7d6095bcca301faf7dfc9907020b79891ae0"
+    "sha256": "9b26bb25ebcd3f65a1ef226138fe6c1e64f6a9b054604b7cd1cba7fdd1964b37"
   },
   "compat": {
     "date": "2026-11-14",
@@ -132,16 +132,16 @@
     "sha256": "24bafa328d55548033db81a12f27ebb37f404946501ef8405494821692b26041"
   },
   "docs/manifest": {
-    "date": "2026-11-13",
-    "sha256": "433c879a0a46b68fd7148316060259d0ebfa5429afb011796fb774f4a76b06c6"
+    "date": "2026-11-14",
+    "sha256": "0ea8ee4ca92f483d477c96dc8809804fe83180f8898781a25d6c094b7291b2ed"
   },
   "docs/mcp": {
     "date": "2026-11-13",
     "sha256": "76fb9bc1e6ece6a2922b4f11337d79c736cf715eb022b4d032e0a780eea9ea72"
   },
   "docs/naming": {
-    "date": "2026-11-13",
-    "sha256": "e09d8872536eced35da574a2d90b6ce2b1c1c2894a727bd0399b867f1f811eb5"
+    "date": "2026-11-14",
+    "sha256": "a8ae3cc1abc129288f943ac9ce439aefc27c190c0b6c8458bfe83536e12ffa4a"
   },
   "docs/security-policy": {
     "date": "2026-11-13",
@@ -164,12 +164,12 @@
     "sha256": "6ef5545f89891b3c5ec6565833ed126f977a0766dc7bb4a0b02ed07313e3917b"
   },
   "flac": {
-    "date": "2026-11-13",
-    "sha256": "739d8d67f1c4f5d77004db386f8c6b40a62f620d4bb928537e20e753de38e632"
+    "date": "2026-11-14",
+    "sha256": "a1fc43420cdf9b4402269e90ac84276edb127789462fb5c6e36c572760d3d820"
   },
   "formats": {
-    "date": "2026-11-13",
-    "sha256": "7af16c73bac35e9375e3a5fe788f61f73317136ccf424b22dd8fb34ddc609598"
+    "date": "2026-11-14",
+    "sha256": "13aa828da4b30b80c390c6570ea235e478a16ffb07012ae99a54b20d188f39f8"
   },
   "geojson": {
     "date": "2026-11-13",
@@ -212,8 +212,8 @@
     "sha256": "b3317d62083ab9cb9684a27b4e8907eae00d11238ad0b4ba2d471285a1ecb31b"
   },
   "index.html": {
-    "date": "2026-11-13",
-    "sha256": "b699886568dceca30c76cd516a9ea18c79d2a1839647782ff137c55baa99cdd2"
+    "date": "2026-11-14",
+    "sha256": "01fc7523c30f34941e24d4409aa4e2e0d0297958a048c8d6d7e5c6b7c6d09b09"
   },
   "ini": {
     "date": "2026-11-13",
@@ -268,8 +268,8 @@
     "sha256": "69b37f0a46bf5477a751ac3b6293a08438239178bf08899ebbf6d350653e3b31"
   },
   "mp3": {
-    "date": "2026-11-13",
-    "sha256": "157d7a2d8354eb1ab6fe9f79bf2abc4d7b2c0a44df1d0420a2a75e32c5bea893"
+    "date": "2026-11-14",
+    "sha256": "6f554a534550bb68cd3c641f89b3daaf01c2e013e4a570eefdb78a447693e40b"
   },
   "mp4": {
     "date": "2026-11-13",
@@ -284,8 +284,8 @@
     "sha256": "084d8ba141317af8cd86ec5af39913c106cbe6d9aeb24f7e5a60404d52968742"
   },
   "ogv": {
-    "date": "2026-11-13",
-    "sha256": "3b5875265f48b066cba2c39aaebdae60771702599f98e2576f125c784c8934de"
+    "date": "2026-11-14",
+    "sha256": "b076e55e487e913cd00404ea05edcce68e80efb42f82ddace25bb9999d2d54d3"
   },
   "opus": {
     "date": "2026-11-13",
@@ -372,8 +372,8 @@
     "sha256": "de648f94189649b276665669bf0b05c10c877009cdd2e4e7139d427aaba5dc8e"
   },
   "ts": {
-    "date": "2026-11-13",
-    "sha256": "913566da0b6d3e23df151cccf985b16bf2b1391c4979f96ecbf13967334f2b4b"
+    "date": "2026-11-14",
+    "sha256": "748518bb99d0fa616f337882587a21eb49b4369d161d14c70644f6b19becc68b"
   },
   "tsv": {
     "date": "2026-11-13",
@@ -400,8 +400,8 @@
     "sha256": "2e2a4a5badaaf83c85f27eea0852cfb7c1412f4e05f9776307de1bc0399f5a00"
   },
   "wav": {
-    "date": "2026-11-13",
-    "sha256": "10a8a2a5ed9c7000439c0957e1118c7a1d9b0911055595f29c6d76f171599d48"
+    "date": "2026-11-14",
+    "sha256": "0194d124afca710dc6a3122393d3716f732e250258799d0632b6030a2e684a3b"
   },
   "webm": {
     "date": "2026-11-13",

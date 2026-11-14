@@ -45,6 +45,7 @@ aliases:
   mp4: mp4/720p-5s.mp4
   ndjson: ndjson/people-1000.ndjson
   ogg: ogg/vorbis-mono-22k-10s.ogg
+  ogv: ogv/720p-5s.ogv
   otf: otf/loremfile-sans.otf
   parquet: parquet/nested-types.parquet
   pdf: pdf/a4-3pages.pdf
@@ -59,6 +60,7 @@ aliases:
   tar: tar/3-text-files.tar
   tiff: tiff/lzw-640x480.tiff
   toml: toml/config.toml
+  ts: ts/720p-5s.ts
   tsv: tsv/people-1000.tsv
   ttf: ttf/loremfile-sans.ttf
   txt: txt/lorem-1kb.txt
