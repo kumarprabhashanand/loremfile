@@ -1,5 +1,31 @@
 {
  "controls": {
+  "java/javax.sound.sampled": {
+   "java-11": {
+    "reads:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok",
+    "zero-byte:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok"
+   },
+   "java-17": {
+    "reads:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok",
+    "zero-byte:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok"
+   },
+   "java-21": {
+    "reads:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok",
+    "zero-byte:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok"
+   },
+   "java-25": {
+    "reads:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok",
+    "zero-byte:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok"
+   },
+   "java-27": {
+    "reads:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok",
+    "zero-byte:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok"
+   },
+   "java-8": {
+    "reads:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok",
+    "zero-byte:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok"
+   }
+  },
   "python/wave": {
    "python-3.11": {
     "reads:wav/sine-440hz-3s-44k-16bit-mono.wav": "ok",
@@ -27,6 +53,98 @@
   {
    "bytes": 10000000,
    "cells": {
+    "java/javax.sound.sampled": {
+     "java-11": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 56689,
+       "sample_rate": 44100
+      }
+     },
+     "java-17": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 56689,
+       "sample_rate": 44100
+      }
+     },
+     "java-21": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 56689,
+       "sample_rate": 44100
+      }
+     },
+     "java-25": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 56689,
+       "sample_rate": 44100
+      }
+     },
+     "java-27": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 56689,
+       "sample_rate": 44100
+      }
+     },
+     "java-8": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 56689,
+       "sample_rate": 44100
+      }
+     }
+    },
     "python/wave": {
      "python-3.11": {
       "compared": [
@@ -122,6 +240,98 @@
   {
    "bytes": 264644,
    "cells": {
+    "java/javax.sound.sampled": {
+     "java-11": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 1,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-17": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 1,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-21": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 1,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-25": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 1,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-27": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 1,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-8": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 1,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     }
+    },
     "python/wave": {
      "python-3.11": {
       "compared": [
@@ -217,6 +427,98 @@
   {
    "bytes": 529244,
    "cells": {
+    "java/javax.sound.sampled": {
+     "java-11": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-17": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-21": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-25": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-27": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-8": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     }
+    },
     "python/wave": {
      "python-3.11": {
       "compared": [
@@ -312,6 +614,104 @@
   {
    "bytes": 1058458,
    "cells": {
+    "java/javax.sound.sampled": {
+     "java-11": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 32,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-17": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 32,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-21": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 32,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-25": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 32,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-27": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 32,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-8": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "differs": {
+       "duration_ms": {
+        "expected": 3000,
+        "reported": 24000
+       }
+      },
+      "outcome": "differs",
+      "props": {
+       "bit_depth": 32,
+       "channels": 2,
+       "duration_ms": 24000,
+       "sample_rate": 44100
+      }
+     }
+    },
     "python/wave": {
      "python-3.11": {
       "error": "unknown format: 3",
@@ -367,6 +767,98 @@
   {
    "bytes": 264644,
    "cells": {
+    "java/javax.sound.sampled": {
+     "java-11": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 8,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-17": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 8,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-21": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 8,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-25": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 8,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-27": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 8,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-8": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 8,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     }
+    },
     "python/wave": {
      "python-3.11": {
       "compared": [
@@ -462,6 +954,88 @@
   {
    "bytes": 864068,
    "cells": {
+    "java/javax.sound.sampled": {
+     "java-11": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 24,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 48000
+      }
+     },
+     "java-17": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 24,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 48000
+      }
+     },
+     "java-21": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 24,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 48000
+      }
+     },
+     "java-25": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 24,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 48000
+      }
+     },
+     "java-27": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 24,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 48000
+      }
+     },
+     "java-8": {
+      "error": "could not get audio input stream from input file",
+      "error_type": "javax.sound.sampled.UnsupportedAudioFileException",
+      "outcome": "refuses"
+     }
+    },
     "python/wave": {
      "python-3.11": {
       "error": "unknown format: 65534",
@@ -547,6 +1121,98 @@
   {
    "bytes": 529294,
    "cells": {
+    "java/javax.sound.sampled": {
+     "java-11": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-17": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-21": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-25": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-27": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     },
+     "java-8": {
+      "compared": [
+       "bit_depth",
+       "channels",
+       "duration_ms",
+       "sample_rate"
+      ],
+      "outcome": "reads",
+      "props": {
+       "bit_depth": 16,
+       "channels": 2,
+       "duration_ms": 3000,
+       "sample_rate": 44100
+      }
+     }
+    },
     "python/wave": {
      "python-3.11": {
       "compared": [
@@ -642,9 +1308,23 @@
  ],
  "format": "wav",
  "no_reader": [
-  "go"
+  "go",
+  "node",
+  "ruby"
  ],
  "readers": [
+  {
+   "docs": "",
+   "id": "java/javax.sound.sampled",
+   "module": "javax.sound.sampled",
+   "props": [
+    "channels",
+    "sample_rate",
+    "bit_depth",
+    "duration_ms"
+   ],
+   "runtime": "java"
+  },
   {
    "docs": "https://docs.python.org/3/library/wave.html",
    "id": "python/wave",
@@ -665,7 +1345,19 @@
   "python-3.14",
   "python-3.15",
   "go-1.26",
-  "go-1.27"
+  "go-1.27",
+  "node-22",
+  "node-24",
+  "node-26",
+  "java-8",
+  "java-11",
+  "java-17",
+  "java-21",
+  "java-25",
+  "java-27",
+  "ruby-3.3",
+  "ruby-3.4",
+  "ruby-4.0"
  ],
  "skipped": []
 }

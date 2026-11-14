@@ -41,6 +41,34 @@
     "reads:tar/3-text-files.tar": "ok",
     "zero-byte:tar/3-text-files.tar": "ok"
    }
+  },
+  "ruby/Gem::Package::TarReader": {
+   "ruby-3.3": {
+    "reads:tar/3-text-files.tar": "ok",
+    "truncated:tar/3-text-files.tar": "ok"
+   },
+   "ruby-3.4": {
+    "reads:tar/3-text-files.tar": "ok",
+    "truncated:tar/3-text-files.tar": "ok"
+   },
+   "ruby-4.0": {
+    "reads:tar/3-text-files.tar": "ok",
+    "truncated:tar/3-text-files.tar": "ok"
+   }
+  },
+  "ruby/Gem::Package::TarReader+Zlib::GzipReader": {
+   "ruby-3.3": {
+    "reads:tar/3-text-files.tar.gz": "ok",
+    "zero-byte:tar/3-text-files.tar.gz": "ok"
+   },
+   "ruby-3.4": {
+    "reads:tar/3-text-files.tar.gz": "ok",
+    "zero-byte:tar/3-text-files.tar.gz": "ok"
+   },
+   "ruby-4.0": {
+    "reads:tar/3-text-files.tar.gz": "ok",
+    "zero-byte:tar/3-text-files.tar.gz": "ok"
+   }
   }
  },
  "files": [
@@ -129,6 +157,47 @@
       }
      },
      "python-3.15": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2812
+      }
+     }
+    },
+    "ruby/Gem::Package::TarReader": {
+     "ruby-3.3": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2812
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2812
+      }
+     },
+     "ruby-4.0": {
       "compared": [
        "directories",
        "entries",
@@ -253,6 +322,47 @@
        "uncompressed_bytes": 2705
       }
      }
+    },
+    "ruby/Gem::Package::TarReader+Zlib::GzipReader": {
+     "ruby-3.3": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2705
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2705
+      }
+     },
+     "ruby-4.0": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 2705
+      }
+     }
     }
    },
    "edge_outcome": null,
@@ -347,7 +457,8 @@
    },
    "kind": "ordinary",
    "no_reader": [
-    "go"
+    "go",
+    "ruby"
    ],
    "path": "tar/3-text-files.tar.xz",
    "role": "ordinary",
@@ -356,7 +467,10 @@
   }
  ],
  "format": "tar",
- "no_reader": [],
+ "no_reader": [
+  "java",
+  "node"
+ ],
  "readers": [
   {
    "docs": "https://pkg.go.dev/archive/tar",
@@ -390,6 +504,28 @@
     "uncompressed_bytes"
    ],
    "runtime": "python"
+  },
+  {
+   "docs": "",
+   "id": "ruby/Gem::Package::TarReader",
+   "module": "Gem::Package::TarReader",
+   "props": [
+    "entries",
+    "directories",
+    "uncompressed_bytes"
+   ],
+   "runtime": "ruby"
+  },
+  {
+   "docs": "",
+   "id": "ruby/Gem::Package::TarReader+Zlib::GzipReader",
+   "module": "Gem::Package::TarReader + Zlib::GzipReader",
+   "props": [
+    "entries",
+    "directories",
+    "uncompressed_bytes"
+   ],
+   "runtime": "ruby"
   }
  ],
  "runtimes": [
@@ -399,7 +535,19 @@
   "python-3.14",
   "python-3.15",
   "go-1.26",
-  "go-1.27"
+  "go-1.27",
+  "node-22",
+  "node-24",
+  "node-26",
+  "java-8",
+  "java-11",
+  "java-17",
+  "java-21",
+  "java-25",
+  "java-27",
+  "ruby-3.3",
+  "ruby-3.4",
+  "ruby-4.0"
  ],
  "skipped": []
 }

@@ -10,6 +10,32 @@
     "zero-byte:xml/people-10.xml": "ok"
    }
   },
+  "java/javax.xml.parsers": {
+   "java-11": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "java-17": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "java-21": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "java-25": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "java-27": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "java-8": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   }
+  },
   "python/xml.dom.minidom": {
    "python-3.11": {
     "reads:xml/people-10.xml": "ok",
@@ -53,6 +79,20 @@
     "reads:xml/people-10.xml": "ok",
     "zero-byte:xml/people-10.xml": "ok"
    }
+  },
+  "ruby/REXML": {
+   "ruby-3.3": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "ruby-3.4": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   },
+   "ruby-4.0": {
+    "reads:xml/people-10.xml": "ok",
+    "zero-byte:xml/people-10.xml": "ok"
+   }
   }
  },
  "files": [
@@ -68,6 +108,38 @@
      "go-1.27": {
       "error": "XML syntax error on line 5: element <item> closed by </catalog>",
       "error_type": "xml.SyntaxError",
+      "outcome": "refuses"
+     }
+    },
+    "java/javax.xml.parsers": {
+     "java-11": {
+      "error": "The element type \"item\" must be terminated by the matching end-tag \"</item>\".",
+      "error_type": "org.xml.sax.SAXParseException",
+      "outcome": "refuses"
+     },
+     "java-17": {
+      "error": "The element type \"item\" must be terminated by the matching end-tag \"</item>\".",
+      "error_type": "org.xml.sax.SAXParseException",
+      "outcome": "refuses"
+     },
+     "java-21": {
+      "error": "The element type \"item\" must be terminated by the matching end-tag \"</item>\".",
+      "error_type": "org.xml.sax.SAXParseException",
+      "outcome": "refuses"
+     },
+     "java-25": {
+      "error": "The element type \"item\" must be terminated by the matching end-tag \"</item>\".",
+      "error_type": "org.xml.sax.SAXParseException",
+      "outcome": "refuses"
+     },
+     "java-27": {
+      "error": "The element type \"item\" must be terminated by the matching end-tag \"</item>\".",
+      "error_type": "org.xml.sax.SAXParseException",
+      "outcome": "refuses"
+     },
+     "java-8": {
+      "error": "The element type \"item\" must be terminated by the matching end-tag \"</item>\".",
+      "error_type": "org.xml.sax.SAXParseException",
       "outcome": "refuses"
      }
     },
@@ -122,6 +194,23 @@
      "python-3.15": {
       "error": "mismatched tag: line 5, column 2",
       "error_type": "xml.etree.ElementTree.ParseError",
+      "outcome": "refuses"
+     }
+    },
+    "ruby/REXML": {
+     "ruby-3.3": {
+      "error": "Missing end tag for 'item' (got 'catalog')",
+      "error_type": "REXML::ParseException",
+      "outcome": "refuses"
+     },
+     "ruby-3.4": {
+      "error": "Missing end tag for 'item' (got 'catalog')",
+      "error_type": "REXML::ParseException",
+      "outcome": "refuses"
+     },
+     "ruby-4.0": {
+      "error": "Missing end tag for 'item' (got 'catalog')",
+      "error_type": "REXML::ParseException",
       "outcome": "refuses"
      }
     }
@@ -158,6 +247,62 @@
       }
      }
     },
+    "java/javax.xml.parsers": {
+     "java-11": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "java-17": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "java-21": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "java-25": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "java-27": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "java-8": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     }
+    },
     "python/xml.dom.minidom": {
      "python-3.11": {
       "compared": [
@@ -243,6 +388,35 @@
       }
      },
      "python-3.15": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     }
+    },
+    "ruby/REXML": {
+     "ruby-3.3": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "people"
+      }
+     },
+     "ruby-4.0": {
       "compared": [
        "root_element"
       ],
@@ -287,6 +461,62 @@
       }
      }
     },
+    "java/javax.xml.parsers": {
+     "java-11": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "java-17": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "java-21": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "java-25": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "java-27": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "java-8": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     }
+    },
     "python/xml.dom.minidom": {
      "python-3.11": {
       "compared": [
@@ -372,6 +602,35 @@
       }
      },
      "python-3.15": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     }
+    },
+    "ruby/REXML": {
+     "ruby-3.3": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "rss"
+      }
+     },
+     "ruby-4.0": {
       "compared": [
        "root_element"
       ],
@@ -418,6 +677,62 @@
       }
      }
     },
+    "java/javax.xml.parsers": {
+     "java-11": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue"
+      }
+     },
+     "java-17": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue"
+      }
+     },
+     "java-21": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue"
+      }
+     },
+     "java-25": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue"
+      }
+     },
+     "java-27": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue"
+      }
+     },
+     "java-8": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue"
+      }
+     }
+    },
     "python/xml.dom.minidom": {
      "python-3.11": {
       "compared": [
@@ -521,6 +836,38 @@
        "root_namespace": "https://loremfile.dev/ns/catalogue"
       }
      }
+    },
+    "ruby/REXML": {
+     "ruby-3.3": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
+      }
+     },
+     "ruby-4.0": {
+      "compared": [
+       "root_element"
+      ],
+      "outcome": "reads",
+      "props": {
+       "root_element": "catalogue",
+       "root_namespace": "https://loremfile.dev/ns/catalogue"
+      }
+     }
     }
    },
    "edge_outcome": null,
@@ -536,7 +883,9 @@
   }
  ],
  "format": "xml",
- "no_reader": [],
+ "no_reader": [
+  "node"
+ ],
  "readers": [
   {
    "docs": "https://pkg.go.dev/encoding/xml",
@@ -547,6 +896,15 @@
     "root_namespace"
    ],
    "runtime": "go"
+  },
+  {
+   "docs": "",
+   "id": "java/javax.xml.parsers",
+   "module": "javax.xml.parsers",
+   "props": [
+    "root_element"
+   ],
+   "runtime": "java"
   },
   {
    "docs": "https://docs.python.org/3/library/xml.dom.minidom.html",
@@ -567,6 +925,16 @@
     "root_namespace"
    ],
    "runtime": "python"
+  },
+  {
+   "docs": "",
+   "id": "ruby/REXML",
+   "module": "REXML",
+   "props": [
+    "root_element",
+    "root_namespace"
+   ],
+   "runtime": "ruby"
   }
  ],
  "runtimes": [
@@ -576,7 +944,19 @@
   "python-3.14",
   "python-3.15",
   "go-1.26",
-  "go-1.27"
+  "go-1.27",
+  "node-22",
+  "node-24",
+  "node-26",
+  "java-8",
+  "java-11",
+  "java-17",
+  "java-21",
+  "java-25",
+  "java-27",
+  "ruby-3.3",
+  "ruby-3.4",
+  "ruby-4.0"
  ],
  "skipped": []
 }

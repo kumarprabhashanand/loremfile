@@ -13,6 +13,84 @@
     "zero-byte:der/self-signed-ed25519-cert.der": "ok",
     "zero-byte:pem/self-signed-ed25519-cert.pem": "ok"
    }
+  },
+  "java/java.security.cert.CertificateFactory": {
+   "java-11": {
+    "reads:der/self-signed-ed25519-cert.der": "ok",
+    "reads:pem/self-signed-ed25519-cert.pem": "ok",
+    "zero-byte:der/self-signed-ed25519-cert.der": "ok",
+    "zero-byte:pem/self-signed-ed25519-cert.pem": "ok"
+   },
+   "java-17": {
+    "reads:der/self-signed-ed25519-cert.der": "ok",
+    "reads:pem/self-signed-ed25519-cert.pem": "ok",
+    "zero-byte:der/self-signed-ed25519-cert.der": "ok",
+    "zero-byte:pem/self-signed-ed25519-cert.pem": "ok"
+   },
+   "java-21": {
+    "reads:der/self-signed-ed25519-cert.der": "ok",
+    "reads:pem/self-signed-ed25519-cert.pem": "ok",
+    "zero-byte:der/self-signed-ed25519-cert.der": "ok",
+    "zero-byte:pem/self-signed-ed25519-cert.pem": "ok"
+   },
+   "java-25": {
+    "reads:der/self-signed-ed25519-cert.der": "ok",
+    "reads:pem/self-signed-ed25519-cert.pem": "ok",
+    "zero-byte:der/self-signed-ed25519-cert.der": "ok",
+    "zero-byte:pem/self-signed-ed25519-cert.pem": "ok"
+   },
+   "java-27": {
+    "reads:der/self-signed-ed25519-cert.der": "ok",
+    "reads:pem/self-signed-ed25519-cert.pem": "ok",
+    "zero-byte:der/self-signed-ed25519-cert.der": "ok",
+    "zero-byte:pem/self-signed-ed25519-cert.pem": "ok"
+   },
+   "java-8": {
+    "reads:der/self-signed-ed25519-cert.der": "ok",
+    "reads:pem/self-signed-ed25519-cert.pem": "ok",
+    "zero-byte:der/self-signed-ed25519-cert.der": "ok",
+    "zero-byte:pem/self-signed-ed25519-cert.pem": "ok"
+   }
+  },
+  "node/crypto.X509Certificate": {
+   "node-22": {
+    "reads:der/self-signed-ed25519-cert.der": "ok",
+    "reads:pem/self-signed-ed25519-cert.pem": "ok",
+    "zero-byte:der/self-signed-ed25519-cert.der": "ok",
+    "zero-byte:pem/self-signed-ed25519-cert.pem": "ok"
+   },
+   "node-24": {
+    "reads:der/self-signed-ed25519-cert.der": "ok",
+    "reads:pem/self-signed-ed25519-cert.pem": "ok",
+    "zero-byte:der/self-signed-ed25519-cert.der": "ok",
+    "zero-byte:pem/self-signed-ed25519-cert.pem": "ok"
+   },
+   "node-26": {
+    "reads:der/self-signed-ed25519-cert.der": "ok",
+    "reads:pem/self-signed-ed25519-cert.pem": "ok",
+    "zero-byte:der/self-signed-ed25519-cert.der": "ok",
+    "zero-byte:pem/self-signed-ed25519-cert.pem": "ok"
+   }
+  },
+  "ruby/OpenSSL::X509::Certificate": {
+   "ruby-3.3": {
+    "reads:der/self-signed-ed25519-cert.der": "ok",
+    "reads:pem/self-signed-ed25519-cert.pem": "ok",
+    "zero-byte:der/self-signed-ed25519-cert.der": "ok",
+    "zero-byte:pem/self-signed-ed25519-cert.pem": "ok"
+   },
+   "ruby-3.4": {
+    "reads:der/self-signed-ed25519-cert.der": "ok",
+    "reads:pem/self-signed-ed25519-cert.pem": "ok",
+    "zero-byte:der/self-signed-ed25519-cert.der": "ok",
+    "zero-byte:pem/self-signed-ed25519-cert.pem": "ok"
+   },
+   "ruby-4.0": {
+    "reads:der/self-signed-ed25519-cert.der": "ok",
+    "reads:pem/self-signed-ed25519-cert.pem": "ok",
+    "zero-byte:der/self-signed-ed25519-cert.der": "ok",
+    "zero-byte:pem/self-signed-ed25519-cert.pem": "ok"
+   }
   }
  },
  "files": [
@@ -38,6 +116,216 @@
       }
      },
      "go-1.27": {
+      "compared": [
+       "dns_names",
+       "issuer_cn",
+       "serial",
+       "subject_cn"
+      ],
+      "outcome": "reads",
+      "props": {
+       "dns_names": [
+        "fixture.example"
+       ],
+       "issuer_cn": "fixture.example",
+       "serial": 1409983142208024964197,
+       "subject_cn": "fixture.example"
+      }
+     }
+    },
+    "java/java.security.cert.CertificateFactory": {
+     "java-11": {
+      "compared": [
+       "dns_names",
+       "issuer_cn",
+       "serial",
+       "subject_cn"
+      ],
+      "outcome": "reads",
+      "props": {
+       "dns_names": [
+        "fixture.example"
+       ],
+       "issuer_cn": "fixture.example",
+       "serial": 1409983142208024964197,
+       "subject_cn": "fixture.example"
+      }
+     },
+     "java-17": {
+      "compared": [
+       "dns_names",
+       "issuer_cn",
+       "serial",
+       "subject_cn"
+      ],
+      "outcome": "reads",
+      "props": {
+       "dns_names": [
+        "fixture.example"
+       ],
+       "issuer_cn": "fixture.example",
+       "serial": 1409983142208024964197,
+       "subject_cn": "fixture.example"
+      }
+     },
+     "java-21": {
+      "compared": [
+       "dns_names",
+       "issuer_cn",
+       "serial",
+       "subject_cn"
+      ],
+      "outcome": "reads",
+      "props": {
+       "dns_names": [
+        "fixture.example"
+       ],
+       "issuer_cn": "fixture.example",
+       "serial": 1409983142208024964197,
+       "subject_cn": "fixture.example"
+      }
+     },
+     "java-25": {
+      "compared": [
+       "dns_names",
+       "issuer_cn",
+       "serial",
+       "subject_cn"
+      ],
+      "outcome": "reads",
+      "props": {
+       "dns_names": [
+        "fixture.example"
+       ],
+       "issuer_cn": "fixture.example",
+       "serial": 1409983142208024964197,
+       "subject_cn": "fixture.example"
+      }
+     },
+     "java-27": {
+      "compared": [
+       "dns_names",
+       "issuer_cn",
+       "serial",
+       "subject_cn"
+      ],
+      "outcome": "reads",
+      "props": {
+       "dns_names": [
+        "fixture.example"
+       ],
+       "issuer_cn": "fixture.example",
+       "serial": 1409983142208024964197,
+       "subject_cn": "fixture.example"
+      }
+     },
+     "java-8": {
+      "compared": [
+       "dns_names",
+       "issuer_cn",
+       "serial",
+       "subject_cn"
+      ],
+      "outcome": "reads",
+      "props": {
+       "dns_names": [
+        "fixture.example"
+       ],
+       "issuer_cn": "fixture.example",
+       "serial": 1409983142208024964197,
+       "subject_cn": "fixture.example"
+      }
+     }
+    },
+    "node/crypto.X509Certificate": {
+     "node-22": {
+      "compared": [
+       "dns_names",
+       "issuer_cn",
+       "serial",
+       "subject_cn"
+      ],
+      "outcome": "reads",
+      "props": {
+       "dns_names": [
+        "fixture.example"
+       ],
+       "issuer_cn": "fixture.example",
+       "serial": 1409983142208024964197,
+       "subject_cn": "fixture.example"
+      }
+     },
+     "node-24": {
+      "compared": [
+       "dns_names",
+       "issuer_cn",
+       "serial",
+       "subject_cn"
+      ],
+      "outcome": "reads",
+      "props": {
+       "dns_names": [
+        "fixture.example"
+       ],
+       "issuer_cn": "fixture.example",
+       "serial": 1409983142208024964197,
+       "subject_cn": "fixture.example"
+      }
+     },
+     "node-26": {
+      "compared": [
+       "dns_names",
+       "issuer_cn",
+       "serial",
+       "subject_cn"
+      ],
+      "outcome": "reads",
+      "props": {
+       "dns_names": [
+        "fixture.example"
+       ],
+       "issuer_cn": "fixture.example",
+       "serial": 1409983142208024964197,
+       "subject_cn": "fixture.example"
+      }
+     }
+    },
+    "ruby/OpenSSL::X509::Certificate": {
+     "ruby-3.3": {
+      "compared": [
+       "dns_names",
+       "issuer_cn",
+       "serial",
+       "subject_cn"
+      ],
+      "outcome": "reads",
+      "props": {
+       "dns_names": [
+        "fixture.example"
+       ],
+       "issuer_cn": "fixture.example",
+       "serial": 1409983142208024964197,
+       "subject_cn": "fixture.example"
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "dns_names",
+       "issuer_cn",
+       "serial",
+       "subject_cn"
+      ],
+      "outcome": "reads",
+      "props": {
+       "dns_names": [
+        "fixture.example"
+       ],
+       "issuer_cn": "fixture.example",
+       "serial": 1409983142208024964197,
+       "subject_cn": "fixture.example"
+      }
+     },
+     "ruby-4.0": {
       "compared": [
        "dns_names",
        "issuer_cn",
@@ -89,6 +377,42 @@
     "dns_names"
    ],
    "runtime": "go"
+  },
+  {
+   "docs": "",
+   "id": "java/java.security.cert.CertificateFactory",
+   "module": "java.security.cert.CertificateFactory",
+   "props": [
+    "subject_cn",
+    "issuer_cn",
+    "serial",
+    "dns_names"
+   ],
+   "runtime": "java"
+  },
+  {
+   "docs": "https://nodejs.org/api/crypto.html",
+   "id": "node/crypto.X509Certificate",
+   "module": "crypto.X509Certificate",
+   "props": [
+    "subject_cn",
+    "issuer_cn",
+    "serial",
+    "dns_names"
+   ],
+   "runtime": "node"
+  },
+  {
+   "docs": "",
+   "id": "ruby/OpenSSL::X509::Certificate",
+   "module": "OpenSSL::X509::Certificate",
+   "props": [
+    "subject_cn",
+    "issuer_cn",
+    "serial",
+    "dns_names"
+   ],
+   "runtime": "ruby"
   }
  ],
  "runtimes": [
@@ -98,7 +422,19 @@
   "python-3.14",
   "python-3.15",
   "go-1.26",
-  "go-1.27"
+  "go-1.27",
+  "node-22",
+  "node-24",
+  "node-26",
+  "java-8",
+  "java-11",
+  "java-17",
+  "java-21",
+  "java-25",
+  "java-27",
+  "ruby-3.3",
+  "ruby-3.4",
+  "ruby-4.0"
  ],
  "skipped": []
 }

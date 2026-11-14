@@ -10,6 +10,20 @@
     "zero-byte:json/people-10.json": "ok"
    }
   },
+  "node/JSON": {
+   "node-22": {
+    "reads:json/people-10.json": "ok",
+    "zero-byte:json/people-10.json": "ok"
+   },
+   "node-24": {
+    "reads:json/people-10.json": "ok",
+    "zero-byte:json/people-10.json": "ok"
+   },
+   "node-26": {
+    "reads:json/people-10.json": "ok",
+    "zero-byte:json/people-10.json": "ok"
+   }
+  },
   "python/json": {
    "python-3.11": {
     "reads:json/people-10.json": "ok",
@@ -31,6 +45,20 @@
     "reads:json/people-10.json": "ok",
     "zero-byte:json/people-10.json": "ok"
    }
+  },
+  "ruby/JSON": {
+   "ruby-3.3": {
+    "reads:json/people-10.json": "ok",
+    "zero-byte:json/people-10.json": "ok"
+   },
+   "ruby-3.4": {
+    "reads:json/people-10.json": "ok",
+    "zero-byte:json/people-10.json": "ok"
+   },
+   "ruby-4.0": {
+    "reads:json/people-10.json": "ok",
+    "zero-byte:json/people-10.json": "ok"
+   }
   }
  },
  "files": [
@@ -46,6 +74,23 @@
      "go-1.27": {
       "error": "invalid character '\\ufeff' looking for beginning of value",
       "error_type": "json.SyntaxError",
+      "outcome": "refuses"
+     }
+    },
+    "node/JSON": {
+     "node-22": {
+      "error": "Unexpected token '﻿', \"﻿{",
+      "error_type": "SyntaxError",
+      "outcome": "refuses"
+     },
+     "node-24": {
+      "error": "Unexpected token '﻿', \"﻿{",
+      "error_type": "SyntaxError",
+      "outcome": "refuses"
+     },
+     "node-26": {
+      "error": "Unexpected token '﻿', \"﻿{",
+      "error_type": "SyntaxError",
       "outcome": "refuses"
      }
     },
@@ -73,6 +118,23 @@
      "python-3.15": {
       "error": "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)",
       "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     }
+    },
+    "ruby/JSON": {
+     "ruby-3.3": {
+      "error": "unexpected token at '﻿{",
+      "error_type": "JSON::ParserError",
+      "outcome": "refuses"
+     },
+     "ruby-3.4": {
+      "error": "unexpected token at '﻿{",
+      "error_type": "JSON::ParserError",
+      "outcome": "refuses"
+     },
+     "ruby-4.0": {
+      "error": "unexpected character: '﻿{' at line 1 column 1",
+      "error_type": "JSON::ParserError",
       "outcome": "refuses"
      }
     }
@@ -101,6 +163,23 @@
       "outcome": "refuses"
      }
     },
+    "node/JSON": {
+     "node-22": {
+      "error": "Unexpected token ']', ...\"e\", \"two\",],",
+      "error_type": "SyntaxError",
+      "outcome": "refuses"
+     },
+     "node-24": {
+      "error": "Unexpected token ']', ...\"e\", \"two\",],",
+      "error_type": "SyntaxError",
+      "outcome": "refuses"
+     },
+     "node-26": {
+      "error": "Unexpected token ']', ...\"e\", \"two\",],",
+      "error_type": "SyntaxError",
+      "outcome": "refuses"
+     }
+    },
     "python/json": {
      "python-3.11": {
       "error": "Expecting value: line 4 column 25 (char 59)",
@@ -125,6 +204,23 @@
      "python-3.15": {
       "error": "Illegal trailing comma before end of array: line 4 column 24 (char 58)",
       "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     }
+    },
+    "ruby/JSON": {
+     "ruby-3.3": {
+      "error": "unexpected token at '],",
+      "error_type": "JSON::ParserError",
+      "outcome": "refuses"
+     },
+     "ruby-3.4": {
+      "error": "unexpected token at '],",
+      "error_type": "JSON::ParserError",
+      "outcome": "refuses"
+     },
+     "ruby-4.0": {
+      "error": "unexpected character: '],' at line 3 column 25",
+      "error_type": "JSON::ParserError",
       "outcome": "refuses"
      }
     }
@@ -153,6 +249,23 @@
       "outcome": "refuses"
      }
     },
+    "node/JSON": {
+     "node-22": {
+      "error": "Unexpected end of JSON input",
+      "error_type": "SyntaxError",
+      "outcome": "refuses"
+     },
+     "node-24": {
+      "error": "Unexpected end of JSON input",
+      "error_type": "SyntaxError",
+      "outcome": "refuses"
+     },
+     "node-26": {
+      "error": "Unexpected end of JSON input",
+      "error_type": "SyntaxError",
+      "outcome": "refuses"
+     }
+    },
     "python/json": {
      "python-3.11": {
       "error": "Expecting value: line 1 column 1 (char 0)",
@@ -177,6 +290,23 @@
      "python-3.15": {
       "error": "Expecting value: line 1 column 1 (char 0)",
       "error_type": "json.decoder.JSONDecodeError",
+      "outcome": "refuses"
+     }
+    },
+    "ruby/JSON": {
+     "ruby-3.3": {
+      "error": "unexpected token at ''",
+      "error_type": "JSON::ParserError",
+      "outcome": "refuses"
+     },
+     "ruby-3.4": {
+      "error": "unexpected token at ''",
+      "error_type": "JSON::ParserError",
+      "outcome": "refuses"
+     },
+     "ruby-4.0": {
+      "error": "unexpected end of input at line 1 column 1",
+      "error_type": "JSON::ParserError",
       "outcome": "refuses"
      }
     }
@@ -217,6 +347,41 @@
       }
      }
     },
+    "node/JSON": {
+     "node-22": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 19368,
+       "top_type": "array"
+      }
+     },
+     "node-24": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 19368,
+       "top_type": "array"
+      }
+     },
+     "node-26": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 19368,
+       "top_type": "array"
+      }
+     }
+    },
     "python/json": {
      "python-3.11": {
       "compared": [
@@ -263,6 +428,41 @@
       }
      },
      "python-3.15": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 19368,
+       "top_type": "array"
+      }
+     }
+    },
+    "ruby/JSON": {
+     "ruby-3.3": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 19368,
+       "top_type": "array"
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 19368,
+       "top_type": "array"
+      }
+     },
+     "ruby-4.0": {
       "compared": [
        "items",
        "top_type"
@@ -314,6 +514,41 @@
       }
      }
     },
+    "node/JSON": {
+     "node-22": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1942,
+       "top_type": "array"
+      }
+     },
+     "node-24": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1942,
+       "top_type": "array"
+      }
+     },
+     "node-26": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1942,
+       "top_type": "array"
+      }
+     }
+    },
     "python/json": {
      "python-3.11": {
       "compared": [
@@ -360,6 +595,41 @@
       }
      },
      "python-3.15": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1942,
+       "top_type": "array"
+      }
+     }
+    },
+    "ruby/JSON": {
+     "ruby-3.3": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1942,
+       "top_type": "array"
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1942,
+       "top_type": "array"
+      }
+     },
+     "ruby-4.0": {
       "compared": [
        "items",
        "top_type"
@@ -411,6 +681,41 @@
       }
      }
     },
+    "node/JSON": {
+     "node-22": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 21,
+       "top_type": "object"
+      }
+     },
+     "node-24": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 21,
+       "top_type": "object"
+      }
+     },
+     "node-26": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 21,
+       "top_type": "object"
+      }
+     }
+    },
     "python/json": {
      "python-3.11": {
       "compared": [
@@ -457,6 +762,41 @@
       }
      },
      "python-3.15": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 21,
+       "top_type": "object"
+      }
+     }
+    },
+    "ruby/JSON": {
+     "ruby-3.3": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 21,
+       "top_type": "object"
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 21,
+       "top_type": "object"
+      }
+     },
+     "ruby-4.0": {
       "compared": [
        "items",
        "top_type"
@@ -508,6 +848,41 @@
       }
      }
     },
+    "node/JSON": {
+     "node-22": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1,
+       "top_type": "object"
+      }
+     },
+     "node-24": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1,
+       "top_type": "object"
+      }
+     },
+     "node-26": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1,
+       "top_type": "object"
+      }
+     }
+    },
     "python/json": {
      "python-3.11": {
       "compared": [
@@ -554,6 +929,41 @@
       }
      },
      "python-3.15": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1,
+       "top_type": "object"
+      }
+     }
+    },
+    "ruby/JSON": {
+     "ruby-3.3": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1,
+       "top_type": "object"
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1,
+       "top_type": "object"
+      }
+     },
+     "ruby-4.0": {
       "compared": [
        "items",
        "top_type"
@@ -605,6 +1015,41 @@
       }
      }
     },
+    "node/JSON": {
+     "node-22": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 10,
+       "top_type": "array"
+      }
+     },
+     "node-24": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 10,
+       "top_type": "array"
+      }
+     },
+     "node-26": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 10,
+       "top_type": "array"
+      }
+     }
+    },
     "python/json": {
      "python-3.11": {
       "compared": [
@@ -661,6 +1106,41 @@
        "top_type": "array"
       }
      }
+    },
+    "ruby/JSON": {
+     "ruby-3.3": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 10,
+       "top_type": "array"
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 10,
+       "top_type": "array"
+      }
+     },
+     "ruby-4.0": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 10,
+       "top_type": "array"
+      }
+     }
     }
    },
    "edge_outcome": null,
@@ -691,6 +1171,41 @@
       }
      },
      "go-1.27": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1000,
+       "top_type": "array"
+      }
+     }
+    },
+    "node/JSON": {
+     "node-22": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1000,
+       "top_type": "array"
+      }
+     },
+     "node-24": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1000,
+       "top_type": "array"
+      }
+     },
+     "node-26": {
       "compared": [
        "items",
        "top_type"
@@ -758,6 +1273,41 @@
        "top_type": "array"
       }
      }
+    },
+    "ruby/JSON": {
+     "ruby-3.3": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1000,
+       "top_type": "array"
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1000,
+       "top_type": "array"
+      }
+     },
+     "ruby-4.0": {
+      "compared": [
+       "items",
+       "top_type"
+      ],
+      "outcome": "reads",
+      "props": {
+       "items": 1000,
+       "top_type": "array"
+      }
+     }
     }
    },
    "edge_outcome": null,
@@ -774,7 +1324,9 @@
   }
  ],
  "format": "json",
- "no_reader": [],
+ "no_reader": [
+  "java"
+ ],
  "readers": [
   {
    "docs": "https://pkg.go.dev/encoding/json",
@@ -787,6 +1339,16 @@
    "runtime": "go"
   },
   {
+   "docs": "https://nodejs.org/api/globals.html",
+   "id": "node/JSON",
+   "module": "JSON",
+   "props": [
+    "top_type",
+    "items"
+   ],
+   "runtime": "node"
+  },
+  {
    "docs": "https://docs.python.org/3/library/json.html",
    "id": "python/json",
    "module": "json",
@@ -795,6 +1357,16 @@
     "items"
    ],
    "runtime": "python"
+  },
+  {
+   "docs": "",
+   "id": "ruby/JSON",
+   "module": "JSON",
+   "props": [
+    "top_type",
+    "items"
+   ],
+   "runtime": "ruby"
   }
  ],
  "runtimes": [
@@ -804,7 +1376,19 @@
   "python-3.14",
   "python-3.15",
   "go-1.26",
-  "go-1.27"
+  "go-1.27",
+  "node-22",
+  "node-24",
+  "node-26",
+  "java-8",
+  "java-11",
+  "java-17",
+  "java-21",
+  "java-25",
+  "java-27",
+  "ruby-3.3",
+  "ruby-3.4",
+  "ruby-4.0"
  ],
  "skipped": []
 }

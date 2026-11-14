@@ -31,6 +31,20 @@
     "reads:csv/people-10.csv": "ok",
     "zero-byte:csv/people-10.csv": "ok"
    }
+  },
+  "ruby/CSV": {
+   "ruby-3.3": {
+    "reads:csv/people-10.csv": "ok",
+    "zero-byte:csv/people-10.csv": "ok"
+   },
+   "ruby-3.4": {
+    "reads:csv/people-10.csv": "ok",
+    "zero-byte:csv/people-10.csv": "ok"
+   },
+   "ruby-4.0": {
+    "reads:csv/people-10.csv": "ok",
+    "zero-byte:csv/people-10.csv": "ok"
+   }
   }
  },
  "files": [
@@ -107,6 +121,41 @@
       }
      },
      "python-3.15": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 38462
+      }
+     }
+    },
+    "ruby/CSV": {
+     "ruby-3.3": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 38462
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 38462
+      }
+     },
+     "ruby-4.0": {
       "compared": [
        "columns",
        "rows"
@@ -215,6 +264,41 @@
        "rows": 3847
       }
      }
+    },
+    "ruby/CSV": {
+     "ruby-3.3": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 3847
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 3847
+      }
+     },
+     "ruby-4.0": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 3847
+      }
+     }
     }
    },
    "edge_outcome": null,
@@ -303,6 +387,41 @@
       }
      },
      "python-3.15": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
+    },
+    "ruby/CSV": {
+     "ruby-3.3": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "ruby-4.0": {
       "compared": [
        "columns",
        "rows"
@@ -411,6 +530,41 @@
        "rows": 11
       }
      }
+    },
+    "ruby/CSV": {
+     "ruby-3.3": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "ruby-4.0": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
     }
    },
    "edge_outcome": null,
@@ -499,6 +653,41 @@
       }
      },
      "python-3.15": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
+    },
+    "ruby/CSV": {
+     "ruby-3.3": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "ruby-4.0": {
       "compared": [
        "columns",
        "rows"
@@ -607,6 +796,41 @@
        "rows": 11
       }
      }
+    },
+    "ruby/CSV": {
+     "ruby-3.3": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "ruby-4.0": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
     }
    },
    "edge_outcome": null,
@@ -695,6 +919,41 @@
       }
      },
      "python-3.15": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
+    },
+    "ruby/CSV": {
+     "ruby-3.3": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "ruby-4.0": {
       "compared": [
        "columns",
        "rows"
@@ -803,6 +1062,41 @@
        "rows": 11
       }
      }
+    },
+    "ruby/CSV": {
+     "ruby-3.3": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     },
+     "ruby-4.0": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 11
+      }
+     }
     }
    },
    "edge_outcome": null,
@@ -901,6 +1195,41 @@
        "rows": 1001
       }
      }
+    },
+    "ruby/CSV": {
+     "ruby-3.3": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 1001
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 1001
+      }
+     },
+     "ruby-4.0": {
+      "compared": [
+       "columns",
+       "rows"
+      ],
+      "outcome": "reads",
+      "props": {
+       "columns": 14,
+       "rows": 1001
+      }
+     }
     }
    },
    "edge_outcome": null,
@@ -965,6 +1294,32 @@
       }
      },
      "python-3.15": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "columns": 3,
+       "rows": 5
+      }
+     }
+    },
+    "ruby/CSV": {
+     "ruby-3.3": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "columns": 3,
+       "rows": 5
+      }
+     },
+     "ruby-3.4": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "columns": 3,
+       "rows": 5
+      }
+     },
+     "ruby-4.0": {
       "compared": [],
       "outcome": "reads",
       "props": {
@@ -1038,6 +1393,29 @@
        "rows": 0
       }
      }
+    },
+    "ruby/CSV": {
+     "ruby-3.3": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "rows": 0
+      }
+     },
+     "ruby-3.4": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "rows": 0
+      }
+     },
+     "ruby-4.0": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "rows": 0
+      }
+     }
     }
    },
    "edge_outcome": "must-fail",
@@ -1051,7 +1429,10 @@
   }
  ],
  "format": "csv",
- "no_reader": [],
+ "no_reader": [
+  "java",
+  "node"
+ ],
  "readers": [
   {
    "docs": "https://pkg.go.dev/encoding/csv",
@@ -1072,6 +1453,16 @@
     "columns"
    ],
    "runtime": "python"
+  },
+  {
+   "docs": "",
+   "id": "ruby/CSV",
+   "module": "CSV",
+   "props": [
+    "rows",
+    "columns"
+   ],
+   "runtime": "ruby"
   }
  ],
  "runtimes": [
@@ -1081,7 +1472,19 @@
   "python-3.14",
   "python-3.15",
   "go-1.26",
-  "go-1.27"
+  "go-1.27",
+  "node-22",
+  "node-24",
+  "node-26",
+  "java-8",
+  "java-11",
+  "java-17",
+  "java-21",
+  "java-25",
+  "java-27",
+  "ruby-3.3",
+  "ruby-3.4",
+  "ruby-4.0"
  ],
  "skipped": [
   {
