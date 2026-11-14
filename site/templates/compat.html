@@ -23,7 +23,7 @@
 </ul>
 
 <h2 id="run">This run</h2>
-<p class="meta">Run on {{ date }} against catalogue {{ catalog_version }}. Each runtime's supported versions were read from its own page on {{ checked }}:{% for s in sources %} {{ s.name }}, <code>{{ s.source }}</code>{{ "." if loop.last else ";" }}{% endfor %} <a href="{{ run_url }}">The run's record</a>.</p>
+<p class="meta">Run on {{ date }} against catalogue {{ catalog_version }}. <a href="{{ run_url }}">The run's record</a>.</p>
 <div class="table-wrap">
 <table class="files">
   <caption>Runtime versions in this run</caption>
@@ -33,6 +33,20 @@
   <tbody>
 {% for run in runs %}
     <tr><th scope="row">{{ run.name }}</th><td>{{ run.resolved }}{% if run.detail %} ({{ run.detail }}){% endif %}</td></tr>
+{% endfor %}
+  </tbody>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="files">
+  <caption>Where each runtime's supported versions come from</caption>
+  <thead>
+    <tr><th scope="col">Runtime</th><th scope="col">Page</th><th scope="col">Read on</th><th scope="col">Rule</th></tr>
+  </thead>
+  <tbody>
+{% for s in sources %}
+    <tr><th scope="row">{{ s.name }}</th><td><code>{{ s.source }}</code></td><td>{{ s.checked }}</td><td>{{ s.supported }}</td></tr>
 {% endfor %}
   </tbody>
 </table>

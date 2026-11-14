@@ -11,8 +11,8 @@
 {% for c in columns %}
       <th scope="col">{{ c.runtime_name }} <code>{{ c.module }}</code> <a href="{{ c.adapter }}">adapter</a></th>
 {% endfor %}
-{% for runtime in no_reader %}
-      <th scope="col">{{ runtime }}</th>
+{% for r in no_reader %}
+      <th scope="col">{{ r.name }}<br><span class="size">{{ r.reason }}</span></th>
 {% endfor %}
     </tr>
   </thead>
@@ -37,7 +37,7 @@
 {% endif %}
       </td>
 {% endfor %}
-{% for runtime in no_reader %}
+{% for r in no_reader %}
       <td><strong>no-reader</strong></td>
 {% endfor %}
     </tr>
@@ -47,6 +47,9 @@
 </div>
 {% for r in routing %}
 <p>{{ r.text }}</p>
+{% endfor %}
+{% for note in notes %}
+<p>{{ note }}</p>
 {% endfor %}
 {% if skipped %}
 <p>Skipped, over the size limit:{% for s in skipped %} <a href="/{{ s.path }}"><code>{{ s.path }}</code></a> ({{ s.size }}){{ "." if loop.last else "," }}{% endfor %}</p>

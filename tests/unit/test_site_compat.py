@@ -57,6 +57,9 @@ def tallies(fmt: str) -> set[str]:
                     counts[cell["outcome"]] = counts.get(cell["outcome"], 0) + 1
     found = {str(n) for n in counts.values()} | {"0"}
     found |= {str(len(document["files"])), str(len(document["readers"])), str(len(versions))}
+    found |= {str(len({r["runtime"] for r in document["readers"]}))}
+    for row in document["files"]:
+        found |= {str(len(row["cells"])), str(len({r.split("/", 1)[0] for r in row["cells"]}))}
     return found
 
 
@@ -66,11 +69,19 @@ def sizes(fmt: str) -> set[str]:
     return {n for row in rows for n in NUMBER.findall(build.sized(row["bytes"]))}
 
 
+def config_text() -> str:
+    """The owner-reviewed prose of readers.yaml and runtimes.yaml: reasons, rules and dates."""
+    return " ".join(
+        (ROOT / "compat" / name).read_text(encoding="utf-8")
+        for name in ("readers.yaml", "runtimes.yaml")
+    )
+
+
 def allowed(fmt: str | None) -> set[str]:
     scope = READERS["scope"]
     figures = {str(scope["timeout_seconds"]), str(scope["max_bytes"] // 1_000_000)}
     figures |= {str(v) for v in scope["tolerance"].values()}
-    pool = set(NUMBER.findall(results_text())) | figures
+    pool = set(NUMBER.findall(results_text())) | set(NUMBER.findall(config_text())) | figures
     for name in [fmt] if fmt else FORMATS:
         pool |= tallies(name) | sizes(name)
     return pool
@@ -195,12 +206,29 @@ def test_the_tar_page_says_who_decompresses_and_shows_each_cell_in_its_own_state
     site: Path,
 ) -> None:
     body = main_text(text(site, "compat/tar"))
-    for part in ("python/tarfile is given the file as it is", "Go has no reader", "no xz"):
+    for part in ("python/tarfile is given the file as it is", "neither Go nor Ruby", "no xz"):
         assert part in body, part
     assert "archive/tar + compress/gzip" in body
-    # The plain file is not given to the gzip chain and the gzip file not to plain archive/tar.
-    assert body.count("not given this file") == 2
-    assert body.count("no-reader") >= 2, "the xz file has no Go reader, in both Go columns"
+    # The plain file is not given to the Go and Ruby gzip chains, the gzip file not to the plain
+    # Go and Ruby readers: four cells.
+    assert body.count("not given this file") == 4
+    assert body.count("no-reader") >= 4, "the xz file has no Go or Ruby reader, in four columns"
     twin = (site / routes.disk_path(routes.twin_key("compat/tar"))).read_text(encoding="utf-8")
     assert "not given this file" in twin and "**no-reader**" in twin
     assert "no xz" not in main_text(text(site, "compat/zip")), "control: other pages do not say it"
+
+
+def test_a_varies_file_that_no_reader_read_is_said_to_be_so_in_one_line(site: Path) -> None:
+    """edge/json-bom.json is labelled varies, because RFC 8259 lets a parser ignore a BOM; every
+    reader refusing it does not relabel it, the page says so (owner, 2026-11-14)."""
+    results = json.loads((RESULTS / "json.json").read_text(encoding="utf-8"))
+    row = next(r for r in results["files"] if r["path"] == "edge/json-bom.json")
+    assert row["edge_outcome"] == "varies"
+    outcomes = {c["outcome"] for per in row["cells"].values() for c in per.values()}
+    assert outcomes == {"refuses"}, "control: nothing read it, so the line must be there"
+    body = main_text(text(site, "compat/json"))
+    assert body.count("read edge/json-bom.json. Its outcome, varies,") == 1
+    assert "not what these readers did" in body
+    assert "None of the" not in main_text(text(site, "compat/csv")), "control: csv files were read"
+    note = compat.unread_notes(compat.load(ROOT), "json")
+    assert len(note) == 1 and "edge/json-bom.json" in note[0]

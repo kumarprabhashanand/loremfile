@@ -125,6 +125,6 @@ Every catalog row marked phase 1 that is not in the `05` §9 launch list (188 fi
 
 ## M8: /compat, how standard libraries read our files (A, ≈ 12 h; no owner step)
 
-1. `compat/` with the harness, the Python and Go adapters, `readers.yaml` and `runtimes.yaml`, two controls per reader, and `compat.yml` (`07` §8, ADR-034). Results come from the pull request's own run.
+1. `compat/` with the harness, the adapters for Python, Go, Node.js, Java and Ruby, `readers.yaml` and `runtimes.yaml`, two controls per reader, and `compat.yml` (`07` §8, ADR-034). Results come from the pull request's own run.
 2. The site: `/compat` and `/compat/{format}`, Markdown twins, a line in `llms.txt`, the agent on `/status`, a link from each in-scope format page.
-3. Node, Java and Ruby, a monthly schedule, and one line in `11` §3: the monthly maintenance pull request refreshes `compat/results/` from that month's run.
+3. Done in the second pull request: Node.js, Java and Ruby, a monthly schedule, and one line in `11` §3: the monthly maintenance pull request refreshes `compat/results/` from that month's run.

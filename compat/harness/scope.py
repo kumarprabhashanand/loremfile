@@ -22,7 +22,8 @@ def load_json(path: Path) -> Any:  # noqa: ANN401 - whatever the document is
 def load_config(compat_dir: Path = COMPAT_DIR) -> dict[str, Any]:
     readers = load_json(compat_dir / "readers.yaml")
     runtimes = load_json(compat_dir / "runtimes.yaml")
-    return {**readers, "runtime_list": runtimes["runtimes"], "checked": runtimes["checked"]}
+    checked = max(r["checked"] for r in runtimes["runtimes"])
+    return {**readers, "runtime_list": runtimes["runtimes"], "checked": checked}
 
 
 def load_manifest(root: Path = ROOT) -> dict[str, Any]:

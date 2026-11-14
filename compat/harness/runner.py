@@ -23,32 +23,58 @@ ERROR_LIMIT = 200
 Command = list[str]
 
 
+def run_tool(
+    argv: Command, *, env: dict[str, str] | None = None
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(argv, capture_output=True, text=True, check=False, env=env)
+
+
 def adapter_command(runtime: str, compat_dir: Path, work: Path) -> Command:
     """The command prefix that runs this runtime's adapter; builds it first where it compiles."""
+    adapters = compat_dir / "adapters"
     if runtime == "python":
-        return [sys.executable, "-I", str(compat_dir / "adapters" / "python" / "adapter.py")]
+        return [sys.executable, "-I", str(adapters / "python" / "adapter.py")]
+    if runtime == "node":
+        return ["node", str(adapters / "node" / "adapter.mjs")]
+    if runtime == "ruby":
+        return ["ruby", "-W0", str(adapters / "ruby" / "adapter.rb")]
     if runtime == "go":
         binary = work / "adapter-go"
-        source = compat_dir / "adapters" / "go" / "adapter.go"
-        build = subprocess.run(
-            ["go", "build", "-o", str(binary), str(source)],
-            capture_output=True,
-            text=True,
-            check=False,
+        build = run_tool(
+            ["go", "build", "-o", str(binary), str(adapters / "go" / "adapter.go")],
             env={**os.environ, "CGO_ENABLED": "0"},
         )
         if build.returncode != 0:
             raise RuntimeError(f"go build failed: {build.stderr.strip()[:ERROR_LIMIT]}")
         return [str(binary)]
+    if runtime == "java":
+        classes = work / "java-classes"
+        classes.mkdir(parents=True, exist_ok=True)
+        build = run_tool(["javac", "-d", str(classes), str(adapters / "java" / "Adapter.java")])
+        if build.returncode != 0:
+            raise RuntimeError(f"javac failed: {build.stderr.strip()[:ERROR_LIMIT]}")
+        return ["java", "-Djava.awt.headless=true", "-cp", str(classes), "Adapter"]
     raise RuntimeError(f"no adapter for runtime {runtime!r}")
+
+
+def java_version(banner: str) -> str:
+    """`openjdk version "17.0.14" 2025-01-21` is 17.0.14; Java 8's `"1.8.0_472"` is 8.0.472."""
+    quoted = banner.split('"')[1]
+    return quoted.replace("1.8.0_", "8.0.") if quoted.startswith("1.8.0_") else quoted
 
 
 def resolved_version(runtime: str) -> str:
     if runtime == "python":
         return platform.python_version()
     if runtime == "go":
-        out = subprocess.run(["go", "version"], capture_output=True, text=True, check=True).stdout
-        return out.split()[2].removeprefix("go")
+        return run_tool(["go", "version"]).stdout.split()[2].removeprefix("go")
+    if runtime == "node":
+        return run_tool(["node", "--version"]).stdout.strip().removeprefix("v")
+    if runtime == "ruby":
+        return run_tool(["ruby", "-e", "print RUBY_VERSION"]).stdout.strip()
+    if runtime == "java":
+        done = run_tool(["java", "-version"])
+        return java_version(done.stderr or done.stdout)
     raise RuntimeError(f"no version probe for runtime {runtime!r}")
 
 

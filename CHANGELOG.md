@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- `/compat`: what the standard libraries of Python and Go do with our zip, tar, gz, wav, jpg, png, gif, json, csv, xml, pem and der files, per reader and runtime version, against the manifest's measured properties.
+- `/compat`: what the standard libraries of Python, Go, Node.js, Java and Ruby do with our zip, tar, gz, wav, jpg, png, gif, json, csv, xml, pem and der files, per reader and runtime version, against the manifest's measured properties.
 
 ## [1.15.1] - 2026-11-13
 

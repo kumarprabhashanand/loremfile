@@ -101,11 +101,28 @@
           "python/xml.etree.ElementTree"
         ],
         "text": "A root name in Clark notation, {namespace}local, is reduced to its local name before it is reported as root_element, the form the manifest and the other readers use. The namespace is reported as its own property, root_namespace, which is not compared."
+      },
+      {
+        "name": "Name strings",
+        "applies": [
+          "node/crypto.X509Certificate",
+          "ruby/OpenSSL::X509::Certificate"
+        ],
+        "text": "A certificate reader that gives names as text is reduced by the adapter to the values the manifest holds: the CN from a subject or issuer written CN=..., the DNS entries from subject alternative names written DNS:a, DNS:b, and, where the serial is given as hexadecimal text, the integer it spells."
       }
     ],
     "no_reader_when": [
       {
         "runtime": "go",
+        "format": "tar",
+        "when": {
+          "compression": [
+            "xz"
+          ]
+        }
+      },
+      {
+        "runtime": "ruby",
         "format": "tar",
         "when": {
           "compression": [
@@ -120,9 +137,11 @@
         "applies": [
           "go/archive/tar",
           "go/archive/tar+compress/gzip",
-          "python/tarfile"
+          "python/tarfile",
+          "ruby/Gem::Package::TarReader",
+          "ruby/Gem::Package::TarReader+Zlib::GzipReader"
         ],
-        "text": "The manifest's compression decides what each tar reader is given. python/tarfile is given the file as it is, gzip and xz included, and decompresses it itself. archive/tar does not decompress, so go/archive/tar is given only uncompressed tar, compress/gzip is chained into archive/tar for gzip-compressed tar (the arrangement Go's documentation describes) under the reader go/archive/tar+compress/gzip, and for xz-compressed tar Go has no reader: its standard library has bzip2, flate, gzip, lzw and zlib, and no xz."
+        "text": "The manifest's compression decides what each tar reader is given. python/tarfile is given the file as it is, gzip and xz included, and decompresses it itself. archive/tar (Go) and Gem::Package::TarReader (Ruby) do not decompress, so each is given only uncompressed tar, compress/gzip or Zlib::GzipReader is chained into it for gzip-compressed tar (the arrangement Go's documentation describes) under its own reader id, and for xz-compressed tar neither Go nor Ruby has a reader: Go's standard library has bzip2, flate, gzip, lzw and zlib, and no xz."
       }
     ]
   },
@@ -357,6 +376,202 @@
       ]
     },
     {
+      "id": "java/java.security.cert.CertificateFactory",
+      "runtime": "java",
+      "module": "java.security.cert.CertificateFactory",
+      "docs": "",
+      "formats": [
+        "pem",
+        "der"
+      ],
+      "props": [
+        "subject_cn",
+        "issuer_cn",
+        "serial",
+        "dns_names"
+      ],
+      "controls": [
+        {
+          "reads": "pem/self-signed-ed25519-cert.pem",
+          "must_not": "zero-byte"
+        },
+        {
+          "reads": "der/self-signed-ed25519-cert.der",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "java/java.util.zip.GZIPInputStream",
+      "runtime": "java",
+      "module": "java.util.zip.GZIPInputStream",
+      "docs": "",
+      "formats": [
+        "gz"
+      ],
+      "props": [
+        "uncompressed_bytes"
+      ],
+      "controls": [
+        {
+          "reads": "gz/lorem-1mb.txt.gz",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "java/java.util.zip.ZipFile",
+      "runtime": "java",
+      "module": "java.util.zip.ZipFile",
+      "docs": "",
+      "formats": [
+        "zip"
+      ],
+      "props": [
+        "entries",
+        "directories",
+        "uncompressed_bytes"
+      ],
+      "controls": [
+        {
+          "reads": "zip/3-text-files.zip",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "java/javax.imageio",
+      "runtime": "java",
+      "module": "javax.imageio",
+      "docs": "",
+      "formats": [
+        "jpg",
+        "png",
+        "gif"
+      ],
+      "props": [
+        "width",
+        "height",
+        "frames"
+      ],
+      "controls": [
+        {
+          "reads": "jpg/100x100.jpg",
+          "must_not": "zero-byte"
+        },
+        {
+          "reads": "png/100x100.png",
+          "must_not": "zero-byte"
+        },
+        {
+          "reads": "gif/static-256x256.gif",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "java/javax.sound.sampled",
+      "runtime": "java",
+      "module": "javax.sound.sampled",
+      "docs": "",
+      "formats": [
+        "wav"
+      ],
+      "props": [
+        "channels",
+        "sample_rate",
+        "bit_depth",
+        "duration_ms"
+      ],
+      "controls": [
+        {
+          "reads": "wav/sine-440hz-3s-44k-16bit-mono.wav",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "java/javax.xml.parsers",
+      "runtime": "java",
+      "module": "javax.xml.parsers",
+      "docs": "",
+      "formats": [
+        "xml"
+      ],
+      "props": [
+        "root_element"
+      ],
+      "controls": [
+        {
+          "reads": "xml/people-10.xml",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "node/JSON",
+      "runtime": "node",
+      "module": "JSON",
+      "docs": "https://nodejs.org/api/globals.html",
+      "formats": [
+        "json"
+      ],
+      "props": [
+        "top_type",
+        "items"
+      ],
+      "controls": [
+        {
+          "reads": "json/people-10.json",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "node/crypto.X509Certificate",
+      "runtime": "node",
+      "module": "crypto.X509Certificate",
+      "docs": "https://nodejs.org/api/crypto.html",
+      "formats": [
+        "pem",
+        "der"
+      ],
+      "props": [
+        "subject_cn",
+        "issuer_cn",
+        "serial",
+        "dns_names"
+      ],
+      "controls": [
+        {
+          "reads": "pem/self-signed-ed25519-cert.pem",
+          "must_not": "zero-byte"
+        },
+        {
+          "reads": "der/self-signed-ed25519-cert.der",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "node/zlib",
+      "runtime": "node",
+      "module": "zlib",
+      "docs": "https://nodejs.org/api/zlib.html",
+      "formats": [
+        "gz"
+      ],
+      "props": [
+        "uncompressed_bytes"
+      ],
+      "controls": [
+        {
+          "reads": "gz/lorem-1mb.txt.gz",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
       "id": "python/csv",
       "runtime": "python",
       "module": "csv",
@@ -510,18 +725,191 @@
           "must_not": "zero-byte"
         }
       ]
+    },
+    {
+      "id": "ruby/CSV",
+      "runtime": "ruby",
+      "module": "CSV",
+      "docs": "",
+      "formats": [
+        "csv"
+      ],
+      "props": [
+        "rows",
+        "columns"
+      ],
+      "controls": [
+        {
+          "reads": "csv/people-10.csv",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "ruby/Gem::Package::TarReader",
+      "runtime": "ruby",
+      "module": "Gem::Package::TarReader",
+      "docs": "",
+      "formats": [
+        "tar"
+      ],
+      "props": [
+        "entries",
+        "directories",
+        "uncompressed_bytes"
+      ],
+      "controls": [
+        {
+          "reads": "tar/3-text-files.tar",
+          "must_not": "truncated"
+        }
+      ],
+      "when": {
+        "compression": [
+          ""
+        ]
+      }
+    },
+    {
+      "id": "ruby/Gem::Package::TarReader+Zlib::GzipReader",
+      "runtime": "ruby",
+      "module": "Gem::Package::TarReader + Zlib::GzipReader",
+      "docs": "",
+      "formats": [
+        "tar"
+      ],
+      "props": [
+        "entries",
+        "directories",
+        "uncompressed_bytes"
+      ],
+      "controls": [
+        {
+          "reads": "tar/3-text-files.tar.gz",
+          "must_not": "zero-byte"
+        }
+      ],
+      "when": {
+        "compression": [
+          "gz"
+        ]
+      }
+    },
+    {
+      "id": "ruby/JSON",
+      "runtime": "ruby",
+      "module": "JSON",
+      "docs": "",
+      "formats": [
+        "json"
+      ],
+      "props": [
+        "top_type",
+        "items"
+      ],
+      "controls": [
+        {
+          "reads": "json/people-10.json",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "ruby/OpenSSL::X509::Certificate",
+      "runtime": "ruby",
+      "module": "OpenSSL::X509::Certificate",
+      "docs": "",
+      "formats": [
+        "pem",
+        "der"
+      ],
+      "props": [
+        "subject_cn",
+        "issuer_cn",
+        "serial",
+        "dns_names"
+      ],
+      "controls": [
+        {
+          "reads": "pem/self-signed-ed25519-cert.pem",
+          "must_not": "zero-byte"
+        },
+        {
+          "reads": "der/self-signed-ed25519-cert.der",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "ruby/REXML",
+      "runtime": "ruby",
+      "module": "REXML",
+      "docs": "",
+      "formats": [
+        "xml"
+      ],
+      "props": [
+        "root_element",
+        "root_namespace"
+      ],
+      "controls": [
+        {
+          "reads": "xml/people-10.xml",
+          "must_not": "zero-byte"
+        }
+      ]
+    },
+    {
+      "id": "ruby/Zlib::GzipReader",
+      "runtime": "ruby",
+      "module": "Zlib::GzipReader",
+      "docs": "",
+      "formats": [
+        "gz"
+      ],
+      "props": [
+        "uncompressed_bytes"
+      ],
+      "controls": [
+        {
+          "reads": "gz/lorem-1mb.txt.gz",
+          "must_not": "zero-byte"
+        }
+      ]
     }
   ],
   "no_reader": {
-    "python": [
-      "jpg",
-      "png",
-      "gif",
-      "pem",
-      "der"
-    ],
-    "go": [
-      "wav"
-    ]
+    "python": {
+      "jpg": "The standard library has no image decoder. tkinter.PhotoImage is outside the scope rule (docs/07 section 8).",
+      "png": "The standard library has no image decoder. tkinter.PhotoImage is outside the scope rule (docs/07 section 8).",
+      "gif": "The standard library has no image decoder. tkinter.PhotoImage is outside the scope rule (docs/07 section 8).",
+      "pem": "The standard library has no certificate parser: ssl loads certificates for TLS and offers none that returns a subject, an issuer, a serial and names.",
+      "der": "The standard library has no certificate parser: ssl loads certificates for TLS and offers none that returns a subject, an issuer, a serial and names."
+    },
+    "go": {
+      "wav": "The standard library has no audio file reader."
+    },
+    "node": {
+      "zip": "The standard library has no zip reader: zlib inflates streams and does not read the archive format.",
+      "tar": "The standard library has no tar reader.",
+      "csv": "The standard library has no CSV reader.",
+      "xml": "The standard library has no XML parser.",
+      "wav": "The standard library has no audio file reader.",
+      "jpg": "The standard library has no image decoder.",
+      "png": "The standard library has no image decoder.",
+      "gif": "The standard library has no image decoder."
+    },
+    "java": {
+      "tar": "The standard library has no tar reader: java.util.zip reads zip and gzip.",
+      "json": "The standard library has no JSON parser.",
+      "csv": "The standard library has no CSV reader."
+    },
+    "ruby": {
+      "zip": "The standard library has no zip reader: Zlib reads gzip and zlib streams, not the archive format.",
+      "wav": "The standard library has no audio file reader.",
+      "jpg": "The standard library has no image decoder.",
+      "png": "The standard library has no image decoder.",
+      "gif": "The standard library has no image decoder."
+    }
   }
 }
