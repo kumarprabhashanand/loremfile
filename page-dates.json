@@ -40,60 +40,60 @@
     "sha256": "c955a981e5761d75f55a4348b4f4eff77dc2cb16c3f0809e49f2eadd9dfe8adc"
   },
   "changelog": {
-    "date": "2026-11-13",
-    "sha256": "cc2c1f6bda478135614cd697bfa21c23ddd886b846e7474ef3b154a3a58cedd8"
+    "date": "2026-11-14",
+    "sha256": "183b5cd304f509ee3f2eb02aaf6f7d6095bcca301faf7dfc9907020b79891ae0"
   },
   "compat": {
-    "date": "2026-11-13",
-    "sha256": "89b2f1bd0cf8e8b57117747418e6974b586806fe53ff2887b11690a4847f33ca"
+    "date": "2026-11-14",
+    "sha256": "1bf0304563e756aa560a09c31f5b91e1f33bad38f790cca6740e0ce5bc514ec3"
   },
   "compat/csv": {
-    "date": "2026-11-13",
-    "sha256": "b413e405b36a09724d98095e1121c02e10206ed78c89da645c5bbc4d460138c1"
+    "date": "2026-11-14",
+    "sha256": "500a2a386fcb95a55d8983daa1f58112d198df0ada3a860332f8a814bb8386f2"
   },
   "compat/der": {
-    "date": "2026-11-13",
-    "sha256": "cb411e5a8cb0cb78029475bdc9aa752861b936ebe85619d2254188224519f7b8"
+    "date": "2026-11-14",
+    "sha256": "6f2e26b6e7a87eb79d16dc50f43c780cc1f599a7e1348f5b2cd49cbfda6a9b8f"
   },
   "compat/gif": {
-    "date": "2026-11-13",
-    "sha256": "7cd60facc40e2dc5ba2344177a53b65e67bd38551eeef79655934f0b6771df2c"
+    "date": "2026-11-14",
+    "sha256": "fddbb1df73056aec164c5f227a9877c87c11573ab6661266ea0f9db43b9860d0"
   },
   "compat/gz": {
-    "date": "2026-11-13",
-    "sha256": "0edb7c073c54f845e3e8d49710d9cd87549dfc89b6580e1cfc238ba011a39395"
+    "date": "2026-11-14",
+    "sha256": "c56fcb91023fe7cf0cdb644dcfac5b358eed5f5b32e94404cbdc178ae300b75d"
   },
   "compat/jpg": {
-    "date": "2026-11-13",
-    "sha256": "dce4ec450817de53477c246f0509d0af0844ba5e84ca441c25599a7a1f3979cf"
+    "date": "2026-11-14",
+    "sha256": "e1d2cfbf0c498061c8f361fb21138756c440f465950d7a3d42b522684bbb3324"
   },
   "compat/json": {
-    "date": "2026-11-13",
-    "sha256": "1767964e054bae25b586d7f02766512b32b6021046d5ad946dcb51e4e15fc4b9"
+    "date": "2026-11-14",
+    "sha256": "5d0d81f12338f23ea70058880bcd0c87725254db2f222ebc1429da21b20baaac"
   },
   "compat/pem": {
-    "date": "2026-11-13",
-    "sha256": "83d5aa8ffec88a8b15f345ae2ac408c0c9462f4d9a01056dc916ea6c3038c8cd"
+    "date": "2026-11-14",
+    "sha256": "4feb800e91fbecb82f0af505ca89e1608beb1b2a3042f3331b201fe3405d5823"
   },
   "compat/png": {
-    "date": "2026-11-13",
-    "sha256": "3b819a1d8753d01d0e11a93f53f45a223f256386176c9a6dd0b2780e62807b94"
+    "date": "2026-11-14",
+    "sha256": "3582f07fb34d1be602563d6a6d7e8664de1cc8a5e14be33adb3d580c0dde0349"
   },
   "compat/tar": {
-    "date": "2026-11-13",
-    "sha256": "0689cc8eba712fd381e06e8503abe9e4e499c4a8dd2a519fedb535edb586da89"
+    "date": "2026-11-14",
+    "sha256": "aee19cf46151072edf4c7b369fc2b570254354b0ff8bf2da72929133361beefe"
   },
   "compat/wav": {
-    "date": "2026-11-13",
-    "sha256": "27f8749c3878fdbec10522e11c7f40ce62da96ba1ea3562f971fe5880655c2db"
+    "date": "2026-11-14",
+    "sha256": "616631a007322daf63f4830d23747feb269d1bee0b075743f84ada8e9ec2df2c"
   },
   "compat/xml": {
-    "date": "2026-11-13",
-    "sha256": "a096287fa2fc6bb1aff3b141f8ba761e02d9af2add2d091d63832c006ae35092"
+    "date": "2026-11-14",
+    "sha256": "c7c03cc1281671aff2653a7e0f189210a069c0561ae12d97e18f2281989f292e"
   },
   "compat/zip": {
-    "date": "2026-11-13",
-    "sha256": "3e623aac46b043204066072b9aa12d58b2e2c75261278802d1e8d5070c038d95"
+    "date": "2026-11-14",
+    "sha256": "3db99ef066fc070c9ea7c67d8911cce80ed37628f98e3a60986eaf2710c279d9"
   },
   "css": {
     "date": "2026-11-13",
