@@ -475,7 +475,9 @@ def test_the_workflow_runs_the_versions_runtimes_yaml_names_and_is_never_require
         assert matrix == runtime["versions"], runtime["id"]
         assert jobs[runtime["id"]]["continue-on-error"] is True
     triggers = workflow()[True]  # YAML reads the key `on` as a boolean
-    assert set(triggers) == {"workflow_dispatch", "pull_request"}
+    assert set(triggers) == {"workflow_dispatch", "pull_request", "schedule"}
+    cron = triggers["schedule"][0]["cron"].split()
+    assert cron[2] == "1" and cron[3:] == ["*", "*"], "monthly: the first day of the month"
     assert triggers["pull_request"]["paths"] == ["compat/**", "!compat/results/**"]
     text = (ROOT / ".github" / "workflows" / "compat.yml").read_text()
     for forbidden in ("TOOLCHAIN", "needs.setup", "ghcr.io", "container:", "src/loremfile"):
@@ -512,7 +514,7 @@ def load_python_adapter() -> Any:
 
 def test_the_exceptions_are_named_in_readers_yaml_beside_the_tolerance() -> None:
     exceptions = {e["name"]: e for e in CONFIG["scope"]["exceptions"]}
-    assert set(exceptions) == {"Duration", "CSV header", "Clark notation"}
+    assert set(exceptions) == {"Duration", "CSV header", "Clark notation", "Name strings"}
     assert f"{CONFIG['scope']['tolerance']['duration_ms']} ms" in exceptions["Duration"]["text"]
     ids = {r["id"] for r in CONFIG["readers"]}
     for exception in exceptions.values():
@@ -556,15 +558,23 @@ def routed(path: str) -> set[str]:
 
 
 def test_a_reader_that_takes_uncompressed_tar_is_not_given_a_compressed_one() -> None:
-    assert routed("tar/3-text-files.tar") == {"go/archive/tar", "python/tarfile"}
-    assert routed("tar/3-text-files.tar.gz") == {"go/archive/tar+compress/gzip", "python/tarfile"}
+    assert routed("tar/3-text-files.tar") == {
+        "go/archive/tar",
+        "python/tarfile",
+        "ruby/Gem::Package::TarReader",
+    }
+    assert routed("tar/3-text-files.tar.gz") == {
+        "go/archive/tar+compress/gzip",
+        "python/tarfile",
+        "ruby/Gem::Package::TarReader+Zlib::GzipReader",
+    }
     assert routed("tar/3-text-files.tar.xz") == {"python/tarfile"}
     assert BY_PATH["tar/3-text-files.tar.gz"]["route"] == {"compression": "gz"}
     assert BY_PATH["tar/3-text-files.tar"]["route"] == {"compression": ""}, "plain tar says so"
 
 
-def test_go_has_no_reader_for_xz_tar_and_only_for_that_file() -> None:
-    assert scope.no_reader_for(BY_PATH["tar/3-text-files.tar.xz"], CONFIG) == ["go"]
+def test_go_and_ruby_have_no_reader_for_xz_tar_and_only_for_that_file() -> None:
+    assert scope.no_reader_for(BY_PATH["tar/3-text-files.tar.xz"], CONFIG) == ["go", "ruby"]
     assert scope.no_reader_for(BY_PATH["tar/3-text-files.tar.gz"], CONFIG) == []
     assert scope.no_reader_for(BY_PATH["zip/3-text-files.zip"], CONFIG) == []
 
@@ -581,3 +591,34 @@ def test_the_routing_text_names_readers_that_exist() -> None:
     ids = {r["id"] for r in CONFIG["readers"]}
     for entry in CONFIG["scope"]["routing"]:
         assert entry["format"] in CONFIG["scope"]["formats"] and set(entry["applies"]) <= ids
+
+
+# --- the adapters and the reader list agree, and every absence says why --------------------------
+
+
+def test_every_reader_id_is_a_string_in_its_runtimes_adapter() -> None:
+    adapters = {r["id"]: ROOT / "compat" / r["adapter"] for r in CONFIG["runtime_list"]}
+    assert len(adapters) == 5, "control: Python, Go, Node.js, Java and Ruby"
+    for reader_ in CONFIG["readers"]:
+        source = adapters[reader_["runtime"]].read_text(encoding="utf-8")
+        assert f'"{reader_["id"]}"' in source or f"'{reader_['id']}'" in source, reader_["id"]
+    registered = {r["id"] for r in CONFIG["readers"] if r["runtime"] == "ruby"}
+    assert "ruby/Zlib::GzipReader" in registered, (
+        "control: ids with colons and plus signs are found"
+    )
+
+
+def test_every_absence_has_a_reason_and_the_ones_the_owner_named_are_there() -> None:
+    for runtime, formats in CONFIG["no_reader"].items():
+        for fmt, reason in formats.items():
+            assert reason.strip() and fmt in CONFIG["scope"]["formats"], (runtime, fmt)
+    assert {"tar", "json", "csv"} == set(CONFIG["no_reader"]["java"])
+    assert {"zip", "csv", "xml", "wav", "jpg", "png", "gif"} <= set(CONFIG["no_reader"]["node"])
+
+
+def test_nothing_in_any_adapter_reaches_into_the_repository() -> None:
+    kinds = {".py", ".go", ".mjs", ".java", ".rb"}
+    sources = [p for p in (ROOT / "compat" / "adapters").rglob("*") if p.suffix in kinds]
+    assert {p.suffix for p in sources} >= {".py", ".go", ".mjs", ".java", ".rb"}, "control"
+    for path in sources:
+        assert "src/loremfile" not in path.read_text(encoding="utf-8"), path

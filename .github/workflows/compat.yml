@@ -5,11 +5,15 @@
 # check, and nothing here touches the toolchain image, the lock or a deploy: the runtimes are the
 # latest supported ones, recorded and never pinned, because the question is what a fresh install
 # does. The results in a pull request come from that pull request's own run (`gh run download`),
-# never from a laptop. The monthly schedule arrives with the second runtime batch.
+# never from a laptop. The first day of each month's scheduled run is what the monthly maintenance
+# pull request refreshes `compat/results/` from (docs/11 section 3).
 name: compat
 
 on:
   workflow_dispatch:
+  schedule:
+    # Monthly, off the hour: the runner pool is quietest after the start of the day.
+    - cron: "23 4 1 * *"
   pull_request:
     paths:
       - "compat/**"
@@ -104,8 +108,105 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  node:
+    needs: fetch
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["22", "24", "26"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.version }}
+          check-latest: true
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: compat-corpus
+          path: compat-work
+      - name: Give each Node.js ${{ matrix.version }} reader every file
+        run: python3 -m harness run --runtime node --version "${{ matrix.version }}" --work ../compat-work --out ../compat-parts
+        working-directory: compat
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: compat-part-node-${{ matrix.version }}
+          path: compat-parts
+          if-no-files-found: ignore
+          retention-days: 7
+
+  java:
+    needs: fetch
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["8", "11", "17", "21", "25", "27"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Eclipse Temurin only (docs/07 section 8): the distribution is part of the question.
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.version }}
+          check-latest: true
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: compat-corpus
+          path: compat-work
+      - name: Give each Java ${{ matrix.version }} reader every file
+        run: python3 -m harness run --runtime java --version "${{ matrix.version }}" --work ../compat-work --out ../compat-parts
+        working-directory: compat
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: compat-part-java-${{ matrix.version }}
+          path: compat-parts
+          if-no-files-found: ignore
+          retention-days: 7
+
+  ruby:
+    needs: fetch
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["3.3", "3.4", "4.0"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        with:
+          ruby-version: ${{ matrix.version }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: compat-corpus
+          path: compat-work
+      - name: Give each Ruby ${{ matrix.version }} reader every file
+        run: python3 -m harness run --runtime ruby --version "${{ matrix.version }}" --work ../compat-work --out ../compat-parts
+        working-directory: compat
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: compat-part-ruby-${{ matrix.version }}
+          path: compat-parts
+          if-no-files-found: ignore
+          retention-days: 7
+
   merge:
-    needs: [fetch, python, go]
+    needs: [fetch, python, go, node, java, ruby]
     # Even when a runtime job failed: a part that never arrived is not-run, not an error.
     if: ${{ !cancelled() && needs.fetch.result == 'success' }}
     runs-on: ubuntu-24.04
@@ -136,4 +237,4 @@ jobs:
           name: compat-results
           path: compat-results
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 35

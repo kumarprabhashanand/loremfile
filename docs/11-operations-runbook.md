@@ -36,6 +36,7 @@ Operating model: no on-call, no pager. Automation raises GitHub issues; a human 
 - (O) Check the card on file is not expiring within 60 days.
 - (A) Verify the latest GitHub Release archive is downloadable and `sha256sum -c` (macOS: `shasum -a 256 -c`) passes for 3 random entries.
 - (A) **One maintenance pull request** (2026-11-13): Dependabot runs monthly for all three ecosystems (`.github/dependabot.yml`), and its dependency bumps, together with any new AI-crawler tokens for the legal pages, go in one pull request. No standalone pull request for either. A Dependabot *security* alert is not on this schedule (§2's table). The same pass runs `loremfile replacements check`, which re-reads every URL on `/replacements` from the machine it runs on and exits 1 when a row works again, fails differently or cannot be read: delete or correct that row, and update `checked` in `site/content/replacements.yaml`.
+- (A) **The maintenance pull request also refreshes `compat/results/`** from that month's `compat.yml` run (it starts itself on the first of the month, `09` §3.10): `gh run download <run id> -n compat-results -D compat/results`, then `loremfile site build --update-dates` in the toolchain image, as its own commit. Read every `differs` and `crashes` cell before merging (`07` §8).
 
 ## 4. Quarterly (+60 minutes)
 

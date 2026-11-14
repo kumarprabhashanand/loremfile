@@ -47,7 +47,6 @@ class Results:
     formats: dict[str, dict[str, Any]]
     config: dict[str, Any]
     runtimes: list[dict[str, Any]]
-    checked: str
 
 
 def scope_formats(root: Path) -> frozenset[str]:
@@ -70,7 +69,7 @@ def load(root: Path) -> Results:
         raise CompatError(
             f"compat/results: {error}; run compat.yml and commit its results"
         ) from error
-    return Results(run, formats, readers, runtimes["runtimes"], str(runtimes["checked"]))
+    return Results(run, formats, readers, runtimes["runtimes"])
 
 
 def version_label(versions: list[str]) -> str:
@@ -170,6 +169,29 @@ def tally(results: Results, fmt: str) -> dict[str, int]:
     return counts
 
 
+def unread_notes(results: Results, fmt: str) -> list[str]:
+    """For an `edge/` file labelled `varies` that no reader read: one line saying so.
+
+    The label describes what the format allows, not what readers did, so it is never changed
+    to fit; a page that shows every reader refusing it says that in a sentence instead.
+    """
+    document = results.formats[fmt]
+    notes = []
+    for row in document["files"]:
+        if row["kind"] != "edge" or row["edge_outcome"] != "varies":
+            continue
+        outcomes = [cell["outcome"] for per in row["cells"].values() for cell in per.values()]
+        if outcomes and not {"reads", "differs"} & set(outcomes) and "refuses" in outcomes:
+            readers = len(row["cells"])
+            runtimes = len({reader.split("/", 1)[0] for reader in row["cells"]})
+            notes.append(
+                f"None of the {readers} readers, in {counted(runtimes, 'runtime')}, read "
+                f"{row['path']}. Its outcome, varies, is what the format allows, not what these "
+                "readers did."
+            )
+    return notes
+
+
 def runtime_name(results: Results, runtime: str) -> str:
     return str(next(r["name"] for r in results.runtimes if r["id"] == runtime))
 
@@ -227,7 +249,7 @@ def index_description(results: Results) -> str:
     runtimes = " and ".join([", ".join(names[:-1]), names[-1]] if len(names) > 1 else names)
     return banded(
         f"How the standard libraries of {runtimes} read our sample files: who opens them, who "
-        "refuses, and who disagrees with the manifest, version by version.",
+        "refuses, who disagrees with the manifest.",
         "compat",
     )
 
@@ -327,7 +349,15 @@ def format_context(results: Results, fmt: str, size: Callable[[int], str]) -> di
     return {
         "format": fmt,
         "columns": columns,
-        "no_reader": document["no_reader"],
+        "no_reader": [
+            {
+                "runtime": runtime,
+                "name": runtime_name(results, runtime),
+                "reason": results.config["no_reader"][runtime][fmt],
+            }
+            for runtime in document["no_reader"]
+        ],
+        "notes": unread_notes(results, fmt),
         "routing": [r for r in results.config["scope"].get("routing", []) if r["format"] == fmt],
         "rows": rows,
         "skipped": [{**s, "size": size(s["bytes"])} for s in document["skipped"]],
@@ -344,7 +374,7 @@ def index_context(results: Results) -> dict[str, Any]:
             {
                 "format": fmt,
                 "readers": document["readers"],
-                "no_reader": document["no_reader"],
+                "no_reader": [runtime_name(results, rt) for rt in document["no_reader"]],
                 "files": len(document["files"]),
                 "tally": tally(results, fmt),
                 "result_url": f"{ADAPTER_LINK}results/{fmt}.json",
@@ -357,8 +387,15 @@ def index_context(results: Results) -> dict[str, Any]:
         "date": results.run["date"],
         "catalog_version": results.run["catalog_version"],
         "runs": run_rows(results),
-        "sources": [{"name": r["name"], "source": r["source"]} for r in results.runtimes],
-        "checked": results.checked,
+        "sources": [
+            {
+                "name": r["name"],
+                "source": r["source"],
+                "supported": r["supported"],
+                "checked": r["checked"],
+            }
+            for r in results.runtimes
+        ],
         "by_format": by_format,
         "run_url": f"{ADAPTER_LINK}results/_run.json",
     }
@@ -378,7 +415,7 @@ def format_twin(page_context: dict[str, Any]) -> str:
         "File",
         "Manifest says",
         *[c["id"] for c in columns],
-        *[f"{r} (no reader)" for r in page_context["no_reader"]],
+        *[f"{r['name']} (no reader)" for r in page_context["no_reader"]],
     ]
     lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for row in page_context["rows"]:
@@ -399,6 +436,11 @@ def format_twin(page_context: dict[str, Any]) -> str:
             + "."
         )
     out.extend(f"{r['text']}" for r in page_context["routing"])
+    out.extend(
+        f"{r['name']} has no reader for these files. {r['reason']}"
+        for r in page_context["no_reader"]
+    )
+    out.extend(page_context["notes"])
     out.append(f"The results as JSON: <{page_context['result_url']}>.")
     return "\n\n".join(out)
 
@@ -419,6 +461,10 @@ def index_twin(context: dict[str, Any]) -> str:
         for row in context["by_format"]
     ]
     outcomes = "\n".join(f"- **{name}**: {text}" for name, text in context["outcomes"])
+    sources = "\n".join(
+        f"- {s['name']}: {s['source']} ({s['supported']}; read {s['checked']})"
+        for s in context["sources"]
+    )
     return "\n\n".join(
         [
             f"## Outcomes\n\n{outcomes}",
@@ -428,7 +474,7 @@ def index_twin(context: dict[str, Any]) -> str:
                 f"- **{e['name']}** ({', '.join(e['applies'])}): {e['text']}"
                 for e in context["exceptions"]
             ),
-            f"## This run\n\n{run}\n\n{runs}",
+            f"## This run\n\n{run}\n\n{runs}\n\n{sources}",
             "## Readers by format\n\n"
             + "\n".join([head, "|" + "---|" * (4 + len(TALLIED)), *rows]),
         ]

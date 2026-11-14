@@ -10,6 +10,46 @@
     "zero-byte:gz/lorem-1mb.txt.gz": "ok"
    }
   },
+  "java/java.util.zip.GZIPInputStream": {
+   "java-11": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   },
+   "java-17": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   },
+   "java-21": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   },
+   "java-25": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   },
+   "java-27": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   },
+   "java-8": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   }
+  },
+  "node/zlib": {
+   "node-22": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   },
+   "node-24": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   },
+   "node-26": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   }
+  },
   "python/gzip": {
    "python-3.11": {
     "reads:gz/lorem-1mb.txt.gz": "ok",
@@ -31,6 +71,20 @@
     "reads:gz/lorem-1mb.txt.gz": "ok",
     "zero-byte:gz/lorem-1mb.txt.gz": "ok"
    }
+  },
+  "ruby/Zlib::GzipReader": {
+   "ruby-3.3": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   },
+   "ruby-3.4": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   },
+   "ruby-4.0": {
+    "reads:gz/lorem-1mb.txt.gz": "ok",
+    "zero-byte:gz/lorem-1mb.txt.gz": "ok"
+   }
   }
  },
  "files": [
@@ -48,6 +102,91 @@
       }
      },
      "go-1.27": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     }
+    },
+    "java/java.util.zip.GZIPInputStream": {
+     "java-11": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     },
+     "java-17": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     },
+     "java-21": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     },
+     "java-25": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     },
+     "java-27": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     },
+     "java-8": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     }
+    },
+    "node/zlib": {
+     "node-22": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     },
+     "node-24": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     },
+     "node-26": {
       "compared": [
        "uncompressed_bytes"
       ],
@@ -95,6 +234,35 @@
       }
      },
      "python-3.15": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     }
+    },
+    "ruby/Zlib::GzipReader": {
+     "ruby-3.3": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1000000
+      }
+     },
+     "ruby-4.0": {
       "compared": [
        "uncompressed_bytes"
       ],
@@ -140,6 +308,91 @@
       }
      }
     },
+    "java/java.util.zip.GZIPInputStream": {
+     "java-11": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     },
+     "java-17": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     },
+     "java-21": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     },
+     "java-25": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     },
+     "java-27": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     },
+     "java-8": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     }
+    },
+    "node/zlib": {
+     "node-22": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     },
+     "node-24": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     },
+     "node-26": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "uncompressed_bytes": 1440
+      }
+     }
+    },
     "python/gzip": {
      "python-3.11": {
       "compared": [
@@ -186,6 +439,53 @@
        "uncompressed_bytes": 1440
       }
      }
+    },
+    "ruby/Zlib::GzipReader": {
+     "ruby-3.3": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "differs": {
+       "uncompressed_bytes": {
+        "expected": 1440,
+        "reported": 605
+       }
+      },
+      "outcome": "differs",
+      "props": {
+       "uncompressed_bytes": 605
+      }
+     },
+     "ruby-3.4": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "differs": {
+       "uncompressed_bytes": {
+        "expected": 1440,
+        "reported": 605
+       }
+      },
+      "outcome": "differs",
+      "props": {
+       "uncompressed_bytes": 605
+      }
+     },
+     "ruby-4.0": {
+      "compared": [
+       "uncompressed_bytes"
+      ],
+      "differs": {
+       "uncompressed_bytes": {
+        "expected": 1440,
+        "reported": 605
+       }
+      },
+      "outcome": "differs",
+      "props": {
+       "uncompressed_bytes": 605
+      }
+     }
     }
    },
    "edge_outcome": null,
@@ -214,6 +514,24 @@
    "runtime": "go"
   },
   {
+   "docs": "",
+   "id": "java/java.util.zip.GZIPInputStream",
+   "module": "java.util.zip.GZIPInputStream",
+   "props": [
+    "uncompressed_bytes"
+   ],
+   "runtime": "java"
+  },
+  {
+   "docs": "https://nodejs.org/api/zlib.html",
+   "id": "node/zlib",
+   "module": "zlib",
+   "props": [
+    "uncompressed_bytes"
+   ],
+   "runtime": "node"
+  },
+  {
    "docs": "https://docs.python.org/3/library/gzip.html",
    "id": "python/gzip",
    "module": "gzip",
@@ -221,6 +539,15 @@
     "uncompressed_bytes"
    ],
    "runtime": "python"
+  },
+  {
+   "docs": "",
+   "id": "ruby/Zlib::GzipReader",
+   "module": "Zlib::GzipReader",
+   "props": [
+    "uncompressed_bytes"
+   ],
+   "runtime": "ruby"
   }
  ],
  "runtimes": [
@@ -230,7 +557,19 @@
   "python-3.14",
   "python-3.15",
   "go-1.26",
-  "go-1.27"
+  "go-1.27",
+  "node-22",
+  "node-24",
+  "node-26",
+  "java-8",
+  "java-11",
+  "java-17",
+  "java-21",
+  "java-25",
+  "java-27",
+  "ruby-3.3",
+  "ruby-3.4",
+  "ruby-4.0"
  ],
  "skipped": []
 }

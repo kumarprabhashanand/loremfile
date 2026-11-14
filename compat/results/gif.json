@@ -9,6 +9,56 @@
     "reads:gif/static-256x256.gif": "ok",
     "zero-byte:gif/static-256x256.gif": "ok"
    }
+  },
+  "java/javax.imageio": {
+   "java-11": {
+    "reads:gif/static-256x256.gif": "ok",
+    "reads:jpg/100x100.jpg": "ok",
+    "reads:png/100x100.png": "ok",
+    "zero-byte:gif/static-256x256.gif": "ok",
+    "zero-byte:jpg/100x100.jpg": "ok",
+    "zero-byte:png/100x100.png": "ok"
+   },
+   "java-17": {
+    "reads:gif/static-256x256.gif": "ok",
+    "reads:jpg/100x100.jpg": "ok",
+    "reads:png/100x100.png": "ok",
+    "zero-byte:gif/static-256x256.gif": "ok",
+    "zero-byte:jpg/100x100.jpg": "ok",
+    "zero-byte:png/100x100.png": "ok"
+   },
+   "java-21": {
+    "reads:gif/static-256x256.gif": "ok",
+    "reads:jpg/100x100.jpg": "ok",
+    "reads:png/100x100.png": "ok",
+    "zero-byte:gif/static-256x256.gif": "ok",
+    "zero-byte:jpg/100x100.jpg": "ok",
+    "zero-byte:png/100x100.png": "ok"
+   },
+   "java-25": {
+    "reads:gif/static-256x256.gif": "ok",
+    "reads:jpg/100x100.jpg": "ok",
+    "reads:png/100x100.png": "ok",
+    "zero-byte:gif/static-256x256.gif": "ok",
+    "zero-byte:jpg/100x100.jpg": "ok",
+    "zero-byte:png/100x100.png": "ok"
+   },
+   "java-27": {
+    "reads:gif/static-256x256.gif": "ok",
+    "reads:jpg/100x100.jpg": "ok",
+    "reads:png/100x100.png": "ok",
+    "zero-byte:gif/static-256x256.gif": "ok",
+    "zero-byte:jpg/100x100.jpg": "ok",
+    "zero-byte:png/100x100.png": "ok"
+   },
+   "java-8": {
+    "reads:gif/static-256x256.gif": "ok",
+    "reads:jpg/100x100.jpg": "ok",
+    "reads:png/100x100.png": "ok",
+    "zero-byte:gif/static-256x256.gif": "ok",
+    "zero-byte:jpg/100x100.jpg": "ok",
+    "zero-byte:png/100x100.png": "ok"
+   }
   }
  },
  "files": [
@@ -26,6 +76,62 @@
       }
      },
      "go-1.27": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 4,
+       "width": 4
+      }
+     }
+    },
+    "java/javax.imageio": {
+     "java-11": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 4,
+       "width": 4
+      }
+     },
+     "java-17": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 4,
+       "width": 4
+      }
+     },
+     "java-21": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 4,
+       "width": 4
+      }
+     },
+     "java-25": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 4,
+       "width": 4
+      }
+     },
+     "java-27": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 4,
+       "width": 4
+      }
+     },
+     "java-8": {
       "compared": [],
       "outcome": "reads",
       "props": {
@@ -63,6 +169,86 @@
       }
      },
      "go-1.27": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 1,
+       "width": 1
+      }
+     }
+    },
+    "java/javax.imageio": {
+     "java-11": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 1,
+       "width": 1
+      }
+     },
+     "java-17": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 1,
+       "width": 1
+      }
+     },
+     "java-21": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 1,
+       "width": 1
+      }
+     },
+     "java-25": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 1,
+       "width": 1
+      }
+     },
+     "java-27": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 1,
+       "width": 1
+      }
+     },
+     "java-8": {
       "compared": [
        "frames",
        "height",
@@ -120,6 +306,86 @@
        "width": 256
       }
      }
+    },
+    "java/javax.imageio": {
+     "java-11": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 10,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "java-17": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 10,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "java-21": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 10,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "java-25": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 10,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "java-27": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 10,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "java-8": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 10,
+       "height": 256,
+       "width": 256
+      }
+     }
     }
    },
    "edge_outcome": null,
@@ -153,6 +419,86 @@
       }
      },
      "go-1.27": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     }
+    },
+    "java/javax.imageio": {
+     "java-11": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "java-17": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "java-21": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "java-25": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "java-27": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "java-8": {
       "compared": [
        "frames",
        "height",
@@ -210,6 +556,86 @@
        "width": 256
       }
      }
+    },
+    "java/javax.imageio": {
+     "java-11": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "java-17": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "java-21": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "java-25": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "java-27": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     },
+     "java-8": {
+      "compared": [
+       "frames",
+       "height",
+       "width"
+      ],
+      "outcome": "reads",
+      "props": {
+       "frames": 1,
+       "height": 256,
+       "width": 256
+      }
+     }
     }
    },
    "edge_outcome": null,
@@ -228,7 +654,9 @@
  ],
  "format": "gif",
  "no_reader": [
-  "python"
+  "node",
+  "python",
+  "ruby"
  ],
  "readers": [
   {
@@ -241,6 +669,17 @@
     "frames"
    ],
    "runtime": "go"
+  },
+  {
+   "docs": "",
+   "id": "java/javax.imageio",
+   "module": "javax.imageio",
+   "props": [
+    "width",
+    "height",
+    "frames"
+   ],
+   "runtime": "java"
   }
  ],
  "runtimes": [
@@ -250,7 +689,19 @@
   "python-3.14",
   "python-3.15",
   "go-1.26",
-  "go-1.27"
+  "go-1.27",
+  "node-22",
+  "node-24",
+  "node-26",
+  "java-8",
+  "java-11",
+  "java-17",
+  "java-21",
+  "java-25",
+  "java-27",
+  "ruby-3.3",
+  "ruby-3.4",
+  "ruby-4.0"
  ],
  "skipped": []
 }

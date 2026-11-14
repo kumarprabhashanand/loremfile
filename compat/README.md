@@ -13,7 +13,7 @@ deploy. The runtimes are the latest supported ones, their versions recorded and 
 |---|---|
 | `runtimes.yaml` | Versions to run, each with the page that lists them as supported and the date. |
 | `readers.yaml` | The corpus rules, and each reader: id, runtime, formats, the properties it reports, two controls. |
-| `adapters/<runtime>/` | One adapter per runtime: a program that opens one file with one reader. |
+| `adapters/<runtime>/` | One adapter per runtime (Python, Go, Node.js, Java, Ruby): a program that opens one file with one reader. |
 | `harness/` | Standard-library Python: fetch, run, compare, write. `python -m harness {fetch,run,merge,check}` from this directory. |
 | `results/` | `_run.json` (run id, date, resolved runtime versions) and one `{format}.json` each, keys sorted, no timestamps. Written by the workflow, never by hand. |
 
@@ -47,14 +47,22 @@ and gif `width`, `height`, `frames`; json `top_type`, `items`; csv `rows`, `colu
 `members` and `frames` only where its reader exposes them with default settings.
 
 The harness judges, not the adapter. `reads` means no error and every property both sides hold is
-equal; `differs` means at least one is not. There are three named exceptions, listed in
+equal; `differs` means at least one is not. There are four named exceptions, listed in
 `readers.yaml` under `scope.exceptions` and shown on the page: a 1 ms tolerance on `duration_ms`;
 for CSV, the expected `rows` is the manifest's plus one when it says `has_header`, because the
 header is a record to a reader and not a data row; and a root name in Clark notation,
 `{namespace}local`, is reduced by the adapter to its local name before it is reported as
 `root_element`, the form the manifest holds (the manifest lists the namespace URIs apart, under
-`namespaces`). A reader may report the namespace as its own property, `root_namespace`, which is
-never compared and is not `root_element`.
+`namespaces`); and a certificate reader that gives names as text is reduced to the values the
+manifest holds (the CN, the DNS entries, the serial as an integer). A reader may report the
+namespace as its own property, `root_namespace`, which is never compared and is not `root_element`.
+
+## A column that is mostly `no-reader`
+
+That is the answer and not a gap. A runtime whose standard library has no reader for a format gets
+`no-reader`, with the reason beside it in `readers.yaml` (`no_reader`) and on the page. Never fill
+the cell with a third-party package or a parser written for this: version 1 is standard libraries
+only (docs/07 §8). A reader a file was not given (`when`) has no cell; the page says so.
 
 ## Routing
 
@@ -62,9 +70,11 @@ A reader in `readers.yaml` may name a `when`: manifest props that a file must ha
 `scope.no_reader_when` says the same for a runtime that has no reader for particular files. Both are
 read from the file's own manifest entry, never guessed from its name. The one use today is
 compressed tar, and it is recorded in `scope.routing` and shown on `/compat/tar`: `python/tarfile`
-is given every tar file as it is, `go/archive/tar` only the files whose `compression` is empty,
-`go/archive/tar+compress/gzip` (compress/gzip chained into archive/tar) those whose `compression` is
-`gz`, and Go has no reader for `xz`. A cell for a reader a file was not given does not exist;
+is given every tar file as it is, `go/archive/tar` and `ruby/Gem::Package::TarReader` only the
+files whose `compression` is empty, `go/archive/tar+compress/gzip` and
+`ruby/Gem::Package::TarReader+Zlib::GzipReader` (the decompressor chained into the tar reader) those
+whose `compression` is `gz`, and neither Go nor Ruby has a reader for `xz`. Node and Java have no tar
+reader at all. A cell for a reader a file was not given does not exist;
 the page says "not given this file", and `no-reader` where the runtime has none at all.
 
 ## Outcomes

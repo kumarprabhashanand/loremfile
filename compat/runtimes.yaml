@@ -1,6 +1,5 @@
 {
-  "checked": "2026-11-13",
-  "policy": "Latest of everything, versions recorded, never pinned: the question is what a fresh install does (docs/07 §8).",
+  "policy": "Latest of everything, versions recorded, never pinned: the question is what a fresh install does (docs/07 \u00a78).",
   "runtimes": [
     {
       "id": "python",
@@ -14,7 +13,8 @@
         "3.14",
         "3.15"
       ],
-      "adapter": "adapters/python/adapter.py"
+      "adapter": "adapters/python/adapter.py",
+      "checked": "2026-11-13"
     },
     {
       "id": "go",
@@ -25,7 +25,50 @@
         "1.26",
         "1.27"
       ],
-      "adapter": "adapters/go/adapter.go"
+      "adapter": "adapters/go/adapter.go",
+      "checked": "2026-11-13"
+    },
+    {
+      "id": "node",
+      "name": "Node.js",
+      "source": "https://nodejs.org/en/about/previous-releases",
+      "supported": "Current, Active LTS or Maintenance LTS on the checked date; the page renders the Node.js Release Working Group's schedule.json",
+      "versions": [
+        "22",
+        "24",
+        "26"
+      ],
+      "adapter": "adapters/node/adapter.mjs",
+      "checked": "2026-11-14"
+    },
+    {
+      "id": "java",
+      "name": "Java",
+      "source": "https://adoptium.net/support/",
+      "supported": "Eclipse Temurin only: the releases its support page lists with an end of availability after the checked date",
+      "versions": [
+        "8",
+        "11",
+        "17",
+        "21",
+        "25",
+        "27"
+      ],
+      "adapter": "adapters/java/Adapter.java",
+      "checked": "2026-11-14"
+    },
+    {
+      "id": "ruby",
+      "name": "Ruby",
+      "source": "https://www.ruby-lang.org/en/downloads/branches/",
+      "supported": "Branches in normal or security maintenance on the checked date; a preview is not supported",
+      "versions": [
+        "3.3",
+        "3.4",
+        "4.0"
+      ],
+      "adapter": "adapters/ruby/adapter.rb",
+      "checked": "2026-11-14"
     }
   ]
 }

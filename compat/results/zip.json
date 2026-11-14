@@ -10,6 +10,32 @@
     "zero-byte:zip/3-text-files.zip": "ok"
    }
   },
+  "java/java.util.zip.ZipFile": {
+   "java-11": {
+    "reads:zip/3-text-files.zip": "ok",
+    "zero-byte:zip/3-text-files.zip": "ok"
+   },
+   "java-17": {
+    "reads:zip/3-text-files.zip": "ok",
+    "zero-byte:zip/3-text-files.zip": "ok"
+   },
+   "java-21": {
+    "reads:zip/3-text-files.zip": "ok",
+    "zero-byte:zip/3-text-files.zip": "ok"
+   },
+   "java-25": {
+    "reads:zip/3-text-files.zip": "ok",
+    "zero-byte:zip/3-text-files.zip": "ok"
+   },
+   "java-27": {
+    "reads:zip/3-text-files.zip": "ok",
+    "zero-byte:zip/3-text-files.zip": "ok"
+   },
+   "java-8": {
+    "reads:zip/3-text-files.zip": "ok",
+    "zero-byte:zip/3-text-files.zip": "ok"
+   }
+  },
   "python/zipfile": {
    "python-3.11": {
     "reads:zip/3-text-files.zip": "ok",
@@ -48,6 +74,62 @@
       }
      },
      "go-1.27": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 39
+      }
+     }
+    },
+    "java/java.util.zip.ZipFile": {
+     "java-11": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 39
+      }
+     },
+     "java-17": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 39
+      }
+     },
+     "java-21": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 39
+      }
+     },
+     "java-25": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 39
+      }
+     },
+     "java-27": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 39
+      }
+     },
+     "java-8": {
       "compared": [],
       "outcome": "reads",
       "props": {
@@ -137,6 +219,62 @@
       }
      }
     },
+    "java/java.util.zip.ZipFile": {
+     "java-11": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 41
+      }
+     },
+     "java-17": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 41
+      }
+     },
+     "java-21": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 41
+      }
+     },
+     "java-25": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 41
+      }
+     },
+     "java-27": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 41
+      }
+     },
+     "java-8": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 41
+      }
+     }
+    },
     "python/zipfile": {
      "python-3.11": {
       "compared": [],
@@ -209,6 +347,38 @@
       "outcome": "refuses"
      }
     },
+    "java/java.util.zip.ZipFile": {
+     "java-11": {
+      "error": "zip file is empty",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     },
+     "java-17": {
+      "error": "zip file is empty",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     },
+     "java-21": {
+      "error": "zip file is empty",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     },
+     "java-25": {
+      "error": "zip file is empty",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     },
+     "java-27": {
+      "error": "zip file is empty",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     },
+     "java-8": {
+      "error": "zip file is empty",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     }
+    },
     "python/zipfile": {
      "python-3.11": {
       "error": "File is not a zip file",
@@ -260,6 +430,62 @@
       }
      },
      "go-1.27": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 2,
+       "uncompressed_bytes": 1010
+      }
+     }
+    },
+    "java/java.util.zip.ZipFile": {
+     "java-11": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 2,
+       "uncompressed_bytes": 1010
+      }
+     },
+     "java-17": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 2,
+       "uncompressed_bytes": 1010
+      }
+     },
+     "java-21": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 2,
+       "uncompressed_bytes": 1010
+      }
+     },
+     "java-25": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 2,
+       "uncompressed_bytes": 1010
+      }
+     },
+     "java-27": {
+      "compared": [],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 2,
+       "uncompressed_bytes": 1010
+      }
+     },
+     "java-8": {
       "compared": [],
       "outcome": "reads",
       "props": {
@@ -341,6 +567,38 @@
       "outcome": "refuses"
      }
     },
+    "java/java.util.zip.ZipFile": {
+     "java-11": {
+      "error": "zip END header not found",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     },
+     "java-17": {
+      "error": "zip END header not found",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     },
+     "java-21": {
+      "error": "zip END header not found",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     },
+     "java-25": {
+      "error": "zip END header not found",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     },
+     "java-27": {
+      "error": "zip END header not found",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     },
+     "java-8": {
+      "error": "error in opening zip file",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     }
+    },
     "python/zipfile": {
      "python-3.11": {
       "error": "File is not a zip file",
@@ -396,6 +654,86 @@
       }
      },
      "go-1.27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 9990000
+      }
+     }
+    },
+    "java/java.util.zip.ZipFile": {
+     "java-11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 9990000
+      }
+     },
+     "java-17": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 9990000
+      }
+     },
+     "java-21": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 9990000
+      }
+     },
+     "java-25": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 9990000
+      }
+     },
+     "java-27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 9990000
+      }
+     },
+     "java-8": {
       "compared": [
        "directories",
        "entries",
@@ -521,6 +859,86 @@
       }
      }
     },
+    "java/java.util.zip.ZipFile": {
+     "java-11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 999000
+      }
+     },
+     "java-17": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 999000
+      }
+     },
+     "java-21": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 999000
+      }
+     },
+     "java-25": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 999000
+      }
+     },
+     "java-27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 999000
+      }
+     },
+     "java-8": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 1,
+       "uncompressed_bytes": 999000
+      }
+     }
+    },
     "python/zipfile": {
      "python-3.11": {
       "compared": [
@@ -633,6 +1051,86 @@
       }
      }
     },
+    "java/java.util.zip.ZipFile": {
+     "java-11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 3228
+      }
+     },
+     "java-17": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 3228
+      }
+     },
+     "java-21": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 3228
+      }
+     },
+     "java-25": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 3228
+      }
+     },
+     "java-27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 3228
+      }
+     },
+     "java-8": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 3,
+       "uncompressed_bytes": 3228
+      }
+     }
+    },
     "python/zipfile": {
      "python-3.11": {
       "compared": [
@@ -729,6 +1227,38 @@
       "outcome": "refuses"
      }
     },
+    "java/java.util.zip.ZipFile": {
+     "java-11": {
+      "error": "invalid CEN header (encrypted entry)",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     },
+     "java-17": {
+      "error": "invalid CEN header (encrypted entry)",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     },
+     "java-21": {
+      "error": "invalid CEN header (encrypted entry)",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     },
+     "java-25": {
+      "error": "invalid CEN header (encrypted entry)",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     },
+     "java-27": {
+      "error": "invalid CEN header (encrypted entry)",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     },
+     "java-8": {
+      "error": "invalid CEN header (encrypted entry)",
+      "error_type": "java.util.zip.ZipException",
+      "outcome": "refuses"
+     }
+    },
     "python/zipfile": {
      "python-3.11": {
       "error": "That compression method is not supported",
@@ -788,6 +1318,86 @@
       }
      },
      "go-1.27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 0,
+       "uncompressed_bytes": 0
+      }
+     }
+    },
+    "java/java.util.zip.ZipFile": {
+     "java-11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 0,
+       "uncompressed_bytes": 0
+      }
+     },
+     "java-17": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 0,
+       "uncompressed_bytes": 0
+      }
+     },
+     "java-21": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 0,
+       "uncompressed_bytes": 0
+      }
+     },
+     "java-25": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 0,
+       "uncompressed_bytes": 0
+      }
+     },
+     "java-27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 0,
+       "uncompressed_bytes": 0
+      }
+     },
+     "java-8": {
       "compared": [
        "directories",
        "entries",
@@ -913,6 +1523,86 @@
       }
      }
     },
+    "java/java.util.zip.ZipFile": {
+     "java-11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 9838
+      }
+     },
+     "java-17": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 9838
+      }
+     },
+     "java-21": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 9838
+      }
+     },
+     "java-25": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 9838
+      }
+     },
+     "java-27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 9838
+      }
+     },
+     "java-8": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 9838
+      }
+     }
+    },
     "python/zipfile": {
      "python-3.11": {
       "compared": [
@@ -1012,6 +1702,86 @@
       }
      },
      "go-1.27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 1368
+      }
+     }
+    },
+    "java/java.util.zip.ZipFile": {
+     "java-11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 1368
+      }
+     },
+     "java-17": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 1368
+      }
+     },
+     "java-21": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 1368
+      }
+     },
+     "java-25": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 1368
+      }
+     },
+     "java-27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 4,
+       "uncompressed_bytes": 1368
+      }
+     },
+     "java-8": {
       "compared": [
        "directories",
        "entries",
@@ -1137,6 +1907,86 @@
       }
      }
     },
+    "java/java.util.zip.ZipFile": {
+     "java-11": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 70000,
+       "uncompressed_bytes": 0
+      }
+     },
+     "java-17": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 70000,
+       "uncompressed_bytes": 0
+      }
+     },
+     "java-21": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 70000,
+       "uncompressed_bytes": 0
+      }
+     },
+     "java-25": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 70000,
+       "uncompressed_bytes": 0
+      }
+     },
+     "java-27": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 70000,
+       "uncompressed_bytes": 0
+      }
+     },
+     "java-8": {
+      "compared": [
+       "directories",
+       "entries",
+       "uncompressed_bytes"
+      ],
+      "outcome": "reads",
+      "props": {
+       "directories": 0,
+       "entries": 70000,
+       "uncompressed_bytes": 0
+      }
+     }
+    },
     "python/zipfile": {
      "python-3.11": {
       "compared": [
@@ -1220,7 +2070,10 @@
   }
  ],
  "format": "zip",
- "no_reader": [],
+ "no_reader": [
+  "node",
+  "ruby"
+ ],
  "readers": [
   {
    "docs": "https://pkg.go.dev/archive/zip",
@@ -1232,6 +2085,17 @@
     "uncompressed_bytes"
    ],
    "runtime": "go"
+  },
+  {
+   "docs": "",
+   "id": "java/java.util.zip.ZipFile",
+   "module": "java.util.zip.ZipFile",
+   "props": [
+    "entries",
+    "directories",
+    "uncompressed_bytes"
+   ],
+   "runtime": "java"
   },
   {
    "docs": "https://docs.python.org/3/library/zipfile.html",
@@ -1252,7 +2116,19 @@
   "python-3.14",
   "python-3.15",
   "go-1.26",
-  "go-1.27"
+  "go-1.27",
+  "node-22",
+  "node-24",
+  "node-26",
+  "java-8",
+  "java-11",
+  "java-17",
+  "java-21",
+  "java-25",
+  "java-27",
+  "ruby-3.3",
+  "ruby-3.4",
+  "ruby-4.0"
  ],
  "skipped": [
   {

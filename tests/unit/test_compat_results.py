@@ -48,7 +48,7 @@ def test_the_files_were_read_at_all() -> None:
         s["path"] for s in document("zip")["skipped"]
     }
     assert document("pem")["no_reader"] == ["python"]
-    assert document("wav")["no_reader"] == ["go"]
+    assert document("wav")["no_reader"] == ["go", "node", "ruby"]
 
 
 def test_the_vocabulary_is_closed_and_no_cell_is_outside_it() -> None:
@@ -138,7 +138,9 @@ def test_the_namespaced_file_reads_in_every_xml_reader_on_every_version() -> Non
             seen += 1
             assert cell["outcome"] == "reads", (reader_id, version, cell)
             assert cell["props"]["root_element"] == "catalogue", (reader_id, version)
-            assert cell["props"]["root_namespace"] == "https://loremfile.dev/ns/catalogue"
+            # A reader that exposes the namespace reports it apart; one that does not leaves it out.
+            namespace = cell["props"].get("root_namespace", "https://loremfile.dev/ns/catalogue")
+            assert namespace == "https://loremfile.dev/ns/catalogue", (reader_id, version)
     versions = merge.runtime_versions(CONFIG)
     expected = sum(
         1
@@ -162,10 +164,20 @@ def test_the_tar_asymmetry_the_page_states_is_what_the_results_hold() -> None:
     for row in (plain, gz, xz):
         assert outcomes(row, "python/tarfile") == {"reads"}, row["path"]
         assert row["cells"]["python/tarfile"]["python-3.13"]["props"]["entries"] == 3
-    assert set(plain["cells"]) == {"go/archive/tar", "python/tarfile"}
-    assert set(gz["cells"]) == {"go/archive/tar+compress/gzip", "python/tarfile"}
-    assert set(xz["cells"]) == {"python/tarfile"} and xz["no_reader"] == ["go"]
+    assert set(plain["cells"]) == {
+        "go/archive/tar",
+        "python/tarfile",
+        "ruby/Gem::Package::TarReader",
+    }
+    assert set(gz["cells"]) == {
+        "go/archive/tar+compress/gzip",
+        "python/tarfile",
+        "ruby/Gem::Package::TarReader+Zlib::GzipReader",
+    }
+    assert set(xz["cells"]) == {"python/tarfile"} and xz["no_reader"] == ["go", "ruby"]
     assert outcomes(plain, "go/archive/tar") == {"reads"}
     assert outcomes(gz, "go/archive/tar+compress/gzip") == {"reads"}
     assert gz["cells"]["go/archive/tar+compress/gzip"]["go-1.27"]["props"]["entries"] == 3
+    assert outcomes(plain, "ruby/Gem::Package::TarReader") == {"reads"}
+    assert outcomes(gz, "ruby/Gem::Package::TarReader+Zlib::GzipReader") == {"reads"}
     assert gz["no_reader"] == plain["no_reader"] == []
