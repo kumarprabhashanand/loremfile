@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-11-14
+
+- Eleven more audio files. MP3: a 20 Hz to 20 kHz sweep, white noise, the sweep at a constant
+  128 kbps and at 320 kbps, variable bitrate, and mono at 22.05 kHz. WAV: 8 kHz 8-bit mono, 96 kHz
+  32-bit float, five seconds of silence and exactly 100 MB. FLAC: 24-bit at 96 kHz. The FLAC file
+  has a new prop, `bit_depth`, which FLAC files publish only where it is not 16.
+- `/ogv/sample.ogv` and `/ts/sample.ts`: the two formats whose only file is over 2 MB now have a
+  start-here file and a name to guess. Only `hls`, `edge` and `opus` have none.
 - `/compat`: what the standard libraries of Python, Go, Node.js, Java and Ruby do with our zip, tar, gz, wav, jpg, png, gif, json, csv, xml, pem and der files, per reader and runtime version, against the manifest's measured properties.
 
 ## [1.15.1] - 2026-11-13

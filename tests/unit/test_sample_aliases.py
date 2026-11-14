@@ -35,7 +35,7 @@ BY_PATH = {e["path"]: e for e in MANIFEST}
 ALIASES = yaml.safe_load((ROOT / "catalog" / "_aliases.yaml").read_text())["aliases"]
 FAMILY = {f.format: f.family.value for f in CATALOG.formats}
 DRIFTING = {f.path for fmt in CATALOG.formats for f in fmt.fixtures if f.expected_drift}
-NO_ALIAS = {"edge", "hls", "ogv", "opus", "ts"}
+NO_ALIAS = {"edge", "hls", "opus"}
 load_generators()
 load()
 
@@ -65,11 +65,12 @@ def disagreements(entries: list[dict[str, Any]]) -> list[str]:
 
 def test_the_aliases_are_found_where_they_are_known_to_be() -> None:
     """Empty-set control: every check below holds of nothing if no alias exists."""
-    assert len(ALIASES) == 75 and ALIASES["pdf"] == "pdf/a4-3pages.pdf"
+    assert len(ALIASES) == 77 and ALIASES["pdf"] == "pdf/a4-3pages.pdf"
     assert ALIASES["webm"] == "webm/720p-5s-vp8.webm" and ALIASES["gif"] == "gif/static-256x256.gif"
     aliases = [e for e in MANIFEST if is_alias(e)]
-    assert len(aliases) == 75 and "pdf/sample.pdf" in {e["path"] for e in aliases}
-    assert set(FAMILY) - set(ALIASES) == NO_ALIAS, "hls, edge, ogv, ts and opus have none"
+    assert len(aliases) == 77 and "pdf/sample.pdf" in {e["path"] for e in aliases}
+    assert ALIASES["ogv"] == "ogv/720p-5s.ogv" and ALIASES["ts"] == "ts/720p-5s.ts"
+    assert set(FAMILY) - set(ALIASES) == NO_ALIAS, "hls, edge and opus have none"
 
 
 def test_the_mapping_is_what_the_default_rule_chooses_today() -> None:
@@ -102,7 +103,7 @@ def test_the_alias_rows_the_loader_makes_are_the_originals_with_a_new_name() -> 
 
 def test_every_alias_has_the_sha256_and_everything_else_of_its_original() -> None:
     aliases = [e for e in MANIFEST if is_alias(e)]
-    assert disagreements(MANIFEST) == [] and len(aliases) == 75
+    assert disagreements(MANIFEST) == [] and len(aliases) == 77
     for e in aliases:
         assert e["path"] == f"{e['format']}/sample.{e['format']}"
         assert not is_alias(BY_PATH[alias_original(e)])
@@ -200,7 +201,7 @@ def test_the_counts_leave_aliases_out(site: Path) -> None:
     manifest = Manifest.load()
     files = len(manifest.current)
     assert files == len([e for e in MANIFEST if not is_alias(e) and not e.get("supersededBy")])
-    assert len(manifest.active) == len(MANIFEST) == files + 75 + 1, "75 aliases, 1 superseded"
+    assert len(manifest.active) == len(MANIFEST) == files + 77 + 1, "77 aliases, 1 superseded"
     home = (site / "index.html").read_text(encoding="utf-8")
     assert f"Search {files} files by path or description" in home
     counts = [int(n) for n in re.findall(r'<span class="count">(\d+)</span>', home)]
@@ -212,7 +213,7 @@ def test_the_counts_leave_aliases_out(site: Path) -> None:
     index = json.loads((site / routes.format_index_key("pdf")).read_text(encoding="utf-8"))
     assert index["count"] == 20 and "pdf/sample.pdf" not in {e["path"] for e in index["fixtures"]}
     formats = json.loads((ROOT / "formats.json").read_text(encoding="utf-8"))["formats"]
-    assert sum(f["count"] for f in formats) == len(MANIFEST) - 75, "formats.json: no aliases"
+    assert sum(f["count"] for f in formats) == len(MANIFEST) - 77, "formats.json: no aliases"
     llms = (site / "llms-full.txt").read_text(encoding="utf-8")
     assert not re.search(r"^\| [a-z0-9]+/sample\.[a-z0-9]+ \|", llms, re.MULTILINE)
     assert "| pdf/a4-3pages.pdf |" in llms, "control: the table lists the originals"

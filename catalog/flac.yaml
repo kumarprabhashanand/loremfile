@@ -16,3 +16,12 @@ fixtures:
     tags: [audio]
     expect: { acodec: flac, sample_rate: 48000, channels: 2 }
     size_class: free
+  - name: 24bit-96k-10s.flac
+    phase: 1
+    generator: media_audio.encoded
+    params: { codec: flac, duration: 10, sample_rate: 96000, bits: 24, channels: 2 }
+    description: "Ten seconds of a 440 Hz sine as 24-bit stereo at 96 kHz, losslessly compressed: the sample size and rate of studio masters, which a decoder that assumes CD-quality samples may truncate or refuse."
+    tags: [audio]
+    expect: { acodec: flac, sample_rate: 96000, channels: 2, bit_depth: 24 }
+    size_class: free
+    label: "24-bit 96 kHz"

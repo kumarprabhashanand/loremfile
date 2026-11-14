@@ -10,6 +10,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import re
+import shutil
 import sys
 import textwrap
 import urllib.error
@@ -622,3 +623,24 @@ def test_nothing_in_any_adapter_reaches_into_the_repository() -> None:
     assert {p.suffix for p in sources} >= {".py", ".go", ".mjs", ".java", ".rb"}, "control"
     for path in sources:
         assert "src/loremfile" not in path.read_text(encoding="utf-8"), path
+
+
+# --- a file added after a run is not missing from it ---------------------------------------------
+
+
+def test_a_file_added_to_the_manifest_after_a_run_is_not_required_of_that_runs_results(
+    tmp_path: Path,
+) -> None:
+    """Results describe the catalogue of their run; the next run brings a new file in."""
+    results = tmp_path / "results"
+    shutil.copytree(ROOT / "compat" / "results", results)
+    run_version = json.loads((results / "_run.json").read_text())["catalog_version"]
+    ran = merge.version_key(run_version)
+    after = [e["path"] for e in MANIFEST["fixtures"] if merge.version_key(e["added_in"]) > ran]
+    assert "wav/silence-5s.wav" in after, "control: the audio batch is newer than the committed run"
+    assert check.problems(results, CONFIG, MANIFEST) == [], "newer files are not required"
+    # The control: a file the run's own catalogue held is required, whatever the newer ones.
+    wav = json.loads((results / "wav.json").read_text())
+    wav["files"] = [r for r in wav["files"] if r["path"] != "wav/10mb.wav"]
+    (results / "wav.json").write_text(json.dumps(wav))
+    assert any("wav/10mb.wav" in problem for problem in check.problems(results, CONFIG, MANIFEST))

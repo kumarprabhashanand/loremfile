@@ -313,6 +313,18 @@ AFTER_LAUNCH = (
     "webm/1080p-10s-vp9.webm",
     "webm/720p-5s-vp8.webm",
     "webm/alpha-vp9-512x512-5s.webm",
+    # 1.16.0: the phase-1 audio rows that were not in the launch set (docs/05 §3.4).
+    "mp3/sweep-20-20khz-10s.mp3",
+    "mp3/noise-white-5s.mp3",
+    "mp3/128kbps-30s.mp3",
+    "mp3/320kbps-30s.mp3",
+    "mp3/vbr-v2-30s.mp3",
+    "mp3/mono-22khz-64kbps-30s.mp3",
+    "wav/sine-440hz-3s-8k-8bit-mono.wav",
+    "wav/sine-440hz-3s-96k-32bit-float.wav",
+    "wav/silence-5s.wav",
+    "wav/100mb.wav",
+    "flac/24bit-96k-10s.flac",
 )
 
 

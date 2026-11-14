@@ -968,7 +968,7 @@ def test_a_demand_page_leads_with_what_people_type_and_its_description_with_its_
     assert '<meta name="description" content="5 OGG test files from ' in ogg
     mp3 = text(site, "mp3")
     assert "<title>MP3 test files: free sample downloads, 48.8 KB to 10 MB</title>" in mp3
-    assert '<meta name="description" content="7 MP3 test files from 48.8 KB to 10 MB: ' in mp3
+    assert '<meta name="description" content="13 MP3 test files from 48.8 KB to 10 MB: ' in mp3
     assert "L/R channels" in mp3.split('<meta name="description" content="')[1].split('"')[0]
     assert "<title>PDF test files: free sample downloads, 586 B to 9.9 MB</title>" in text(
         site, "pdf"

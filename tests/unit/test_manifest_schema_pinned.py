@@ -77,7 +77,7 @@ def test_no_manifest_entry_carries_an_alias_field_and_an_alias_says_what_it_is_b
     None
 ):
     aliases = [e for e in MANIFEST["fixtures"] if is_alias(e)]
-    assert len(aliases) == 75, "control: the rule finds the aliases"
+    assert len(aliases) == 77, "control: the rule finds the aliases"
     fields: set[Any] = set().union(*(e.keys() for e in MANIFEST["fixtures"]))
     assert "aliasOf" not in fields
     for entry in aliases:

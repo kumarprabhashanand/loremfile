@@ -44,7 +44,7 @@ segments sit beside it, such as `hls/720p-10s/seg-000.ts`.
 ## Is there a name I can guess?
 
 `/{format}/sample.{format}`, for example `/pdf/sample.pdf`, serves the same bytes as the file that
-format's page starts with, for every format except `hls`, `edge`, `ogv`, `ts` and `opus`; `sample` is
+format's page starts with, for every format except `hls`, `edge` and `opus`; `sample` is
 reserved for it.
 
 ## Will a name ever point at different bytes?

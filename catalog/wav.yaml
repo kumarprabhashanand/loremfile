@@ -74,3 +74,40 @@ fixtures:
     size_class: exact
     nominal_bytes: 10000000
     label: "exactly 10 MB"
+  - name: sine-440hz-3s-8k-8bit-mono.wav
+    phase: 1
+    generator: media_audio.pcm
+    params: { duration: 3, sample_rate: 8000, bits: 8, channels: 1 }
+    description: "Three seconds of a 440 Hz sine as 8 kHz, 8-bit, mono PCM: telephone quality, 24,044 bytes, and the lowest sample rate here. WAV stores 8-bit samples unsigned, centred on 128, and a reader that assumes the CD rate plays it about 5.5 times too fast."
+    tags: [audio]
+    expect: { acodec: pcm_u8, sample_rate: 8000, channels: 1, bit_depth: 8, duration_ms: 3000, header_format: pcm, header_bytes: 44 }
+    size_class: free
+    label: "8 kHz 8-bit mono"
+  - name: sine-440hz-3s-96k-32bit-float.wav
+    phase: 1
+    generator: media_audio.wav_float
+    params: { duration: 3, sample_rate: 96000, channels: 2 }
+    description: "Three seconds of a 440 Hz sine as 32-bit IEEE float stereo at 96 kHz behind the plain float header (format tag 3, fact chunk, samples from byte 58). A reader that knows only integer PCM refuses it; one that counts float frames as bytes reports eight times the length."
+    tags: [audio]
+    expect: { acodec: pcm_f32le, sample_rate: 96000, channels: 2, bit_depth: 32, duration_ms: 3000, header_format: float, header_bytes: 58 }
+    size_class: free
+    label: "96 kHz float"
+  - name: silence-5s.wav
+    phase: 1
+    generator: media_audio.pcm
+    params: { duration: 5, source: silence, sample_rate: 44100, bits: 16, channels: 2 }
+    description: "Five seconds of digital silence as 44.1 kHz, 16-bit stereo PCM: 882,044 bytes of zeros behind the 44-byte header, for code that treats silence as failure."
+    tags: [audio]
+    expect: { acodec: pcm_s16le, sample_rate: 44100, channels: 2, bit_depth: 16, duration_ms: 5000, header_format: pcm, header_bytes: 44 }
+    size_class: free
+    label: "digital silence"
+  - name: 100mb.wav
+    phase: 1
+    generator: media_audio.wav_sized
+    params: { size: 100000000, sample_rate: 44100, bits: 16, channels: 2 }
+    description: "Exactly 100,000,000 bytes: a 44-byte header plus 24,999,989 frames of 44.1 kHz 16-bit stereo sine, 566.9 seconds of audio. Not approximately: exactly."
+    tags: [audio, sized, large]
+    expect: { sample_rate: 44100, channels: 2, bit_depth: 16, duration_ms: 566893 }
+    size_class: exact
+    nominal_bytes: 100000000
+    label: "exactly 100 MB"

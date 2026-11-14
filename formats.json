@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.15.1",
+  "catalog_version": "1.16.0",
   "formats": [
     {
       "format": "7z",
@@ -139,8 +139,8 @@
     },
     {
       "format": "flac",
-      "count": 1,
-      "total_bytes": 411820,
+      "count": 2,
+      "total_bytes": 1479164,
       "url": "https://loremfile.dev/flac",
       "index": "https://loremfile.dev/flac/index.json",
       "mime_default": "audio/flac"
@@ -331,8 +331,8 @@
     },
     {
       "format": "mp3",
-      "count": 7,
-      "total_bytes": 11690256,
+      "count": 13,
+      "total_bytes": 14036639,
       "url": "https://loremfile.dev/mp3",
       "index": "https://loremfile.dev/mp3/index.json",
       "mime_default": "audio/mpeg"
@@ -547,8 +547,8 @@
     },
     {
       "format": "wav",
-      "count": 7,
-      "total_bytes": 13510352,
+      "count": 11,
+      "total_bytes": 116720498,
       "url": "https://loremfile.dev/wav",
       "index": "https://loremfile.dev/wav/index.json",
       "mime_default": "audio/wav"

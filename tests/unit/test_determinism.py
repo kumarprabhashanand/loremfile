@@ -182,6 +182,9 @@ PROVING_FIXTURES = [
     "pptx/with-chart.pptx",
     # Catalog 1.14.0: a geq-drawn alpha plane through libvpx-vp9, and VP8 with Vorbis.
     "webm/alpha-vp9-512x512-5s.webm",
+    # Catalog 1.16.0: aevalsrc's sweep (libm's sin). The noise and the 24-bit FLAC are built twice
+    # in test_catalog_1_16.py.
+    "mp3/sweep-20-20khz-10s.mp3",
 ]
 
 DETERMINISM_TABLE_HEADER = "| Library | Claim | Proving fixture | Verified |"

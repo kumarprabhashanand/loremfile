@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from . import OUTCOMES, scope
-from .merge import runtime_versions
+from .merge import runtime_versions, version_key
 
 
 def problems(results: Path, config: dict[str, Any], manifest: dict[str, Any]) -> list[str]:
@@ -26,6 +26,12 @@ def problems(results: Path, config: dict[str, Any], manifest: dict[str, Any]) ->
         if key not in run
     ]
     files, skipped = scope.corpus(manifest, config)
+    # A run describes the catalogue it was given. A file added to the manifest since (its
+    # `added_in` is newer than the run's `catalog_version`) is not missing from it: the next
+    # run, which fetches it from production once it is deployed, brings it in.
+    known = version_key(run["catalog_version"])
+    files = [f for f in files if version_key(f["added_in"]) <= known]
+    skipped = [f for f in skipped if version_key(f["added_in"]) <= known]
     for fmt in config["scope"]["formats"]:
         path = results / f"{fmt}.json"
         if not path.is_file():
