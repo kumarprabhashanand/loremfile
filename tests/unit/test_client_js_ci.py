@@ -1,4 +1,4 @@
-"""CI runs every test file the npm client has.
+"""CI runs every npm client test and the browser search regression suite.
 
 ci.yml names its `node --test` files one by one, so a new file that is not added there is a
 suite that never runs and a job that stays green. This holds the list to the directory.
@@ -13,6 +13,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 TESTS = ROOT / "client-js" / "test"
+SITE_TESTS = ROOT / "tests" / "site"
 
 
 def run_line() -> str:
@@ -28,19 +29,22 @@ def run_line() -> str:
 
 
 def unlisted(files: list[str], line: str) -> list[str]:
-    listed = set(re.findall(r"test/([\w.-]+\.test\.js)", line))
+    listed = set(re.findall(r"(?:test/|tests/site/)([\w.-]+\.test\.(?:js|cjs))", line))
     return sorted(name for name in files if name not in listed)
 
 
 def test_every_client_js_test_file_runs_in_ci() -> None:
     files = sorted(path.name for path in TESTS.glob("*.test.js"))
-    assert {"commands.test.js", "mcp.test.js", "packaging.test.js"} <= set(files), "control"
+    files += sorted(path.name for path in SITE_TESTS.glob("*.test.cjs"))
+    assert {"commands.test.js", "mcp.test.js", "packaging.test.js", "search.test.cjs"} <= set(
+        files
+    ), "control"
     assert unlisted(files, run_line()) == []
 
 
 def test_a_file_left_out_of_the_line_is_reported() -> None:
     """The control for the check above: watch it name the file that would not run."""
     line = "node --test test/commands.test.js test/packaging.test.js"
-    assert unlisted(["commands.test.js", "mcp.test.js", "packaging.test.js"], line) == [
-        "mcp.test.js"
-    ]
+    assert unlisted(
+        ["commands.test.js", "mcp.test.js", "packaging.test.js", "search.test.cjs"], line
+    ) == ["mcp.test.js", "search.test.cjs"]

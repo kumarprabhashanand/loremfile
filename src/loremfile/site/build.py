@@ -1497,6 +1497,7 @@ def search_index(manifest: Manifest) -> bytes:
             "bytes": e["bytes"],
             "size": sized(e["bytes"]),
             "description": e["description"],
+            "edge_case": e.get("edge_case", False),
         }
         for e in sorted(manifest.current, key=lambda e: e["path"])
     ]
