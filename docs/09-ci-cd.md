@@ -605,7 +605,21 @@ Publishes `server.json`, the official MCP registry entry `io.github.kumarprabhas
 - **`mcp-publisher` pinned** by version and SHA-256 (the release's own digest, checked before the tarball is unpacked), as `gh` is in `tools/Dockerfile`.
 - **Inspection first, in a job with no identity:** every package `server.json` names must be live at that version and claim this name (npm's `mcpName`, the PyPI description's `mcp-name:` line), and `mcp-publisher validate` must accept the entry. A package not yet released stops the run there, naming it. `tests/unit/test_publish_mcp_registry_workflow.py` pins the trigger, the permissions, the pin and the order, each with a control.
 
-Procedure: release each package at the version `server.json` names for it (`npm-v*`, `client-v*`), then `gh workflow run publish-mcp-registry.yml --ref main`. The entry's `version` is the npm package's, because that is the package the entry points at; the PyPI package names its own release, which need not match (the two clients have their own version lines: npm 0.2.1 and Python 0.3.1 ship the same change, and PyPI has no 0.2.1), so the entry names the release an MCP client installs from each registry, and `tests/unit/test_mcp_surface.py` holds each to a release its tree has reached. The registry dispatch comes last: it refuses an entry whose npm version is not yet live. The entry then resolves at `https://registry.modelcontextprotocol.io/v0/servers?search=io.github.kumarprabhashanand/loremfile`.
+Procedure: release each package at the version `server.json` names for it (`npm-v*`, `client-v*`), then `gh workflow run publish-mcp-registry.yml --ref main`. The entry's `version` is the npm package's, because that is the package the entry points at; the PyPI package names its own release, which need not match (the two clients have their own version lines: npm 0.2.2 and Python 0.3.2 ship the same change, and PyPI has no 0.2.2), so the entry names the release an MCP client installs from each registry, and `tests/unit/test_mcp_surface.py` holds each to a release its tree has reached. The registry dispatch comes last: it refuses an entry whose npm version is not yet live. The entry then resolves at `https://registry.modelcontextprotocol.io/v0/servers?search=io.github.kumarprabhashanand/loremfile`.
+
+**The annotations are a published claim, and they were wrong until 2026-11-16.** Both
+servers resolve the manifest through `api.manifest` before any handler runs and cache it for
+the process, so **all three tools reach HTTPS on a cold call, the local-file verifier
+included**, while all three declared `openWorldHint: false`. A third-party scanner ran the
+server in a sinkholed container, observed the connection and published a "do not install"
+card. npm 0.2.2 and Python 0.3.2 set it to `true` and say so in each description; the
+read-only, destructive and idempotent hints were already correct and did not move. The guard
+against a repeat is behavioural, not a list of names: each client's test takes the tools from
+`tools/list`, calls each one on a fresh server with the HTTPS transport intercepted, and
+requires an attempted manifest fetch to come with `openWorldHint: true`, so a fourth tool is
+covered the day it is added. A control flips each annotation to `false` and requires the
+guard to reject it. Correcting metadata is allowed during the feature freeze because no
+capability or argument changes.
 
 ### 3.10 `compat.yml`: dispatch, the first of each month, and pull requests that touch `compat/`
 

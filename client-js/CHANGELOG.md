@@ -4,6 +4,10 @@ All notable changes to the `loremfile` npm package. The files it downloads have 
 versions, published at <https://loremfile.dev/changelog> — a catalog version says what is
 on the service, this one says what the client does.
 
+## [0.2.2]
+
+- All MCP tools declare `openWorldHint: true` and describe their network read of the published manifest.
+
 ## [0.2.1]
 
 - `get --format`, `list` and the MCP `list_fixtures` leave out the `sample.{format}` aliases, which repeat another file's bytes, so a format no longer arrives twice. `--include-aliases` brings them back; a path named outright is always fetched.

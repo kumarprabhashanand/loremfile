@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import https from "node:https";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, test } from "node:test";
@@ -195,6 +196,80 @@ test("both eras get identical tool definitions, every one read-only", async () =
   for (const tool of now) {
     assert.equal(tool.annotations.readOnlyHint, true, tool.name);
     assert.equal(tool.annotations.destructiveHint, false, tool.name);
+  }
+});
+
+/**
+ * Follow the default api.manifest loader to its transport, without sending a request.
+ *
+ * Deliberately strict: every tool `tools/list` advertises must attempt the manifest fetch.
+ * A tool that genuinely needs no network fails here, and that is the point. Declaring one
+ * closed-world is then a decision taken on purpose, in this guard, and not a default.
+ *
+ * The override is removed for the probe rather than asserted against, because sibling test
+ * files set it and this test must not depend on who ran before it.
+ */
+async function assertManifestAnnotations(tools, t) {
+  const requests = [];
+  const saved = process.env[api.OVERRIDE];
+  delete process.env[api.OVERRIDE];
+  const get = t.mock.method(https, "get", (url) => {
+    requests.push(url.href);
+    throw new Error("manifest network probe");
+  });
+  try {
+    assert.equal(api.baseUrl(), api.BASE_URL, "the probe uses the published HTTPS origin");
+    for (const tool of tools) {
+      requests.length = 0;
+      // A fresh server defeats the cache. Dispatch loads the manifest before validating args.
+      const reply = await mcp.createServer().handle({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: { name: tool.name, arguments: {}, _meta: META },
+      });
+      assert.deepEqual(requests, [`${api.BASE_URL}manifest.json`], tool.name);
+      assert.equal(reply.result?.isError, true, tool.name);
+      assert.match(reply.result.content[0].text, /manifest network probe/);
+      assert.equal(
+        tool.annotations.openWorldHint,
+        true,
+        `${tool.name}: manifest network access requires openWorldHint: true`,
+      );
+    }
+  } finally {
+    get.mock.restore();
+    if (saved === undefined) {
+      delete process.env[api.OVERRIDE];
+    } else {
+      process.env[api.OVERRIDE] = saved;
+    }
+  }
+}
+
+/** An annotation is a published claim about behaviour, and a scanner will check it. */
+test("manifest-fetching tool handlers declare an open world", async (t) => {
+  const reply = await mcp.createServer().handle({
+    jsonrpc: "2.0",
+    id: 1,
+    method: "tools/list",
+    params: { _meta: META },
+  });
+  const tools = reply.result.tools;
+  assert.ok(
+    tools.some((tool) => tool.name === "verify_file"),
+    "control: discovery finds verify_file",
+  );
+  await assertManifestAnnotations(tools, t);
+});
+
+test("the manifest annotation guard rejects each closed-world declaration", async (t) => {
+  for (const tool of mcp.TOOLS) {
+    const closed = { ...tool, annotations: { ...tool.annotations, openWorldHint: false } };
+    await assert.rejects(
+      assertManifestAnnotations([closed], t),
+      /manifest network access requires openWorldHint: true/,
+    );
   }
 });
 

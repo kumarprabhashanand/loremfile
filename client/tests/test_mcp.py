@@ -10,6 +10,7 @@ import os
 import re
 import subprocess
 import sys
+import urllib.error
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -174,6 +175,67 @@ def test_both_eras_get_identical_tool_definitions_every_one_read_only(child: Cli
 def test_the_paging_bounds_the_schema_advertises_are_the_ones_enforced() -> None:
     limit = mcp.TOOLS[0]["inputSchema"]["properties"]["limit"]
     assert (limit["default"], limit["maximum"]) == (mcp.DEFAULT_LIMIT, mcp.MAX_LIMIT)
+
+
+def assert_manifest_annotations(
+    tools: list[dict[str, Any]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Follow the default api.manifest loader to its transport without sending a request.
+
+    Deliberately strict: every tool ``tools/list`` advertises must attempt the manifest
+    fetch. A tool that genuinely needs no network fails here, and that is the point.
+    Declaring one closed-world is then a decision taken on purpose, in this guard, and
+    not a default.
+    """
+    requests = []
+
+    def block(request, **_kwargs):
+        requests.append(request.full_url)
+        raise urllib.error.URLError("manifest network probe")
+
+    with monkeypatch.context() as patch:
+        patch.delenv(api.OVERRIDE, raising=False)
+        patch.setattr(api.urllib.request, "urlopen", block)
+        for tool in tools:
+            requests.clear()
+            # A fresh server defeats the cache. Dispatch loads before validating args.
+            reply = mcp.Server().handle(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "tools/call",
+                    "params": {"name": tool["name"], "arguments": {}, "_meta": META},
+                }
+            )
+            assert requests == [f"{api.BASE_URL}manifest.json"], tool["name"]
+            assert reply["result"]["isError"] is True, tool["name"]
+            assert "manifest network probe" in reply["result"]["content"][0]["text"]
+            assert tool["annotations"]["openWorldHint"] is True, (
+                f"{tool['name']}: manifest network access requires openWorldHint: true"
+            )
+
+
+def test_manifest_fetching_tool_handlers_declare_an_open_world(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An annotation is a published claim about behaviour, and a scanner will check it."""
+    reply = mcp.Server().handle(
+        {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {"_meta": META}}
+    )
+    tools = reply["result"]["tools"]
+    assert any(tool["name"] == "verify_file" for tool in tools), (
+        "control: discovery finds verify_file"
+    )
+    assert_manifest_annotations(tools, monkeypatch)
+
+
+def test_the_manifest_annotation_guard_rejects_each_closed_world_declaration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    for tool in mcp.TOOLS:
+        closed = {**tool, "annotations": {**tool["annotations"], "openWorldHint": False}}
+        with pytest.raises(AssertionError, match="manifest network access requires openWorldHint"):
+            assert_manifest_annotations([closed], monkeypatch)
 
 
 # --- versions and malformed requests: each guard, watched firing ------------------------
