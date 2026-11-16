@@ -40,13 +40,19 @@
   retry.hidden = true;
   box.appendChild(retry);
 
+  // Extension synonyms, so a format's common name finds it: jpeg finds the jpg files.
+  var SYNONYM = { jpg: "jpeg", jpeg: "jpg", tif: "tiff", tiff: "tif",
+                  htm: "html", html: "htm", yml: "yaml", yaml: "yml" };
+
   function words(text) {
     var tokens = text.toLowerCase().match(/[a-z0-9]+(?:\.[0-9]+)?/g) || [];
     // A filename's 10mb is also the two whole tokens 10 and mb, never 100 or embedded.
+    // The query and the row both pass through here, so a synonym stays symmetric.
     return tokens.reduce(function (all, token) {
       all.push(token);
       var size = /^(\d+(?:\.\d+)?)(b|kb|mb|gb|kib|mib|gib)$/.exec(token);
       if (size) { all.push(size[1], size[2]); }
+      if (SYNONYM[token]) { all.push(SYNONYM[token]); }
       return all;
     }, []);
   }
@@ -69,7 +75,9 @@
       });
       var format = path.split("/")[0];
       var extension = path.slice(path.lastIndexOf(".") + 1);
-      var own = wanted.some(function (word) { return word === format || word === extension; });
+      var own = words(format).concat(words(extension)).some(function (word) {
+        return wanted.indexOf(word) !== -1;
+      });
       var tier = edgeCase(row) ? 2 : own ? 0 : inPath ? 1 : 3;
       return { row: row, position: position, tier: tier, found: found };
     }).filter(function (match) { return match.found; })

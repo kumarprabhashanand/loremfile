@@ -101,6 +101,34 @@ test("10 mb matches a whole size token, not 1000 or embedded", async () => {
   assert.ok(!app.paths().includes("avro/people-1000.avro"));
 });
 
+test("jpeg finds the jpg files, and a synonym ranks them the same either way", async () => {
+  const jpegs = ROWS.filter((row) => row.path.startsWith("jpg/")).map((row) => row.path);
+  assert.ok(jpegs.length >= 4, "control: the catalogue has ordinary JPEGs to find");
+  const seen = {};
+  for (const query of ["jpeg", "jpg"]) {
+    const app = browser();
+    await app.type(query);
+    const paths = app.paths();
+    // The common name for the format must reach the format's own files, not only a
+    // document that happens to mention JPEG in its description.
+    assert.ok(paths[0].startsWith("jpg/"), `${query} leads with a JPEG, got ${paths[0]}`);
+    for (const path of jpegs.slice(0, 4)) {
+      assert.ok(paths.includes(path), `${query} finds ${path}`);
+    }
+    seen[query] = paths;
+  }
+  assert.deepEqual(seen.jpeg, seen.jpg, "jpeg and jpg are the same query");
+});
+
+test("yml finds the yaml file, which contains the token nowhere", async () => {
+  const app = browser();
+  await app.type("yml");
+  const yaml = ROWS.find((row) => row.path.startsWith("yaml/"));
+  assert.ok(yaml, "control: the catalogue has a YAML file");
+  assert.ok(!`${yaml.path} ${yaml.description}`.toLowerCase().includes("yml"), "control: no literal yml");
+  assert.ok(app.paths().includes(yaml.path), app.paths().join(", "));
+});
+
 test("pdf puts ordinary PDFs first and marks every edge/ result as an edge case", async () => {
   const app = browser();
   await app.type("pdf");
