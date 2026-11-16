@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Search matches whole words, puts a format's files first, labels edge cases, shows the total
+  with a way to see every match, and retries after a failed load. Page dates were corrected.
+
 ## [1.16.0] - 2026-11-14
 
 - Eleven more audio files. MP3: a 20 Hz to 20 kHz sweep, white noise, the sweep at a constant

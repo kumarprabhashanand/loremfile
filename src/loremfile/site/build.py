@@ -1497,6 +1497,7 @@ def search_index(manifest: Manifest) -> bytes:
             "bytes": e["bytes"],
             "size": sized(e["bytes"]),
             "description": e["description"],
+            "edge_case": e.get("edge_case", False),
         }
         for e in sorted(manifest.current, key=lambda e: e["path"])
     ]
@@ -1745,10 +1746,19 @@ def build(
     }
     if previous is None:
         previous = page_dates.load(root / page_dates.FILE)
-    # Hashed with no date at all, so neither a page's own date nor another's can move it.
+    # Dates track content, not the fingerprinted URL of shared assets. Real pages below
+    # still use `site`, so immutable asset caching keeps working.
+    undated_site = {**site, **page_dates.ASSET_URLS}
     undated = site_pages(root, manifest, catalogs, committed=committed, date_of=lambda _: None)
-    hashes = {p.key: sha256(render_page(env, p, site)) for p in undated if in_sitemap(p)}
-    dates = page_dates.update(previous, hashes, committed.date())
+    hashes = {p.key: sha256(render_page(env, p, undated_site)) for p in undated if in_sitemap(p)}
+    # Migrate only a hash that the old rendering still reproduces. A real content edit
+    # cannot match it and must advance its date instead (docs/04 §7).
+    legacy_hashes = {
+        p.key: sha256(render_page(env, p, site))
+        for p in undated
+        if p.key in previous and previous[p.key].sha256 != hashes.get(p.key)
+    }
+    dates = page_dates.update(previous, hashes, committed.date(), legacy_hashes=legacy_hashes)
 
     def date_of(key: str) -> dt.date:
         if key not in dates:

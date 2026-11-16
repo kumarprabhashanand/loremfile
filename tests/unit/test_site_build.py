@@ -957,6 +957,23 @@ def test_the_popular_list_and_search_use_the_same_size_string(site: Path) -> Non
     assert "row.size" in script and '"MB"' not in script, "search formats sizes its own way"
 
 
+def test_search_index_adds_the_catalogue_edge_case_flag_without_breaking_old_consumers(
+    site: Path,
+) -> None:
+    """Old scripts keep their fields; new scripts may also read the catalogue's edge flag."""
+    entries = manifest_entries()
+    rows = json.loads(text(site, "search-index.json"))
+    by_path = {row["path"]: row for row in rows}
+    assert by_path["edge/zero-byte.pdf"]["edge_case"] is True
+    assert by_path["pdf/minimal.pdf"]["edge_case"] is False
+    for row in rows:
+        entry = entries[row["path"]]
+        assert {"path", "bytes", "size", "description"} <= row.keys()
+        assert row["bytes"] == entry["bytes"]
+        assert row["description"] == entry["description"]
+        assert row["edge_case"] is entry.get("edge_case", False)
+
+
 def test_a_demand_page_leads_with_what_people_type_and_its_description_with_its_labels(
     site: Path,
 ) -> None:
