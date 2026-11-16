@@ -2,8 +2,8 @@
 
 The sitemap's `lastmod` and a page's `dateModified` come from here rather than from the
 build's date, so a deploy that changes no page's content moves no date. Each entry holds a
-date and the sha256 of the page as rendered *without any date*: hashed with its date, a page
-would change whenever its date did, and the date would move on every build.
+date and the sha256 of the page rendered without a date and with neutral shared-asset URLs:
+hashed with its date or an asset revision, a page would change without a content edit.
 
 Like `manifest.json`, the file is written by a command and committed, never edited by hand:
 `loremfile site build --update-dates`. Without that flag, `site build` refuses a stale record.
@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import Final
 
 FILE: Final = "page-dates.json"
+#: Neutral URLs used only for content hashing; real pages keep fingerprinted URLs.
+ASSET_URLS: Final = {"css": "/assets/site.css", "js": "/assets/site.js"}
 #: How many stale pages an error names before it counts the rest.
 SHOWN: Final = 10
 
@@ -53,14 +55,23 @@ def render(record: Record) -> bytes:
     return (json.dumps(data, indent=2) + "\n").encode()
 
 
-def update(previous: Record, hashes: dict[str, str], today: dt.date) -> Record:
+def update(
+    previous: Record,
+    hashes: dict[str, str],
+    today: dt.date,
+    *,
+    legacy_hashes: dict[str, str] | None = None,
+) -> Record:
     """A page keeps its date while its undated hash is unchanged, and otherwise moves to
-    `today`, never backwards. A page no longer built drops out."""
+    `today`, never backwards. A page no longer built drops out. A matching legacy hash
+    proves unchanged content during the one-time asset-URL scheme migration."""
     record: Record = {}
     for key, digest in sorted(hashes.items()):
         old = previous.get(key)
-        if old is not None and old.sha256 == digest:
-            record[key] = old
+        if old is not None and (
+            old.sha256 == digest or (legacy_hashes or {}).get(key) == old.sha256
+        ):
+            record[key] = Entry(old.date, digest)
         else:
             record[key] = Entry(today if old is None else max(today, old.date), digest)
     return record

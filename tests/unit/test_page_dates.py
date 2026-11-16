@@ -11,6 +11,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import re
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -155,6 +156,61 @@ def test_a_content_change_moves_only_that_pages_date(
     assert days["pdf"] == "2026-11-09"
     assert {day for key, day in days.items() if key != "pdf"} == {"2026-11-02"}
     assert b'"dateModified":"2026-11-09"' in page(site2, "pdf")
+
+
+@pytest.mark.parametrize("asset_name", ["site.js", "site.css"])
+def test_a_one_byte_site_js_or_css_edit_does_not_redate_every_page(
+    tmp_path: Path, asset_name: str
+) -> None:
+    """Asset fingerprints change the served URL, never a page's content date."""
+    root = tmp_path / "root"
+    root.mkdir()
+    for source in ROOT.iterdir():
+        target = root / source.name
+        if source.name == "site":
+            shutil.copytree(source, target)
+        else:
+            target.symlink_to(source, target_is_directory=source.is_dir())
+    out1, out2 = tmp_path / "before" / "site", tmp_path / "after" / "site"
+    before = build.build(out1, root=root, committed=DAY1, previous={})
+    record = tmp_path / page_dates.FILE
+    assert page_dates.settle(before.dates, before.stale, record, write=True) == []
+    original = record.read_bytes()
+    script = root / "site" / "static" / asset_name
+    script.write_bytes(script.read_bytes() + b"\n")
+    after = build.build(out2, root=root, committed=DAY2, previous=page_dates.load(record))
+    assert page(out1, "pdf") != page(out2, "pdf"), "control: real pages use the new asset URL"
+    asset = f"assets/site.{build.sha256(script.read_bytes())[:12]}{script.suffix}"
+    assert (out2 / asset).read_bytes() == script.read_bytes(), "the fingerprint stays real"
+    assert after.stale == [], f"a script edit re-dated {len(after.stale)} pages"
+    assert page_dates.settle(after.dates, after.stale, record, write=True) == []
+    assert record.read_bytes() == original
+    assert lastmods(out2) == lastmods(out1)
+
+
+@pytest.mark.parametrize("content_change", [False, True])
+def test_asset_hash_scheme_migration_preserves_only_unchanged_content_dates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, content_change: bool
+) -> None:
+    """Legacy hashes migrate without date changes; real content still advances its date."""
+    with monkeypatch.context() as patch:
+        patch.setattr(page_dates, "ASSET_URLS", {})
+        _, before = built(tmp_path, "legacy", DAY1, {})
+    if content_change:
+        original = build.content
+
+        def edited(root: Path, relative: str) -> str:
+            text = original(root, relative)
+            return text + "\nOne more sentence.\n" if relative == "formats/pdf.md" else text
+
+        monkeypatch.setattr(build, "content", edited)
+    _, after = built(tmp_path, "neutral-assets", DAY2, before.dates)
+    assert {"index.html", "pdf", "changelog", "docs/faq"} <= set(after.dates), "control"
+    assert after.stale == sorted(before.dates), "every legacy digest changes scheme once"
+    moved = [key for key in after.dates if after.dates[key].date != before.dates[key].date]
+    assert moved == (["pdf"] if content_change else [])
+    if content_change:
+        assert after.dates["pdf"].date == DAY2.date()
 
 
 # --- the committed record ----------------------------------------------------------------
