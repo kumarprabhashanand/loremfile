@@ -4,6 +4,10 @@ All notable changes to the `loremfile` client. The files it downloads have their
 versions, published at <https://loremfile.dev/changelog>: a catalog version says what is
 on the service, this one says what the client does.
 
+## [0.3.2] - 2026-11-16
+
+- All MCP tools declare `openWorldHint: true` and describe their network read of the published manifest.
+
 ## [0.3.1] - 2026-11-13
 
 - `get --format`, `list` and the MCP `list_fixtures` leave out the `sample.{format}` aliases, which repeat another file's bytes, so a format no longer arrives twice. `--include-aliases` brings them back; a path named outright is always fetched.
