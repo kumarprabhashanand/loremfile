@@ -104,6 +104,12 @@ class Response:
         )
 
 
+@dataclass(frozen=True)
+class Multipart:
+    data: bytes
+    content_type: str
+
+
 @dataclass
 class Client:
     """Talks to Cloudflare for exactly one zone and one account."""
@@ -203,7 +209,9 @@ class Client:
 
     # --- transport ---------------------------------------------------------
 
-    def request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> Response:
+    def request(
+        self, method: str, path: str, payload: dict[str, Any] | Multipart | None = None
+    ) -> Response:
         if self.read_only and method in WRITE_METHODS:
             raise ReadOnlyError(
                 f"{method} {self._public(path)} attempted through a read-only client. The audit "
@@ -215,8 +223,13 @@ class Client:
             return Response(status=200, body={"success": True, "result": {}, "dry_run": True})
         return self._send(method, path, payload)
 
-    def _send(self, method: str, path: str, payload: dict[str, Any] | None) -> Response:
-        data = json.dumps(payload).encode("utf-8") if payload is not None else None
+    def _send(self, method: str, path: str, payload: dict[str, Any] | Multipart | None) -> Response:
+        data: bytes | None
+        if isinstance(payload, Multipart):
+            data, content_type = payload.data, payload.content_type
+        else:
+            data = json.dumps(payload).encode("utf-8") if payload is not None else None
+            content_type = "application/json"
         last: Response | None = None
         for attempt in range(MAX_ATTEMPTS):
             request = urllib.request.Request(  # noqa: S310 - fixed https API root
@@ -225,7 +238,7 @@ class Client:
                 method=method,
                 headers={
                     "Authorization": f"Bearer {self.token}",
-                    "Content-Type": "application/json",
+                    "Content-Type": content_type,
                     "Accept": "application/json",
                 },
             )

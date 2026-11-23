@@ -184,7 +184,17 @@ Two spaces between hash and path, LF line endings, UTF-8, no BOM, trailing newli
 
 ## 4. `{format}/index.json`
 
-Same shape as `manifest.json` but `fixtures` filtered to one format (active only), `count` and `total_bytes` are the **per-format** values, and there is no top-level `formats` array. Stored as `_formats/{format}.json` and served at this URL by a rewrite, because `{format}/` is a locked prefix (ADR-032).
+The manifest's metadata and the active original `fixtures` for one format. `count` and
+`total_bytes` describe that list. A separate `aliases` array carries the metadata needed to
+describe each active sample alias by path. The site stores these indexes under
+`_formats/{format}.json` and rewrites the public URL because `{format}/` is a locked prefix
+(ADR-032).
+
+The MCP pilot uses `mcp-index.json` for lists without a single known format. Its `fixtures`
+columns contain the two tools' fixture fields in path order. `url` stores the common prefix
+once. Each `props.rows` entry alternates a position in `props.keys` and its value. This keeps
+the full projection within the 150 KB build budget. Deploy purges the URL and verifies the
+served bytes against the build. See `09` §3.2c.
 
 ## 5. `llms.txt` and `llms-full.txt`
 

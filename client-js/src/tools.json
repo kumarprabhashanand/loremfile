@@ -2,7 +2,7 @@
   {
     "name": "list_fixtures",
     "title": "List loremfile.dev fixtures",
-    "description": "One page of the published sample files, filtered by format, tag and size. Reads the published manifest over the network. Each comes with its URL and a description of what it is for. `total` counts every match and `next_offset` fetches the next page; it is null on the last.",
+    "description": "One page of the published sample files, filtered by format, tag and size. Reads published fixture metadata over the network. Each comes with its URL and a description of what it is for. `total` counts every match and `next_offset` fetches the next page; it is null on the last.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -141,7 +141,7 @@
   {
     "name": "describe_fixture",
     "title": "Describe one loremfile.dev fixture",
-    "description": "The published manifest entry for one fixture: its URL, MIME type, size, SHA-256, tags, description and measured properties. Reads the published manifest over the network. Metadata only; fetch the URL for the file.",
+    "description": "Published metadata for one fixture: its URL, MIME type, size, SHA-256, tags, description and measured properties. Reads fixture metadata over the network. Fetch the URL for the file.",
     "inputSchema": {
       "type": "object",
       "properties": {

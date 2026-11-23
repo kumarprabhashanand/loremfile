@@ -967,4 +967,10 @@ def site_findings(
             responses[key] = fetch(routes.public_path(key), method="GET")
             results[key] = check_site_key(key, hashes[key], responses[key])
     findings = [finding for key in sorted(results) for finding in results[key]]
+    if routes.MCP_INDEX_KEY not in hashes:
+        findings.append(
+            Finding(
+                routes.public_path(routes.MCP_INDEX_KEY), Status.MISSING_OBJECT, "build omitted it"
+            )
+        )
     return findings + header_branch_findings(hashes, responses)

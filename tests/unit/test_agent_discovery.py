@@ -212,6 +212,7 @@ IN_THE_SKILL = {
 LEFT_OUT = {
     "formats.json": "manifest.json's `formats` names the same formats; one entry point is enough",
     "search-index.json": "the home page's search box reads it; its shape is not a contract",
+    "mcp-index.json": "an input to the pilot Worker, whose tools expose the usable interface",
     "sitemap.xml": "lists pages for crawlers, not files",
     "robots.txt": "crawler policy, not a way to find or verify a file",
     ".well-known/security.txt": "for reporting a vulnerability, not for using the files",

@@ -53,6 +53,28 @@ jobs:
       - id: read
         run: echo "digest=$(cat tools/TOOLCHAIN_DIGEST)" >> "$GITHUB_OUTPUT"
 
+  mcp:
+    needs: setup
+    runs-on: ubuntu-24.04
+    environment: production
+    permissions:
+      contents: read
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: vars.MCP_PILOT_ACTIVE == 'true'
+      - name: Install the package
+        if: vars.MCP_PILOT_ACTIVE == 'true'
+        run: pip install -e . --no-deps
+      - name: Check the pilot without publishing invocation metrics
+        if: vars.MCP_PILOT_ACTIVE == 'true'
+        env:
+          CLOUDFLARE_ANALYTICS_TOKEN: ${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: python -m loremfile.infra.mcp_worker monitor
+
   check:
     needs: setup
     runs-on: ubuntu-24.04

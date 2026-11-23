@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from loremfile.infra import verify_live
+from loremfile.infra import purge, verify_live
 from loremfile.infra.verify_live import Response, Status
 from loremfile.site import routes
 
@@ -20,6 +20,7 @@ FILES = {
     "legal/imprint": META + b"<p>imprint</p>",
     "legal/privacy": META + b"<p>privacy</p>",
     "_formats/pdf.json": b"{}",
+    "mcp-index.json": b'{"catalog_version":"1.2.0","fixtures":{}}',
     # A Markdown twin that sorts before the per-format index: the header-branch check must
     # still find `pdf` among the `_formats/` keys, not a name sliced out of a `.md` key.
     "_formats/7z.md": b"# 7z\n",
@@ -129,6 +130,27 @@ def test_an_empty_build_is_a_finding_not_a_clean_check(tmp_path: Path, edge: Edg
     (found,) = verify_live.site_findings(tmp_path)
     assert found.status is Status.MISSING_OBJECT
     assert edge.calls == []
+
+
+@pytest.mark.parametrize("bad", [b'{"catalog_version":"1.1.0","fixtures":{}}', b"{"])
+def test_stale_or_malformed_mcp_index_fails_deploy_verification(
+    site: Path, edge: Edge, bad: bytes
+) -> None:
+    path = "/mcp-index.json"
+    edge.bodies[path] = bad
+    assert any(
+        f.path == path and f.status is Status.HASH_MISMATCH for f in verify_live.site_findings(site)
+    )
+    assert "https://loremfile.dev/mcp-index.json" in purge.site_targets([])[1]
+
+
+def test_a_build_that_omits_the_mcp_index_fails_deploy_verification(site: Path, edge: Edge) -> None:
+    (site / "mcp-index.json").unlink()
+    assert any(
+        f.path == "/mcp-index.json" and f.status is Status.MISSING_OBJECT
+        for f in verify_live.site_findings(site)
+    )
+    assert "/pdf/index.json" in edge.calls
 
 
 def test_a_legal_page_without_its_robots_header_or_meta_fails(site: Path, edge: Edge) -> None:

@@ -309,6 +309,34 @@ This is how M2.3 (`apply`), M2.4 (`probe`), rotation checks (`audit`) and restor
 - **The inputs** `restore_archive_url` and `restore_only` are space-separated. They reach the shell only through `env`, and are checked for shape before anything runs.
 - **Redact is two modes:** `redact-dry-run` names the releases that would change; `redact` rewrites them (§10, ADR-031).
 
+### 3.2c Remote MCP pilot
+
+The owner provisions a proxied `mcp` CNAME in the loremfile zone, with TLS for
+`mcp.loremfile.dev`. The `loremfile-mcp` Worker owns route `mcp.loremfile.dev/*` and serves
+stateless Streamable HTTP on `POST /mcp`. Other paths return 404. The hostname needs cache
+bypass and its own response policy so the apex site's rewrites and discovery headers stay
+on the apex. The Worker sends `Cache-Control: no-store` and accepts absent or same-origin
+`Origin` headers. The pilot is for server-to-server clients. The zone's existing IP and
+data-centre rate-limit rule covers the proxied hostname.
+
+1. After the site deploy has published and verified the new indexes, run `infra.yml` with
+   `mcp-deploy` on `main`. The `production` environment's `CLOUDFLARE_MCP_TOKEN` needs Worker
+   script write, zone Worker route write, and zone read. The workflow checks the live indexes
+   before uploading the modules and setting the route, then checks HTTPS and both tools.
+2. Set `MCP_PILOT_ACTIVE=true` in the `production` environment to enable the daily `health.yml`
+   check. It runs a short MCP probe and reads aggregate Worker metrics using the analytics
+   token. The dashboard retains the measurements. Actions reports only check status.
+3. At the end of the week run `mcp-unroute` and clear `MCP_PILOT_ACTIVE`. In an incident the
+   same mode detaches the pilot route immediately when the job runs. Use `mcp-rollback` with a
+   previous `loremfile-mcp` version ID to keep serving from that version. Read the pilot window
+   in the dashboard and record the request count, p50 and p99 CPU, and invocation errors in the
+   owner's private measurements (ADR-017).
+
+The Worker reads one public index on a cache miss, uses the parsed data for up to one minute
+per isolate, and revalidates with its ETag. A different catalog version invalidates the other
+parsed indexes. Legacy initialize and discovery work without session affinity. See `19` §2
+for the Free plan limits and monitoring settings.
+
 ### 3.3 `health.yml`: daily
 
 ```yaml
