@@ -76,9 +76,14 @@ function fixtureRows({ fixtures, aliases }) {
 
 async function readIndex(etag) {
   try {
+    // Workers implement only the follow and manual redirect modes. The third one throws a
+    // TypeError on every call, and the catch below used to relabel that as unparseable JSON,
+    // which cost three deploys. Manual hands a 3xx back as a response and the status check
+    // below rejects it. (The test that guards this greps for the option, so do not write the
+    // forbidden value out in a comment or it will match here.)
     const response = await fetch(BASE_URL + INDEX, {
       headers: etag ? { "If-None-Match": etag } : {},
-      redirect: "error",
+      redirect: "manual",
     });
     if (etag && response.status === 304) {
       return null;
@@ -99,7 +104,11 @@ async function readIndex(etag) {
     if (error instanceof IndexError) {
       throw error;
     }
-    throw new IndexError(`/${INDEX} could not be read as JSON`);
+    // Name the real failure. Relabelling every exception as unparseable JSON cost three
+    // deploys: the cause was a TypeError from an unsupported fetch option, and the message
+    // sent us to look at the index, which was fine.
+    const name = error?.constructor?.name ?? "Error";
+    throw new IndexError(`/${INDEX} could not be read: ${name}: ${error?.message ?? error}`);
   }
 }
 

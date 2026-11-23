@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { createServer, TOOLS } from "../client-js/src/mcp.js";
@@ -52,16 +52,43 @@ async function call(handle, name, args) {
   return rpc(handle, "tools/call", { name, arguments: args });
 }
 
+//: Workers implement only these. Node's fetch also accepts "error", which is exactly how a
+//: TypeError at the edge passed every test here: the stub was more permissive than the
+//: runtime it stands in for. Assert the runtime's rule, not whichever value is current.
+const WORKERD_REDIRECT = new Set(["follow", "manual"]);
+
 function intercept(t, reply) {
   const requests = [];
   t.mock.method(globalThis, "fetch", async (target, options) => {
     requests.push({ target, headers: options.headers });
     assert.equal(target, compactIndex);
-    assert.equal(options.redirect, "error");
+    assert.ok(
+      WORKERD_REDIRECT.has(options.redirect),
+      `redirect: ${JSON.stringify(options.redirect)} is not implemented in Workers and throws`,
+    );
     return reply?.(index, target, options.headers) ?? new Response(index);
   });
   return requests;
 }
+
+test("no module under worker/ passes a redirect value Workers does not implement", () => {
+  const dir = new URL("./", import.meta.url);
+  // The worker modules only. A test file names the forbidden value in its own
+  // assertions, and this check is a plain grep that cannot tell code from a string.
+  const files = readdirSync(dir).filter(
+    (name) => name.endsWith(".mjs") && !name.endsWith(".test.mjs"),
+  );
+  assert.ok(files.includes("catalog.mjs"), "control: the module that fetches is scanned");
+  for (const name of files) {
+    const source = readFileSync(new URL(name, dir), "utf8");
+    for (const [, value] of source.matchAll(/redirect:\s*"([^"]+)"/g)) {
+      assert.ok(
+        WORKERD_REDIRECT.has(value),
+        `${name} passes redirect: "${value}", which throws a TypeError at the edge`,
+      );
+    }
+  }
+});
 
 test("the bundled HTTPS handler serves the original two definitions", async () => {
   const { result } = await rpc(bundledWorker.fetch, "tools/list");
