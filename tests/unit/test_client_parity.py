@@ -112,6 +112,10 @@ def action_rules(text: str) -> dict[str, Any]:
 def sources() -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]], str, str]:
     py = {name: py_constants((PY / f"{name}.py").read_text()) for name in ("api", "cli", "mcp")}
     js = {name: js_constants((JS / f"{name}.js").read_text()) for name in ("api", "cli", "mcp")}
+    shared = js_constants((JS / "mcp-fixtures.mjs").read_text())
+    assert {"DEFAULT_LIMIT", "MAX_LIMIT"} <= shared.keys(), "control: shared MCP bounds"
+    assert not (shared.keys() & js["mcp"].keys()), "each bound has one definition"
+    js["mcp"].update(shared)
     return py, js, (JS / "mcp.js").read_text(), ACTION.read_text()
 
 

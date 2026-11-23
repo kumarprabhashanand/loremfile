@@ -173,11 +173,14 @@ def _rpc(method: str, params: dict[str, Any]) -> dict[str, Any]:
     request = urllib.request.Request(
         URL,
         data=json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params}).encode(),
-        headers={
-            "Content-Type": "application/json",
-            "Accept": "application/json, text/event-stream",
-            "MCP-Protocol-Version": "2025-11-25",
-        },
+        headers=config.with_agent(
+            {
+                "Content-Type": "application/json",
+                "Accept": "application/json, text/event-stream",
+                "MCP-Protocol-Version": "2025-11-25",
+            },
+            config.VERIFY_USER_AGENT,
+        ),
         method="POST",
     )
     try:
@@ -193,22 +196,26 @@ def _rpc(method: str, params: dict[str, Any]) -> dict[str, Any]:
             message = json.load(response)
     except (OSError, ValueError) as exc:
         raise CloudflareError(f"MCP {method} did not answer over HTTPS: {exc}") from exc
-    result = message.get("result")
-    if message.get("id") != 1 or not isinstance(result, dict) or result.get("isError"):
+    result = message.get("result") if isinstance(message, dict) else None
+    if not isinstance(result, dict) or message.get("id") != 1 or result.get("isError"):
         raise CloudflareError(f"MCP {method} did not return a result")
     return result
 
 
 def smoke() -> None:
     tools = _rpc("tools/list", {}).get("tools", [])
-    if {tool["name"] for tool in tools} != {"list_fixtures", "describe_fixture"}:
+    if not isinstance(tools, list) or [
+        tool.get("name") if isinstance(tool, dict) else None for tool in tools
+    ] != ["list_fixtures", "describe_fixture"]:
         raise CloudflareError("MCP tools/list did not return the two pilot tools")
     path = "pdf/sample.pdf"
     result = _rpc("tools/call", {"name": "describe_fixture", "arguments": {"path": path}})
-    if result.get("structuredContent", {}).get("path") != path:
+    fixture = result.get("structuredContent")
+    if not isinstance(fixture, dict) or fixture.get("path") != path:
         raise CloudflareError("MCP describe_fixture did not describe the PDF alias")
     result = _rpc("tools/call", {"name": "list_fixtures", "arguments": {"limit": 1}})
-    if not result.get("structuredContent", {}).get("fixtures"):
+    listing = result.get("structuredContent")
+    if not isinstance(listing, dict) or not listing.get("fixtures"):
         raise CloudflareError("MCP list_fixtures did not read the cross-format index")
 
 

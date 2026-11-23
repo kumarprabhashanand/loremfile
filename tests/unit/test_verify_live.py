@@ -398,7 +398,7 @@ def test_with_agent_leaves_a_callers_choice_alone_whatever_its_case() -> None:
 
 # Modules under infra/ that open a URL, sorted by whose site they fetch. A new one must be put
 # in a list below, so that nothing fetches loremfile.dev under urllib's default agent unseen.
-OUR_SITE = {"probe", "verify_live"}
+OUR_SITE = {"mcp_worker", "probe", "verify_live"}
 OTHER_HOSTS = {"cloudflare_api", "crawlers", "indexnow", "restore", "tokens", "usage"}
 
 
@@ -415,5 +415,5 @@ def test_every_module_that_opens_a_url_either_fetches_our_site_with_an_agent_or_
     assert opening == OUR_SITE | OTHER_HOSTS, "a module that opens a URL is not classified here"
     for name in OUR_SITE:
         assert "with_agent(" in (infra / f"{name}.py").read_text(encoding="utf-8"), name
-    # Control: the sweep sees `verify_live` as opening one and the probe's opener too.
-    assert {"verify_live", "probe"} <= opening
+    # Control: name the three monitors, including the one on the MCP subdomain.
+    assert {"mcp_worker", "probe", "verify_live"} <= opening
