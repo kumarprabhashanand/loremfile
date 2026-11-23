@@ -32,6 +32,7 @@ Repository variables set in M1.5: `R2_BUCKET=loremfile-public`, `SITE_HOST=lorem
 | `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | secrets | env `production` | T2 | 180 days |
 | `CLOUDFLARE_ANALYTICS_TOKEN` | secret | env `production` | T4 (read-only) | 365 days |
 | `R2_READ_TOKEN` | secret | env `production` | T5 (Admin Read only, `08` §2 step 10c); read by `audit_bucket_locks` alone | 180 days |
+| `CLOUDFLARE_MCP_TOKEN` | secret | env `production` | T6: Workers Scripts Edit, Workers Routes Edit, Zone Read, scoped to this zone. Read by the `mcp` job of `infra.yml` alone (§3.2c) | 98 days, to 2027-03-01 with T1 and T4 |
 | `FORBIDDEN_STRINGS` | secret, optional | env `production` | the owner: one string per line that must never appear in the tree; the site build's git-grep guard fails if one does. **The list lives only here**: committed, it would publish what it protects | n/a |
 | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_ZONE_ID` | secrets | env `production` | Cloudflare dashboard (Overview page of the zone). Only jobs in `production` read them, which a test pins | n/a |
 | `R2_BUCKET`, `SITE_HOST` | variables | repository | fixed values | n/a |
@@ -318,10 +319,6 @@ bypass and its own response policy so the apex site's rewrites and discovery hea
 on the apex. The Worker sends `Cache-Control: no-store` and accepts absent or same-origin
 `Origin` headers. The pilot is for server-to-server clients. The zone's existing IP and
 data-centre rate-limit rule covers the proxied hostname.
-
-`worker/mcp.test.mjs` imports the bundle, so `python -m loremfile.infra.mcp_worker build`
-has to run first; without it the import fails as `ERR_MODULE_NOT_FOUND` before any test does.
-CI runs the two in that order in the `site` job.
 
 1. After the site deploy has published and verified the new indexes, run `infra.yml` with
    `mcp-deploy` on `main`. The `production` environment's `CLOUDFLARE_MCP_TOKEN` needs Worker

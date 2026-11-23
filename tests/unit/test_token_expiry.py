@@ -17,7 +17,7 @@ import pytest
 from loremfile.infra import tokens
 
 EXPIRY = Path(__file__).resolve().parents[2] / "infra" / "token-expiry.json"
-EXPECTED = {"T1", "T2", "T4", "T5"}
+EXPECTED = {"T1", "T2", "T4", "T5", "T6"}
 
 #: The secret names docs/09 §2 says must exist in the `production` environment.
 SECRET_NAMES = {
@@ -26,6 +26,7 @@ SECRET_NAMES = {
     "R2_SECRET_ACCESS_KEY",
     "CLOUDFLARE_ANALYTICS_TOKEN",
     "R2_READ_TOKEN",
+    "CLOUDFLARE_MCP_TOKEN",
 }
 
 
@@ -80,7 +81,9 @@ def test_expiry_dates_are_in_the_future() -> None:
 
 def test_every_recorded_token_reports_days_left() -> None:
     rows = tokens.tokens_due()
-    assert {row.key for row in rows} == {"T1", "T2", "T4", "T5"}
+    # EXPECTED, not a second copy of the set: this list was duplicated here and adding T6
+    # passed the check above while failing this one.
+    assert {row.key for row in rows} == EXPECTED
     assert all(row.days_left > 0 for row in rows), "a token has already expired"
 
 

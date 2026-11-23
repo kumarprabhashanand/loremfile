@@ -87,10 +87,49 @@ def test_first_deploy_detaches_the_pilot_route_if_smoke_fails(cloudflare, monkey
         raise CloudflareError("smoke failed")
 
     monkeypatch.setattr(mcp_worker, "smoke", fail)
+    monkeypatch.setattr(mcp_worker, "SMOKE_ATTEMPTS", 1)
     with pytest.raises(CloudflareError, match="smoke failed"):
         mcp_worker.deploy(client, ROOT)
     assert calls[-1] == ("DELETE", f"{ROUTES}/pilot", None)
     assert [row["id"] for row in routes] == ["other"]
+
+
+def test_deploy_waits_for_a_new_route_to_take_effect_before_believing_a_failure(
+    cloudflare, monkeypatch
+) -> None:
+    """Run 45264923599 rolled a working Worker back because it smoked the route instantly."""
+    client, routes, calls = cloudflare
+    tries: list[int] = []
+    slept: list[float] = []
+
+    def flaky() -> None:
+        tries.append(1)
+        if len(tries) < 3:
+            raise CloudflareError("MCP tools/list did not answer over HTTPS: HTTP Error 522")
+
+    monkeypatch.setattr(mcp_worker, "smoke", flaky)
+    monkeypatch.setattr(mcp_worker, "SMOKE_PAUSE", 0)
+    monkeypatch.setattr(mcp_worker.time, "sleep", slept.append)
+    mcp_worker.deploy(client, ROOT)
+    assert len(tries) == 3, "it retried rather than rolling back on the first 522"
+    assert len(slept) == 2, "it paused between attempts"
+    assert ("DELETE", f"{ROUTES}/pilot", None) not in calls, "the route survived"
+    assert "pilot" in [row["id"] for row in routes]
+
+
+def test_the_settle_window_is_bounded_so_a_broken_worker_still_fails(monkeypatch) -> None:
+    tries: list[int] = []
+
+    def always() -> None:
+        tries.append(1)
+        raise CloudflareError("broken")
+
+    monkeypatch.setattr(mcp_worker, "smoke", always)
+    monkeypatch.setattr(mcp_worker, "SMOKE_ATTEMPTS", 4)
+    monkeypatch.setattr(mcp_worker.time, "sleep", lambda _seconds: None)
+    with pytest.raises(CloudflareError, match="broken"):
+        mcp_worker._settle()
+    assert len(tries) == 4
 
 
 @pytest.mark.parametrize("operation", ["deploy", "unroute"])

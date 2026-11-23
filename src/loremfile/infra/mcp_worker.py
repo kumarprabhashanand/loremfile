@@ -7,6 +7,7 @@ import datetime as dt
 import hashlib
 import json
 import sys
+import time
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -125,6 +126,26 @@ def _verify_catalog(root: Path) -> None:
             )
 
 
+#: A route that has just been created takes seconds to reach every POP, so a 522 straight
+#: after creating one means "not yet", not "broken". Run `45264923599` created the route,
+#: smoke-tested it two seconds later, got 522 and rolled the route back off a working Worker.
+#: Bounded, so a genuinely broken Worker still fails, about a minute later. Tests lower these.
+SMOKE_ATTEMPTS = 8
+SMOKE_PAUSE = 8.0
+
+
+def _settle() -> None:
+    """`smoke`, but allowing a new route the time it needs to take effect."""
+    for attempt in range(1, SMOKE_ATTEMPTS + 1):
+        try:
+            smoke()
+            return
+        except CloudflareError:
+            if attempt == SMOKE_ATTEMPTS:
+                raise
+            time.sleep(SMOKE_PAUSE)
+
+
 def deploy(client: Client, root: Path) -> None:
     client.verify_zone()
     route_id = find_route(client)
@@ -140,7 +161,7 @@ def deploy(client: Client, root: Path) -> None:
             client.post(_route_path(client), {"pattern": ROUTE, "script": SCRIPT}), "route MCP"
         )
     try:
-        smoke()
+        _settle()
     except CloudflareError:
         if route_id is None:
             unroute(client)
