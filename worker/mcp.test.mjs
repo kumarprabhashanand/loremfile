@@ -1,3 +1,7 @@
+// Requires the bundle: run `python -m loremfile.infra.mcp_worker build` first, which
+// writes build/mcp-worker/index.mjs with tools.json injected. Without it the static
+// import below fails as ERR_MODULE_NOT_FOUND before any test runs. CI does this in
+// the step above `node --test worker/mcp.test.mjs` (docs/09 §3.2c).
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
