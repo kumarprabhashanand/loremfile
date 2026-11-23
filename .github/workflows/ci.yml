@@ -254,6 +254,16 @@ jobs:
       - name: Site tests
         run: pytest -q tests/site
 
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          package-manager-cache: false
+
+      - name: Test the MCP Worker with the built indexes
+        run: |
+          python -m loremfile.infra.mcp_worker build
+          node --test worker/mcp.test.mjs
+
       - name: Fixture inventory
         # Deliberately *not* the fixture bytes. docs/09 §3.1 asks for a `new-fixtures`
         # artifact of build/fixtures; that directory is already 243 MB at M3.1 and would

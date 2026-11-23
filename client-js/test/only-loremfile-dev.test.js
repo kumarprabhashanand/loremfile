@@ -23,7 +23,7 @@ async function sources() {
   const found = [];
   for (const directory of ["bin", "src"]) {
     for (const name of await readdir(join(CLIENT, directory))) {
-      if (name.endsWith(".js")) {
+      if (/\.m?js$/.test(name)) {
         const text = await readFile(join(CLIENT, directory, name), "utf8");
         found.push({ name: `${directory}/${name}`, text });
       }
@@ -32,7 +32,7 @@ async function sources() {
   const names = found.map((s) => s.name).sort();
   assert.deepEqual(
     names,
-    ["bin/loremfile.js", "src/api.js", "src/cli.js", "src/mcp.js"],
+    ["bin/loremfile.js", "src/api.js", "src/cli.js", "src/mcp-fixtures.mjs", "src/mcp.js"],
     "control: the scan",
   );
   return found;
@@ -128,6 +128,7 @@ test("the client imports nothing but Node's built-ins", async () => {
     "node:timers/promises",
     "node:util",
     "./api.js",
+    "./mcp-fixtures.mjs",
     "./mcp.js",
     "../src/cli.js",
   ]);

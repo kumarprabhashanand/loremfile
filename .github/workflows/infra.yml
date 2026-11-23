@@ -28,6 +28,9 @@ on:
           - restore
           - redact-dry-run
           - redact
+          - mcp-deploy
+          - mcp-rollback
+          - mcp-unroute
       restore_archive_url:
         description: >-
           restore modes only: space-separated release archive parts of this repository,
@@ -43,6 +46,10 @@ on:
       redact_path:
         description: >-
           redact modes only: the tombstoned fixture path to remove from the release archives
+        type: string
+        default: ""
+      mcp_version:
+        description: For mcp-rollback, the previous version ID of loremfile-mcp
         type: string
         default: ""
 
@@ -71,6 +78,32 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: read
         run: echo "digest=$(cat tools/TOOLCHAIN_DIGEST)" >> "$GITHUB_OUTPUT"
+
+  mcp:
+    needs: setup
+    if: startsWith(inputs.mode, 'mcp-')
+    runs-on: ubuntu-24.04
+    environment: production
+    container:
+      image: ${{ needs.setup.outputs.digest }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install the package
+        run: pip install -e . --no-deps
+      - name: Deploy, roll back or unroute the MCP pilot
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_MCP_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          MODE: ${{ inputs.mode }}
+          VERSION: ${{ inputs.mcp_version }}
+        run: |
+          if [ "$MODE" = mcp-rollback ]; then
+            python -m loremfile.infra.mcp_worker rollback --version "$VERSION"
+          else
+            python -m loremfile.infra.mcp_worker "${MODE#mcp-}"
+          fi
 
   verify-tokens:
     needs: setup

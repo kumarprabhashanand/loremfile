@@ -17,7 +17,7 @@ import pytest
 
 from loremfile import __version__, config
 from loremfile.infra import locks, purge
-from loremfile.manifest import is_alias
+from loremfile.manifest import Manifest, is_alias
 from loremfile.site import build, checks, icons, legal, page_dates, routes
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -304,10 +304,51 @@ def test_a_format_index_has_the_manifest_shape_for_one_format(site: Path) -> Non
         for e in manifest["fixtures"]
         if e["format"] == "pdf" and e.get("status") == "active" and not is_alias(e)
     ]
-    assert set(index) == set(manifest) - {"formats"}
+    assert set(index) == (set(manifest) - {"formats"}) | {"aliases"}
     assert index["fixtures"] == active
     assert index["count"] == len(active)
     assert index["total_bytes"] == sum(e["bytes"] for e in active)
+    assert [row["path"] for row in index["aliases"]] == ["pdf/sample.pdf"]
+
+
+def test_mcp_index_has_only_tool_fields(site: Path) -> None:
+    payload = (site / "mcp-index.json").read_bytes()
+    assert len(payload) < 150_000
+    index = json.loads(payload)
+    assert set(index) == {"catalog_version", "fixtures"}
+    columns = index["fixtures"]
+    assert set(columns) == {
+        "path",
+        "url",
+        "format",
+        "mime",
+        "bytes",
+        "sha256",
+        "size_class",
+        "tags",
+        "description",
+        "props",
+        "added_in",
+    }
+    manifest = Manifest.load(ROOT / "manifest.json")
+    assert index["catalog_version"] == manifest.catalog_version
+    assert columns["url"] == "https://loremfile.dev/"
+    entries = sorted(
+        (entry for entry in manifest.active if not is_alias(entry)), key=lambda entry: entry["path"]
+    )
+    assert {"pdf/minimal.pdf", "jpg/cmyk-640x480.jpg"} <= set(columns["path"])
+    for key in set(columns) - {"url", "props"}:
+        assert columns[key] == [entry[key] for entry in entries], key
+    names, rows = (columns["props"][key] for key in ("keys", "rows"))
+    assert set(columns["props"]) == {"keys", "rows"}
+    assert len(names) == len(set(names))
+    decoded = [
+        None
+        if row is None
+        else {names[key]: value for key, value in zip(row[::2], row[1::2], strict=True)}
+        for row in rows
+    ]
+    assert decoded == [entry["props"] for entry in entries]
 
 
 def test_copied_discovery_files_are_the_repositorys_bytes(site: Path) -> None:

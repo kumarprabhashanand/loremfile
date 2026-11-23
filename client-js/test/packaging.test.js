@@ -22,6 +22,7 @@ const SHIPPED = [
   "package/package.json",
   "package/src/api.js",
   "package/src/cli.js",
+  "package/src/mcp-fixtures.mjs",
   "package/src/mcp.js",
   "package/src/tools.json",
 ];

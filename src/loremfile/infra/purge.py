@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 
 from loremfile.config import SITE_HOST
 from loremfile.infra.cloudflare_api import Client
+from loremfile.site.routes import MCP_INDEX_KEY
 
 #: Free plan: at most this many prefixes/files per purge request.
 BATCH = 100
@@ -50,6 +51,7 @@ SITE_FILES = (
     "sha256sums.txt",
     "formats.json",
     "search-index.json",
+    MCP_INDEX_KEY,
     "llms.txt",
     "llms-full.txt",
     "sitemap.xml",

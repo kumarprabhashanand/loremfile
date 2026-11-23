@@ -30,6 +30,7 @@ LEGAL_ROBOTS: Final = "noindex, nofollow, nosnippet"
 #: Both edge rules match these exact paths, so the values may live nowhere else (docs/15 M4.1).
 LEGAL_KEYS: Final = ("legal/imprint", "legal/privacy")
 FORMAT_INDEX_DIR: Final = "_formats"
+MCP_INDEX_KEY: Final = "mcp-index.json"
 #: Every other key a build could write a legal page's text to, as `site_files` returns it: a
 #: `legal/privacy/index.html` file becomes `legal/privacy/index`, and the Markdown twin is
 #: `twin_key`. Neither edge rule matches their paths (docs/13 §3b). `legal/privacy.html` is

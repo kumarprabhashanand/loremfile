@@ -29,6 +29,13 @@
 
 Alerts: the Free plan has **no** usage-based billing notification (that is a Pro+/pay-as-you-go feature), so the cost control is the daily `health.yml` usage step (read-only analytics token) opening a `cost` issue above 5 M R2 reads month-to-date; plus HTTP DDoS alert (all plans), Registrar expiry mail, GitHub Dependabot alerts and the daily health issue.
 
+For the remote MCP pilot the owner confirmed Workers Free in the dashboard on 2026-11-23.
+The platform enforces 10 ms CPU per HTTP invocation and the account shares a 100,000
+requests/day allowance across its Workers. The owner handles the Workers request-usage alert.
+The inherited zone rate limit handles bursts and `infra.yml` can detach the pilot route.
+Worker logs and traces are disabled. Aggregate request, error and CPU metrics stay in the
+dashboard. Workers Logs metering changes on 2026-12-01. See `09` §3.2c.
+
 ## 3. Worst-case cost scenarios
 
 > **Both controls verified in M2.4 (probe runs 7-9), and the numbers below are unchanged.**

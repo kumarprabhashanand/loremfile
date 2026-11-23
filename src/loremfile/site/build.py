@@ -25,7 +25,7 @@ from markupsafe import Markup
 from loremfile import config, replacements
 from loremfile.catalog import Catalog, FormatCatalog
 from loremfile.manifest import Manifest, alias_original, is_alias
-from loremfile.site import compat, defaults, icons, markdown, page_dates, routes
+from loremfile.site import compat, defaults, icons, markdown, mcp, page_dates, routes
 
 #: docs/05 §8, in order.
 POPULAR = (
@@ -1478,15 +1478,21 @@ def compat_pages(root: Path) -> list[Page]:
 
 
 def format_index(manifest: Manifest, fmt: str) -> bytes:
-    """docs/04 §4: the manifest's shape, one format's active fixtures, no `formats` array."""
+    """One format's active fixtures and the aliases that can be looked up by path."""
     document = manifest.to_document()
     active = [
         e
         for e in document["fixtures"]
-        if e["format"] == fmt and e.get("status", "active") == "active" and not is_alias(e)
+        if e["format"] == fmt and e.get("status", "active") == "active"
     ]
+    fixtures = [e for e in active if not is_alias(e)]
     document.pop("formats")
-    document.update(count=len(active), total_bytes=sum(e["bytes"] for e in active), fixtures=active)
+    document.update(
+        count=len(fixtures),
+        total_bytes=sum(e["bytes"] for e in fixtures),
+        fixtures=fixtures,
+        aliases=[mcp.fixture_details(e) for e in active if is_alias(e)],
+    )
     return (json.dumps(document, indent=2, ensure_ascii=False) + "\n").encode()
 
 
@@ -1787,6 +1793,7 @@ def build(
                 root / "src/loremfile/schema/manifest-v1.json"
             ).read_bytes(),
             "search-index.json": search_index(manifest),
+            routes.MCP_INDEX_KEY: mcp.compact_index(manifest),
             "llms.txt": llms(manifest, catalogs, guides(pages), full=False),
             "llms-full.txt": llms(manifest, catalogs, guides(pages), full=True),
             "sitemap.xml": sitemap(pages, dates),

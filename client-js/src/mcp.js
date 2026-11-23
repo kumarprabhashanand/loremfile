@@ -13,6 +13,18 @@ import path from "node:path";
 import { createInterface } from "node:readline";
 
 import * as api from "./api.js";
+import {
+  ToolError,
+  byPath,
+  describePath,
+  describeResult,
+  listArguments,
+  listResult,
+  only,
+  text,
+} from "./mcp-fixtures.mjs";
+
+export { DEFAULT_LIMIT, MAX_LIMIT, ToolError } from "./mcp-fixtures.mjs";
 
 export const MODERN = "2026-07-28";
 export const LEGACY = "2025-11-25";
@@ -20,8 +32,6 @@ export const LEGACY = "2025-11-25";
 export const SUPPORTED = [MODERN, LEGACY];
 
 const META = "io.modelcontextprotocol/";
-export const DEFAULT_LIMIT = 50;
-export const MAX_LIMIT = 250;
 
 /** JSON-RPC codes, and the one MCP code this server uses. */
 export const CODES = {
@@ -50,9 +60,6 @@ const INSTRUCTIONS =
  */
 export const TOOLS = JSON.parse(readFileSync(new URL("./tools.json", import.meta.url), "utf8"));
 
-/** A failure the model can act on: a tool result with `isError`, not a protocol error. */
-export class ToolError extends Error {}
-
 class ProtocolError extends Error {
   constructor(code, message, data) {
     super(message);
@@ -61,126 +68,22 @@ class ProtocolError extends Error {
   }
 }
 
-// --- arguments ----------------------------------------------------------------------------
-
-function only(args, allowed) {
-  if (args === null || typeof args !== "object" || Array.isArray(args)) {
-    throw new ToolError("arguments must be an object");
-  }
-  const unknown = Object.keys(args).filter((key) => !allowed.includes(key));
-  if (unknown.length > 0) {
-    throw new ToolError(
-      `unknown argument ${unknown.join(", ")}; this tool takes ${allowed.join(", ")}`,
-    );
-  }
-  return args;
-}
-
-function strings(value, name) {
-  if (value === undefined) {
-    return [];
-  }
-  const list = typeof value === "string" ? [value] : value;
-  if (!Array.isArray(list) || !list.every((item) => typeof item === "string")) {
-    throw new ToolError(`${name} must be a list of strings`);
-  }
-  return list;
-}
-
-function integer(value, name, { min, max, fallback }) {
-  if (value === undefined) {
-    return fallback;
-  }
-  if (!Number.isInteger(value) || value < min || (max !== undefined && value > max)) {
-    const range = max === undefined ? `at least ${min}` : `from ${min} to ${max}`;
-    throw new ToolError(`${name} must be a whole number ${range}, not ${JSON.stringify(value)}`);
-  }
-  return value;
-}
-
-function text(value, name) {
-  if (typeof value !== "string" || value.trim() === "") {
-    throw new ToolError(`${name} is required and must be a non-empty string`);
-  }
-  return value;
-}
-
 // --- the tools ----------------------------------------------------------------------------
 
-function url(entry) {
-  return `${api.baseUrl()}${entry.path}`;
-}
-
-function byPath(document, fixturePath) {
-  const entry = api.active(document).find((candidate) => candidate.path === fixturePath);
-  if (entry === undefined) {
-    throw new ToolError(
-      `no published fixture at ${JSON.stringify(fixturePath)}; ` +
-        "list_fixtures shows what is published",
-    );
-  }
-  return entry;
-}
-
 async function listFixtures(document, args) {
-  only(args, ["format", "tag", "max_bytes", "limit", "offset"]);
-  const formats = strings(args.format, "format");
-  const tags = strings(args.tag, "tag");
-  const maxBytes = integer(args.max_bytes, "max_bytes", { min: 0, fallback: null });
-  const limit = integer(args.limit, "limit", { min: 1, max: MAX_LIMIT, fallback: DEFAULT_LIMIT });
-  const offset = integer(args.offset, "offset", { min: 0, fallback: 0 });
-  // The same filters as `loremfile list`: any of the formats, any of the tags, all three kinds.
-  // The sample.{format} aliases repeat another file's bytes and stay out; describe_fixture and
-  // verify_file still take one by path.
-  const matches = api
-    .active(document)
-    .filter((e) => !api.isAlias(e))
-    .filter((e) => formats.length === 0 || formats.includes(e.format))
-    .filter((e) => tags.length === 0 || (e.tags ?? []).some((tag) => tags.includes(tag)))
-    .filter((e) => maxBytes === null || e.bytes <= maxBytes)
-    .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
-  const page = matches.slice(offset, offset + limit);
-  return {
-    catalog_version: String(document.catalog_version ?? ""),
-    total: matches.length,
-    offset,
-    limit,
-    count: page.length,
-    next_offset: offset + limit < matches.length ? offset + limit : null,
-    fixtures: page.map((e) => ({
-      path: e.path,
-      url: url(e),
-      format: e.format,
-      mime: e.mime,
-      bytes: e.bytes,
-      tags: e.tags ?? [],
-      description: e.description ?? "",
-    })),
-  };
+  const query = listArguments(args);
+  const entries = api.active(document).filter((e) => !api.isAlias(e));
+  return listResult(entries, query, document.catalog_version, api.baseUrl());
 }
 
 async function describeFixture(document, args) {
-  only(args, ["path"]);
-  const entry = byPath(document, text(args.path, "path"));
-  return {
-    catalog_version: String(document.catalog_version ?? ""),
-    path: entry.path,
-    url: url(entry),
-    format: entry.format,
-    mime: entry.mime,
-    bytes: entry.bytes,
-    sha256: entry.sha256,
-    size_class: entry.size_class ?? null,
-    tags: entry.tags ?? [],
-    description: entry.description ?? "",
-    props: entry.props ?? null,
-    added_in: entry.added_in ?? null,
-  };
+  const entry = byPath(api.active(document), describePath(args));
+  return describeResult(entry, document.catalog_version, api.baseUrl());
 }
 
 async function verifyFile(document, args) {
   only(args, ["path", "file"]);
-  const entry = byPath(document, text(args.path, "path"));
+  const entry = byPath(api.active(document), text(args.path, "path"));
   const file = path.resolve(text(args.file, "file"));
   const info = await api.fileInfo(file);
   const actual = info === null ? null : await api.hashFile(file);
