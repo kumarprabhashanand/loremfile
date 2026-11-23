@@ -190,11 +190,12 @@ describe each active sample alias by path. The site stores these indexes under
 `_formats/{format}.json` and rewrites the public URL because `{format}/` is a locked prefix
 (ADR-032).
 
-The MCP pilot uses `mcp-index.json` for lists without a single known format. Its `fixtures`
-columns contain the two tools' fixture fields in path order. `url` stores the common prefix
-once. Each `props.rows` entry alternates a position in `props.keys` and its value. This keeps
-the full projection within the 150 KB build budget. Deploy purges the URL and verifies the
-served bytes against the build. See `09` §3.2c.
+Both remote MCP tools read `mcp-index.json`. Its `fixtures` columns cover every active manifest
+path. The `aliases` array identifies rows that `list_fixtures` skips and `describe_fixture` can
+return. `url` stores the common prefix once. Columns with repeated values store them once in
+`values`, with one reference per fixture in `rows`. Each entry in `props.values` alternates
+a position in `props.keys` and its value. Deploy purges the URL and verifies the served bytes
+against the build. See `09` §3.2c.
 
 ## 5. `llms.txt` and `llms-full.txt`
 

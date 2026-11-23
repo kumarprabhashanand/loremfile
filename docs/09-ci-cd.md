@@ -320,9 +320,9 @@ on the apex. The Worker sends `Cache-Control: no-store` and accepts absent or sa
 `Origin` headers. The pilot is for server-to-server clients. The zone's existing IP and
 data-centre rate-limit rule covers the proxied hostname.
 
-1. After the site deploy has published and verified the new indexes, run `infra.yml` with
+1. After the site deploy has published and verified `mcp-index.json`, run `infra.yml` with
    `mcp-deploy` on `main`. The `production` environment's `CLOUDFLARE_MCP_TOKEN` needs Worker
-   script write, zone Worker route write, and zone read. The workflow checks the live indexes
+   script write, zone Worker route write, and zone read. The workflow checks the live index
    before uploading the modules and setting the route, then checks HTTPS and both tools.
 2. Set `MCP_PILOT_ACTIVE=true` in the `production` environment to enable the daily `health.yml`
    check. It runs a short MCP probe and reads aggregate Worker metrics using the analytics
@@ -333,10 +333,10 @@ data-centre rate-limit rule covers the proxied hostname.
    in the dashboard and record the request count, p50 and p99 CPU, and invocation errors in the
    owner's private measurements (ADR-017).
 
-The Worker reads one public index on a cache miss, uses the parsed data for up to one minute
-per isolate, and revalidates with its ETag. A different catalog version invalidates the other
-parsed indexes. Legacy initialize and discovery work without session affinity. See `19` §2
-for the Free plan limits and monitoring settings.
+The Worker uses the parsed index for up to one minute per isolate and revalidates it with its
+ETag. CI replays the deploy smoke requests against the built index and compares the Worker's
+responses with stdio, including the alias lookup. Legacy initialize and discovery work without
+session affinity. See `19` §2 for the Free plan limits and monitoring settings.
 
 ### 3.3 `health.yml`: daily
 

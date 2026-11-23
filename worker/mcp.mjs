@@ -1,6 +1,5 @@
 import {
   ToolError,
-  byPath,
   describePath,
   describeResult,
   listArguments,
@@ -73,21 +72,21 @@ async function readMessage(request) {
   }
 }
 
-export function createHandler(toolDefinitions, serverInfo, formats) {
+export function createHandler(toolDefinitions, serverInfo) {
   const handlers = new Map([
     ["list_fixtures", async (args) => {
       const query = listArguments(args);
-      const { version, entries } = await catalog.list(query.formats);
-      return listResult(entries, query, version, BASE_URL);
+      const { version, entries } = await loadCatalog();
+      return listResult(entries, query, version, BASE_URL, (entry) => entry.isAlias);
     }],
     ["describe_fixture", async (args) => {
       const path = describePath(args);
-      const { version, entries } = await catalog.describe(path);
-      return describeResult(byPath(entries, path), version, BASE_URL);
+      const { version, describe } = await loadCatalog();
+      return describeResult(describe(path), version, BASE_URL);
     }],
   ]);
   const tools = toolDefinitions.filter((tool) => handlers.has(tool.name));
-  const catalog = createCatalog(new Set(formats));
+  const loadCatalog = createCatalog();
 
   function success(id, result, modern) {
     const payload = modern

@@ -259,9 +259,10 @@ jobs:
           node-version: "22"
           package-manager-cache: false
 
-      - name: Test the MCP Worker with the built indexes
+      - name: Test the MCP Worker with the built index
         run: |
           python -m loremfile.infra.mcp_worker build
+          python worker/smoke_requests.py > build/mcp-worker/smoke-requests.json
           node --test worker/mcp.test.mjs
 
       - name: Fixture inventory

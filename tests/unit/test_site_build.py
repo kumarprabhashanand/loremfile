@@ -315,7 +315,7 @@ def test_mcp_index_has_only_tool_fields(site: Path) -> None:
     payload = (site / "mcp-index.json").read_bytes()
     assert len(payload) < 150_000
     index = json.loads(payload)
-    assert set(index) == {"catalog_version", "fixtures"}
+    assert set(index) == {"catalog_version", "fixtures", "aliases"}
     columns = index["fixtures"]
     assert set(columns) == {
         "path",
@@ -333,22 +333,26 @@ def test_mcp_index_has_only_tool_fields(site: Path) -> None:
     manifest = Manifest.load(ROOT / "manifest.json")
     assert index["catalog_version"] == manifest.catalog_version
     assert columns["url"] == "https://loremfile.dev/"
-    entries = sorted(
-        (entry for entry in manifest.active if not is_alias(entry)), key=lambda entry: entry["path"]
-    )
-    assert {"pdf/minimal.pdf", "jpg/cmyk-640x480.jpg"} <= set(columns["path"])
+    entries = sorted(manifest.active, key=lambda entry: entry["path"])
+    assert {"pdf/minimal.pdf", "pdf/sample.pdf", "jpg/cmyk-640x480.jpg"} <= set(columns["path"])
+    assert index["aliases"] == [row for row, entry in enumerate(entries) if is_alias(entry)]
+    assert "pdf/sample.pdf" in {columns["path"][row] for row in index["aliases"]}
     for key in set(columns) - {"url", "props"}:
-        assert columns[key] == [entry[key] for entry in entries], key
-    names, rows = (columns["props"][key] for key in ("keys", "rows"))
-    assert set(columns["props"]) == {"keys", "rows"}
+        values = columns[key]
+        if isinstance(values, dict):
+            assert set(values) == {"values", "rows"}
+            values = [values["values"][row] for row in values["rows"]]
+        assert values == [entry[key] for entry in entries], key
+    names, values, rows = (columns["props"][key] for key in ("keys", "values", "rows"))
+    assert set(columns["props"]) == {"keys", "values", "rows"}
     assert len(names) == len(set(names))
     decoded = [
         None
         if row is None
         else {names[key]: value for key, value in zip(row[::2], row[1::2], strict=True)}
-        for row in rows
+        for row in values
     ]
-    assert decoded == [entry["props"] for entry in entries]
+    assert [decoded[row] for row in rows] == [entry["props"] for entry in entries]
 
 
 def test_copied_discovery_files_are_the_repositorys_bytes(site: Path) -> None:

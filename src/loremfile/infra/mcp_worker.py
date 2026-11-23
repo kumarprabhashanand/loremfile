@@ -23,7 +23,7 @@ from loremfile.infra.cloudflare_api import (
     ZoneScopeError,
 )
 from loremfile.manifest import Manifest
-from loremfile.site import build, mcp, routes
+from loremfile.site import mcp, routes
 
 SCRIPT = "loremfile-mcp"
 HOST = f"mcp.{config.SITE_HOST}"
@@ -51,12 +51,7 @@ query Pilot($account: string!, $start: Time!, $end: Time!, $script: string!) {
 def modules(root: Path) -> dict[str, bytes]:
     tools = json.loads((root / "client-js/src/tools.json").read_bytes())
     version = json.loads((root / "client-js/package.json").read_bytes())["version"]
-    formats = json.loads((root / "formats.json").read_bytes())["formats"]
-    arguments = (
-        tools,
-        {"name": "loremfile", "version": version},
-        [row["format"] for row in formats],
-    )
+    arguments = (tools, {"name": "loremfile", "version": version})
     encoded = ", ".join(json.dumps(arg, ensure_ascii=True) for arg in arguments)
     entry = (
         'import { createHandler } from "./worker/mcp.mjs";\n'
@@ -113,17 +108,13 @@ def find_route(client: Client) -> str | None:
 
 def _verify_catalog(root: Path) -> None:
     manifest = Manifest.load(root / "manifest.json")
-    for key, expected in (
-        (routes.MCP_INDEX_KEY, mcp.compact_index(manifest)),
-        (routes.format_index_key("pdf"), build.format_index(manifest, "pdf")),
-    ):
-        response = verify_live.fetch(routes.public_path(key), method="GET")
-        digest = hashlib.sha256(expected).hexdigest()
-        findings = verify_live.check_site_key(key, digest, response)
-        if any(finding.status is not verify_live.Status.OK for finding in findings):
-            raise CloudflareError(
-                f"{routes.public_path(key)} failed its live check; run site deploy"
-            )
+    key = routes.MCP_INDEX_KEY
+    path = routes.public_path(key)
+    response = verify_live.fetch(path, method="GET")
+    digest = hashlib.sha256(mcp.compact_index(manifest)).hexdigest()
+    findings = verify_live.check_site_key(key, digest, response)
+    if any(finding.status is not verify_live.Status.OK for finding in findings):
+        raise CloudflareError(f"{path} failed its live check; run site deploy")
 
 
 #: A route that has just been created takes seconds to reach every POP, so a 522 straight
