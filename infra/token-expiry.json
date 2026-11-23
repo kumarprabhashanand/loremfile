@@ -26,5 +26,12 @@
     "expires": "2027-03-16",
     "created": "2026-09-16",
     "note": "Admin Read only; its one caller is audit_bucket_locks (docs/08 §2 step 10c). Expires about two weeks after T1 and T4, so March 2027 is two rotation dates, not one."
+  },
+  "T6": {
+    "name": "loremfile-ci-mcp",
+    "secret": "CLOUDFLARE_MCP_TOKEN",
+    "expires": "2027-03-01",
+    "created": "2026-11-23",
+    "note": "Three permissions only, so a rotation recreates it exactly: Account > Workers Scripts > Edit (upload the script, disable its workers.dev subdomain), Zone > Workers Routes > Edit (claim and delete mcp.loremfile.dev/*, which is the mcp-unroute kill switch) and Zone > Zone > Read (verify_zone runs before any write). Scoped to this account and the loremfile.dev zone. **A pilot token:** if the remote MCP pilot is dropped, delete it rather than rotate it. It shares 2027-03-01 with T1 and T4, so that date is now three tokens, one of which may not need renewing (docs/11 7.3)."
   }
 }
