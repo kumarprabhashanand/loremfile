@@ -72,8 +72,8 @@ class ProtocolError extends Error {
 
 async function listFixtures(document, args) {
   const query = listArguments(args);
-  const entries = api.active(document).filter((e) => !api.isAlias(e));
-  return listResult(entries, query, document.catalog_version, api.baseUrl());
+  const entries = api.active(document);
+  return listResult(entries, query, document.catalog_version, api.baseUrl(), api.isAlias);
 }
 
 async function describeFixture(document, args) {

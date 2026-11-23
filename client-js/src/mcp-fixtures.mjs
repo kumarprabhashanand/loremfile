@@ -75,11 +75,11 @@ export function byPath(entries, fixturePath) {
   return entry;
 }
 
-export function listResult(entries, query, version, baseUrl) {
+export function listResult(entries, query, version, baseUrl, isAlias) {
   const { formats, tags, maxBytes, limit, offset } = query;
-  // Entries are the active originals (including superseded files). Either selector
-  // matches any of its values, and the different kinds of filter must all match.
+  // Named lookups can return aliases. Listings skip them.
   const matches = entries
+    .filter((e) => !isAlias(e))
     .filter((e) => formats.size === 0 || formats.has(e.format))
     .filter((e) => tags.size === 0 || (e.tags ?? []).some((tag) => tags.has(tag)))
     .filter((e) => maxBytes === null || e.bytes <= maxBytes)

@@ -1,122 +1,121 @@
+import { byPath } from "../client-js/src/mcp-fixtures.mjs";
+
 export const BASE_URL = "https://loremfile.dev/";
-const CROSS_FORMAT_INDEX = "mcp-index.json";
+const INDEX = "mcp-index.json";
 const REVALIDATE_AFTER_MS = 60_000;
 
 export class IndexError extends Error {}
 
-async function readIndex(path, etag) {
+function invalidColumns() {
+  return new IndexError(`/${INDEX} has invalid fixture columns`);
+}
+
+function unpack(column, count) {
+  const { values, rows } = column ?? {};
+  if (!Array.isArray(values) || !Array.isArray(rows) || rows.length !== count) {
+    throw invalidColumns();
+  }
+  return rows.map((row) => {
+    if (!Number.isInteger(row) || row < 0 || row >= values.length) {
+      throw invalidColumns();
+    }
+    return values[row];
+  });
+}
+
+function unpackProps(packed, keys) {
+  if (packed === null) {
+    return null;
+  }
+  if (!Array.isArray(packed) || packed.length % 2 !== 0) {
+    throw invalidColumns();
+  }
+  const pairs = [];
+  for (let i = 0; i < packed.length; i += 2) {
+    pairs.push([keys[packed[i]], packed[i + 1]]);
+  }
+  return Object.fromEntries(pairs);
+}
+
+function fixtureRows({ fixtures, aliases }) {
+  const { path, bytes, description } = fixtures ?? {};
+  if (!Array.isArray(path) ||
+      ![bytes, description].every((column) => Array.isArray(column) && column.length === path.length) ||
+      !Array.isArray(aliases) || !Array.isArray(fixtures.props?.keys)) {
+    throw invalidColumns();
+  }
+  const aliasRows = new Set(aliases);
+  const columns = Object.fromEntries(
+    ["format", "mime", "sha256", "size_class", "tags", "added_in"].map((name) => [
+      name, unpack(fixtures[name], path.length),
+    ]),
+  );
+  const { keys } = fixtures.props;
+  const props = unpack(fixtures.props, path.length);
+  const entries = path.map((name, row) => ({
+    path: name,
+    format: columns.format[row],
+    mime: columns.mime[row],
+    bytes: bytes[row],
+    sha256: columns.sha256[row],
+    size_class: columns.size_class[row],
+    tags: columns.tags[row],
+    description: description[row],
+    props: props[row],
+    added_in: columns.added_in[row],
+    isAlias: aliasRows.has(row),
+  }));
+  return {
+    entries,
+    describe(path) {
+      const entry = byPath(entries, path);
+      return { ...entry, props: unpackProps(entry.props, keys) };
+    },
+  };
+}
+
+async function readIndex(etag) {
   try {
-    const response = await fetch(BASE_URL + path, {
+    const response = await fetch(BASE_URL + INDEX, {
       headers: etag ? { "If-None-Match": etag } : {},
       redirect: "error",
     });
-    if ((etag && response.status === 304) || response.status === 404) {
-      return { status: response.status };
+    if (etag && response.status === 304) {
+      return null;
     }
     if (response.status !== 200) {
-      throw new IndexError(`/${path} answered HTTP ${response.status}`);
+      throw new IndexError(`/${INDEX} answered HTTP ${response.status}`);
     }
     const data = await response.json();
     if (typeof data?.catalog_version !== "string" || !data.catalog_version) {
-      throw new IndexError(`/${path} has no catalog_version`);
+      throw new IndexError(`/${INDEX} has no catalog_version`);
     }
-    return { status: 200, data, etag: response.headers.get("etag") };
+    return {
+      version: data.catalog_version,
+      ...fixtureRows(data),
+      etag: response.headers.get("etag"),
+    };
   } catch (error) {
     if (error instanceof IndexError) {
       throw error;
     }
-    throw new IndexError(`/${path} could not be read as JSON`);
+    throw new IndexError(`/${INDEX} could not be read as JSON`);
   }
 }
 
-function listRows({ fixtures: columns }) {
-  // Describe reads its full rows from the format index. Materialize only the columns for list.
-  const fields = ["path", "format", "mime", "bytes", "tags", "description"];
-  if (!fields.every((field) => Array.isArray(columns?.[field]) &&
-      columns[field].length === columns.path.length)) {
-    throw new IndexError(`/${CROSS_FORMAT_INDEX} has invalid fixture columns`);
-  }
-  return columns.path.map((path, index) => ({
-    path,
-    format: columns.format[index],
-    mime: columns.mime[index],
-    bytes: columns.bytes[index],
-    tags: columns.tags[index],
-    description: columns.description[index],
-  }));
-}
+export function createCatalog() {
+  let cached;
 
-function formatRows({ fixtures, aliases }) {
-  if (!Array.isArray(fixtures) || !Array.isArray(aliases)) {
-    throw new IndexError("The format index has invalid fixture or alias rows");
-  }
-  return { fixtures, aliases };
-}
-
-export function createCatalog(knownFormats) {
-  let version;
-  let indexes = new Map();
-
-  async function load(path, project) {
-    const snapshot = indexes;
-    const cached = snapshot.get(path);
+  return async function loadCatalog() {
     if (cached && Date.now() < cached.checkAfter) {
       return cached;
     }
     // Cache resolved data only. Cloudflare fetch I/O belongs to the initiating request.
-    const { status, data, etag } = await readIndex(path, cached?.etag);
-    if (status === 404) {
-      return null;
+    const previous = cached;
+    const result = await readIndex(previous?.etag);
+    if (cached === previous) {
+      cached = { ...(result ?? previous), checkAfter: Date.now() + REVALIDATE_AFTER_MS };
     }
-    if (status === 304) {
-      cached.checkAfter = Date.now() + REVALIDATE_AFTER_MS;
-      return cached;
-    }
-    const value = {
-      version: data.catalog_version,
-      rows: project(data),
-      etag,
-      checkAfter: Date.now() + REVALIDATE_AFTER_MS,
-    };
-    // An in-flight refresh must not discard a newer snapshot established by another request.
-    if (snapshot === indexes) {
-      if (version !== value.version) {
-        version = value.version;
-        indexes = new Map();
-      }
-      indexes.set(path, value);
-    }
-    return value;
-  }
-
-  async function perFormat(format) {
-    return load(`${format}/index.json`, formatRows);
-  }
-
-  return {
-    async list(formats) {
-      const [format] = formats;
-      if (formats.size === 1 && knownFormats.has(format)) {
-        const index = await perFormat(format);
-        if (index === null) {
-          throw new IndexError(`/${format}/index.json answered HTTP 404`);
-        }
-        return { version: index.version, entries: index.rows.fixtures };
-      }
-      // Multiple explicit formats still take one read. The same index supplies the
-      // catalog version for an empty result when the caller names an unknown format.
-      const index = await load(CROSS_FORMAT_INDEX, listRows);
-      if (index === null) {
-        throw new IndexError(`/${CROSS_FORMAT_INDEX} answered HTTP 404`);
-      }
-      return { version: index.version, entries: index.rows };
-    },
-    async describe(path) {
-      const [, format] = /^([a-z0-9]+)\//.exec(path) ?? [];
-      const index = format ? await perFormat(format) : null;
-      return index === null
-        ? { entries: [] }
-        : { version: index.version, entries: [...index.rows.fixtures, ...index.rows.aliases] };
-    },
+    return cached;
   };
 }
