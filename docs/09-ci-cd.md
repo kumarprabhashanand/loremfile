@@ -319,10 +319,6 @@ on the apex. The Worker sends `Cache-Control: no-store` and accepts absent or sa
 `Origin` headers. The pilot is for server-to-server clients. The zone's existing IP and
 data-centre rate-limit rule covers the proxied hostname.
 
-`worker/mcp.test.mjs` imports the bundle, so `python -m loremfile.infra.mcp_worker build`
-has to run first; without it the import fails as `ERR_MODULE_NOT_FOUND` before any test does.
-CI runs the two in that order in the `site` job.
-
 1. After the site deploy has published and verified the new indexes, run `infra.yml` with
    `mcp-deploy` on `main`. The `production` environment's `CLOUDFLARE_MCP_TOKEN` needs Worker
    script write, zone Worker route write, and zone read. The workflow checks the live indexes
