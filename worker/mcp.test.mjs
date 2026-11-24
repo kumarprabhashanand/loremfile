@@ -147,9 +147,13 @@ test("both transports give identical results and errors from the real catalog", 
     ["describe_fixture", { path: "edge/zero-byte.zip" }, [compactIndex]],
     ["describe_fixture", { path: "unknown/missing" }, [compactIndex]],
     ["describe_fixture", { path: "../manifest.json" }, [compactIndex]],
-    ["describe_fixture", {}, []],
+    ["describe_fixture", {}, [], "path is required"],
+    ["describe_fixture", { path: "" }, [], 'path must be a non-empty string, not ""'],
+    ["describe_fixture", { path: "  " }, [], 'path must be a non-empty string, not "  "'],
+    ["describe_fixture", { path: 123 }, [], "path must be a string, not 123"],
+    ["describe_fixture", { path: null }, [], "path must be a string, not null"],
   ];
-  for (const [name, args, expected] of cases) {
+  for (const [name, args, expected, message] of cases) {
     requests.length = 0;
     const remote = await call(start(), name, args);
     const local = await stdio.handle({
@@ -157,7 +161,73 @@ test("both transports give identical results and errors from the real catalog", 
     });
     assert.deepEqual(remote, local, JSON.stringify({ name, args }));
     assert.deepEqual(requests.map(({ target }) => target), expected);
+    if (message !== undefined) {
+      assert.equal(remote.result.isError, true);
+      assert.equal(remote.result.content[0].text, message);
+    }
   }
+});
+
+test("extension synonyms return the same canonical rows in both transports", async (t) => {
+  intercept(t);
+  const handle = start();
+  const stdio = createServer({ load: async () => manifest });
+  await stdio.handle({ jsonrpc: "2.0", id: 0, method: "initialize" });
+  for (const [alias, format] of [["jpeg", "jpg"], ["tif", "tiff"], ["htm", "html"], ["yml", "yaml"]]) {
+    const canonical = await call(handle, "list_fixtures", { format });
+    const page = canonical.result.structuredContent;
+    const expected = manifest.fixtures.filter((entry) =>
+      entry.status === "active" && entry.format === format && !aliases.has(entry.path));
+    assert.ok(expected.length > 0, `control: ${format} has published fixtures`);
+    assert.equal(page.next_offset, null);
+    assert.deepEqual(page.fixtures.map((row) => [row.path, row.format]),
+      expected.map((entry) => [entry.path, entry.format]).sort());
+
+    for (const args of [{ format: alias }, { format: [format, alias] }]) {
+      const remote = await call(handle, "list_fixtures", args);
+      const local = await stdio.handle({
+        jsonrpc: "2.0", id: 1, method: "tools/call",
+        params: { name: "list_fixtures", arguments: args },
+      });
+      assert.deepEqual(remote, local);
+      assert.deepEqual(remote, canonical);
+    }
+  }
+});
+
+test("discovery and results expose licence, hashes and measured properties", async (t) => {
+  intercept(t);
+  const handle = start();
+  const { result: { instructions } } = await rpc(handle, "initialize");
+  assert.match(instructions, /CC0 1\.0 Universal/);
+  assert.match(instructions, /the bytes at that URL never change/);
+
+  const { result: { tools } } = await rpc(handle, "tools/list");
+  const [list, describe] = tools;
+  assert.match(list.description, /ascending path order/);
+  assert.match(list.inputSchema.properties.format.description, /Omit format.*each row/);
+  assert.ok(list.outputSchema.properties.fixtures.items.required.includes("sha256"));
+  assert.equal(describe.outputSchema.properties.props.properties.pages.type, "integer");
+
+  const { result: { structuredContent: page } } = await call(handle, "list_fixtures", { limit: 250 });
+  const entries = new Map(manifest.fixtures.map((entry) => [entry.path, entry]));
+  assert.equal(page.count, 250);
+  assert.equal(page.fixtures.length, 250);
+  const paths = page.fixtures.map((row) => row.path);
+  assert.deepEqual(paths, paths.toSorted());
+  for (const row of page.fixtures) {
+    assert.equal(row.sha256, entries.get(row.path).sha256);
+    assert.equal(row.license, "CC0-1.0");
+  }
+
+  const path = "jpg/cmyk-640x480.jpg";
+  const { result: { structuredContent: jpeg } } = await call(handle, "describe_fixture", { path });
+  assert.equal(jpeg.format, "jpg");
+  assert.equal(jpeg.license, "CC0-1.0");
+  assert.equal(jpeg.props.width, 640);
+  assert.equal(jpeg.props.height, 640);
+  assert.equal(entries.get(path).props.format, "jpeg", "control: the index source has the conflicting key");
+  assert.ok(!Object.hasOwn(jpeg.props, "format"));
 });
 
 async function checkSmokeParity(handle) {
@@ -281,6 +351,8 @@ test("modern discovery and calls are stateless and require matching metadata hea
   const { result } = await discover.json();
   assert.ok(result.supportedVersions.includes(modernVersion));
   assert.deepEqual(result.capabilities, { tools: {} });
+  assert.match(result.instructions, /CC0 1\.0 Universal/);
+  assert.match(result.instructions, /the bytes at that URL never change/);
   const listing = await post(start(), "tools/list", { _meta: meta }, extra("tools/list"), 2);
   assert.deepEqual((await listing.json()).result.tools.map((tool) => tool.name), names);
   const method = "tools/call";

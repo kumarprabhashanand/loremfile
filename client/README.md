@@ -74,12 +74,17 @@ and they are the npm package's `npx loremfile mcp` tools, definition for definit
 
 | Tool | Arguments | Returns |
 |---|---|---|
-| `list_fixtures` | `format`, `tag`, `max_bytes`, `limit`, `offset` | One page of published fixtures, each with `path`, `url`, `format`, `mime`, `bytes`, `tags` and `description`, plus `total` and `next_offset`. `format` and `tag` are lists matched as any of; `limit` defaults to 50, at most 250. |
-| `describe_fixture` | `path` (required) | One fixture's manifest entry: `url`, `mime`, `bytes`, `sha256`, `size_class`, `tags`, `description`, `props` and `added_in`. |
+| `list_fixtures` | `format`, `tag`, `max_bytes`, `limit`, `offset` | One page of fixtures in ascending path order, each with `path`, `url`, `format`, `mime`, `bytes`, `sha256`, `license`, `tags` and `description`, plus `total` and `next_offset`. `format` and `tag` accept a string or a list matched as any of. `limit` defaults to 50, at most 250. |
+| `describe_fixture` | `path` (required) | One fixture's metadata, including the fields in a list row plus `size_class`, measured `props` and the catalog version that introduced it (`added_in`). |
 | `verify_file` | `path` (required), `file` (required) | Whether the local `file` is the published `path`: `status` is `ok`, `changed` or `missing`, with both hashes and sizes. The file is read to hash it and goes nowhere. |
 
-The manifest is read once per server process from loremfile.dev, under the same rules as the
-commands above.
+Omit `format` to discover the catalog keys in the results. The filter accepts `jpg`/`jpeg`,
+`tif`/`tiff`, `htm`/`html` and `yml`/`yaml` interchangeably. `size_class` describes how the
+byte count relates to the nominal size. `free` means the filename makes no size claim.
+
+Fixtures are CC0 1.0 Universal (`CC0-1.0`). The bytes at each published fixture URL never
+change. The manifest is read once per server process from loremfile.dev, under the same
+rules as the commands above.
 
 ## What it will not do
 

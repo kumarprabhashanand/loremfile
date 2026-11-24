@@ -14,6 +14,7 @@ import { createInterface } from "node:readline";
 
 import * as api from "./api.js";
 import {
+  FIXTURE_INSTRUCTIONS,
   ToolError,
   byPath,
   describePath,
@@ -49,8 +50,8 @@ export const SERVER_INFO = {
 };
 
 const INSTRUCTIONS =
-  "CC0 sample files and test fixtures from loremfile.dev, each at a stable URL. Use " +
-  "list_fixtures to find one, describe_fixture for its size, hash and measured properties, " +
+  `${FIXTURE_INSTRUCTIONS} Use ` +
+  "list_fixtures to find files and their hashes, describe_fixture for measured properties, " +
   "and verify_file to check a copy on disk. The tools return URLs, never file contents.";
 
 /**

@@ -2,7 +2,7 @@
   {
     "name": "list_fixtures",
     "title": "List loremfile.dev fixtures",
-    "description": "One page of the published sample files, filtered by format, tag and size. Reads published fixture metadata over the network. Each comes with its URL and a description of what it is for. `total` counts every match and `next_offset` fetches the next page; it is null on the last.",
+    "description": "One page of published CC0 sample files in ascending path order, filtered by format, tag and maximum byte count. Reads fixture metadata over the network. Each row includes the URL, SHA-256 and a description. `total` counts every match. Use `next_offset` for the next page. It is null on the last page.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -18,7 +18,7 @@
               }
             }
           ],
-          "description": "Formats to include, any of, e.g. [\"pdf\", \"png\"]."
+          "description": "Formats to include, any of, e.g. [\"pdf\", \"png\"]. Extension synonyms are jpg/jpeg, tif/tiff, htm/html and yml/yaml. Omit format to list all formats, with the catalogue key in each row's format field."
         },
         "tag": {
           "anyOf": [
@@ -91,13 +91,23 @@
                 "type": "string"
               },
               "format": {
-                "type": "string"
+                "type": "string",
+                "description": "Catalogue format key, e.g. jpg."
               },
               "mime": {
                 "type": "string"
               },
               "bytes": {
                 "type": "integer"
+              },
+              "sha256": {
+                "type": "string",
+                "description": "Published SHA-256 of the fixture bytes, as 64 lowercase hexadecimal characters."
+              },
+              "license": {
+                "type": "string",
+                "const": "CC0-1.0",
+                "description": "CC0 1.0 Universal public domain dedication."
               },
               "tags": {
                 "type": "array",
@@ -115,6 +125,8 @@
               "format",
               "mime",
               "bytes",
+              "sha256",
+              "license",
               "tags",
               "description"
             ]
@@ -141,7 +153,7 @@
   {
     "name": "describe_fixture",
     "title": "Describe one loremfile.dev fixture",
-    "description": "Published metadata for one fixture: its URL, MIME type, size, SHA-256, tags, description and measured properties. Reads fixture metadata over the network. Fetch the URL for the file.",
+    "description": "Published metadata for one CC0 fixture, including its URL, MIME type, byte count, SHA-256, tags, description and measured properties. Reads fixture metadata over the network. Fetch the URL for the file.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -168,7 +180,8 @@
           "type": "string"
         },
         "format": {
-          "type": "string"
+          "type": "string",
+          "description": "Catalogue format key, e.g. jpg. Use it to filter list_fixtures."
         },
         "mime": {
           "type": "string"
@@ -179,11 +192,17 @@
         "sha256": {
           "type": "string"
         },
+        "license": {
+          "type": "string",
+          "const": "CC0-1.0",
+          "description": "CC0 1.0 Universal public domain dedication."
+        },
         "size_class": {
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "description": "How the byte count relates to the nominal size. exact means equal, boundary means exactly one byte above or below, approx means within 5%, and free means the filename makes no size claim. Null if unrecorded."
         },
         "tags": {
           "type": "array",
@@ -198,13 +217,37 @@
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "description": "Properties measured from the fixture bytes. Keys depend on the format and may be absent. Null if no properties are recorded. See https://loremfile.dev/docs/manifest for format-specific keys.",
+          "properties": {
+            "pages": {
+              "type": "integer",
+              "description": "Measured PDF page count."
+            },
+            "width": {
+              "type": ["number", "string", "null"],
+              "description": "Measured width in pixels for raster images and video. SVG may record its width attribute or null."
+            },
+            "height": {
+              "type": ["number", "string", "null"],
+              "description": "Measured height in pixels for raster images and video. SVG may record its height attribute or null."
+            },
+            "duration_ms": {
+              "type": "integer",
+              "description": "Measured audio or video duration in milliseconds."
+            },
+            "rows": {
+              "type": "integer",
+              "description": "Measured row count. The format determines which rows are included."
+            }
+          }
         },
         "added_in": {
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "description": "Catalogue version that first published the fixture. Null if unrecorded."
         }
       },
       "required": [
@@ -215,6 +258,7 @@
         "mime",
         "bytes",
         "sha256",
+        "license",
         "size_class",
         "tags",
         "description",
