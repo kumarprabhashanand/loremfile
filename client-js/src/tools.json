@@ -222,15 +222,15 @@
           "properties": {
             "pages": {
               "type": "integer",
-              "description": "Measured PDF page count."
+              "description": "Page count for a PDF, or number of page records in a HAR log."
             },
             "width": {
               "type": ["number", "string", "null"],
-              "description": "Measured width in pixels for raster images and video. SVG may record its width attribute or null."
+              "description": "Measured width in pixels for raster images and media, including embedded artwork where reported. SVG may record its width attribute or null."
             },
             "height": {
               "type": ["number", "string", "null"],
-              "description": "Measured height in pixels for raster images and video. SVG may record its height attribute or null."
+              "description": "Measured height in pixels for raster images and media, including embedded artwork where reported. SVG may record its height attribute or null."
             },
             "duration_ms": {
               "type": "integer",
