@@ -7,6 +7,7 @@
 - Per-format JSON indexes include sample alias metadata for direct lookups.
 - MCP listings accept common extension synonyms and include SHA-256. Both discovery tools
   show the CC0 licence, and `describe_fixture` explains invalid paths.
+- The Terms of Use clarify liability, hotlinking, and how the terms apply to the MCP endpoint.
 
 ## [1.16.0] - 2026-11-14
 

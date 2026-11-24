@@ -460,8 +460,10 @@ OUTLINES = {
         "What the files are",
         "Liability",
         "Acceptable use",
+        "The metadata API",
         "Discontinuation",
         "Changes",
+        "Law",
         "Who provides this service",
         "Contact",
     ],
@@ -509,6 +511,21 @@ def test_the_live_check_expects_the_section_counts_the_build_writes() -> None:
     assert {
         routes.public_path(key): len(sections) for key, sections in OUTLINES.items()
     } == verify_live.LEGAL_SECTIONS
+
+
+def test_the_terms_loss_exclusion_refers_to_the_preceding_liability_paragraph() -> None:
+    terms = body(published()["legal/terms"])
+    _, heading, after = terms.partition('<h2 id="liability">Liability</h2>')
+    assert heading
+    liability = after.split("<h2 ", 1)[0]
+    paragraphs = re.findall(r"<p>(.*?)</p>", liability, re.S)
+    preceding, exclusion = paragraphs[-2:]
+    assert preceding.startswith("We are liable without limitation")
+    assert "for injury to life, body or health however caused" in preceding
+    assert exclusion.startswith(
+        "Subject to the preceding paragraph, and except where we are liable without limitation, "
+        "we are not liable for loss of data,"
+    )
 
 
 def test_each_dated_page_opens_with_its_date_in_prose_and_markup() -> None:
