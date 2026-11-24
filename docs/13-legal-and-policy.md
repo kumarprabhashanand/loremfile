@@ -49,17 +49,31 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 >
 > ## What the files are
 >
-> The files are synthetic test data. Some are deliberately malformed and may crash or hang software that reads them. Use them only against systems you are authorised to test.
+> The files are synthetic test data. Some are deliberately malformed and may crash or hang software that reads them.
 >
 > ## Liability
 >
+> This service is provided free of charge and non-commercially.
+>
 > In short: our liability is unlimited where the law requires it and limited for slight negligence.
 >
-> We are liable without limitation for intent and gross negligence, and under mandatory statutory liability, including for injury to life, body or health and under the Produkthaftungsgesetz. For slight negligence we are liable only for the breach of an essential contractual obligation, an obligation whose fulfilment makes the proper performance of this service possible in the first place and on whose observance you may regularly rely, and then only for the foreseeable damage typical of this kind of service. We are not liable for loss of data, for lost profits, or for damage arising from the use of the files in production systems.
+> We are liable without limitation for intent and gross negligence, for injury to life, body or health however caused, and under mandatory statutory liability, including under the Produkthaftungsgesetz. For slight negligence we are liable only for the breach of an essential contractual obligation, an obligation whose fulfilment makes the proper performance of this service possible in the first place and on whose observance you may regularly rely, and then only for the foreseeable damage typical of this kind of service.
+>
+> Subject to the preceding paragraph, and except where we are liable without limitation, we are not liable for loss of data, for lost profits, or for damage arising from the use of the files in production systems.
 >
 > ## Acceptable use
 >
-> Once an IP address reaches 300 requests within 10 seconds at one Cloudflare data centre, its further requests there are blocked for 10 seconds. We may rate-limit, block or otherwise restrict clients that degrade the service for others. Do not use this service to distribute content you do not own, to test attacks against third parties, or in any way that violates the law. The service hosts no user content and offers no upload.
+> Hotlinking is allowed and encouraged. Link directly to the file URLs from your tests, your CI, your documentation and your agents. You do not need to mirror or proxy, though you may.
+>
+> Anyone may use this service. There is nothing to sign up for and no age restriction.
+>
+> Once an IP address reaches 300 requests within 10 seconds at one Cloudflare data centre, its further requests there are blocked for 10 seconds. We may rate-limit, block or otherwise restrict clients that degrade the service for others. Do not use this service to test attacks against third parties, or in any way that violates the law. The service hosts no user content and offers no upload.
+>
+> Testing systems you are not authorised to test may itself be unlawful. That is your responsibility.
+>
+> ## The metadata API
+>
+> A machine-readable HTTPS endpoint (an MCP server) returns metadata about the files. It needs no authentication, creates no account and asks you for no personal data. Everything on this page applies to it, including the rate limit and the warranty and liability sections. Its shape may change.
 >
 > ## Discontinuation
 >
@@ -69,9 +83,17 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 >
 > These terms may change. The version in force is the one published here, with the date shown. Every file is CC0 and the release archives can be mirrored, so you keep what you already hold.
 >
+> ## Law
+>
+> The operator is in Germany, so German law applies. If you are a consumer, you keep whatever protection the mandatory consumer law of your own country of residence gives you. We do not try to choose a court for you.
+>
+> If any part of these terms is invalid, the rest remains in force.
+>
 > ## Who provides this service
 >
 > loremfile.dev is operated by a private individual and provided free of charge and non-commercially. The operator is named in the Impressum.
+>
+> No accounts, no tracking cookies, no analytics scripts. Our CDN provider processes IP addresses and request metadata to deliver and protect the service. See the [privacy notice](/legal/privacy).
 >
 > ## Contact
 >
@@ -91,6 +113,8 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 - [§ 309 Nr. 7 BGB](https://www.gesetze-im-internet.de/bgb/__309.html) voids standard-terms limits on liability for negligent injury to life, body or health, and for gross negligence.
 
 **Conclusion: the present clause stands, because it holds under either characterisation.** A statutory privilege applies by operation of law if the characterisation holds, so invoking § 521 in the terms gains nothing; relying on it loses the fallback, because a clause cut to intent and gross negligence would breach § 309 Nr. 7 a if a court found no gift, and fall away entirely under § 306. The predicate is preserved without invoking it: the terms state that the service is free of charge and non-commercial.
+
+**2026-11-24.** The data-loss sentence is expressly subject to the preceding liability paragraph and the unlimited-liability carve-outs. The governing-law clause preserves mandatory consumer protections. The reach of the data-loss exclusion, contract formation, the typical-damage ceiling and the effect of the new product-liability rules remain questions for counsel. [BGB § 276(3)](https://www.gesetze-im-internet.de/bgb/__276.html), [BGB § 309 No. 7](https://www.gesetze-im-internet.de/bgb/__309.html), [BGB § 306](https://www.gesetze-im-internet.de/bgb/__306.html), [Rome I Article 6](https://eur-lex.europa.eu/eli/reg/2008/593/oj/eng).
 
 ## 3. Privacy notice (`/legal/privacy`) — full text
 
