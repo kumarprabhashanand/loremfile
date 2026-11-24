@@ -146,6 +146,9 @@ def test_a_2026_07_28_client_discovers_the_server_and_lists_the_documented_tools
     assert discovered["supportedVersions"] == [mcp.MODERN, mcp.LEGACY]
     assert discovered["capabilities"] == {"tools": {}}
     assert discovered["_meta"][f"{mcp.META}serverInfo"]["name"] == "loremfile"
+    assert "CC0 1.0 Universal" in discovered["instructions"]
+    assert "the bytes at that URL never change. Use list_fixtures" in discovered["instructions"]
+    assert "verify_file" in discovered["instructions"]
     listed = child.modern("tools/list")["result"]
     assert (listed["resultType"], listed["cacheScope"]) == ("complete", "public")
     assert surface(listed["tools"]) == documented()

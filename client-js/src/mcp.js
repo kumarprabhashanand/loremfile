@@ -49,10 +49,10 @@ export const SERVER_INFO = {
   version: JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version,
 };
 
-const INSTRUCTIONS =
-  `${FIXTURE_INSTRUCTIONS} Use ` +
-  "list_fixtures to find files and their hashes, describe_fixture for measured properties, " +
+const STDIO_INSTRUCTIONS =
+  "Use list_fixtures to find files and their hashes, describe_fixture for measured properties, " +
   "and verify_file to check a copy on disk. The tools return URLs, never file contents.";
+const INSTRUCTIONS = `${FIXTURE_INSTRUCTIONS} ${STDIO_INSTRUCTIONS}`;
 
 /**
  * The tool surface, shared byte for byte with the Python client (tools.json in both trees;

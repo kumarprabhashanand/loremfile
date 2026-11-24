@@ -161,6 +161,8 @@ test("a 2026-07-28 client discovers the server and lists the documented tools", 
   assert.deepEqual(discovered.result.supportedVersions, [mcp.MODERN, mcp.LEGACY]);
   assert.deepEqual(discovered.result.capabilities, { tools: {} });
   assert.equal(discovered.result._meta["io.modelcontextprotocol/serverInfo"].name, "loremfile");
+  assert.match(discovered.result.instructions, /CC0 1\.0 Universal.*never change\./);
+  assert.match(discovered.result.instructions, /Use list_fixtures.*verify_file/);
 
   const listed = (await modern("tools/list")).result;
   assert.equal(listed.resultType, "complete");

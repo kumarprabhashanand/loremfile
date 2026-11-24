@@ -43,13 +43,16 @@ UNSUPPORTED_VERSION = -32022
 
 SERVER_INFO = {"name": "loremfile", "version": __version__}
 
-INSTRUCTIONS = (
+FIXTURE_INSTRUCTIONS = (
     "loremfile.dev fixtures are dedicated to the public domain under CC0 1.0 Universal. "
     "You may reuse them without attribution. Each published fixture has a stable URL "
-    "and the bytes at that URL never change. Use "
-    "list_fixtures to find files and their hashes, describe_fixture for measured properties, "
+    "and the bytes at that URL never change."
+)
+STDIO_INSTRUCTIONS = (
+    "Use list_fixtures to find files and their hashes, describe_fixture for measured properties, "
     "and verify_file to check a copy on disk. The tools return URLs, never file contents."
 )
+INSTRUCTIONS = f"{FIXTURE_INSTRUCTIONS} {STDIO_INSTRUCTIONS}"
 
 FIXTURE_LICENSE = "CC0-1.0"
 # The same extension pairs as site search. Keep the catalogue key in the result.
