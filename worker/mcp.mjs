@@ -1,4 +1,5 @@
 import {
+  FIXTURE_INSTRUCTIONS,
   ToolError,
   describePath,
   describeResult,
@@ -12,7 +13,6 @@ const LEGACY = "2025-11-25";
 const MODERN = "2026-07-28";
 const SUPPORTED = [MODERN, LEGACY];
 const META = "io.modelcontextprotocol/";
-const INSTRUCTIONS = "Find and describe CC0 fixtures at stable URLs from loremfile.dev.";
 const MAX_BODY_BYTES = 64 * 1024;
 const HEADERS = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
 const CACHE_HINT = { ttlMs: 3_600_000, cacheScope: "public" };
@@ -189,7 +189,7 @@ export function createHandler(toolDefinitions, serverInfo) {
       return success(id, {
         supportedVersions: SUPPORTED,
         capabilities: { tools: {} },
-        instructions: INSTRUCTIONS,
+        instructions: FIXTURE_INSTRUCTIONS,
         ...CACHE_HINT,
       }, true);
     }
@@ -198,7 +198,7 @@ export function createHandler(toolDefinitions, serverInfo) {
         protocolVersion: LEGACY,
         capabilities: { tools: {} },
         serverInfo,
-        instructions: INSTRUCTIONS,
+        instructions: FIXTURE_INSTRUCTIONS,
       }, false);
     }
     if (method === "ping" && !modern) {

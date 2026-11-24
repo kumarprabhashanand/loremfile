@@ -150,7 +150,10 @@ def differences(
             (name, py["mcp"][name], js["mcp"][name])
             for name in ("MODERN", "LEGACY", "SUPPORTED", "META", "DEFAULT_LIMIT", "MAX_LIMIT")
         ],
-        ("INSTRUCTIONS", py["mcp"]["INSTRUCTIONS"], js["mcp"]["INSTRUCTIONS"]),
+        *[
+            (name, py["mcp"][name], js["mcp"][name])
+            for name in ("FIXTURE_INSTRUCTIONS", "STDIO_INSTRUCTIONS", "FIXTURE_LICENSE")
+        ],
         *[
             (f"CODES.{code}", py["mcp"][code], js["mcp"]["CODES"][code])
             for code in (
@@ -194,11 +197,18 @@ def test_a_rule_changed_on_one_side_is_named() -> None:
     py, js, js_mcp, action = sources()
     js["api"]["PAUSE_MS"] = 400
     js["mcp"]["MODERN"] = "2026-01-01"
+    js["mcp"]["FIXTURE_INSTRUCTIONS"] = "Each fixture's URL may serve different bytes."
     changed = differences(py, js, js_mcp.replace("ttlMs: 3_600_000", "ttlMs: 60_000", 1), action)
-    assert [line.split(":")[0] for line in changed] == ["PAUSE", "MODERN", "CACHE_MS"]
+    assert [line.split(":")[0] for line in changed] == [
+        "PAUSE",
+        "MODERN",
+        "FIXTURE_INSTRUCTIONS",
+        "CACHE_MS",
+    ]
     slower = action.replace("sleep 0.5", "sleep 1")
     assert [line.split(":")[0] for line in differences(py, js, js_mcp, slower)] == [
         "PAUSE",
         "MODERN",
+        "FIXTURE_INSTRUCTIONS",
         "action PAUSE",
     ]

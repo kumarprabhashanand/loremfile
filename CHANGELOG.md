@@ -5,6 +5,8 @@
 - Search matches whole words, puts a format's files first, labels edge cases, shows the total
   with a way to see every match, and retries after a failed load. Page dates were corrected.
 - Per-format JSON indexes include sample alias metadata for direct lookups.
+- MCP listings accept common extension synonyms and include SHA-256. Both discovery tools
+  show the CC0 licence, and `describe_fixture` explains invalid paths.
 
 ## [1.16.0] - 2026-11-14
 

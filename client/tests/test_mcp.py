@@ -12,6 +12,7 @@ import subprocess
 import sys
 import urllib.error
 from collections.abc import Iterator
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
@@ -145,6 +146,9 @@ def test_a_2026_07_28_client_discovers_the_server_and_lists_the_documented_tools
     assert discovered["supportedVersions"] == [mcp.MODERN, mcp.LEGACY]
     assert discovered["capabilities"] == {"tools": {}}
     assert discovered["_meta"][f"{mcp.META}serverInfo"]["name"] == "loremfile"
+    assert "CC0 1.0 Universal" in discovered["instructions"]
+    assert "the bytes at that URL never change. Use list_fixtures" in discovered["instructions"]
+    assert "verify_file" in discovered["instructions"]
     listed = child.modern("tools/list")["result"]
     assert (listed["resultType"], listed["cacheScope"]) == ("complete", "public")
     assert surface(listed["tools"]) == documented()
@@ -288,6 +292,9 @@ def test_list_fixtures_pages_and_says_where_it_is(child: Client, server: str) ->
     assert (every["limit"], every["next_offset"]) == (mcp.DEFAULT_LIMIT, None)
     assert [f["path"] for f in every["fixtures"]] == sorted(BODIES)
     assert every["fixtures"][0]["url"] == f"{server}{sorted(BODIES)[0]}"
+    for row in every["fixtures"]:
+        assert row["sha256"] == sha256(BODIES[row["path"]]).hexdigest()
+        assert row["license"] == "CC0-1.0"
     first = child.call("list_fixtures", {"limit": 3})["structuredContent"]
     assert (first["count"], first["next_offset"], first["total"]) == (3, 3, 4)
     last = child.call("list_fixtures", {"limit": 3, "offset": 3})["structuredContent"]
@@ -314,6 +321,27 @@ def test_list_fixtures_filters_as_loremfile_list_does(child: Client) -> None:
     assert paths({"tag": ["txt", "svg"]}) == ["svg/square.svg", "txt/notes.txt"]
     assert paths({"format": ["pdf"], "max_bytes": 17}) == ["pdf/small.pdf"]
     assert paths({"limit": 2.0}) == ["pdf/other.pdf", "pdf/small.pdf"], "50.0 is 50, as in JS"
+
+
+def test_format_synonyms_and_describe_use_the_catalog_key() -> None:
+    path = "jpg/example.jpg"
+    entry = {
+        "path": path,
+        "format": "jpg",
+        "mime": "image/jpeg",
+        "bytes": 100,
+        "sha256": "0" * 64,
+        "props": {"format": "jpeg", "width": 1, "height": 1},
+    }
+    catalog = {"fixtures": [entry]}
+    page = mcp.list_fixtures(catalog, {"format": ["jpeg", "jpg"]})
+    assert page["total"] == 1
+    assert page == mcp.list_fixtures(catalog, {"format": "jpeg"})
+    assert page["fixtures"][0]["format"] == "jpg"
+    described = mcp.describe_fixture(catalog, {"path": path})
+    assert described["format"] == "jpg"
+    assert described["props"] == {"width": 1, "height": 1}
+    assert entry["props"]["format"] == "jpeg"
 
 
 @pytest.mark.parametrize(
@@ -347,10 +375,29 @@ def test_describe_fixture_returns_the_entry_and_names_a_path_it_does_not_know(
     assert entry["url"] == f"{server}pdf/small.pdf"
     assert entry["catalog_version"] == "9.9.9"
     assert re.fullmatch(r"[0-9a-f]{64}", entry["sha256"])
+    assert entry["license"] == "CC0-1.0"
     for path in ("pdf/nope.pdf", "pdf/withdrawn.pdf"):
         missing = child.call("describe_fixture", {"path": path})
         assert missing["isError"] is True
         assert path in missing["content"][0]["text"]
+
+
+@pytest.mark.parametrize(
+    ("arguments", "message"),
+    [
+        ({}, "path is required"),
+        ({"path": ""}, 'path must be a non-empty string, not ""'),
+        ({"path": "  "}, 'path must be a non-empty string, not "  "'),
+        ({"path": 123}, "path must be a string, not 123"),
+        ({"path": None}, "path must be a string, not null"),
+    ],
+)
+def test_describe_fixture_explains_invalid_paths(
+    child: Client, arguments: dict[str, Any], message: str
+) -> None:
+    response = child.call("describe_fixture", arguments)
+    assert response["isError"] is True
+    assert response["content"][0]["text"] == message
 
 
 def test_verify_file_reports_ok_changed_and_missing(child: Client, tmp_path: Path) -> None:

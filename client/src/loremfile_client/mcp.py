@@ -43,11 +43,29 @@ UNSUPPORTED_VERSION = -32022
 
 SERVER_INFO = {"name": "loremfile", "version": __version__}
 
-INSTRUCTIONS = (
-    "CC0 sample files and test fixtures from loremfile.dev, each at a stable URL. Use "
-    "list_fixtures to find one, describe_fixture for its size, hash and measured properties, "
+FIXTURE_INSTRUCTIONS = (
+    "loremfile.dev fixtures are dedicated to the public domain under CC0 1.0 Universal. "
+    "You may reuse them without attribution. Each published fixture has a stable URL "
+    "and the bytes at that URL never change."
+)
+STDIO_INSTRUCTIONS = (
+    "Use list_fixtures to find files and their hashes, describe_fixture for measured properties, "
     "and verify_file to check a copy on disk. The tools return URLs, never file contents."
 )
+INSTRUCTIONS = f"{FIXTURE_INSTRUCTIONS} {STDIO_INSTRUCTIONS}"
+
+FIXTURE_LICENSE = "CC0-1.0"
+# The same extension pairs as site search. Keep the catalogue key in the result.
+FORMAT_SYNONYMS = {
+    "jpg": "jpeg",
+    "jpeg": "jpg",
+    "tif": "tiff",
+    "tiff": "tif",
+    "htm": "html",
+    "html": "htm",
+    "yml": "yaml",
+    "yaml": "yml",
+}
 
 #: The tool surface, shared byte for byte with the npm client (tools.json in both trees),
 #: and documented in client/README.md. Read-only tools, URLs and metadata only.
@@ -139,7 +157,9 @@ def _by_path(document: dict[str, Any], path: str) -> dict[str, Any]:
 
 def list_fixtures(document: dict[str, Any], args: Any) -> dict[str, Any]:  # noqa: ANN401
     args = _only(args, ["format", "tag", "max_bytes", "limit", "offset"])
-    formats = _strings(args.get("format", MISSING), "format")
+    requested_formats = _strings(args.get("format", MISSING), "format")
+    formats = set(requested_formats)
+    formats.update(FORMAT_SYNONYMS.get(key, key) for key in requested_formats)
     tags = _strings(args.get("tag", MISSING), "tag")
     max_bytes = _integer(
         args.get("max_bytes", MISSING), "max_bytes", low=0, high=None, fallback=None
@@ -148,9 +168,8 @@ def list_fixtures(document: dict[str, Any], args: Any) -> dict[str, Any]:  # noq
         args.get("limit", MISSING), "limit", low=1, high=MAX_LIMIT, fallback=DEFAULT_LIMIT
     )
     offset = _integer(args.get("offset", MISSING), "offset", low=0, high=None, fallback=0)
-    # The same filters as `loremfile list`: any of the formats, any of the tags, all three. The
-    # sample.{format} aliases repeat another file's bytes and stay out; describe_fixture and
-    # verify_file still take one by path.
+    # Any of the formats, any of the tags, and the size ceiling. The sample.{format} aliases
+    # repeat another file's bytes and stay out; describe_fixture and verify_file take them by path.
     matches = sorted(
         (
             e
@@ -177,6 +196,8 @@ def list_fixtures(document: dict[str, Any], args: Any) -> dict[str, Any]:  # noq
                 "format": e["format"],
                 "mime": e["mime"],
                 "bytes": e["bytes"],
+                "sha256": e["sha256"],
+                "license": FIXTURE_LICENSE,
                 "tags": e.get("tags") or [],
                 "description": e.get("description") or "",
             }
@@ -187,7 +208,17 @@ def list_fixtures(document: dict[str, Any], args: Any) -> dict[str, Any]:  # noq
 
 def describe_fixture(document: dict[str, Any], args: Any) -> dict[str, Any]:  # noqa: ANN401
     args = _only(args, ["path"])
-    entry = _by_path(document, _text(args.get("path"), "path"))
+    path = args.get("path", MISSING)
+    if path is MISSING:
+        raise ToolError("path is required")
+    if not isinstance(path, str):
+        raise ToolError(f"path must be a string, not {_serialise(path)}")
+    if not path.strip():
+        raise ToolError(f"path must be a non-empty string, not {_serialise(path)}")
+    entry = _by_path(document, path)
+    props = entry.get("props")
+    if props is not None:
+        props = {key: value for key, value in props.items() if key != "format"}
     return {
         "catalog_version": str(document.get("catalog_version", "")),
         "path": entry["path"],
@@ -196,10 +227,11 @@ def describe_fixture(document: dict[str, Any], args: Any) -> dict[str, Any]:  # 
         "mime": entry["mime"],
         "bytes": entry["bytes"],
         "sha256": entry["sha256"],
+        "license": FIXTURE_LICENSE,
         "size_class": entry.get("size_class"),
         "tags": entry.get("tags") or [],
         "description": entry.get("description") or "",
-        "props": entry.get("props"),
+        "props": props,
         "added_in": entry.get("added_in"),
     }
 

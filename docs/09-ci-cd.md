@@ -351,6 +351,19 @@ ETag. CI replays the deploy smoke requests against the built index and compares 
 responses with stdio, including the alias lookup. Legacy initialize and discovery work without
 session affinity. See `19` §2 for the Free plan limits and monitoring settings.
 
+The HTTPS and stdio tools accept the same extension synonyms as site search. List rows
+carry the catalog's format key and published SHA-256 so clients can discover filters and
+verify their downloads in one page request. Both tools report `CC0-1.0`. The server
+instructions explain reuse without attribution and stable URLs with immutable bytes.
+`describe_fixture` exposes measured `props`, including `pages` for PDFs. Its top-level
+`format` is the catalog key. The `size_class` describes the relation to nominal byte size,
+and `added_in` identifies the first catalog version that published the path.
+
+Pages use ascending path order. To find the smallest fixture today, compare `bytes`
+across all matching pages. A future `sort: "bytes_asc"` could order matches by ascending
+byte count before pagination, with path as the tie-breaker. The default would stay in path
+order.
+
 ### 3.3 `health.yml`: daily
 
 ```yaml
