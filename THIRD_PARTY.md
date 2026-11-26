@@ -1,8 +1,7 @@
 # Third-party components
 
-Fixtures published by loremfile.dev are **generated**, not redistributed: no third-party
-image, audio, video, text or font ships inside them. This file lists the tools and
-libraries used to *produce* them, and their licences.
+Fixtures published by loremfile.dev are **generated** by the tools listed below rather
+than collected from anywhere. This file records those tools and their licences.
 
 Entries are added by the milestone that introduces the dependency. Every addition must
 also appear in `tools/requirements.in`, be pinned with hashes in `tools/requirements.lock`,

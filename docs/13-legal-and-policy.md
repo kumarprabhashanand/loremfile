@@ -19,7 +19,7 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 >
 > ## Files
 >
-> Every file served under a format path (for example `/pdf/…`, `/bin/…`, `/edge/…`) is dedicated to the public domain under the [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) deed. You may copy, modify, distribute and use them for any purpose, commercially or not, without asking permission or giving credit.
+> Every file served under a format path (for example `/pdf/…`, `/bin/…`, `/edge/…`) is yours to use. You may copy, modify, distribute and use them for any purpose, commercially or not, without asking permission or giving credit. We dedicate every right we hold in them under the [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) deed.
 >
 > ## Code
 >
@@ -31,7 +31,7 @@ Why CC0 for fixtures: users must be able to embed, redistribute, modify and comm
 >
 > ## Trademarks and third parties
 >
-> Format names (PDF, MP4, …) belong to their owners and are used descriptively. No third-party media is redistributed; see THIRD_PARTY.md in the repository for the tools used to generate files.
+> Format names (PDF, MP4, …) belong to their owners and are used descriptively. THIRD_PARTY.md in the repository lists the tools used to generate the files.
 
 ## 2. Terms of use (`/legal/terms`) — full text
 
