@@ -24,6 +24,7 @@ PART = re.compile(
     r"fixtures-(?P<since>snapshot|v\d+\.\d+\.\d+)-(?P<tag>v\d+\.\d+\.\d+)\.part(?P<number>\d+)\.tar"
 )
 PARTS_LISTING = "parts.txt"
+REDACTED_NOTE = re.compile(r"^Redacted `(?P<path>[^`]+)` on ", re.MULTILINE)
 
 
 class RedactError(RuntimeError):
@@ -97,9 +98,21 @@ def releases(repository: str) -> list[dict[str, Any]]:
 
 
 def members_of(archive: Archive, *, cwd: Path | None) -> list[dict[str, Any]]:
-    """What the archive holds, recomputed from git exactly as `release archive` chose it."""
+    """What the archive holds, recomputed from git exactly as `release archive` chose it.
+
+    The release's own manifest still names a path an earlier redaction removed, because
+    `sha256sums.txt` and `manifest.json` stay as released. `publish` records each redaction in
+    the notes, so those are the paths the parts no longer carry.
+    """
     plan = release.Plan(tag=archive.tag, since=archive.since)
-    return release.members(plan, release.manifest_at(archive.tag, cwd=cwd), cwd=cwd)
+    listed = release.members(plan, release.manifest_at(archive.tag, cwd=cwd), cwd=cwd)
+    gone = redacted_already(archive.notes)
+    return [member for member in listed if member["path"] not in gone]
+
+
+def redacted_already(notes: str) -> set[str]:
+    """Paths a previous redaction removed, from the lines `publish` writes into the notes."""
+    return {match["path"] for match in REDACTED_NOTE.finditer(notes)}
 
 
 def rebuild(

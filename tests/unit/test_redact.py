@@ -258,6 +258,40 @@ def test_released_bytes_that_no_longer_match_stop_the_redaction(
     assert gh.writes() == []
 
 
+def test_a_second_redaction_from_the_same_archive_succeeds(
+    monkeypatch: pytest.MonkeyPatch, repo: Path, tmp_path: Path
+) -> None:
+    gh = Gh(monkeypatch)
+    gh.views["v1.0.0"]["body"] = (
+        "Release one.\n\nRedacted `png/b.png` on 2026-10-01 (docs/11 §7.8).\n"
+    )
+    monkeypatch.setitem(RELEASED, "v1.0.0", ["pdf/a.pdf"])
+    report = run(repo, tmp_path, "pdf/a.pdf")
+    assert report.errors == []
+    assert report.changed == ["v1.0.0"]
+    assert "Redacted `pdf/a.pdf` on 2026-10-01" in gh.notes["v1.0.0"]
+    assert "Redacted `png/b.png`" in gh.notes["v1.0.0"]
+
+
+def test_a_member_missing_with_no_redaction_note_still_stops_the_redaction(
+    monkeypatch: pytest.MonkeyPatch, repo: Path, tmp_path: Path
+) -> None:
+    gh = Gh(monkeypatch)
+    monkeypatch.setitem(RELEASED, "v1.0.0", ["pdf/a.pdf"])
+    with pytest.raises(redact.RedactError, match=r"the released parts lack png/b\.png"):
+        run(repo, tmp_path, "pdf/a.pdf")
+    assert gh.writes() == []
+
+
+def test_the_notes_scan_reads_only_the_lines_publish_writes() -> None:
+    assert redact.redacted_already("Release one.") == set()
+    assert redact.redacted_already(
+        "Redacted `a/b.txt` on 2026-10-01 (docs/11 §7.8).\n"
+        "Redacted `c/d.txt` on 2026-11-02 (docs/11 §7.8).\n"
+    ) == {"a/b.txt", "c/d.txt"}
+    assert redact.redacted_already("we redacted `x/y.txt` on a whim") == set()
+
+
 def test_part_names_decide_what_an_archive_covers() -> None:
     snapshot = redact.archive_of(VIEWS["v1.0.0"])
     delta = redact.archive_of(VIEWS["v1.1.0"])
