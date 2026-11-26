@@ -63,7 +63,7 @@
 <h2 id="removed">Removed</h2>
 <ul class="removed">
 {% for entry in removed %}
-  <li><code>{{ entry.path }}</code>, removed {{ entry.removed_at }}: {{ entry.reason }}</li>
+  <li><code>{{ entry.path }}</code>, removed {{ entry.removed_at[:10] }}: {{ entry.reason }}</li>
 {% endfor %}
 </ul>
 {% endif %}

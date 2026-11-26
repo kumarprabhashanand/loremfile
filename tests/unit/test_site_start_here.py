@@ -8,7 +8,6 @@ not be chosen, a count of one must not read plural, and the README's old claim m
 from __future__ import annotations
 
 import datetime as dt
-import json
 import re
 import struct
 import zlib
@@ -19,14 +18,14 @@ import pytest
 import yaml
 
 from loremfile.catalog import Catalog
-from loremfile.manifest import alias_original
+from loremfile.manifest import Manifest, alias_original
 from loremfile.site import build, defaults, icons
 from loremfile.site.build import POPULAR, key_props
 
 ROOT = Path(__file__).resolve().parents[2]
 WHEN = dt.datetime(2026, 9, 15, 12, 0, tzinfo=dt.UTC)
 CATALOG = Catalog.load()
-MANIFEST = json.loads((ROOT / "manifest.json").read_text())["fixtures"]
+MANIFEST = Manifest.load().active
 DRIFTING = {f.path for fmt in CATALOG.formats for f in fmt.fixtures if f.expected_drift}
 FAMILY = {fmt.format: fmt.family.value for fmt in CATALOG.formats}
 DOCS = (ROOT / "docs" / "05-fixture-catalog.md").read_text(encoding="utf-8")
@@ -186,6 +185,7 @@ def test_the_table_in_docs_05_is_what_the_code_chooses() -> None:
     rows = re.findall(r"^\| `([a-z0-9]+)` \| `([^`]+)` \| ([^|]+) \|$", DOCS, re.MULTILINE)
     documented = {fmt: (path, basis) for fmt, path, basis in rows}
     assert len(documented) == 77 and documented["pdf"][0] == "pdf/a4-3pages.pdf"
+    assert documented["vcf"][0] == "vcf/vcard4-single-v2.vcf"
     for fmt in FAMILY:
         found = choice(fmt)
         if found is None:

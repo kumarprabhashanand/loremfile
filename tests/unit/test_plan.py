@@ -10,7 +10,6 @@ copy; a guard that has not been watched failing is not evidence about anything.
 from __future__ import annotations
 
 import copy
-import json
 import re
 from pathlib import Path
 from typing import Any
@@ -19,11 +18,12 @@ import pytest
 import yaml
 
 from loremfile.catalog import Catalog
+from loremfile.manifest import Manifest
 
 ROOT = Path(__file__).resolve().parents[2]
 DOC = (ROOT / "docs" / "05-fixture-catalog.md").read_text(encoding="utf-8")
 PLAN = yaml.safe_load((ROOT / "catalog" / "_plan.yaml").read_text(encoding="utf-8"))["rows"]
-MANIFEST = {e["path"]: e for e in json.loads((ROOT / "manifest.json").read_text())["fixtures"]}
+MANIFEST = {e["path"]: e for e in Manifest.load().active}
 CATALOG = Catalog.load()
 
 #: Rows with phase 1 in their own catalog file that are not among §5's 416: each was added
@@ -31,6 +31,8 @@ CATALOG = Catalog.load()
 #: the manifest's `added_in` must agree with. A new row with phase 1 and no place in §3's
 #: plan has to be added here by name, which is the point.
 OUTSIDE_THE_PLAN = {
+    "vcf/vcard3-single-v2.vcf": "1.17.0",
+    "vcf/vcard4-single-v2.vcf": "1.17.0",
     "csv/people-10-quoted-commas.csv": "1.3.0",
     "edge/pdf-zip-polyglot.pdf": "1.4.0",
     "edge/gif-zip-polyglot.gif": "1.4.0",
@@ -363,7 +365,7 @@ def test_a_complete_family_with_an_uncatalogued_row_fails_and_others_may_have_th
 
 def test_the_release_declared_for_an_outside_row_is_the_manifests() -> None:
     assert release_problems(OUTSIDE_THE_PLAN, MANIFEST) == []
-    assert len(OUTSIDE_THE_PLAN) == 25
+    assert len(OUTSIDE_THE_PLAN) == 27
     wrong = {**OUTSIDE_THE_PLAN, "tiff/cmyk-640x480.tiff": "1.10.0"}
     assert release_problems(wrong, MANIFEST) == [
         "tiff/cmyk-640x480.tiff: declared 1.10.0, the manifest says added in 1.9.0"

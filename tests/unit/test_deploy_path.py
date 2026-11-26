@@ -17,7 +17,7 @@ import pytest
 from loremfile import build as build_module
 from loremfile import cli
 from loremfile.build import BuildError, Selection
-from loremfile.catalog import Catalog
+from loremfile.catalog import ALIAS_GENERATOR, Catalog, Status
 from loremfile.infra import locks, r2
 from loremfile.infra.upload import MULTIPART_THRESHOLD
 
@@ -329,11 +329,11 @@ AFTER_LAUNCH = (
 
 
 def test_the_launch_set_still_adds_up() -> None:
-    # An alias is the same file under a guessable name (docs/05 §8), so it is not a fixture here.
-    catalogued = {f.path for f in CATALOG.fixtures() if not f.alias_of}
-    assert set(AFTER_LAUNCH) <= catalogued, "control: the post-launch rows are catalogued"
-    assert len(catalogued) - len(AFTER_LAUNCH) + REMAINING_M37_M38 == LAUNCH_SET, (
-        f"{len(catalogued)} catalogued less {len(AFTER_LAUNCH)} added after launch, plus "
+    originals = {f.path for f in CATALOG.fixtures() if f.generator != ALIAS_GENERATOR}
+    active = {p for p in originals if CATALOG.by_path[p].status is Status.ACTIVE}
+    assert set(AFTER_LAUNCH) <= originals, "control: the post-launch rows are catalogued"
+    assert len(active) - len(AFTER_LAUNCH) + REMAINING_M37_M38 == LAUNCH_SET, (
+        f"{len(active)} catalogued less {len(AFTER_LAUNCH)} added after launch, plus "
         f"{REMAINING_M37_M38} remaining != {LAUNCH_SET}. A fixture added after launch is "
         "named in AFTER_LAUNCH and listed in docs/05 §9; the launch set itself is a "
         "docs/05 §9 and ADR-024 decision, not a test edit."
@@ -344,10 +344,12 @@ def test_every_catalogued_fixture_is_in_the_manifest() -> None:
     """228 in the manifest, none withheld. The five `expected_drift` rows entered with the
     entries of the CI run whose artifact holds their bytes (docs/11 §7.9b)."""
     manifest = json.loads((Path(__file__).resolve().parents[2] / "manifest.json").read_text())
-    published = {e["path"] for e in manifest["fixtures"] if e.get("status", "active") == "active"}
+    published = {e["path"] for e in manifest["fixtures"]}
     catalogued = {f.path for f in CATALOG.fixtures()}
     files = {
-        p for p in published if not any(f.alias_of and f.path == p for f in CATALOG.fixtures())
+        e["path"]
+        for e in manifest["fixtures"]
+        if e["status"] == "active" and e["generator"] != ALIAS_GENERATOR
     }
 
     assert published == catalogued

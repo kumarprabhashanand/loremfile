@@ -8,13 +8,14 @@ validator is shown failing rather than assumed to work.
 
 from __future__ import annotations
 
+import re
 import tempfile
 from pathlib import Path
 
 import pytest
 from icalendar import Calendar
 
-from loremfile.catalog import Catalog, Fixture
+from loremfile.catalog import Catalog, Fixture, Status
 from loremfile.generators import calendar as calendar_generators
 from loremfile.generators.base import REGISTRY, GeneratorContext
 from loremfile.util.determinism import deterministic
@@ -58,7 +59,11 @@ def refused(path: str, payload: bytes) -> str:
 
 
 def paths() -> list[str]:
-    return [f.path for f in CATALOG.fixtures() if f.format in {"ics", "vcf"} and not f.alias_of]
+    return [
+        f.path
+        for f in CATALOG.fixtures()
+        if f.format in {"ics", "vcf"} and not f.alias_of and f.status is Status.ACTIVE
+    ]
 
 
 def test_the_calendar_and_contact_formats_are_catalogued() -> None:
@@ -100,9 +105,27 @@ def test_the_series_is_one_event_with_a_rule_not_ten_events() -> None:
 # --- contacts --------------------------------------------------------------
 
 
+def test_both_contacts_carry_a_number_from_a_reserved_fiction_range() -> None:
+    assert calendar_generators.PHONE == "+49 30 23125000"
+    assert b"TEL;TYPE=WORK,VOICE:+49 30 23125000" in build("vcf/vcard3-single-v2.vcf")
+    assert b"tel:+49-30-23125000" in build("vcf/vcard4-single-v2.vcf")
+    reserved = re.compile(
+        rb"^TEL[^:\r\n]*:(?:tel:)?(?:"
+        rb"\+49[ -]?30[ -]?23125[ -]?\d{3}"
+        rb"|\+44[ -]?7700[ -]?900\d{3}"
+        rb"|\+44[ -]?20[ -]?7946[ -]?0\d{3}"
+        rb"|\+1[ -]?(?:\(?[2-9]\d{2}\)?[ -]?)?555[ -]?01\d{2})$",
+        re.MULTILINE,
+    )
+    for path in paths():
+        for line in build(path).replace(b"\r\n ", b"").splitlines():
+            if line.startswith(b"TEL"):
+                assert reserved.match(line), f"{path}: {line!r}"
+
+
 def test_the_two_vcard_versions_say_which_they_are() -> None:
-    assert check("vcf/vcard3-single.vcf")["version"] == "3.0"
-    assert check("vcf/vcard4-single.vcf")["version"] == "4.0"
+    assert check("vcf/vcard3-single-v2.vcf")["version"] == "3.0"
+    assert check("vcf/vcard4-single-v2.vcf")["version"] == "4.0"
 
 
 # --- negative tests --------------------------------------------------------
@@ -128,10 +151,10 @@ def test_a_calendar_with_bare_newlines_is_refused() -> None:
 
 
 def test_a_contact_with_a_clock_rev_is_refused() -> None:
-    data = build("vcf/vcard3-single.vcf").replace(
+    data = build("vcf/vcard3-single-v2.vcf").replace(
         b"REV:2020-01-01T00:00:00Z", b"REV:2026-09-16T07:00:00Z"
     )
-    assert "REV" in refused("vcf/vcard3-single.vcf", data)
+    assert "REV" in refused("vcf/vcard3-single-v2.vcf", data)
 
 
 def test_a_contact_without_a_full_name_is_refused() -> None:
@@ -139,4 +162,4 @@ def test_a_contact_without_a_full_name_is_refused() -> None:
         b"BEGIN:VCARD\r\nVERSION:3.0\r\nUID:x@example.com\r\n"
         b"REV:2020-01-01T00:00:00Z\r\nEND:VCARD\r\n"
     )
-    assert "FN" in refused("vcf/vcard3-single.vcf", data)
+    assert "FN" in refused("vcf/vcard3-single-v2.vcf", data)

@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.16.0",
+  "catalog_version": "1.17.0",
   "formats": [
     {
       "format": "7z",
@@ -524,7 +524,7 @@
     {
       "format": "vcf",
       "count": 2,
-      "total_bytes": 805,
+      "total_bytes": 777,
       "url": "https://loremfile.dev/vcf",
       "index": "https://loremfile.dev/vcf/index.json",
       "mime_default": "text/vcard"
