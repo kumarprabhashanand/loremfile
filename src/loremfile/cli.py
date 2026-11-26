@@ -51,6 +51,7 @@ from loremfile.manifest import (
     Manifest,
     ManifestError,
     build_entry,
+    make_tombstone,
     render_formats_json,
     render_sha256sums,
 )
@@ -1745,6 +1746,12 @@ def _catalog_disagreements(loaded: Manifest, catalog_obj: Catalog) -> list[str]:
     errors = []
     for fixture in catalog_obj.fixtures():
         entry = published.get(fixture.path)
+        if fixture.removed is not None:
+            if entry is None or entry != make_tombstone(
+                entry, fixture.removed.reason, fixture.removed.removed_at
+            ):
+                errors.append(f"{fixture.path}: missing or stale tombstone; run `manifest update`")
+            continue
         if entry is None or entry.get("status", "active") != "active":
             continue
         if (entry.get("props") or {}).get("contains_text") != fixture.contains_text:
@@ -1779,7 +1786,7 @@ def _entries_from_build(
 
     for fixture in catalog_obj.fixtures():
         target = directory / fixture.path
-        if not target.is_file() or fixture.awaiting_publication:
+        if fixture.removed is not None or not target.is_file() or fixture.awaiting_publication:
             continue
         data = target.read_bytes()
         mime = catalog_obj.mime_for(fixture)
@@ -2072,6 +2079,18 @@ def manifest_update(as_json: bool) -> None:
         changed = bool(withdrawn) or any(by_path.get(entry["path"]) != entry for entry in added)
         for entry in added:
             by_path[entry["path"]] = entry
+        for fixture in catalog_obj.fixtures():
+            removal = fixture.removed
+            if removal is None:
+                continue
+            if fixture.path not in by_path:
+                raise ManifestError(
+                    f"{fixture.path}: cannot tombstone a path with no manifest entry"
+                )
+            old = by_path[fixture.path]
+            tombstone = make_tombstone(old, removal.reason, removal.removed_at)
+            changed = changed or old != tombstone
+            by_path[fixture.path] = tombstone
         loaded.entries = sorted(by_path.values(), key=lambda e: e["path"])
         changed = changed or loaded.catalog_version != config.CATALOG_VERSION
         loaded.catalog_version = config.CATALOG_VERSION

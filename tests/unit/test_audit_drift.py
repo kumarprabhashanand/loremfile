@@ -154,11 +154,12 @@ def test_manifest_check_downgrades_a_marked_path_but_not_its_neighbours() -> Non
 
 def test_the_marked_paths_are_in_the_manifest_and_none_is_withheld() -> None:
     """They entered the manifest only with entries from the run whose artifact holds their
-    bytes (docs/11 §7.9b). Withdrawn entries stay removals, never tombstones (docs/03 §7.1)."""
-    committed = set(Manifest.load().by_path)
+    bytes (docs/11 §7.9b). Withholding a file before publication leaves no tombstone
+    (docs/03 §7.1)."""
+    manifest = Manifest.load()
+    active = {entry["path"] for entry in manifest.active}
+    tombstones = {e["path"] for e in manifest.entries if e.get("status") == "removed"}
     catalog = Catalog.load()
-    assert committed >= KNOWN_SENSITIVE
+    assert active >= KNOWN_SENSITIVE
+    assert tombstones.isdisjoint(KNOWN_SENSITIVE)
     assert not [f.path for f in catalog.fixtures() if f.awaiting_publication]
-    assert not any(e.get("status") == "removed" for e in Manifest.load().entries), (
-        "withdrawn entries must be removals, not tombstones"
-    )

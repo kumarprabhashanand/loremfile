@@ -9,6 +9,12 @@
   show the CC0 licence, and `describe_fixture` explains invalid paths.
 - The Terms of Use clarify liability, hotlinking, and how the terms apply to the MCP endpoint.
 
+## [1.17.0] - 2026-11-26
+
+- Replaced two vCard paths with `-v2` URLs and withdrew the three previous paths under our
+  content policy. vCard no longer has a `sample.vcf` alias, like hls, edge and opus.
+- The licence page says what the CC0 dedication covers and what THIRD_PARTY.md records.
+
 ## [1.16.0] - 2026-11-14
 
 - Eleven more audio files. MP3: a 20 Hz to 20 kHz sweep, white noise, the sweep at a constant

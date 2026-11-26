@@ -23,6 +23,7 @@ PRODID = "-//loremfile//fixtures//EN"
 START = dt.datetime(2020, 1, 1, 9, 0, tzinfo=dt.UTC)
 STAMP = dt.datetime(2020, 1, 1, 0, 0, tzinfo=dt.UTC)
 DOMAIN = "example.com"
+PHONE = "+49 30 23125000"
 #: vCard and iCalendar both fold long lines at 75 octets, continued by a leading space.
 FOLD_AT = 75
 
@@ -109,7 +110,7 @@ def vcard3(ctx: GeneratorContext) -> bytes:
         "ORG:loremfile fixtures",
         "TITLE:Test Contact",
         f"EMAIL;TYPE=INTERNET:{local}@{DOMAIN}",
-        "TEL;TYPE=WORK,VOICE:+49 30 901820",
+        f"TEL;TYPE=WORK,VOICE:{PHONE}",
         f"URL:https://{DOMAIN}/",
         f"NOTE:{lorem.sentence(ctx.rng)}",
         f"UID:{_uid(ctx)}",
@@ -131,7 +132,7 @@ def vcard4(ctx: GeneratorContext) -> bytes:
         "KIND:individual",
         "ORG:loremfile fixtures",
         f"EMAIL;TYPE=work:{local}@{DOMAIN}",
-        'TEL;VALUE=uri;TYPE="work,voice":tel:+49-30-901820',
+        f'TEL;VALUE=uri;TYPE="work,voice":tel:{PHONE.replace(" ", "-")}',
         f"URL:https://{DOMAIN}/",
         "LANG;PREF=1:en",
         f"NOTE:{lorem.sentence(ctx.rng)}",

@@ -41,7 +41,7 @@
   },
   "changelog": {
     "date": "2026-11-24",
-    "sha256": "7afd25336ff9737801874e5cf27f17004e8a514b6f856fb05105fa3663ace347"
+    "sha256": "622ddd1fd540e14ab104b3b3de9f8578d9a5d323056b671494a578325c71674e"
   },
   "compat": {
     "date": "2026-11-14",
@@ -140,8 +140,8 @@
     "sha256": "e7f8abeaa98eacffa0bfc6d8ed791c56d86cbe8581d1a190c8b5fc6147a83672"
   },
   "docs/naming": {
-    "date": "2026-11-14",
-    "sha256": "98e28235e82fdadc5fb4f2d3514ee82f06d2f2f9caa957efeb3aacbe1fedd96b"
+    "date": "2026-11-24",
+    "sha256": "7df15e3cc2e501876986180c06af0c5b93cd64de17d75f8070dd179a90fa6f08"
   },
   "docs/security-policy": {
     "date": "2026-11-13",
@@ -168,8 +168,8 @@
     "sha256": "09d6b90335315d8701f9782c6b6b2b4602b8f98d7d285851133832ee1d92b651"
   },
   "formats": {
-    "date": "2026-11-14",
-    "sha256": "09331d57c55cbc6b5aac038f439d64267a0c1ed75bdbe40ac17a6e4168d7cee6"
+    "date": "2026-11-24",
+    "sha256": "06289147ca30323e2ed19d27a5a6b3d94a93550131881a245f5dcbe40970f6a7"
   },
   "geojson": {
     "date": "2026-11-13",
@@ -388,8 +388,8 @@
     "sha256": "23d852d694f5c792e043a28ace10d678f5a09db5a636406eea7fda742c1a8805"
   },
   "vcf": {
-    "date": "2026-11-13",
-    "sha256": "3828a62cce7b499630272e62706c3837236bc9f31b9878e2b5133b154b779100"
+    "date": "2026-11-24",
+    "sha256": "fc57d9c898fcf7351285746613ff10d01742a03d6ce3402edd7b22e82e53d7f4"
   },
   "vtt": {
     "date": "2026-11-13",

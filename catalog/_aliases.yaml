@@ -64,7 +64,6 @@ aliases:
   tsv: tsv/people-1000.tsv
   ttf: ttf/loremfile-sans.ttf
   txt: txt/lorem-1kb.txt
-  vcf: vcf/vcard4-single.vcf
   vtt: vtt/3-cues.vtt
   wasm: wasm/minimal-add.wasm
   wav: wav/sine-440hz-3s-44k-16bit-mono.wav

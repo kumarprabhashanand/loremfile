@@ -242,6 +242,14 @@ class Fixture(BaseModel):
     @model_validator(mode="after")
     def _check(self) -> Self:
         self._check_name()
+        if self.status is Status.REMOVED:
+            if self.removed is None:
+                raise ValueError("removed is required when status is 'removed'")
+            if self.params or self.depends_on or self.alias_of is not None:
+                raise ValueError(
+                    "a removed fixture must drop its generator inputs and dependencies"
+                )
+            return self
         if self.expect is None and not self.edge_case:
             raise ValueError("expect is required unless edge_case is true")
         if self.size_class in SIZE_CLASSES_NEEDING_NOMINAL and self.nominal_bytes is None:
@@ -254,9 +262,7 @@ class Fixture(BaseModel):
             raise ValueError("only fixtures under edge/ may carry an 'edge' block")
         if self.format == "edge" and not self.edge_case:
             raise ValueError("fixtures under edge/ must set edge_case: true")
-        if self.status is Status.REMOVED and self.removed is None:
-            raise ValueError("removed is required when status is 'removed'")
-        if self.status is Status.ACTIVE and self.removed is not None:
+        if self.removed is not None:
             raise ValueError("removed is only allowed when status is 'removed'")
         self._check_contains_text()
         self._check_alias()
@@ -573,6 +579,8 @@ class Catalog:
                 target = by_path.get(dependency)
                 if target is None:
                     raise CatalogError(f"{fixture.path}: depends_on unknown path '{dependency}'")
+                if target.status is Status.REMOVED:
+                    raise CatalogError(f"{fixture.path}: depends_on removed path '{dependency}'")
                 # A phase-1 fixture cannot be built from something published later.
                 if target.phase > fixture.phase:
                     raise CatalogError(

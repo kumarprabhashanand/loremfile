@@ -30,12 +30,13 @@ from loremfile.validators import load, validate
 ROOT = Path(__file__).resolve().parents[2]
 WHEN = dt.datetime(2026, 9, 15, 12, 0, tzinfo=dt.UTC)
 CATALOG = Catalog.load()
-MANIFEST = json.loads((ROOT / "manifest.json").read_text())["fixtures"]
+MANIFEST = Manifest.load().active
 BY_PATH = {e["path"]: e for e in MANIFEST}
 ALIASES = yaml.safe_load((ROOT / "catalog" / "_aliases.yaml").read_text())["aliases"]
 FAMILY = {f.format: f.family.value for f in CATALOG.formats}
 DRIFTING = {f.path for fmt in CATALOG.formats for f in fmt.fixtures if f.expected_drift}
-NO_ALIAS = {"edge", "hls", "opus"}
+WITHOUT_DEFAULT = {"edge", "hls", "opus"}
+NO_ALIAS = WITHOUT_DEFAULT | {"vcf"}
 load_generators()
 load()
 
@@ -65,12 +66,12 @@ def disagreements(entries: list[dict[str, Any]]) -> list[str]:
 
 def test_the_aliases_are_found_where_they_are_known_to_be() -> None:
     """Empty-set control: every check below holds of nothing if no alias exists."""
-    assert len(ALIASES) == 77 and ALIASES["pdf"] == "pdf/a4-3pages.pdf"
+    assert len(ALIASES) == 76 and ALIASES["pdf"] == "pdf/a4-3pages.pdf"
     assert ALIASES["webm"] == "webm/720p-5s-vp8.webm" and ALIASES["gif"] == "gif/static-256x256.gif"
     aliases = [e for e in MANIFEST if is_alias(e)]
-    assert len(aliases) == 77 and "pdf/sample.pdf" in {e["path"] for e in aliases}
+    assert len(aliases) == 76 and "pdf/sample.pdf" in {e["path"] for e in aliases}
     assert ALIASES["ogv"] == "ogv/720p-5s.ogv" and ALIASES["ts"] == "ts/720p-5s.ts"
-    assert set(FAMILY) - set(ALIASES) == NO_ALIAS, "hls, edge and opus have none"
+    assert set(FAMILY) - set(ALIASES) == NO_ALIAS, "hls, edge, opus and vcf have none"
 
 
 def test_the_mapping_is_what_the_default_rule_chooses_today() -> None:
@@ -79,7 +80,7 @@ def test_the_mapping_is_what_the_default_rule_chooses_today() -> None:
     ruled = {}
     for fmt, family in FAMILY.items():
         found = defaults.default_choice(fmt, family, MANIFEST, DRIFTING, build.POPULAR)
-        if found:
+        if found and fmt not in NO_ALIAS:
             ruled[fmt] = found[0]
     assert ruled == ALIASES
     assert all(path.rsplit(".", 1)[1] == fmt for fmt, path in ALIASES.items()), "the ext is the key"
@@ -103,7 +104,7 @@ def test_the_alias_rows_the_loader_makes_are_the_originals_with_a_new_name() -> 
 
 def test_every_alias_has_the_sha256_and_everything_else_of_its_original() -> None:
     aliases = [e for e in MANIFEST if is_alias(e)]
-    assert disagreements(MANIFEST) == [] and len(aliases) == 77
+    assert disagreements(MANIFEST) == [] and len(aliases) == 76
     for e in aliases:
         assert e["path"] == f"{e['format']}/sample.{e['format']}"
         assert not is_alias(BY_PATH[alias_original(e)])
@@ -201,7 +202,7 @@ def test_the_counts_leave_aliases_out(site: Path) -> None:
     manifest = Manifest.load()
     files = len(manifest.current)
     assert files == len([e for e in MANIFEST if not is_alias(e) and not e.get("supersededBy")])
-    assert len(manifest.active) == len(MANIFEST) == files + 77 + 1, "77 aliases, 1 superseded"
+    assert len(manifest.active) == len(MANIFEST) == files + 76 + 1, "76 aliases, 1 superseded"
     home = (site / "index.html").read_text(encoding="utf-8")
     assert f"Search {files} files by path or description" in home
     counts = [int(n) for n in re.findall(r'<span class="count">(\d+)</span>', home)]
@@ -213,7 +214,7 @@ def test_the_counts_leave_aliases_out(site: Path) -> None:
     index = json.loads((site / routes.format_index_key("pdf")).read_text(encoding="utf-8"))
     assert index["count"] == 20 and "pdf/sample.pdf" not in {e["path"] for e in index["fixtures"]}
     formats = json.loads((ROOT / "formats.json").read_text(encoding="utf-8"))["formats"]
-    assert sum(f["count"] for f in formats) == len(MANIFEST) - 77, "formats.json: no aliases"
+    assert sum(f["count"] for f in formats) == len(MANIFEST) - 76, "formats.json: no aliases"
     llms = (site / "llms-full.txt").read_text(encoding="utf-8")
     assert not re.search(r"^\| [a-z0-9]+/sample\.[a-z0-9]+ \|", llms, re.MULTILINE)
     assert "| pdf/a4-3pages.pdf |" in llms, "control: the table lists the originals"
@@ -232,8 +233,11 @@ def test_a_format_page_starts_with_its_alias_and_says_whose_bytes_it_is(site: Pa
         assert f"<code>https://loremfile.dev/{fmt}/sample.{fmt}</code>" in block, fmt
         assert f'href="/{fmt}/sample.{fmt}" download' in block, fmt
         assert f"<code>{target}</code>" in block, fmt
-    for fmt in NO_ALIAS:
+    for fmt in WITHOUT_DEFAULT:
         assert 'class="start"' not in (site / f"{fmt}.html").read_text(encoding="utf-8"), fmt
+    start = (site / "vcf.html").read_text(encoding="utf-8")
+    assert 'class="start"' in start
+    assert 'href="/vcf/vcard4-single-v2.vcf" download' in start
 
 
 def test_the_home_example_and_the_rule_in_llms_and_the_naming_page(site: Path) -> None:
@@ -250,5 +254,8 @@ def test_the_home_example_and_the_rule_in_llms_and_the_naming_page(site: Path) -
 def test_the_docs_table_and_the_mapping_agree() -> None:
     text = (ROOT / "docs" / "05-fixture-catalog.md").read_text(encoding="utf-8")
     rows = re.findall(r"^\| `([a-z0-9]+)` \| `([^`]+)` \| ([^|]+) \|$", text, re.MULTILINE)
-    assert {fmt: path for fmt, path, _ in rows} == ALIASES
+    table = {fmt: path for fmt, path, _ in rows}
+    assert ALIASES.keys() < table.keys()
+    assert table.keys() - ALIASES.keys() == {"vcf"}
+    assert {fmt: table[fmt] for fmt in ALIASES} == ALIASES
     assert "catalog/_aliases.yaml" in text and "equal SHA-256" in text

@@ -113,5 +113,7 @@ def test_the_catalog_and_manifest_still_agree_after_adopting() -> None:
     publish them (docs/03 §7.1) — five of them at M3.6.
     """
     loaded = Catalog.load()
-    expected = {f.path for f in loaded.fixtures() if not f.awaiting_publication}
+    expected = {
+        f.path for f in loaded.fixtures() if not f.awaiting_publication and f.removed is None
+    }
     assert {e["path"] for e in Manifest.load().active} == expected
